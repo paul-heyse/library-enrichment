@@ -141,7 +141,8 @@ fn validate_receipt(directory: &Path, receipt: &Receipt) -> Result<()> {
         for batch in &mut reader {
             let batch = batch?;
             if batch.num_rows() > facts::BATCH_ROWS
-                || batch.get_array_memory_size() > facts::BATCH_BYTES + 65536
+                || datafusion::common::utils::memory::get_record_batch_memory_size(&batch)
+                    > facts::BATCH_BYTES + 65536
             {
                 return Err(invalid("rustdoc fact batch allocation bound"));
             }

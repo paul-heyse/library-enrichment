@@ -91,7 +91,8 @@ fn read_blocking(
         Err(err) => return common::operation_error(&err, "artifact_read"),
     };
     let total = artifact.size_bytes;
-    let is_text = artifact.media_type.starts_with("text/")
+    let is_text = selected_window.is_some()
+        || artifact.media_type.starts_with("text/")
         || artifact.media_type.contains("json")
         || artifact.media_type.contains("toml")
         || artifact.media_type.contains("markdown");
@@ -258,7 +259,7 @@ fn read_blocking(
                     .map(|s| format!(" (section `{s}`)"))
                     .unwrap_or_default()
             ),
-            data: common::to_object(&data),
+            data: common::payload(&data),
             coverage: Coverage {
                 details: None,
                 assessments: Vec::new(),
@@ -381,10 +382,10 @@ mod tests {
             ),
         )
         .unwrap();
-        let changes = serde_json::json!([{"text": "é😀\n\"\\".repeat(3000)}]);
+        let changes = envelope::fixture_payload(&"é😀\n\"\\".repeat(3000));
         let answer = envelope::ok(
             "indexed Unicode result",
-            common::to_object(&serde_json::json!({"changes": changes})),
+            changes.clone(),
             Coverage {
                 details: None,
                 assessments: Vec::new(),
@@ -395,7 +396,7 @@ mod tests {
             },
         );
         let (artifact, _) =
-            enrichment_store::result::store(&service.blobs, &answer, "service:bounded-result/3")
+            enrichment_store::result::store(&service.blobs, &answer, "service:bounded-result/4")
                 .unwrap();
         service
             .repository
@@ -406,7 +407,7 @@ mod tests {
         let mut request = ReadArtifactRequest {
             artifact_id: artifact.artifact_id.clone(),
             section: Some(ArtifactSection::Result {
-                name: ResultSectionName::Changes,
+                name: ResultSectionName::Data,
             }),
             max_bytes: Some(4096),
             ..Default::default()
@@ -424,8 +425,9 @@ mod tests {
             );
             let size = common::json_size(&result);
             assert!(size <= 4096);
-            let data: ArtifactSliceData =
-                serde_json::from_value(serde_json::Value::Object(result.data)).unwrap();
+            let enrichment_core::wire::data::ToolData::ReadArtifact(data) = result.data else {
+                panic!("native artifact payload")
+            };
             assert_eq!(data.encoding, SliceEncoding::Utf8);
             if let Some(end) = last_end {
                 assert_eq!(data.start, end);
@@ -449,7 +451,7 @@ mod tests {
         assert!(pages > 1);
         assert_eq!(
             serde_json::from_str::<serde_json::Value>(&content).unwrap(),
-            changes
+            serde_json::to_value(changes).unwrap()
         );
     }
 

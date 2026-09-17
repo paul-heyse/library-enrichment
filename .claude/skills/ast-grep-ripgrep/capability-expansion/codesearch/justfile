@@ -1,0 +1,173 @@
+# codesearch -- build, check and query the capability catalog.
+#
+# This tree is its own Cargo workspace and imports nothing from whatever repository hosts the
+# skill, so these recipes work wherever the skill is copied.
+#
+# Build artifacts and catalog tables live OUTSIDE the repository, because a repository under
+# study is never an output destination. Override with CODESEARCH_HOME if you want them elsewhere.
+
+set positional-arguments
+root := justfile_directory()
+
+# CODESEARCH_HOME honours the host's development-state sandbox when there is one, so this tree
+# never invents a second place for state to live.
+export CODESEARCH_HOME := env_var_or_default("CODESEARCH_HOME", env_var_or_default("LIBENR_HOME", env_var("HOME") / ".cache/codesearch"))
+
+# Derived unconditionally, and deliberately NOT from an inherited CARGO_TARGET_DIR: in a host
+# repository that variable usually points at the host's own `target/`, and honouring it would put
+# several gigabytes of this tree's build artifacts inside a repository under study. Override
+# CODESEARCH_HOME instead.
+export CARGO_TARGET_DIR := CODESEARCH_HOME / "target/codesearch"
+
+[private]
+default:
+    @just --list --unsorted
+
+[doc("Compile everything.")]
+[group('gate')]
+build:
+    cargo build --workspace
+
+[doc("Compile-check without producing binaries.")]
+[group('gate')]
+check:
+    cargo check --workspace --all-targets
+
+[doc("Run the test suite. Includes the schema fixed-point round trip against real Delta storage.")]
+[group('gate')]
+test:
+    cargo test --workspace
+
+[doc("Check formatting without modifying anything.")]
+[group('gate')]
+fmt-check:
+    cargo fmt --all -- --check
+
+[doc("Format in place.")]
+[group('mutating')]
+fmt:
+    cargo fmt --all
+
+[doc("Lint. No suppressions: fix the cause rather than silencing the lint.")]
+[group('gate')]
+lint:
+    cargo clippy --workspace --all-targets -- -D warnings
+
+[doc("The mechanical checks. Each exists because a probe showed the failure is silent.")]
+[group('gate')]
+codesearch-check: fmt-check check lint lint-rules test test-python lint-python
+    @echo "codesearch: every check green."
+    @echo "  schema fixed-point        PB03 -- Delta narrows types silently"
+    @echo "  byte offsets are Int64    PB03 -- UInt32 truncates above i32::MAX"
+    @echo "  lattice range constraints derived from the lattice, cannot go stale"
+    @echo "  constraint purity         PB07 -- a UDF locks out writers, a table reference panics"
+    @echo "  single writer per table   overwrite is only sound while one family writes"
+    @echo "  capability bindings       an unbound capability fails the build"
+    @echo "  index schema drift        a shifted column produces wrong answers, not an error"
+    @echo "  markup safety             P01 -- Rich deletes [a-z] and every rule field name"
+    @echo "  every violations view     has a fixture that breaks it; a check that cannot fail"
+    @echo "                            proves nothing"
+    @echo "  bound parameters          a caller value never reaches the SQL text"
+    @echo "  every projection plans    resolution is lazy, so the gate carries this, not callers"
+    @echo "  a scoped write keeps the  PB17 -- replace_where is silently ignored outside Overwrite"
+    @echo "    other run's rows        mode, so a control is what proves the predicate did work"
+    @echo "  no entity reference in    an entity_id differs between snapshots by construction, so"
+    @echo "    the content digest      including one makes every row report as changed"
+    @echo "  entity_key never joins    a key-to-id join returns ZERO ROWS and no error, which"
+    @echo "    to entity_id            reads as an answer about the data. Refused at plan time"
+    @echo "  a lattice folds with      §5.2 -- ranks are ordinal, so avg over one is a semantics"
+    @echo "    min or max only         nothing states. Checked over the planned projections"
+    @echo "  the ast-grep corpus       ast-grep exits 0 on a failed test AND on a rule"
+    @echo "    asserts on OUTPUT       that fails to parse. The status cannot be trusted"
+
+[doc("Build the catalog from a copy of the ast-grep-ripgrep skill. Offline.")]
+[group('mutating')]
+catalog skill_root=(justfile_directory() / "../..") snapshot_id="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The snapshot id is derived from the index bytes, so two different skills are two snapshots
+    # without anyone having to say so. The override exists for the crash test, which needs two
+    # snapshots over IDENTICAL inputs, and is otherwise not the way to get a second one.
+    # The producer root is optional and its absence is visible: two run rows instead of three.
+    producer=""
+    if [ -d "$CODESEARCH_HOME/producers/cargo-metadata" ]; then
+      producer="--producer-root $CODESEARCH_HOME/producers/cargo-metadata"
+    fi
+    if [ -n "{{ snapshot_id }}" ]; then
+      cargo run --bin codesearch-build -- --skill-root "{{ skill_root }}" $producer \
+        --home "$CODESEARCH_HOME" --snapshot-id "{{ snapshot_id }}"
+    else
+      cargo run --bin codesearch-build -- --skill-root "{{ skill_root }}" $producer \
+        --home "$CODESEARCH_HOME"
+    fi
+
+[doc("Run the cargo-metadata adapter. Writes a producer root OUTSIDE every repository.")]
+[group('mutating')]
+producers:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Its own workspace and its own target dir: the build binary does not depend on it, which is
+    # the whole point -- linking the producers in would add 223 crates for `ra_ap_*` alone.
+    CARGO_TARGET_DIR="$CODESEARCH_HOME/target/producers" \
+      cargo run --quiet --manifest-path "{{ root }}/../producers/cargo-metadata-adapter/Cargo.toml" -- \
+      --skill-root "{{ root }}/../.." --out "$CODESEARCH_HOME/producers/cargo-metadata"
+
+[doc("Materialise a modified copy of the skill, so `compare` has two snapshots to compare.")]
+[group('mutating')]
+fixture:
+    @python3 "{{ root }}/scripts/fixture.py" "{{ root }}/../.." "$CODESEARCH_HOME/fixtures/skill"
+
+[doc("Build the fixture snapshot beside the real one and diff them. Run `just catalog` first.")]
+[group('mutating')]
+compare-fixture: fixture
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just catalog "$CODESEARCH_HOME/fixtures/skill"
+    q="$CARGO_TARGET_DIR/debug/codesearch-query"
+    pick() { python3 -c "import json,sys; print([r['snapshot_id'] for r in json.load(sys.stdin) if r['selected'] is $1][0])"; }
+    from=$("$q" --home "$CODESEARCH_HOME" runs --json | pick False)
+    to=$("$q" --home "$CODESEARCH_HOME" runs --json | pick True)
+    echo "comparing $from -> $to"
+    "$q" --home "$CODESEARCH_HOME" compare --from "$from" --to "$to"
+
+[doc("Query the catalog. Pass the projection and its arguments.")]
+[group('query')]
+query *args:
+    @cargo run --quiet --bin codesearch-query -- "$@"
+
+[doc("Record p50/p95 for describe. The one-shot serving decision is revisited if p95 exceeds 400ms.")]
+[group('gate')]
+bench iterations="30":
+    @CODESEARCH_QUERY_BIN="$CARGO_TARGET_DIR/debug/codesearch-query" python3 "{{ root }}/scripts/bench.py" "{{ iterations }}"
+
+[doc("Run the Python CLI test suite: output fidelity under Rich markup.")]
+[group('gate')]
+test-python:
+    @cd "{{ root }}/python" && uv run --with typer==0.27.2 --with rich==15.0.0 --with pytest==9.0.1 python -m pytest tests -q
+
+[doc("Run the ast-grep rule corpus and its fixtures. Asserts on output, never on exit status.")]
+[group('gate')]
+lint-rules:
+    @python3 "{{ root }}/scripts/lint_rules.py"
+
+[doc("Lint the Python CLI.")]
+[group('gate')]
+lint-python:
+    @cd "{{ root }}/python" && uv run --with ruff==0.14.4 ruff check . && uv run --with ruff==0.14.4 ruff format --check .
+
+[doc("Query through the Python front end rather than the raw binary.")]
+[group('query')]
+cli *args:
+    @cd "{{ root }}/python" && CODESEARCH_QUERY_BIN="$CARGO_TARGET_DIR/debug/codesearch-query" uv run --with typer==0.27.2 --with rich==15.0.0 python -m codesearch_cli "$@"
+
+[doc("Regenerate bridge/CATALOG.md from a live session. Needs a built catalog.")]
+[group('mutating')]
+bridge-catalog:
+    @cargo run --quiet --bin codesearch-query -- catalog-md > "{{ root }}/crates/codesearch-bridge/CATALOG.md"
+    @echo "wrote crates/codesearch-bridge/CATALOG.md"
+
+[doc("Where build artifacts and catalog tables actually live.")]
+[group('environment')]
+where:
+    @echo "CODESEARCH_HOME  = $CODESEARCH_HOME"
+    @echo "CARGO_TARGET_DIR = $CARGO_TARGET_DIR"

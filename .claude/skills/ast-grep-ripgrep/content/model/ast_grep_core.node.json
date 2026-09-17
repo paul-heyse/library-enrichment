@@ -1,0 +1,264 @@
+{
+  "module": "ast_grep_core::node",
+  "crate": "ast-grep-core",
+  "api": "api/ast_grep_core.node.md",
+  "items": [
+    {
+      "path": "ast_grep_core::node::Node",
+      "name": "Node",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct Node<'r, D: Doc>",
+      "summary": "'r represents root lifetime",
+      "doc": "api/ast_grep_core.node.md#node",
+      "aliases": [
+        "ast_grep_core::Node"
+      ],
+      "implements": [
+        "ast_grep_core::replacer::Replacer",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "after",
+          "signature": "fn after(&self) -> source::Edit<<D as Doc>::Source>"
+        },
+        {
+          "name": "ancestors",
+          "signature": "fn ancestors(&self) -> impl Iterator<Item = Node<'r, D>> + '_",
+          "summary": "Returns all ancestors nodes of `self`. Using cursor is overkill here because adjust cursor is too expensive."
+        },
+        {
+          "name": "append",
+          "signature": "fn append(&self) -> source::Edit<<D as Doc>::Source>"
+        },
+        {
+          "name": "before",
+          "signature": "fn before(&self) -> source::Edit<<D as Doc>::Source>"
+        },
+        {
+          "name": "child",
+          "signature": "fn child(&self, nth: usize) -> Option<Self>"
+        },
+        {
+          "name": "child_by_field_id",
+          "signature": "fn child_by_field_id(&self, field_id: u16) -> Option<Self>"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> impl ExactSizeIterator<Item = Node<'r, D>> + '_"
+        },
+        {
+          "name": "dfs",
+          "signature": "fn dfs<'s>(&'s self) -> impl Iterator<Item = Node<'r, D>> + 's"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty(&self) -> Option<source::Edit<<D as Doc>::Source>>",
+          "summary": "Empty children. Remove all child node"
+        },
+        {
+          "name": "end_pos",
+          "signature": "fn end_pos(&self) -> Position",
+          "summary": "Nodes' end position in terms of rows and columns."
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self, name: &str) -> Option<Self>"
+        },
+        {
+          "name": "field_children",
+          "signature": "fn field_children(&self, name: &str) -> impl Iterator<Item = Node<'r, D>> + '_"
+        },
+        {
+          "name": "find",
+          "signature": "fn find<M: Matcher>(&self, pat: M) -> Option<NodeMatch<'r, D>>"
+        },
+        {
+          "name": "find_all",
+          "signature": "fn find_all<'s, M: Matcher + 's>(&'s self, pat: M) -> impl Iterator<Item = NodeMatch<'r, D>> + 's"
+        },
+        {
+          "name": "follows",
+          "signature": "fn follows<M: Matcher>(&self, m: M) -> bool"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(node_match: NodeMatch<'tree, D>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "generate_replacement",
+          "signature": "fn generate_replacement(&self, _nm: &NodeMatch<'_, D>) -> Underlying<D>",
+          "via_trait": "ast_grep_core::replacer::Replacer"
+        },
+        {
+          "name": "get_doc",
+          "signature": "fn get_doc(&self) -> &'r D"
+        },
+        {
+          "name": "get_inner_node",
+          "signature": "fn get_inner_node(&self) -> D::Node<'r>",
+          "summary": "the underlying tree-sitter Node"
+        },
+        {
+          "name": "has",
+          "signature": "fn has<M: Matcher>(&self, m: M) -> bool"
+        },
+        {
+          "name": "inside",
+          "signature": "fn inside<M: Matcher>(&self, m: M) -> bool"
+        },
+        {
+          "name": "is_error",
+          "signature": "fn is_error(&self) -> bool"
+        },
+        {
+          "name": "is_extra",
+          "signature": "fn is_extra(&self) -> bool"
+        },
+        {
+          "name": "is_leaf",
+          "signature": "fn is_leaf(&self) -> bool"
+        },
+        {
+          "name": "is_missing",
+          "signature": "fn is_missing(&self) -> bool"
+        },
+        {
+          "name": "is_named",
+          "signature": "fn is_named(&self) -> bool"
+        },
+        {
+          "name": "is_named_leaf",
+          "signature": "fn is_named_leaf(&self) -> bool",
+          "summary": "if has no named children. N.B. it is different from is_named && is_leaf"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> Cow<'_, str>"
+        },
+        {
+          "name": "kind_id",
+          "signature": "fn kind_id(&self) -> u16"
+        },
+        {
+          "name": "lang",
+          "signature": "fn lang(&self) -> &'r D::Lang"
+        },
+        {
+          "name": "matches",
+          "signature": "fn matches<M: Matcher>(&self, m: M) -> bool"
+        },
+        {
+          "name": "named_children",
+          "signature": "fn named_children(&self) -> impl Iterator<Item = Node<'r, D>> + '_"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&self) -> Option<Self>"
+        },
+        {
+          "name": "next_all",
+          "signature": "fn next_all(&self) -> impl Iterator<Item = Node<'r, D>> + '_",
+          "summary": "Returns all sibling nodes next to `self`."
+        },
+        {
+          "name": "node_id",
+          "signature": "fn node_id(&self) -> usize"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<Self>"
+        },
+        {
+          "name": "precedes",
+          "signature": "fn precedes<M: Matcher>(&self, m: M) -> bool"
+        },
+        {
+          "name": "prepend",
+          "signature": "fn prepend(&self) -> source::Edit<<D as Doc>::Source>"
+        },
+        {
+          "name": "prev",
+          "signature": "fn prev(&self) -> Option<Node<'r, D>>"
+        },
+        {
+          "name": "prev_all",
+          "signature": "fn prev_all(&self) -> impl Iterator<Item = Node<'r, D>> + '_"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> std::ops::Range<usize>",
+          "summary": "byte offsets of start and end."
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove(&self) -> source::Edit<<D as Doc>::Source>",
+          "summary": "Remove the node itself"
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace<M: Matcher, R: Replacer<D>>(&self, matcher: M, replacer: R) -> Option<source::Edit<<D as Doc>::Source>>"
+        },
+        {
+          "name": "replace_all",
+          "signature": "fn replace_all<M: Matcher, R: Replacer<StrDoc<L>>>(&self, matcher: M, replacer: R) -> Vec<Edit<String>>"
+        },
+        {
+          "name": "root",
+          "signature": "fn root(&self) -> &'r Root<D>"
+        },
+        {
+          "name": "start_pos",
+          "signature": "fn start_pos(&self) -> Position",
+          "summary": "Nodes' start position in terms of zero-based rows and columns."
+        },
+        {
+          "name": "text",
+          "signature": "fn text(&self) -> Cow<'r, str>"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::node::Position",
+      "name": "Position",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct Position",
+      "summary": "Represents a position in the source code. The line and column are zero-based, character offsets. It is different from tree-sitter's position which is zero-based `byte` offsets. Note, accessing `column` is O(n) operation.",
+      "doc": "api/ast_grep_core.node.md#position",
+      "aliases": [
+        "ast_grep_core::Position"
+      ],
+      "methods": [
+        {
+          "name": "byte_point",
+          "signature": "fn byte_point(&self) -> (usize, usize)"
+        },
+        {
+          "name": "column",
+          "signature": "fn column<D: Doc>(&self, node: &Node<'_, D>) -> usize",
+          "summary": "Returns the column in terms of characters. Note: node does not have to be a node of matching position."
+        },
+        {
+          "name": "line",
+          "signature": "fn line(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(line: usize, byte_column: usize, byte_offset: usize) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::node::Root",
+      "name": "Root",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct Root<D: Doc>",
+      "summary": "Represents [`tree_sitter::Tree`] and owns source string Note: Root is generic against [`Language`](crate::language::Language)",
+      "doc": "api/ast_grep_core.node.md#root"
+    }
+  ]
+}

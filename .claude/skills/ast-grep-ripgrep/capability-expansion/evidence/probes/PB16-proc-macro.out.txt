@@ -1,0 +1,22 @@
+PB16 — is a failed proc-macro server distinguishable from a disabled one?
+
+  fixture  /tmp/pb16-proc-macro-fixture
+  asking   the three values §3.2 reserves: disabled, server_failed, enabled
+
+  control  /home/paul/.rustup/toolchains/1.94.0-x86_64-unknown-linux-gnu/libexec/rust-analyzer-proc-macro-srv
+
+  A  None               intends `disabled      `  -> loaded=true client=None 
+  B  Explicit(<none>)   intends `server_failed `  -> loaded=true client=None 
+  C  Explicit(real)     intends `enabled       `  -> loaded=true client=Some 
+
+  ---
+  RECORDED   `disabled` and `server_failed` are INDISTINGUISHABLE from what
+             `load_workspace_at` returns: both are `client=None`.
+             The distinction IS made internally -- load-cargo-lib.rs:111-134
+             maps them to ProcMacroLoadingError::Disabled and ::ProcMacroSrvError
+             -- and is discarded at line 204 by `and_then(Result::ok)`.
+             It survives per crate in the `proc_macros` map (lines 158-180),
+             so §3.2's value is reachable, but NOT from this return type.
+             An adapter must read the per-crate ProcMacroLoadResult, and a
+             `project-load` family that recorded only the Option would collapse
+             two states evidence 06 says must not be collapsed.

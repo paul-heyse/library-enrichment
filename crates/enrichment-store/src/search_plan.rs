@@ -30,6 +30,8 @@ pub struct SearchOptions {
 #[derive(Debug)]
 pub struct RankedEvidence {
     pub key: SearchKey,
+    pub fact_id: String,
+    pub subject: enrichment_core::evidence::relational::SubjectRef,
     pub hit: HitKind,
     pub path: Option<String>,
     pub symbol_kind: Option<SymbolKind>,
@@ -297,7 +299,8 @@ pub async fn page(
         SELECT p.*,
             CASE p.hit_order WHEN 0 THEN a.payload.signature ELSE NULL END AS signature,
             CASE p.hit_order WHEN 0 THEN coalesce(a.payload.signature, a.payload.doc_summary, a.docs, '') ELSE f.text END AS excerpt,
-            CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source
+            CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source,
+            CASE p.hit_order WHEN 0 THEN a.subject ELSE f.subject END AS subject_ref
         FROM search_page p
         LEFT JOIN snapshot.evidence.api_observations a ON p.fact_id = a.observation_id AND p.hit_order = 0
         LEFT JOIN snapshot.evidence.fragments f ON p.fact_id = f.fragment_id AND p.hit_order = 1
@@ -308,15 +311,18 @@ pub async fn page(
     // CASE derives a new field and does not copy top-level metadata. Declare the role of
     // this selected qualified source explicitly; row provenance still comes from the joins.
     let source = crate::admission::Relation::ApiObservations.schema()?;
-    let hydrated = hydrated.with_column(
-        "source",
-        col("source").alias_with_metadata(
-            "source",
-            Some(datafusion::common::metadata::FieldMetadata::from(
-                source.field_with_name("source")?.metadata().clone(),
-            )),
-        ),
-    )?;
+    let mut hydrated = hydrated;
+    for (output, input) in [("source", "source"), ("subject_ref", "subject")] {
+        hydrated = hydrated.with_column(
+            output,
+            col(output).alias_with_metadata(
+                output,
+                Some(datafusion::common::metadata::FieldMetadata::from(
+                    source.field_with_name(input)?.metadata().clone(),
+                )),
+            ),
+        )?;
+    }
     let output = runtime
         .execute_family(hydrated, Some(crate::preparation::QueryFamily::Search))
         .await?;

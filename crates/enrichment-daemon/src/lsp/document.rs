@@ -1,7 +1,7 @@
 //! Canonical consumer documents and byte-accurate normalization of LSP ranges.
 use enrichment_core::{
     evidence::{
-        Symbol,
+        SymbolHeader,
         execution::{Utf8Position, Utf8Range},
     },
     identity::Ecosystem,
@@ -16,7 +16,7 @@ pub struct Consumer {
 
 impl Consumer {
     pub fn new(
-        symbol: &Symbol,
+        symbol: &SymbolHeader,
         ecosystem: Ecosystem,
         options: &InspectionOptions,
     ) -> Result<Self, String> {

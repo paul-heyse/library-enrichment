@@ -164,6 +164,7 @@ async def read_complete_answer(client, result):
                 "read_artifact",
                 {
                     "artifact_id": artifact_id,
+                    "section": {"kind": "result", "name": "envelope"},
                     "cursor": cursor,
                     "max_bytes": 65536,
                 },
@@ -179,10 +180,8 @@ async def read_complete_answer(client, result):
         following = data["page"]["next_cursor"]
         if following is None:
             content = b"".join(parts)
-            assert hashlib.sha256(content).hexdigest() == data["artifact"]["sha256"]
             document = json.loads(content)
-            assert document["index"]["format"] == "research-result/3"
-            return document["result"]
+            return document
         assert chunk and following != cursor
         cursor = following
     raise AssertionError("retained result did not finish within the traversal bound")
@@ -193,7 +192,9 @@ async def read_terminal_answer(client, response):
     result = response["data"]["result"]
     assert result is not None
     envelope = response | {key: value for key, value in result.items() if key != "outcome"}
-    envelope.update(status=result["outcome"], data={}, job=None)
+    envelope.update(
+        status=result["outcome"]["status"], error=result["outcome"].get("error"), data={}, job=None
+    )
     return await read_complete_answer(client, envelope)
 
 

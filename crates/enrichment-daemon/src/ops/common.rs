@@ -1,9 +1,9 @@
 //! What the retrieval operations share: opening a context's snapshot, building evidence
 //! entries and artifact handles, and the byte budget.
 
-use enrichment_core::evidence::{Artifact, EvidenceFragment};
+use enrichment_core::evidence::{Artifact, TextFragment};
 use enrichment_core::identity::{Context, ContextId, Environment, Release, SnapshotId};
-use enrichment_core::wire::{ArtifactHandle, Envelope, ErrorCode, Evidence, SourceVersionMatch};
+use enrichment_core::wire::{ArtifactHandle, Envelope, ErrorCode, Evidence};
 use enrichment_store::SnapshotReader;
 
 use crate::envelope;
@@ -209,38 +209,17 @@ pub fn handle_for(artifact: &Artifact, description: String) -> Option<ArtifactHa
 }
 
 /// Cite a fragment as an evidence entry, with a bounded excerpt.
-#[must_use]
 pub fn evidence_from_fragment(
-    _service: &Service,
-    fragment: &EvidenceFragment,
-    source_version_match: SourceVersionMatch,
+    fragment: &TextFragment,
     excerpt_chars: usize,
-) -> Evidence {
-    let source_uri = fragment
-        .source_uri
-        .clone()
-        .unwrap_or_else(|| artifact_uri_for(&fragment.artifact_id));
-    Evidence {
-        evidence_id: format!(
-            "ev_{}",
-            &fragment.fragment_id[5.min(fragment.fragment_id.len())..]
-        ),
-        evidence_class: fragment.evidence_class,
-        subject: fragment.subject.clone(),
-        artifact_id: fragment.artifact_id.clone(),
-        source_uri,
-        locator: fragment.locator.clone(),
-        source_version_match: if fragment.source_uri.is_none() {
-            SourceVersionMatch::Unknown
-        } else {
-            fragment
-                .source_version_match
-                .unwrap_or(source_version_match)
-        },
-        producer: fragment.producer.clone(),
-        producer_version: fragment.producer_version.clone(),
-        excerpt: truncate(&fragment.text, excerpt_chars),
-    }
+) -> Result<Evidence, enrichment_store::QueryError> {
+    Ok(Evidence::new(
+        fragment.fragment_id.clone(),
+        fragment.subject.clone(),
+        fragment.display_subject.clone(),
+        fragment.source.clone(),
+        truncate(&fragment.text, excerpt_chars),
+    )?)
 }
 
 /// Cut text to `max_chars` characters, marking the cut.
@@ -269,13 +248,10 @@ pub fn json_size<T: serde::Serialize>(value: &T) -> usize {
 
 /// A JSON object from any serializable payload.
 #[must_use]
-pub fn to_object<T: serde::Serialize>(value: &T) -> enrichment_core::wire::JsonObject {
-    let serde_json::Value::Object(object) =
-        serde_json::to_value(value).expect("Rust wire payload must serialize")
-    else {
-        panic!("tool data must be a JSON object");
-    };
-    object
+pub fn payload<T: Clone + Into<enrichment_core::wire::data::ToolData>>(
+    value: &T,
+) -> enrichment_core::wire::data::ToolData {
+    value.clone().into()
 }
 
 /// Enforce the complete serialized envelope budget. Oversized answers remain available as

@@ -1,0 +1,19 @@
+id: project-rustdoc-format-pinned-url
+language: bash
+severity: hint
+message: "A docs.rs `/json/<n>` URL is an exact-match lookup, not a minimum version."
+note: |
+  `https://docs.rs/crate/NAME/VERSION/json/61` returns that format version or 404 -- it does not
+  negotiate down, and docs.rs retention is per crate and arbitrary. Measured while this
+  repository was built: `cargo_metadata` answers for 56, 57 and 61; `serde` only for 60.
+
+  Request `/json` and branch on the payload's own `format_version` field. That is the only
+  reading that describes the document in your hand, and it is why acquisition here records a
+  version per crate rather than assuming one: rustdoc-types 0.61.0, the crate that *defines*
+  format 61, is itself served at 60.
+metadata:
+  record: capability-gap
+  capability: versions
+rule:
+  kind: command
+  regex: 'docs\.rs/crate/[^ ]+/json/[0-9]+'

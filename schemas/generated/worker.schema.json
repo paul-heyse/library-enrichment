@@ -2,39 +2,43 @@
   "$defs": {
     "Observation": {
       "additionalProperties": false,
-      "description": "One independent declaration emitted by Griffe.",
+      "description": "One independently scoped declaration emitted by the static Griffe worker.",
       "properties": {
         "alias_target": {
-          "description": "Alias target even if unresolved.",
           "type": [
             "string",
             "null"
           ]
         },
         "bases": {
-          "description": "Declared base expressions, not resolved inheritance claims.",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PythonBase"
           },
           "type": "array"
         },
+        "callable": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonCallable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "docs": {
-          "description": "Full bounded docstring.",
           "type": [
             "string",
             "null"
           ]
         },
         "file": {
-          "description": "Relative archive path, never an arbitrary local path.",
           "type": "string"
         },
         "kind": {
-          "description": "Module, class, function or attribute.",
           "type": "string"
         },
         "line": {
-          "description": "First declaration line.",
           "format": "uint32",
           "minimum": 0,
           "type": [
@@ -43,26 +47,29 @@
           ]
         },
         "origin": {
-          "$ref": "#/$defs/ObservationOrigin",
-          "description": "Source versus stub provenance."
+          "$ref": "#/$defs/ObservationOrigin"
+        },
+        "overload_ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "overloads": {
-          "description": "Every declared overload, including stub-only overload groups.",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PythonOverload"
           },
           "type": "array"
         },
         "path": {
-          "description": "Qualified Python path.",
           "type": "string"
         },
         "publicness": {
-          "$ref": "#/$defs/Publicness",
-          "description": "Signals remain separate."
+          "$ref": "#/$defs/Publicness"
         },
         "signature": {
-          "description": "Rendered signature or annotation.",
           "type": [
             "string",
             "null"
@@ -76,6 +83,8 @@
         "file",
         "line",
         "signature",
+        "callable",
+        "overload_ordinal",
         "overloads",
         "docs",
         "alias_target",
@@ -93,36 +102,31 @@
       "type": "string"
     },
     "Publicness": {
-      "description": "Independent publicness signals. Unknown author/export signals stay absent.",
+      "additionalProperties": false,
+      "description": "Independent signals; no one signal is a publicness verdict.",
       "properties": {
         "declared_exports": {
-          "description": "Literal __all__ entries.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "docstring": {
-          "description": "A docstring exists; absence does not prove private API.",
           "type": "boolean"
         },
         "exported": {
-          "description": "Membership in a statically resolved __all__, when known.",
           "type": [
             "boolean",
             "null"
           ]
         },
         "reexport": {
-          "description": "This is a reexport declaration.",
           "type": "boolean"
         },
         "underscore": {
-          "description": "Underscore naming convention, not a privacy verdict.",
           "type": "boolean"
         },
         "unresolved_exports": {
-          "description": "Export expressions not statically reduced to literals.",
           "items": {
             "type": "string"
           },
@@ -139,21 +143,160 @@
       ],
       "type": "object"
     },
+    "PythonBase": {
+      "additionalProperties": false,
+      "properties": {
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rendering": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "rendering"
+      ],
+      "type": "object"
+    },
+    "PythonCallable": {
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parameters": {
+          "items": {
+            "$ref": "#/$defs/PythonParameter"
+          },
+          "type": "array"
+        },
+        "returns": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "parameters",
+        "returns",
+        "labels"
+      ],
+      "type": "object"
+    },
+    "PythonDefaultOrigin": {
+      "description": "Native interpretation of Griffe's reported value and parameter kind.",
+      "enum": [
+        "absent",
+        "declared",
+        "implicit_variadic"
+      ],
+      "type": "string"
+    },
+    "PythonOverload": {
+      "additionalProperties": false,
+      "properties": {
+        "callable": {
+          "$ref": "#/$defs/PythonCallable"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "signature": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "signature",
+        "callable"
+      ],
+      "type": "object"
+    },
+    "PythonParameter": {
+      "additionalProperties": false,
+      "properties": {
+        "annotation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "default_origin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonDefaultOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonParameterKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reported_default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "ordinal",
+        "name",
+        "kind",
+        "annotation",
+        "reported_default",
+        "default_origin"
+      ],
+      "type": "object"
+    },
+    "PythonParameterKind": {
+      "enum": [
+        "positional-only",
+        "positional or keyword",
+        "variadic positional",
+        "keyword-only",
+        "variadic keyword"
+      ],
+      "type": "string"
+    },
     "WorkerFile": {
       "additionalProperties": false,
       "description": "One source file selected by Rust for the static worker.",
       "properties": {
         "file": {
-          "description": "Archive-relative file path.",
           "type": "string"
         },
         "module": {
-          "description": "Qualified module import path.",
           "type": "string"
         },
         "origin": {
-          "$ref": "#/$defs/ObservationOrigin",
-          "description": "Whether it is .py or .pyi."
+          "$ref": "#/$defs/ObservationOrigin"
         }
       },
       "required": [

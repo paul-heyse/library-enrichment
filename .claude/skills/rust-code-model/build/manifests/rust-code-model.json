@@ -1,0 +1,136 @@
+{
+  "repository": "rust-code-model",
+  "title": "The seven layers of Rust program knowledge",
+  "description": "Pinned, offline index of the seven sources of truth an agent can ask about Rust code, and of which one answers which question.",
+
+  "tools": {
+    "ast_grep_version": "0.45.3",
+    "toolchain": "nightly-2026-09-13",
+    "rustc_release": "1.100.0-nightly",
+    "rustc_commit": "809936eac",
+    "rustdoc_format_version": 61,
+    "rustdoc_format_supported": [57, 59, 60, 61],
+    "toolchain_note": "The probe toolchain and the rustc source pin are the same compiler. `nightly-2026-09-13` is byte-identical in version string to this workstation's rolling nightly, and its commit 809936eac is the ref every rustc source file below is fetched at, so an observed MIR behaviour and the enum variant that names it come from one build. rustc-dev is deliberately NOT a prerequisite: every rustc fact here is either executed through a stable-ish -Z flag or read from pinned source.",
+    "format_note": "rustdoc_format_version is what this toolchain EMITS. It is not what docs.rs serves -- docs.rs builds on its own schedule and its fleet is not uniform. Every payload is branched on its own format_version field; see the rustdoc-types anomaly in PROVENANCE."
+  },
+
+  "crate_sets": [
+    {
+      "name": "rust-analyzer",
+      "version": "0.0.352",
+      "source": "docs_rs",
+      "source_tag": "2026-09-14",
+      "tag_resolution": "by-publication-date",
+      "note": "ra_ap_* ships every Sunday at 0.0.N, so every release is semver-breaking by cargo's rules and there is no changelog. The whole family is published in lockstep on one day; a mixed-version set would be incoherent and the build asserts uniformity. The repository itself carries NO version number -- `[workspace.package]` has no `version` key, because `xtask publish` mints it at publish time. So the tag below is matched to the crate version BY PUBLICATION DATE, which is an inference, not an identity, and is labelled as such wherever it is recorded.",
+      "crates": [
+        {"package": "ra_ap_hir", "lib": "ra_ap_hir", "layer": "hir", "role": "primary"},
+        {"package": "ra_ap_syntax", "lib": "ra_ap_syntax", "layer": "syntax", "role": "primary"},
+        {"package": "ra_ap_load-cargo", "lib": "ra_ap_load_cargo", "layer": "project-load", "role": "primary", "note": "The package name is hyphenated and the library name is not. docs.rs URLs take the hyphen, `use` takes the underscore."},
+        {"package": "ra_ap_project_model", "lib": "ra_ap_project_model", "layer": "project-load", "role": "primary"},
+        {"package": "ra_ap_ide", "lib": "ra_ap_ide", "layer": "hir", "role": "enabler"},
+        {"package": "ra_ap_base_db", "lib": "ra_ap_base_db", "layer": "project-load", "role": "enabler"},
+        {"package": "ra_ap_vfs", "lib": "ra_ap_vfs", "layer": "project-load", "role": "enabler"},
+        {"package": "ra_ap_span", "lib": "ra_ap_span", "layer": "syntax", "role": "enabler"},
+        {"package": "ra_ap_paths", "lib": "ra_ap_paths", "layer": "project-load", "role": "enabler"}
+      ]
+    },
+    {
+      "name": "rustdoc",
+      "version": "0.61.0",
+      "source": "docs_rs",
+      "note": "rustdoc-types is a verbatim re-export of rust-lang/rust's src/rustdoc-json-types/lib.rs; upstream requires changes to land there first. Its minor version equals the format version it describes: 0.61.0 defines FORMAT_VERSION = 61.",
+      "crates": [
+        {"package": "rustdoc-types", "lib": "rustdoc_types", "layer": "rustdoc-json", "role": "primary"}
+      ]
+    },
+    {
+      "name": "cargo",
+      "version": "0.23.1",
+      "source": "docs_rs",
+      "note": "cargo_metadata is third-party (oli-obk), not rust-lang. Published 2025-11-12 after a roughly bimonthly cadence through 2025; whether the gap since is stability or reduced maintenance is UNVERIFIED and recorded as such. The wire format it parses is Cargo's own `--format-version 1`, which is far more stable than the crate.",
+      "crates": [
+        {"package": "cargo_metadata", "lib": "cargo_metadata", "layer": "cargo-metadata", "role": "primary"}
+      ]
+    }
+  ],
+
+  "sources": [
+    {
+      "name": "rustc",
+      "repo": "rust-lang/rust",
+      "ref": "809936eac",
+      "ref_kind": "commit",
+      "dest": "rustc",
+      "note": "Fetched file by file. The rust-lang/rust archive is several hundred megabytes and the build wants seven files from it. The ref is the exact commit of the probe toolchain, so the vocabulary indexed here is the vocabulary the probes observe.",
+      "files": {
+        "mir-syntax.rs": "compiler/rustc_middle/src/mir/syntax.rs",
+        "mir-mod.rs": "compiler/rustc_middle/src/mir/mod.rs",
+        "dataflow-framework.rs": "compiler/rustc_mir_dataflow/src/framework/mod.rs",
+        "dataflow-direction.rs": "compiler/rustc_mir_dataflow/src/framework/direction.rs",
+        "dataflow-lattice.rs": "compiler/rustc_mir_dataflow/src/framework/lattice.rs",
+        "dataflow-impls.rs": "compiler/rustc_mir_dataflow/src/impls/mod.rs",
+        "rustc-public-body.rs": "compiler/rustc_public/src/mir/body.rs"
+      }
+    },
+    {
+      "name": "rust-analyzer",
+      "repo": "rust-lang/rust-analyzer",
+      "ref": "2026-09-14",
+      "ref_kind": "tag",
+      "dest": "rust-analyzer",
+      "note": "rust.ungram and the generated SyntaxKind are the machine-readable node catalogues; hir/src/lib.rs is here because ra_ap_hir is only 12.84% documented on docs.rs and the rustdoc index alone would be a list of names.",
+      "files": {
+        "rust.ungram": "crates/syntax/rust.ungram",
+        "syntax-kind-generated.rs": "crates/parser/src/syntax_kind/generated.rs",
+        "cli-flags.rs": "crates/rust-analyzer/src/cli/flags.rs",
+        "hir-lib.rs": "crates/hir/src/lib.rs",
+        "load-cargo-lib.rs": "crates/load-cargo/src/lib.rs",
+        "project-model-lib.rs": "crates/project-model/src/lib.rs",
+        "architecture.md": "docs/book/src/contributing/architecture.md",
+        "syntax.md": "docs/book/src/contributing/syntax.md",
+        "diagnostics.md": "docs/book/src/diagnostics.md"
+      }
+    },
+    {
+      "name": "rustdoc-types",
+      "repo": "rust-lang/rustdoc-types",
+      "ref": "v0.61.0",
+      "ref_kind": "tag",
+      "dest": "rustdoc-types",
+      "note": "The CHANGELOG is the only machine-readable map from crate version to format version, and it carries the upstream rust commit per entry.",
+      "files": {
+        "CHANGELOG.md": "CHANGELOG.md"
+      }
+    },
+    {
+      "name": "rustc-dev-guide",
+      "repo": "rust-lang/rustc-dev-guide",
+      "ref": "238f1ffe6eddcd93f5fdcbb60893c83bfd220e77",
+      "ref_kind": "commit",
+      "dest": "rustc-dev-guide",
+      "note": "The guide has no releases, so it is pinned by commit. These are the only prose explanations of MIR and dataflow that upstream publishes.",
+      "files": {
+        "mir-index.md": "src/mir/index.md",
+        "mir-construction.md": "src/mir/construction.md",
+        "mir-dataflow.md": "src/mir/dataflow.md",
+        "mir-passes.md": "src/mir/passes.md",
+        "mir-optimizations.md": "src/mir/optimizations.md",
+        "mir-visitor.md": "src/mir/visitor.md",
+        "mir-debugging.md": "src/mir/debugging.md",
+        "mir-drop-elaboration.md": "src/mir/drop-elaboration.md",
+        "rustc-driver-intro.md": "src/rustc-driver/intro.md"
+      }
+    },
+    {
+      "name": "cargo",
+      "repo": "rust-lang/cargo",
+      "ref": "0.99.0",
+      "ref_kind": "tag",
+      "dest": "cargo",
+      "note": "Cargo's own documentation of the metadata wire format, which is the stable contract -- more so than the cargo_metadata crate that parses it.",
+      "files": {
+        "cargo-metadata.md": "src/doc/src/commands/cargo-metadata.md"
+      }
+    }
+  ]
+}

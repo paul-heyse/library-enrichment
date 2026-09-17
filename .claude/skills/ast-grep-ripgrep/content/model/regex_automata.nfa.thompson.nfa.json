@@ -1,0 +1,281 @@
+{
+  "module": "regex_automata::nfa::thompson::nfa",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.nfa.thompson.nfa.md",
+  "items": [
+    {
+      "path": "regex_automata::nfa::thompson::nfa::State",
+      "name": "State",
+      "kind": "enum",
+      "crate": "regex-automata",
+      "signature": "enum State",
+      "summary": "A state in an NFA.",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#state",
+      "aliases": [
+        "regex_automata::nfa::thompson::State"
+      ],
+      "variants": [
+        "ByteRange",
+        "Sparse",
+        "Dense",
+        "Look",
+        "Union",
+        "BinaryUnion",
+        "Capture",
+        "Fail",
+        "Match"
+      ],
+      "methods": [
+        {
+          "name": "is_epsilon",
+          "signature": "fn is_epsilon(&self) -> bool",
+          "summary": "Returns true if and only if this state contains one or more epsilon transitions."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::nfa::DenseTransitions",
+      "name": "DenseTransitions",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct DenseTransitions",
+      "summary": "A sequence of transitions used to represent a dense state.",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#densetransitions",
+      "aliases": [
+        "regex_automata::nfa::thompson::DenseTransitions"
+      ],
+      "fields": [
+        "transitions"
+      ],
+      "methods": [
+        {
+          "name": "matches",
+          "signature": "fn matches(&self, haystack: &[u8], at: usize) -> Option<StateID>",
+          "summary": "This follows the matching transition for a particular byte."
+        },
+        {
+          "name": "matches_byte",
+          "signature": "fn matches_byte(&self, byte: u8) -> Option<StateID>",
+          "summary": "This follows the matching transition for a particular byte."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::nfa::NFA",
+      "name": "NFA",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct NFA",
+      "summary": "A byte oriented Thompson non-deterministic finite automaton (NFA).",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#nfa",
+      "aliases": [
+        "regex_automata::nfa::thompson::NFA"
+      ],
+      "methods": [
+        {
+          "name": "always_match",
+          "signature": "fn always_match() -> NFA",
+          "summary": "Returns an NFA with a single regex pattern that always matches at every position."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(&self) -> &ByteClasses",
+          "summary": "Get the byte classes for this NFA."
+        },
+        {
+          "name": "compiler",
+          "signature": "fn compiler() -> Compiler",
+          "summary": "Return a compiler for configuring the construction of an `NFA`."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "Return a default configuration for an `NFA`."
+        },
+        {
+          "name": "group_info",
+          "signature": "fn group_info(&self) -> &GroupInfo",
+          "summary": "Returns the capturing group info for this NFA."
+        },
+        {
+          "name": "has_capture",
+          "signature": "fn has_capture(&self) -> bool",
+          "summary": "Returns true if and only if this NFA has at least one [`Capture`](State::Capture) in its sequence of states."
+        },
+        {
+          "name": "has_empty",
+          "signature": "fn has_empty(&self) -> bool",
+          "summary": "Returns true if and only if this NFA can match the empty string. When it returns false, all possible matches are guaranteed to have a non-zero length."
+        },
+        {
+          "name": "is_always_start_anchored",
+          "signature": "fn is_always_start_anchored(&self) -> bool",
+          "summary": "Returns true if and only if all starting states for this NFA correspond to the beginning of an anchored search."
+        },
+        {
+          "name": "is_reverse",
+          "signature": "fn is_reverse(&self) -> bool",
+          "summary": "Returns true when this NFA is meant to be matched in reverse."
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "summary": "Whether UTF-8 mode is enabled for this NFA or not."
+        },
+        {
+          "name": "look_matcher",
+          "signature": "fn look_matcher(&self) -> &LookMatcher",
+          "summary": "Returns the look-around matcher associated with this NFA."
+        },
+        {
+          "name": "look_set_any",
+          "signature": "fn look_set_any(&self) -> LookSet",
+          "summary": "Returns the union of all look-around assertions used throughout this NFA. When the returned set is empty, it implies that the NFA has no look-around assertions and thus zero conditional epsilon transitions."
+        },
+        {
+          "name": "look_set_prefix_any",
+          "signature": "fn look_set_prefix_any(&self) -> LookSet",
+          "summary": "Returns the union of all prefix look-around assertions for every pattern in this NFA. When the returned set is empty, it implies none of the patterns require moving through a conditional epsilon transition before inspecting the first byte…"
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the memory usage, in bytes, of this NFA."
+        },
+        {
+          "name": "never_match",
+          "signature": "fn never_match() -> NFA",
+          "summary": "Returns an NFA that never matches at any position."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<NFA, BuildError>",
+          "summary": "Parse the given regular expression using a default configuration and build an NFA from it."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<NFA, BuildError>",
+          "summary": "Parse the given regular expressions using a default configuration and build a multi-NFA from them."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of regex patterns in this NFA."
+        },
+        {
+          "name": "patterns",
+          "signature": "fn patterns(&self) -> PatternIter<'_>",
+          "summary": "Returns an iterator over all pattern identifiers in this NFA."
+        },
+        {
+          "name": "start_anchored",
+          "signature": "fn start_anchored(&self) -> StateID",
+          "summary": "Return the state identifier of the initial anchored state of this NFA."
+        },
+        {
+          "name": "start_pattern",
+          "signature": "fn start_pattern(&self, pid: PatternID) -> Option<StateID>",
+          "summary": "Return the state identifier of the initial anchored state for the given pattern, or `None` if there is no pattern corresponding to the given identifier."
+        },
+        {
+          "name": "start_unanchored",
+          "signature": "fn start_unanchored(&self) -> StateID",
+          "summary": "Return the state identifier of the initial unanchored state of this NFA."
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&self, id: StateID) -> &State",
+          "summary": "Return a reference to the NFA state corresponding to the given ID."
+        },
+        {
+          "name": "states",
+          "signature": "fn states(&self) -> &[State]",
+          "summary": "Returns a slice of all states in this NFA."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::nfa::PatternIter",
+      "name": "PatternIter",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct PatternIter<'a>",
+      "summary": "An iterator over all pattern IDs in an NFA.",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#patterniter",
+      "aliases": [
+        "regex_automata::nfa::thompson::PatternIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<PatternID>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::nfa::SparseTransitions",
+      "name": "SparseTransitions",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct SparseTransitions",
+      "summary": "A sequence of transitions used to represent a sparse state.",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#sparsetransitions",
+      "aliases": [
+        "regex_automata::nfa::thompson::SparseTransitions"
+      ],
+      "fields": [
+        "transitions"
+      ],
+      "methods": [
+        {
+          "name": "matches",
+          "signature": "fn matches(&self, haystack: &[u8], at: usize) -> Option<StateID>",
+          "summary": "This follows the matching transition for a particular byte."
+        },
+        {
+          "name": "matches_byte",
+          "signature": "fn matches_byte(&self, byte: u8) -> Option<StateID>",
+          "summary": "This follows the matching transition for a particular byte."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::nfa::Transition",
+      "name": "Transition",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Transition",
+      "summary": "A single transition to another state.",
+      "doc": "api/regex_automata.nfa.thompson.nfa.md#transition",
+      "aliases": [
+        "regex_automata::nfa::thompson::Transition"
+      ],
+      "fields": [
+        "start",
+        "end",
+        "next"
+      ],
+      "methods": [
+        {
+          "name": "matches",
+          "signature": "fn matches(&self, haystack: &[u8], at: usize) -> bool",
+          "summary": "Returns true if the position `at` in `haystack` falls in this transition's range of bytes."
+        },
+        {
+          "name": "matches_byte",
+          "signature": "fn matches_byte(&self, byte: u8) -> bool",
+          "summary": "Returns true if the given byte falls in this transition's range of bytes."
+        },
+        {
+          "name": "matches_unit",
+          "signature": "fn matches_unit(&self, unit: alphabet::Unit) -> bool",
+          "summary": "Returns true if the given alphabet unit falls in this transition's range of bytes. If the given unit is [`EOI`](alphabet::Unit::eoi), then this returns `false`."
+        }
+      ]
+    }
+  ]
+}

@@ -9,7 +9,7 @@ members = [
 # declares its own `[workspace]`; excluding them here is what lets `cargo rustdoc` run inside
 # one without Cargo deciding it belongs to us (tests/ACCEPTANCE_PLAN.md, "Deterministic
 # fixtures").
-exclude = ["tests/fixtures/crates/*"]
+exclude = ["tests/fixtures/crates/*", "vendor/public-api", "vendor/datafusion-catalog", "vendor/datafusion-common", "vendor/delta-rs"]
 
 [workspace.package]
 version = "0.0.0"
@@ -39,10 +39,9 @@ chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
 async-trait = "0.1.92"
 futures = "0.3.34"
 
-# Consumes rustdoc JSON directly, so the public-API projection needs no Cargo build
-# (blueprint §4.2). The CLI is deliberately NOT a dependency. Verified 2026-09-13: 0.52.2
-# parses every format version we can produce locally -- 57, 60 and 61.
-public-api = "0.52.2"
+# One exact format-61 model in both parsing passes. ADR-0048 records the minimal
+# upstream renderer patch and independent fact/renderer qualification.
+public-api = { path = "vendor/public-api", version = "=0.52.2", default-features = false }
 
 serde = { version = "1", features = ["derive"] }
 # `unbounded_depth` exposes `Deserializer::disable_recursion_limit`, which rustdoc JSON needs:
@@ -137,11 +136,8 @@ rustls = { version = "0.23.44", default-features = false, features = [
   "tls12",
   "logging",
 ] }
-# Pinned to exactly what public-api 0.52.2 depends on: `public_api::PublicItem::id()` returns
-# this crate's `Id`, and that is the join key between the rendered signature and our normalized
-# symbol. A second rustdoc-types version would make the join a compile error, which is the
-# right failure -- see enrichment_core::producer::rustdoc's version test.
-rustdoc-types = "0.59.0"
+# Typed facts and pure rendering must use one exact, qualified format model.
+rustdoc-types = "=0.61.0"
 
 # Internal crates carry an explicit version alongside the path. A bare `{ path = ... }` is a
 # wildcard requirement, and deny.toml sets `wildcards = "deny"`.
@@ -155,3 +151,11 @@ debug = 1
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+[patch.crates-io]
+datafusion-catalog = { path = "vendor/datafusion-catalog" }
+datafusion-common = { path = "vendor/datafusion-common" }
+
+[patch."https://github.com/delta-io/delta-rs.git"]
+deltalake-core = { path = "vendor/delta-rs/crates/core" }
+deltalake-derive = { path = "vendor/delta-rs/crates/derive" }

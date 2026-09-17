@@ -1,0 +1,31 @@
+id: no-impure-check-constraint
+language: rust
+severity: error
+message: A Delta CHECK constraint must be plain column algebra -- no function call, no relation.
+note: |
+  PB07 measured both halves of this, and they fail differently:
+
+  A constraint that names ANOTHER RELATION reaches `DeltaContextProvider::get_table_source`,
+  which is `unimplemented!()`, and **aborts the process**. Not an error -- a panic, from inside a
+  write, with a backtrace that does not mention constraints.
+
+  A constraint that calls a UDF is accepted and then makes the table unwritable by any session
+  that does not register that function. The coupling is durable and lives in the table's own
+  metadata, so a future rename of a `bridge` function locks this tool out of its own tables.
+
+  The same rule governs `replaceWhere` and merge predicates, which take the same path (evidence
+  12). `derived_constraints` in `ddl.rs` builds every constraint from column algebra for exactly
+  this reason.
+files:
+  - "crates/*/src/**/*.rs"
+rule:
+  pattern: $B.with_constraint($NAME, $EXPR)
+constraints:
+  EXPR:
+    # A STRING literal that looks like a call. Not any Rust expression containing one: `ddl.rs`
+    # passes `expr.clone()`, which is a method call and not a constraint naming a function. The
+    # shape worth catching is the direct one -- `with_constraint("ok", "is_valid(off)")` -- and
+    # scoping to a literal is what tells the two apart.
+    all:
+      - kind: string_literal
+      - regex: '[A-Za-z_][A-Za-z0-9_]*\s*\('

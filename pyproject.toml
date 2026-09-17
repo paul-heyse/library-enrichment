@@ -76,7 +76,20 @@ src = ["python", "tests"]
 # way to satisfy E501 would be to shorten a Rust doc comment, letting Python's line budget
 # constrain Rust documentation. ADR 0007 records the decision. This is a scoping choice about
 # which files ruff governs, not a suppression of a finding in hand-written code.
-extend-exclude = ["python/enrichment_mcp/_generated"]
+# Upstream source vendored verbatim at a pinned tag by a capability repository's `acquire.py`,
+# and verified by digest rather than by style (`verify.py::check_corpus`). The same reasoning as
+# above applies with more force: the only way to satisfy a finding here would be to edit another
+# project's released code, which would break the digest that makes the corpus evidence. Scoping,
+# not suppression -- and the corpus is the larger half of these skills by file count.
+extend-exclude = [
+    "python/enrichment_mcp/_generated",
+    ".claude/skills/*/build/acquired",
+    ".claude/skills/*/content/corpus",
+    # Deliberately-wrong Python: the runnable target the capability repositories' `project-*`
+    # rules are pointed at, carrying the mistakes those rules exist to find. Fixing a finding
+    # here would delete the fixture's reason to exist.
+    ".claude/skills/*/queries/fixtures",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ANN", "RUF", "T20"]

@@ -9,14 +9,12 @@
 //! report, not an error to raise: `.claude/rules/evidence-truthfulness.md` is explicit that
 //! `ok` means successful within the declared scope, and the scope here is "what is installed".
 
-use std::collections::BTreeSet;
-
 use enrichment_core::config::Config;
 use enrichment_core::producer::{cratesio, rustdoc};
+use enrichment_core::wire::Envelope;
 use enrichment_core::wire::status::{
     EvidenceCounters, FetchCounters, LspMetrics, SingleFlightCounts, VerificationCounters,
 };
-use enrichment_core::wire::{Coverage, Envelope, JsonObject};
 
 use crate::envelope;
 use crate::service::Service;
@@ -310,9 +308,10 @@ pub async fn from_service(service: &Service) -> std::io::Result<ServiceStatus> {
     status.health.single_flight = service.single_flight.counts();
     // The §14.3 diagnostics. Every one is scoped to this process, which is why
     // `uptime_seconds` travels beside them: a count with no window is not readable.
-    status.health.fetch = service.metrics.fetch();
-    status.health.evidence = service.metrics.evidence();
-    status.health.verification = service.metrics.verification();
+    let counters = service.metrics.counters().await?;
+    status.health.fetch = counters.fetch;
+    status.health.evidence = counters.evidence;
+    status.health.verification = counters.verification;
     status.health.native_queries = Some(
         service
             .repository
@@ -354,94 +353,30 @@ fn which(program: &str) -> bool {
 /// Those are different facts — "this build has no such component" is a much stronger claim than
 /// "the filter matched nothing" — and a caller can only tell them apart if `coverage` says so.
 #[must_use]
-pub async fn status_envelope(service: Option<&Service>, component: Option<&str>) -> Envelope {
-    let status = match service {
-        Some(service) => match from_service(service).await {
-            Ok(status) => status,
-            Err(error) => return crate::ops::common::operation_error(&error, "service_status"),
-        },
-        None => service_status(),
+pub async fn status_envelope(service: &Service, component: Option<&str>) -> Envelope {
+    let status = match from_service(service).await {
+        Ok(status) => status,
+        Err(error) => return crate::ops::common::operation_error(&error, "service_status"),
     };
-    let mut data: JsonObject = serde_json::to_value(&status)
-        .ok()
-        .and_then(|v| v.as_object().cloned())
-        .unwrap_or_default();
-
-    let Some(name) = component else {
-        return envelope::ok(
-            "Service status as reported by the daemon.",
-            data,
-            Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: "installed components and their availability".to_owned(),
-                indexed: ["daemon", "producers", "features", "sandbox"]
-                    .into_iter()
-                    .map(str::to_owned)
-                    .collect(),
-                missing: BTreeSet::new(),
-                limitations: vec![
-                    "Reports what is installed, not whether library evidence has been indexed."
-                        .to_owned(),
-                ],
+    match enrichment_store::status_plan::select(&service.repository.runtime, status, component)
+        .await
+    {
+        Ok(selected) => Envelope::new(
+            enrichment_core::wire::EnvelopeBody {
+                request_id: envelope::new_request_id(),
+                summary: selected.summary,
+                context_id: None,
+                snapshot_id: None,
+                data: selected.status.into(),
+                coverage: selected.coverage,
+                freshness: envelope::unverified_freshness(),
+                evidence: Vec::new(),
+                artifacts: Vec::new(),
+                delivery: Default::default(),
             },
-        );
-    };
-
-    let mut matched = false;
-    for key in ["producers", "features"] {
-        if let Some(entries) = data.get(key).and_then(|v| v.as_array()) {
-            let kept: Vec<_> = entries
-                .iter()
-                .filter(|e| e.get("name").and_then(|n| n.as_str()) == Some(name))
-                .cloned()
-                .collect();
-            matched = matched || !kept.is_empty();
-            data.insert(key.to_owned(), serde_json::Value::Array(kept));
-        }
-    }
-
-    if matched {
-        envelope::ok(
-            format!("Status for `{name}`."),
-            data,
-            Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: format!("components matching `{name}`"),
-                indexed: ["daemon", "producers", "features"]
-                    .into_iter()
-                    .map(str::to_owned)
-                    .collect(),
-                missing: BTreeSet::new(),
-                limitations: vec![
-                    "Reports what is installed, not whether library evidence has been indexed."
-                        .to_owned(),
-                ],
-            },
-        )
-    } else {
-        envelope::partial(
-            format!("No component named `{name}` is known to this build."),
-            data,
-            Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: format!("components matching `{name}`"),
-                indexed: ["daemon"].into_iter().map(str::to_owned).collect(),
-                missing: [
-                    format!("producers matching `{name}`"),
-                    format!("features matching `{name}`"),
-                ]
-                .into_iter()
-                .collect(),
-                limitations: vec![format!(
-                    "`{name}` did not match any component this build reports. That is not \
-                     evidence that no such component exists -- call service.status with no \
-                     filter to see the full list."
-                )],
-            },
-        )
+            selected.outcome,
+        ),
+        Err(error) => crate::ops::common::operation_error(&error, "service_status_selection"),
     }
 }
 
@@ -450,6 +385,38 @@ mod tests {
     use enrichment_store::StatePaths;
 
     use super::*;
+
+    #[tokio::test]
+    async fn native_component_selection_preserves_unknown_status() {
+        let root = tempfile::tempdir().unwrap();
+        let runtime =
+            enrichment_store::runtime::QueryRuntime::new(root.path(), Default::default()).unwrap();
+        let input = service_status();
+        let name = input.producers[0].name.clone();
+        let selected = enrichment_store::status_plan::select(&runtime, input.clone(), Some(&name))
+            .await
+            .unwrap();
+        assert!(matches!(
+            selected.outcome,
+            enrichment_core::wire::Outcome::Ok { .. }
+        ));
+        assert!(selected.status.producers.iter().all(|row| row.name == name));
+        let absent =
+            enrichment_store::status_plan::select(&runtime, input.clone(), Some("not-a-component"))
+                .await
+                .unwrap();
+        assert!(matches!(
+            absent.outcome,
+            enrichment_core::wire::Outcome::Partial { .. }
+        ));
+        assert_eq!(absent.coverage.missing.len(), 2);
+        assert!(absent.status.producers.is_empty());
+        assert!(absent.status.features.is_empty());
+        let all = enrichment_store::status_plan::select(&runtime, input.clone(), None)
+            .await
+            .unwrap();
+        assert_eq!(all.status, input);
+    }
 
     fn open_service() -> (tempfile::TempDir, Service) {
         let dir = tempfile::tempdir().expect("temp dir");

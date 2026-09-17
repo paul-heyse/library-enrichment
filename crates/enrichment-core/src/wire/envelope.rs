@@ -14,7 +14,7 @@
 use schemars::{JsonSchema, Schema};
 use serde::{Deserialize, Serialize};
 
-use super::JsonObject;
+use super::data::ToolData;
 use super::error::ErrorDetail;
 use super::evidence::{ArtifactHandle, Coverage, Evidence, Freshness};
 use super::ids::RequestId;
@@ -32,22 +32,19 @@ pub enum SchemaVersion {
     V3_0,
 }
 
+crate::native_vocabulary! {
 /// The four result statuses (blueprint §7.2).
 ///
 /// The values are, in order: `ok`, `partial`, `pending`, `error`. `ok` means successful within
 /// the declared coverage, not complete knowledge; `partial` carries usable evidence *and* gaps.
 ///
 /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
-pub enum Status {
-    Ok,
-    Partial,
-    Pending,
-    Error,
+pub enum Status { Ok = "ok", Partial = "partial", Pending = "pending", Error = "error" }
 }
 
+crate::native_union! { @tag "status";
 /// The `status`/`job`/`error` triple as a single value, so an invalid combination cannot be
 /// built at all.
 ///
@@ -64,30 +61,12 @@ pub enum Status {
 /// constrains `job` only under `pending`. A Rust type that *also* forbade `job` under `ok`
 /// would reject documents the emitted schema accepts -- an inconsistency in the other
 /// direction, and precisely what C19 exists to catch.
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Outcome {
-    /// Successful within the declared coverage.
-    Ok {
-        /// An optional handle to work that produced this result.
-        job: Option<JobHandle>,
-    },
-    /// Usable evidence together with explicit gaps.
-    Partial {
-        /// An optional handle to work that produced this result.
-        job: Option<JobHandle>,
-    },
-    /// Work was submitted; this is a receipt, not evidence.
-    Pending {
-        /// The durable job to poll with `job_control`.
-        job: JobHandle,
-    },
-    /// The request failed with a typed, actionable error.
-    Error {
-        /// An optional handle to work that had already started.
-        job: Option<JobHandle>,
-        /// What went wrong and what to do about it.
-        error: ErrorDetail,
-    },
+    Ok = "ok" { job: Option<JobHandle> => crate::native_union::Rule::Text },
+    Partial = "partial" { job: Option<JobHandle> => crate::native_union::Rule::Text },
+    Pending = "pending" { job: JobHandle => crate::native_union::Rule::Text },
+    Error = "error" { job: Option<JobHandle> => crate::native_union::Rule::Text, error: ErrorDetail => crate::native_union::Rule::Text },
+}
 }
 
 impl Outcome {
@@ -115,7 +94,7 @@ pub struct EnvelopeBody {
     /// The snapshot read, or `null` when nothing was read.
     pub snapshot_id: Option<String>,
     /// Tool-specific payload.
-    pub data: JsonObject,
+    pub data: ToolData,
     /// What was looked at, and what was not.
     pub coverage: Coverage,
     /// Registry freshness.
@@ -153,7 +132,7 @@ pub struct Envelope {
     /// The snapshot read, or `null`.
     pub snapshot_id: Option<String>,
     /// Tool-specific payload.
-    pub data: JsonObject,
+    pub data: ToolData,
     /// What was looked at, and what was not.
     pub coverage: Coverage,
     /// Registry freshness.
@@ -295,7 +274,7 @@ struct RawEnvelope {
     context_id: Option<String>,
     #[serde(deserialize_with = "super::required_option")]
     snapshot_id: Option<String>,
-    data: JsonObject,
+    data: ToolData,
     coverage: Coverage,
     freshness: Freshness,
     evidence: Vec<Evidence>,
@@ -533,7 +512,7 @@ mod tests {
             summary: String::new(),
             context_id: None,
             snapshot_id: None,
-            data: JsonObject::new(),
+            data: ToolData::default(),
             coverage: Coverage {
                 details: None,
                 assessments: Vec::new(),

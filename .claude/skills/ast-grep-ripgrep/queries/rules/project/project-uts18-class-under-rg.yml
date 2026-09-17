@@ -1,0 +1,22 @@
+id: project-uts18-class-under-rg
+language: bash
+severity: hint
+message: The UTS#18 `[A&&[B]]` class form is not reachable through ripgrep.
+note: |
+  PCRE2 supports `&&`, `--` and `~~` inside an ordinary bracketed class, but only when the
+  pattern is compiled with PCRE2_ALT_EXTENDED_CLASS -- an option ripgrep never sets. Written
+  through `rg -P`, the construct does not perform set intersection; it is interpreted as an
+  ordinary class containing those characters, so the pattern matches the wrong thing rather than
+  failing.
+
+  Use the Perl-style extended class instead, which needs no compile option:
+  `(?[\p{L} & \p{Greek}])`. Probes P015 and P016 record both forms, and
+  `content/index/unreachable.tsv` carries the reason.
+metadata:
+  record: capability-gap
+  capability: unicode
+rule:
+  kind: command
+  all:
+    - regex: '^rg\b'
+    - regex: '\[[^]]*&&\['

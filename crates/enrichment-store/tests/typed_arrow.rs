@@ -124,8 +124,25 @@ fn observations() -> Vec<ApiObservation> {
                         }),
                     },
                     cfg_hints: vec!["cfg(unix)".into(), "cfg(feature = \"β\")".into()],
+                    rust: None,
                     python: (i % 2 == 1).then(|| PythonDetails {
-                        overloads: vec!["f(x: int)".into(), "f(x: str)".into()],
+                        callable: None,
+                        overloads: ["f(x: int)", "f(x: str)"]
+                            .into_iter()
+                            .enumerate()
+                            .map(|(ordinal, signature)| {
+                                enrichment_core::evidence::declarations::PythonOverload {
+                                    ordinal: ordinal as u32,
+                                    signature: signature.into(),
+                                    callable:
+                                        enrichment_core::evidence::declarations::PythonCallable {
+                                            parameters: vec![],
+                                            returns: None,
+                                            labels: vec![],
+                                        },
+                                }
+                            })
+                            .collect(),
                         alias_target: Some("pkg.f".into()),
                         bases: vec![],
                         publicness: Publicness {
@@ -304,7 +321,10 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         ArtifactKind::SourceFile,
         "text/plain",
         "https://example.org/p/1.0/source.py",
-        "2026-09-14T00:00:00Z",
+        enrichment_core::native_time::AcquisitionTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
     );
     let gap = Gap {
         kind: EvidenceKind::RuntimeApi,
@@ -312,7 +332,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         detail: "runtime profile not enabled".into(),
         planned_fallback: Some(PlannedFallback {
             producer: "python-runtime".into(),
-            profile: "runtime".into(),
+            profile: ExecutionProfile::Runtime,
             enabled: false,
             next_action: "enable the runtime profile".into(),
         }),
@@ -321,21 +341,33 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         attempt_id: "attempt-a".into(),
         producer: "griffe-static".into(),
         producer_version: "1".into(),
-        config_digest: "config".into(),
+        config_digest: enrichment_core::canonical::sha256_hex(b"config"),
         inputs: [("source".into(), artifact.sha256.clone())]
             .into_iter()
             .collect(),
         profile: ExecutionProfile::Static,
-        started_at: "2026-09-14T00:00:00Z".into(),
-        finished_at: "2026-09-14T00:00:01Z".into(),
+        started_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
+        finished_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T00:00:01.000000Z".to_owned(),
+        )
+        .unwrap(),
         outcome: RunOutcome::Partial,
         gaps: vec![gap.clone()],
         log: Some(String::new()),
     };
     let second = ProducerRun {
         attempt_id: "attempt-b".into(),
-        started_at: "2026-09-14T01:00:00Z".into(),
-        finished_at: "2026-09-14T01:00:01Z".into(),
+        started_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T01:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
+        finished_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T01:00:01.000000Z".to_owned(),
+        )
+        .unwrap(),
         log: None,
         ..first.clone()
     };

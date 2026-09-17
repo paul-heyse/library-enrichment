@@ -1,0 +1,181 @@
+{
+  "repository": "ast-grep-ripgrep",
+  "description": "Pinned capability repository for ast-grep and ripgrep, including the PCRE2 pattern surface reachable through `rg -P`.",
+  "tools": {
+    "ast_grep_version": "0.45.3",
+    "ripgrep_version": "15.2.0",
+    "pcre2_docs_tag": "pcre2-10.48",
+    "pcre2_baseline": "10.48"
+  },
+  "repos": [
+    {
+      "name": "ripgrep",
+      "repo": "BurntSushi/ripgrep",
+      "ref": "15.2.0",
+      "files": [
+        "GUIDE.md",
+        "FAQ.md",
+        "CHANGELOG.md",
+        "README.md",
+        "Cargo.lock",
+        "crates/core/flags/defs.rs",
+        "crates/pcre2/src/matcher.rs",
+        "crates/core/flags/hiargs.rs"
+      ],
+      "trees": [
+        {
+          "source_prefix": "tests/",
+          "dest": "corpus/ripgrep/tests",
+          "suffixes": [
+            ".rs"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ast-grep",
+      "repo": "ast-grep/ast-grep",
+      "ref": "0.45.3",
+      "files": [
+        "CHANGELOG.md",
+        "README.md"
+      ],
+      "trees": [
+        {
+          "source_prefix": "schemas/",
+          "dest": "schemas",
+          "suffixes": [
+            ".json"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ast-grep-docs",
+      "repo": "ast-grep/ast-grep.github.io",
+      "ref": "main",
+      "trees": [
+        {
+          "source_prefix": "website/guide/",
+          "dest": "corpus/ast-grep/guide",
+          "suffixes": [
+            ".md"
+          ]
+        },
+        {
+          "source_prefix": "website/reference/",
+          "dest": "corpus/ast-grep/reference",
+          "suffixes": [
+            ".md"
+          ]
+        },
+        {
+          "source_prefix": "website/advanced/",
+          "dest": "corpus/ast-grep/advanced",
+          "suffixes": [
+            ".md"
+          ]
+        },
+        {
+          "source_prefix": "website/cheatsheet/",
+          "dest": "corpus/ast-grep/cheatsheet",
+          "suffixes": [
+            ".md"
+          ]
+        },
+        {
+          "source_prefix": "website/catalog/",
+          "dest": "corpus/ast-grep/catalog",
+          "suffixes": [
+            ".md"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pcre2",
+      "repo": "PCRE2Project/pcre2",
+      "ref": "pcre2-10.48",
+      "files": [
+        "doc/pcre2pattern.3",
+        "doc/pcre2syntax.3",
+        "doc/pcre2jit.3",
+        "doc/pcre2unicode.3",
+        "doc/pcre2perform.3",
+        "doc/pcre2matching.3",
+        "ChangeLog",
+        "NEWS"
+      ],
+      "dest_prefix": "corpus/pcre2"
+    }
+  ],
+  "crate_sets": [
+    {
+      "name": "ripgrep-libraries",
+      "note": "Versions are resolved from ripgrep's Cargo.lock at the pinned tag, not from crates.io latest.",
+      "resolve_from_lock": true,
+      "crates": [
+        "grep",
+        "grep-regex",
+        "grep-searcher",
+        "grep-printer",
+        "grep-matcher",
+        "grep-pcre2",
+        "grep-cli",
+        "ignore",
+        "globset"
+      ]
+    },
+    {
+      "name": "ast-grep-libraries",
+      "version": "0.45.3",
+      "crates": [
+        "ast-grep-config",
+        "ast-grep-core",
+        "ast-grep-dynamic",
+        "ast-grep-language",
+        "ast-grep-lsp",
+        "ast-grep-outline"
+      ]
+    },
+    {
+      "name": "engines",
+      "note": "The regex engines both tools rest on. This is what makes regex.tsv's rust_regex column sourced rather than asserted.",
+      "resolve_from_lock": true,
+      "crates": [
+        "regex",
+        "regex-syntax",
+        "regex-automata",
+        "pcre2",
+        "aho-corasick",
+        "bstr",
+        "memchr",
+        "walkdir"
+      ]
+    }
+  ],
+  "bindings": [
+    {
+      "name": "napi",
+      "package": "@ast-grep/napi",
+      "version": "0.45.3",
+      "registry": "npm",
+      "declarations": [
+        "index.d.ts",
+        "types/*.d.ts"
+      ],
+      "parse_lang": "ts"
+    },
+    {
+      "name": "pyo3",
+      "package": "ast-grep-py",
+      "version": "0.45.3",
+      "registry": "pypi",
+      "declarations": [
+        "ast_grep_py/*.pyi",
+        "ast_grep_py/__init__.pyi"
+      ],
+      "parse_lang": "python"
+    }
+  ]
+}

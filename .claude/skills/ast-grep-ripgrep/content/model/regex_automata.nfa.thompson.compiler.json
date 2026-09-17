@@ -1,0 +1,174 @@
+{
+  "module": "regex_automata::nfa::thompson::compiler",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.nfa.thompson.compiler.md",
+  "items": [
+    {
+      "path": "regex_automata::nfa::thompson::compiler::WhichCaptures",
+      "name": "WhichCaptures",
+      "kind": "enum",
+      "crate": "regex-automata",
+      "signature": "enum WhichCaptures",
+      "summary": "A configuration indicating which kinds of [`State::Capture`](crate::nfa::thompson::State::Capture) states to include.",
+      "doc": "api/regex_automata.nfa.thompson.compiler.md#whichcaptures",
+      "aliases": [
+        "regex_automata::nfa::thompson::WhichCaptures"
+      ],
+      "variants": [
+        "All",
+        "Implicit",
+        "None"
+      ],
+      "methods": [
+        {
+          "name": "is_any",
+          "signature": "fn is_any(&self) -> bool",
+          "summary": "Returns true if this configuration indicates that some capture states should be added to an NFA. Note that this might only include capture states for implicit capture groups."
+        },
+        {
+          "name": "is_none",
+          "signature": "fn is_none(&self) -> bool",
+          "summary": "Returns true if this configuration indicates that no capture states should be produced in an NFA."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::compiler::Compiler",
+      "name": "Compiler",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Compiler",
+      "summary": "A builder for compiling an NFA from a regex's high-level intermediate representation (HIR).",
+      "doc": "api/regex_automata.nfa.thompson.compiler.md#compiler",
+      "aliases": [
+        "regex_automata::nfa::thompson::Compiler"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<NFA, BuildError>",
+          "summary": "Compile the given regular expression pattern into an NFA."
+        },
+        {
+          "name": "build_from_hir",
+          "signature": "fn build_from_hir(&self, expr: &Hir) -> Result<NFA, BuildError>",
+          "summary": "Compile the given high level intermediate representation of a regular expression into an NFA."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<NFA, BuildError>",
+          "summary": "Compile the given regular expression patterns into a single NFA."
+        },
+        {
+          "name": "build_many_from_hir",
+          "signature": "fn build_many_from_hir<H: Borrow<Hir>>(&self, exprs: &[H]) -> Result<NFA, BuildError>",
+          "summary": "Compile the given high level intermediate representations of regular expressions into a single NFA."
+        },
+        {
+          "name": "configure",
+          "signature": "fn configure(&mut self, config: Config) -> &mut Compiler",
+          "summary": "Apply the given NFA configuration options to this builder."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Compiler",
+          "summary": "Create a new NFA builder with its default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Compiler",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::nfa::thompson::compiler::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Config",
+      "summary": "The configuration used for a Thompson NFA compiler.",
+      "doc": "api/regex_automata.nfa.thompson.compiler.md#config",
+      "aliases": [
+        "regex_automata::nfa::thompson::Config"
+      ],
+      "methods": [
+        {
+          "name": "captures",
+          "signature": "fn captures(self, yes: bool) -> Config",
+          "summary": "Whether to include 'Capture' states in the NFA."
+        },
+        {
+          "name": "get_captures",
+          "signature": "fn get_captures(&self) -> bool",
+          "summary": "Return whether NFA compilation is configured to produce capture states."
+        },
+        {
+          "name": "get_look_matcher",
+          "signature": "fn get_look_matcher(&self) -> LookMatcher",
+          "summary": "Return the look-around matcher for this NFA."
+        },
+        {
+          "name": "get_nfa_size_limit",
+          "signature": "fn get_nfa_size_limit(&self) -> Option<usize>",
+          "summary": "Return the configured NFA size limit, if it exists, in the number of bytes of heap used."
+        },
+        {
+          "name": "get_reverse",
+          "signature": "fn get_reverse(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled reverse NFA compilation."
+        },
+        {
+          "name": "get_shrink",
+          "signature": "fn get_shrink(&self) -> bool",
+          "summary": "Return whether NFA shrinking is enabled."
+        },
+        {
+          "name": "get_utf8",
+          "signature": "fn get_utf8(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled UTF-8 mode."
+        },
+        {
+          "name": "get_which_captures",
+          "signature": "fn get_which_captures(&self) -> WhichCaptures",
+          "summary": "Return what kinds of capture states will be compiled into an NFA."
+        },
+        {
+          "name": "look_matcher",
+          "signature": "fn look_matcher(self, m: LookMatcher) -> Config",
+          "summary": "Sets the look-around matcher that should be used with this NFA."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Return a new default Thompson NFA compiler configuration."
+        },
+        {
+          "name": "nfa_size_limit",
+          "signature": "fn nfa_size_limit(self, bytes: Option<usize>) -> Config",
+          "summary": "Sets an approximate size limit on the total heap used by the NFA being compiled."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(self, yes: bool) -> Config",
+          "summary": "Reverse the NFA."
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(self, yes: bool) -> Config",
+          "summary": "Apply best effort heuristics to shrink the NFA at the expense of more time/memory."
+        },
+        {
+          "name": "utf8",
+          "signature": "fn utf8(self, yes: bool) -> Config",
+          "summary": "Whether to enable UTF-8 mode during search or not."
+        },
+        {
+          "name": "which_captures",
+          "signature": "fn which_captures(self, which_captures: WhichCaptures) -> Config",
+          "summary": "Configures what kinds of capture groups are compiled into [`State::Capture`](crate::nfa::thompson::State::Capture) states in a Thompson NFA."
+        }
+      ]
+    }
+  ]
+}

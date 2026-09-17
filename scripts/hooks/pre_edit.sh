@@ -14,6 +14,7 @@ while read -r p; do
   case "$abs" in
     "$root"/*) ;;
     "$HOME"/.claude/plans/*) ;;
+    "$HOME"/.claude/projects/*/memory/*) ;;   # agent memory: per-project, outside every repo
     /tmp/claude-*/*) ;;
     *) hook_deny "Refusing to edit outside the repository: ${abs}
 

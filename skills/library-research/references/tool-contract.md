@@ -88,16 +88,33 @@ the structured result always carries the portable tool action.
 {"tool":"read_artifact","arguments":{"artifact_id":"art_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","section":{"kind":"result","name":"signature"},"max_bytes":4096}}
 ```
 
-Result sections are coverage, signature, changes, aspects or data, when listed in the descriptor.
+Result sections are envelope, coverage, signature, changes, aspects or data, when listed in the
+descriptor. `delivery.read` selects `envelope`, the complete research answer. A whole retained
+result artifact is a native Arrow IPC index plus encoded sections; do not parse its raw bytes as
+JSON. Parse the selected `envelope` section directly as the response object. Section names share
+the descriptor's one artifact identity.
 Markdown selection instead uses `{"kind":"markdown","heading":"Heading"}`. Each artifact
 page reports a digest and encoding. Follow `data.page.next_cursor` until `has_more=false`; retain
 the same section and limits, and decode base64 when indicated. `delivery.limits` reports the
 requested and effective native byte caps; MCP framing adds its separately bounded allowance.
 
 A pending result carries a durable job handle. Preserve its interest token when present.
-Terminal `job_control.data.result` exposes outcome, scope, error and delivery directly; it does
-not nest another full envelope. Cancellation affects only the supplied caller interest.
+Terminal `job_control.data.result.outcome` is a tagged record: `status` is `ok`, `partial`, or
+`error`; only the error alternative carries `error`. The result carries its scope and delivery
+beside that outcome. Cancellation affects only the supplied caller interest. A `call_tool`
+recovery action carries a typed `request` with `method` and `params`.
 
 The workflow resource is `library-evidence://workflow`. Artifact, overview, snapshot-manifest
 and job resources expose the same validated reads as their tools. Resource support and progress
 notifications are optional; ordinary tool calls complete the same workflow.
+
+### Typed evidence and public bindings
+
+Citations preserve `subject` as a discriminated native reference and `source` as the full
+qualified provenance record. Read epistemic class, producer binding, extractor/version,
+artifact, source URI, version match and typed `locator` from `source`. `display_subject` is
+a label only. A missing source URI does not change the recorded version-match assessment.
+
+Inspection's `symbol` is an identity-only `SymbolHeader`. Signatures, documentation, cfg
+hints, deprecation and producer coordinates belong to the independently qualified
+`observations`. An unknown observation is never a fabricated zero producer item.

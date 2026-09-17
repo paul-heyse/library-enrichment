@@ -119,7 +119,7 @@ pub(crate) fn run_request(request: Request, cancelled: &AtomicBool) -> Result<Re
             .current_dir("/")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()?,
     );
     child
@@ -130,6 +130,11 @@ pub(crate) fn run_request(request: Request, cancelled: &AtomicBool) -> Result<Re
         .write_all(&bytes)?;
     let output = supervise(child, started, request.deadline, cancelled)?;
     let report: Report = serde_json::from_slice(&output).map_err(|e| invalid(e.to_string()))?;
+    if report.producer_revision != crate::runtime::DEFINITION_REVISION {
+        return Err(invalid(
+            "native decoder compiled definition differs; rebuild/install the matching native worker",
+        ));
+    }
     if report.protocol != PROTOCOL || report.request_digest != canonical::sha256_hex(&bytes) {
         return Err(invalid("native decoder report identity mismatch"));
     }
@@ -162,6 +167,14 @@ fn supervise(
         }
         Ok::<_, io::Error>(bytes)
     });
+    let stderr = child.0.stderr.take();
+    let diagnostics = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        if let Some(source) = stderr {
+            source.take(4097).read_to_end(&mut bytes)?;
+        }
+        Ok::<_, io::Error>(bytes)
+    });
     let status = loop {
         if cancelled.load(Ordering::Acquire) || started.elapsed() >= deadline {
             break Err(DataFusionError::ResourcesExhausted(
@@ -185,10 +198,17 @@ fn supervise(
     if bytes.len() > CONTROL_BYTES {
         return Err(invalid("native decoder report too large"));
     }
+    let diagnostics = diagnostics
+        .join()
+        .map_err(|_| invalid("native decoder diagnostic reader panicked"))??;
+    if diagnostics.len() > 4096 {
+        return Err(invalid("native decoder diagnostic byte bound"));
+    }
     let status = status?;
     if !status.success() {
         return Err(invalid(format!(
-            "native admission rejected input or exceeded process limits ({status})"
+            "native admission rejected input or exceeded process limits ({status}): {}",
+            String::from_utf8_lossy(&diagnostics)
         )));
     }
     Ok(bytes)

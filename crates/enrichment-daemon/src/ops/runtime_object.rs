@@ -9,9 +9,9 @@ use crate::{
     service::Service,
 };
 use enrichment_core::{
-    canonical, clock,
+    canonical,
     evidence::{
-        Symbol,
+        SymbolHeader,
         execution::{ExecutionOutcome, ExecutionPayload, RuntimeObject},
         relational::SubjectRef,
     },
@@ -30,7 +30,7 @@ const HELPER: &str = include_str!("../execution/runtime_object.py");
 pub async fn produce(
     service: &Service,
     opened: &common::Opened,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     options: &InspectionOptions,
     cancel: Arc<AtomicBool>,
 ) -> io::Result<Produced> {
@@ -58,10 +58,12 @@ pub async fn produce(
         &service.config.execution,
         &service.paths.cache_root,
         service.execution.clone(),
+        service.ownership.clone(),
     )?
     .using_lease(lease.clone());
     let containment = runner.containment_identity()?;
-    let started_at = clock::now_rfc3339();
+    let started_at =
+        enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
     let outcome = async {
         let prepared = capsule::prepare(service, opened, &runner, image, &format!("runtime-{}", uuid::Uuid::new_v4().simple()), cancel.clone()).await.map_err(preparation_error)?;
         let mut inputs = inspect_execution::capsule_inputs(service, opened, &prepared).await?;
@@ -86,7 +88,7 @@ pub async fn produce(
         ExecutionPayload::RuntimeObject(result.clone()).validate(&SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }).map_err(io::Error::other)?;
         Ok(Produced { environment: prepared.environment.clone(), image: image.clone(), containment,
             producer: "runtime-object".into(), version: inspect_execution::producer_identity(true).1, profile: ExecutionProfile::Runtime,
-            started_at, finished_at: clock::now_rfc3339(),
+            started_at, finished_at: enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?,
             facts: vec![(SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }, ExecutionPayload::RuntimeObject(result), EvidenceClass::RuntimeObserved)],
             inputs, lock: prepared.lock.clone(), transcript: serde_json::json!({"preparation":prepared.observations,"runtime":observation,"report":raw}) })
     }.await;

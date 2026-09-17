@@ -1,0 +1,229 @@
+{
+  "module": "memchr::memmem",
+  "crate": "memchr",
+  "api": "api/memchr.memmem.md",
+  "items": [
+    {
+      "path": "memchr::memmem::find",
+      "name": "find",
+      "kind": "function",
+      "crate": "memchr",
+      "signature": "fn find(haystack: &[u8], needle: &[u8]) -> Option<usize>",
+      "summary": "Returns the index of the first occurrence of the given needle.",
+      "doc": "api/memchr.memmem.md#find"
+    },
+    {
+      "path": "memchr::memmem::find_iter",
+      "name": "find_iter",
+      "kind": "function",
+      "crate": "memchr",
+      "signature": "fn find_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(haystack: &'h [u8], needle: &'n N) -> FindIter<'h, 'n>",
+      "summary": "Returns an iterator over all non-overlapping occurrences of a substring in a haystack.",
+      "doc": "api/memchr.memmem.md#find_iter"
+    },
+    {
+      "path": "memchr::memmem::rfind",
+      "name": "rfind",
+      "kind": "function",
+      "crate": "memchr",
+      "signature": "fn rfind(haystack: &[u8], needle: &[u8]) -> Option<usize>",
+      "summary": "Returns the index of the last occurrence of the given needle.",
+      "doc": "api/memchr.memmem.md#rfind"
+    },
+    {
+      "path": "memchr::memmem::rfind_iter",
+      "name": "rfind_iter",
+      "kind": "function",
+      "crate": "memchr",
+      "signature": "fn rfind_iter<'h, 'n, N: 'n + ?Sized + AsRef<[u8]>>(haystack: &'h [u8], needle: &'n N) -> FindRevIter<'h, 'n>",
+      "summary": "Returns a reverse iterator over all non-overlapping occurrences of a substring in a haystack.",
+      "doc": "api/memchr.memmem.md#rfind_iter"
+    },
+    {
+      "path": "memchr::memmem::FindIter",
+      "name": "FindIter",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct FindIter<'h, 'n>",
+      "summary": "An iterator over non-overlapping substring matches.",
+      "doc": "api/memchr.memmem.md#finditer",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> FindIter<'h, 'static>",
+          "summary": "Convert this iterator into its owned variant, such that it no longer borrows the finder and needle."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<usize>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "memchr::memmem::FindRevIter",
+      "name": "FindRevIter",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct FindRevIter<'h, 'n>",
+      "summary": "An iterator over non-overlapping substring matches in reverse.",
+      "doc": "api/memchr.memmem.md#findreviter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> FindRevIter<'h, 'static>",
+          "summary": "Convert this iterator into its owned variant, such that it no longer borrows the finder and needle."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<usize>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "memchr::memmem::Finder",
+      "name": "Finder",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct Finder<'n>",
+      "summary": "A single substring searcher fixed to a particular needle.",
+      "doc": "api/memchr.memmem.md#finder",
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> Finder<'_>",
+          "summary": "Convert this finder into its borrowed variant."
+        },
+        {
+          "name": "find",
+          "signature": "fn find(&self, haystack: &[u8]) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of this needle in the given haystack."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'a, 'h>(&'a self, haystack: &'h [u8]) -> FindIter<'h, 'a>",
+          "summary": "Returns an iterator over all occurrences of a substring in a haystack."
+        },
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> Finder<'static>",
+          "summary": "Convert this finder into its owned variant, such that it no longer borrows the needle."
+        },
+        {
+          "name": "needle",
+          "signature": "fn needle(&self) -> &[u8]",
+          "summary": "Returns the needle that this finder searches for."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<B: ?Sized + AsRef<[u8]>>(needle: &'n B) -> Finder<'n>",
+          "summary": "Create a new finder for the given needle."
+        }
+      ]
+    },
+    {
+      "path": "memchr::memmem::FinderBuilder",
+      "name": "FinderBuilder",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct FinderBuilder",
+      "summary": "A builder for constructing non-default forward or reverse memmem finders.",
+      "doc": "api/memchr.memmem.md#finderbuilder",
+      "methods": [
+        {
+          "name": "build_forward",
+          "signature": "fn build_forward<'n, B: ?Sized + AsRef<[u8]>>(&self, needle: &'n B) -> Finder<'n>",
+          "summary": "Build a forward finder using the given needle from the current settings."
+        },
+        {
+          "name": "build_forward_owned",
+          "signature": "fn build_forward_owned<B: Into<alloc::boxed::Box<[u8]>>>(&self, needle: B) -> Finder<'static>",
+          "summary": "Build an owned forward finder using the given needle from the current settings."
+        },
+        {
+          "name": "build_forward_with_ranker",
+          "signature": "fn build_forward_with_ranker<'n, R: HeuristicFrequencyRank, B: ?Sized + AsRef<[u8]>>(&self, ranker: R, needle: &'n B) -> Finder<'n>",
+          "summary": "Build a forward finder using the given needle and a custom heuristic for determining the frequency of a given byte in the dataset. See [`HeuristicFrequencyRank`] for more details."
+        },
+        {
+          "name": "build_forward_with_ranker_owned",
+          "signature": "fn build_forward_with_ranker_owned<R: HeuristicFrequencyRank, B: Into<alloc::boxed::Box<[u8]>>>(&self, ranker: R, needle: B) -> Finder<'static>",
+          "summary": "Build an owned forward finder using the given needle and a custom heuristic for determining the frequency of a given byte in the dataset. See [`HeuristicFrequencyRank`] for more details."
+        },
+        {
+          "name": "build_reverse",
+          "signature": "fn build_reverse<'n, B: ?Sized + AsRef<[u8]>>(&self, needle: &'n B) -> FinderRev<'n>",
+          "summary": "Build a reverse finder using the given needle from the current settings."
+        },
+        {
+          "name": "build_reverse_owned",
+          "signature": "fn build_reverse_owned<B: Into<alloc::boxed::Box<[u8]>>>(&self, needle: B) -> FinderRev<'static>",
+          "summary": "Build an owned reverse finder using the given needle from the current settings."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> FinderBuilder",
+          "summary": "Create a new finder builder with default settings."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(&mut self, prefilter: Prefilter) -> &mut FinderBuilder",
+          "summary": "Configure the prefilter setting for the finder."
+        }
+      ]
+    },
+    {
+      "path": "memchr::memmem::FinderRev",
+      "name": "FinderRev",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct FinderRev<'n>",
+      "summary": "A single substring reverse searcher fixed to a particular needle.",
+      "doc": "api/memchr.memmem.md#finderrev",
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> FinderRev<'_>",
+          "summary": "Convert this finder into its borrowed variant."
+        },
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> FinderRev<'static>",
+          "summary": "Convert this finder into its owned variant, such that it no longer borrows the needle."
+        },
+        {
+          "name": "needle",
+          "signature": "fn needle(&self) -> &[u8]",
+          "summary": "Returns the needle that this finder searches for."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<B: ?Sized + AsRef<[u8]>>(needle: &'n B) -> FinderRev<'n>",
+          "summary": "Create a new reverse finder for the given needle."
+        },
+        {
+          "name": "rfind",
+          "signature": "fn rfind<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of this needle in the given haystack."
+        },
+        {
+          "name": "rfind_iter",
+          "signature": "fn rfind_iter<'a, 'h>(&'a self, haystack: &'h [u8]) -> FindRevIter<'h, 'a>",
+          "summary": "Returns a reverse iterator over all occurrences of a substring in a haystack."
+        }
+      ]
+    }
+  ]
+}

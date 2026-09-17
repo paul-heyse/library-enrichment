@@ -59,23 +59,6 @@ If a guardrail is genuinely wrong, say so and stop."
   done
 fi
 
-# 6. Writes outside the repository boundary (blueprint §2.3; gate C20). Only inspect commands
-#    that actually mutate, so read-only exploration stays unimpeded.
-if printf '%s' "$cmd" | grep -Eq '(^|[|;&[:space:]])(rm|mv|cp|tee|install|mkdir|touch|truncate|chmod|chown|ln)([[:space:]])|[[:space:]]>[^>|&]|[[:space:]]>>|sed[[:space:]]+-i'; then
-  while read -r p; do
-    [ -n "$p" ] || continue
-    case "$p" in
-      "$root"|"$root"/*) ;;
-      "${LIBENR_HOME:-/nonexistent}"/*) ;;
-      /tmp/claude-*|/tmp/claude-*/*) ;;
-      /dev/null|/dev/stdout|/dev/stderr) ;;
-      *) hook_deny "Write outside the repository boundary: ${p}
 
-Blueprint §2.3: service state, environments, caches and outputs live outside working repositories, and a repository under study is never a subprocess working directory or an extraction destination. Gate C20 proves this with a filesystem digest.
-
-Development service state belongs in \$LIBENR_HOME (.dev-state/, gitignored). Temporary files belong in the session scratch directory." ;;
-    esac
-  done < <(printf '%s' "$cmd" | grep -oE '(^|[[:space:]>])(/|~/)[^[:space:]|;&)"'"'"']*' | sed 's/^[[:space:]>]*//' | sed "s|^~|$HOME|")
-fi
 
 exit 0

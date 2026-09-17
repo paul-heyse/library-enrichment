@@ -14,10 +14,31 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
+from enrichment_mcp._generated.research_envelope_schema import EventTime
+
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = json.loads((ROOT / "schemas/generated/research-envelope.schema.json").read_text())
 EXAMPLES = ROOT / "tests/fixtures/wire"
 VALIDATOR = Draft202012Validator(SCHEMA)
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["1969-12-31T23:59:59.999999Z", "1970-01-01T00:00:00.000000Z", "2026-09-16T12:34:56.123456Z"],
+)
+def test_native_clock_wire_values_keep_exact_utc_microseconds(value: str) -> None:
+    encoded = json.dumps(value)
+    clock = EventTime.model_validate_json(encoded, strict=True)
+    assert clock.model_dump_json() == encoded
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["2026-09-16T12:34:56Z", "2026-09-16T12:34:56.123456789Z", "2026-09-16T12:34:56.123456+00:00"],
+)
+def test_native_clock_wire_values_reject_other_precision_or_zone(value: str) -> None:
+    with pytest.raises(ValueError):
+        EventTime.model_validate_json(json.dumps(value), strict=True)
 
 
 def _ok_document() -> dict:
@@ -63,7 +84,7 @@ def test_structural_extract_matches_the_native_schema() -> None:
     assert native["root_required"] == sorted(SCHEMA["required"])
     assert native["status"] == SCHEMA["properties"]["status"]["enum"]
     assert native["error_codes"] == defs["Error"]["properties"]["code"]["enum"]
-    assert native["evidence_class"] == defs["Evidence"]["properties"]["evidence_class"]["enum"]
+    assert native["evidence_class"] == defs["FactSource"]["properties"]["evidence_class"]["enum"]
     assert native["job_state"] == defs["JobHandle"]["properties"]["state"]["enum"]
     assert native["artifact_uri_pattern"] == defs["ArtifactHandle"]["properties"]["uri"]["pattern"]
 

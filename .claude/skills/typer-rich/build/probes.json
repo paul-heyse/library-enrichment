@@ -1,0 +1,239 @@
+{
+  "_comment": [
+    "Executed behaviour probes. Each is a Python snippet run in the pinned capsule under a",
+    "replaced environment, with a control that must come out differently. See probes.py for the",
+    "four determinism layers and why `differs` is the default control mode.",
+    "",
+    "The prelude gives every probe `console(**kw)`, `render(x, **kw)`, `cli(app, args)` and",
+    "`emit(value)`. A probe answers by calling `emit`, so its own prints cannot be mistaken for",
+    "its result.",
+    "",
+    "Several rows exist because the thing they guard was measured and found surprising while this",
+    "repository was being built: rich markup silently deleting words out of help text, `from rich",
+    "import Console` raising at runtime while two type checkers pass it, TERM=dumb overriding an",
+    "explicitly passed width. Those are the rows most likely to regress into a comfortable",
+    "falsehood, so they get an assertion rather than a sentence."
+  ],
+  "probes": [
+    {
+      "id": "M001",
+      "subject": "rich",
+      "topic": "markup-and-escaping",
+      "question": "Does Console.print silently DELETE a bracketed word that is not a style?",
+      "source": "emit(render('status [ok] done'))",
+      "expect": "absent:[ok]",
+      "control": "emit(render('status [ok] done', markup=False))",
+      "control_expect": "contains:[ok]",
+      "note": "The flagship failure. The word is parsed as a style tag, resolves to nothing, and is dropped -- no exception, no warning, and no type checker involved. The control is the same string with markup off, which keeps it. Every help string in a Typer app goes through this path by default.",
+      "capture": "plain"
+    },
+    {
+      "id": "M002",
+      "subject": "rich",
+      "topic": "markup-and-escaping",
+      "question": "Which bracketed forms survive markup parsing and which are eaten?",
+      "source": "emit({s: render('v ' + s + ' w').strip() for s in ['[path]', '[key=value]', '[a b]', '[x]', '[FILE]', '[1-9]', '[--flag]', '[0]']})",
+      "expect": "ok",
+      "note": "Measured: lowercase word-ish content is consumed; uppercase, digits and a leading double dash survive. The rule is 'parses as a style name', not 'contains a square bracket', which is why the trap is so hard to spot by eye -- [FILE] in one help string works and [path] in the next does not.",
+      "capture": "plain"
+    },
+    {
+      "id": "M003",
+      "subject": "rich",
+      "topic": "markup-and-escaping",
+      "question": "Does rich.markup.escape make a bracketed word survive?",
+      "source": "from rich.markup import escape\nemit(render('v ' + escape('[path]') + ' w'))",
+      "expect": "contains:[path]",
+      "control": "emit(render('v [path] w'))",
+      "control_expect": "absent:[path]",
+      "note": "The fix, and its own proof that the fix is needed."
+    },
+    {
+      "id": "M004",
+      "subject": "rich",
+      "topic": "markup-and-escaping",
+      "question": "Does a stray closing tag raise rather than being dropped?",
+      "source": "from rich.errors import MarkupError\ntry:\n    render('a [/] b')\n    emit('no-raise')\nexcept MarkupError as e:\n    emit('MarkupError: ' + str(e)[:60])",
+      "expect": "contains:MarkupError",
+      "control": "emit(render('a [x] b'))",
+      "control_expect": "ok",
+      "note": "Two different failure modes for the same class of input. An unknown tag is deleted in silence; an unbalanced close raises. So neither 'it always raises' nor 'it never raises' is safe to assume."
+    },
+    {
+      "id": "T001",
+      "subject": "typer",
+      "topic": "help-rendering",
+      "question": "Does a help string lose bracketed text under the default rich_markup_mode?",
+      "source": "import typer\nfrom typing import Annotated\napp = typer.Typer()\n@app.command()\ndef go(x: Annotated[str, typer.Option(help='give a [path] here')] = 'a'): ...\nemit([l for l in cli(app, ['--help']).splitlines() if 'give a' in l])",
+      "expect": "absent:[path]",
+      "control": "import typer\nfrom typing import Annotated\napp = typer.Typer(rich_markup_mode=None)\n@app.command()\ndef go(x: Annotated[str, typer.Option(help='give a [path] here')] = 'a'): ...\nemit([l for l in cli(app, ['--help']).splitlines() if 'give a' in l])",
+      "control_expect": "contains:[path]",
+      "note": "The same deletion, reached through the surface an agent actually writes. typer.Typer() defaults rich_markup_mode to 'rich', so this is the out-of-the-box behaviour, and the control shows the opt-out.",
+      "capture": "plain"
+    },
+    {
+      "id": "T002",
+      "subject": "typer",
+      "topic": "help-rendering",
+      "question": "How does an Annotated argument render in --help at 0.27.2?",
+      "source": "import typer\nfrom typing import Annotated\napp = typer.Typer()\n@app.command()\ndef greet(name: Annotated[str, typer.Argument(help='who')] = 'World'): ...\nemit(cli(app, ['--help']))",
+      "expect": "contains:<str>",
+      "control": "import typer\nfrom typing import Annotated\napp = typer.Typer()\n@app.command()\ndef greet(name: Annotated[int, typer.Argument(help='who')] = 1): ...\nemit(cli(app, ['--help']))",
+      "control_expect": "contains:<int>",
+      "note": "0.27.0 changed metavar printing. The control is the same app with a different annotation, which is what proves the column reflects the type rather than being a constant -- the must-come-out-the-other-way discipline applied to a rendering.",
+      "capture": "plain"
+    },
+    {
+      "id": "E001",
+      "subject": "rich",
+      "topic": "colour-and-terminal-detection",
+      "question": "Does NO_COLOR strip colour even from an explicitly forced truecolor Console?",
+      "source": "emit(render('[bold red]hi[/] plain', env={'NO_COLOR': '1'}, force_terminal=True, color_system='truecolor'))",
+      "expect": "absent:31m",
+      "control": "emit(render('[bold red]hi[/] plain', force_terminal=True, color_system='truecolor'))",
+      "control_expect": "contains:31m",
+      "note": "Measured: the red goes and the bold stays -- '\\x1b[1;31m' becomes '\\x1b[1m'. force_terminal and color_system are both explicit and neither wins. The variable is declared through rich's own `_environ` injection point rather than set on os.environ, because the probe harness isolates os.environ by design; the first draft did the latter and came out inconclusive, which is the isolation proving itself.",
+      "capture": "ansi"
+    },
+    {
+      "id": "E002",
+      "subject": "rich",
+      "topic": "colour-and-terminal-detection",
+      "question": "Is an EMPTY NO_COLOR ignored rather than treated as set?",
+      "source": "emit(render('[bold red]hi[/] plain', env={'NO_COLOR': ''}, force_terminal=True, color_system='truecolor'))",
+      "expect": "contains:31m",
+      "control": "emit(render('[bold red]hi[/] plain', env={'NO_COLOR': '1'}, force_terminal=True, color_system='truecolor'))",
+      "control_expect": "absent:31m",
+      "note": "14.0 made an empty value mean disabled, which is the opposite of the usual convention that presence is enough. Documented only in the changelog.",
+      "capture": "ansi"
+    },
+    {
+      "id": "E003",
+      "subject": "rich",
+      "topic": "width-and-wrapping",
+      "question": "Does TERM=dumb override a width passed explicitly to the constructor?",
+      "source": "import os\nos.environ['TERM'] = 'dumb'\nfrom rich.console import Console\nimport io\nemit(Console(file=io.StringIO(), width=40, force_terminal=True, legacy_windows=False).width)",
+      "expect": "ok",
+      "control": "from rich.console import Console\nimport io\nemit(Console(file=io.StringIO(), width=40, force_terminal=True, legacy_windows=False).width)",
+      "control_expect": "ok",
+      "note": "Measured: 80 with TERM=dumb, 40 without -- an explicitly passed width is NOT authoritative. This probe deliberately builds its Console raw rather than through the prelude, because the prelude's `_environ` isolation is exactly what it is testing the absence of."
+    },
+    {
+      "id": "E004",
+      "subject": "rich",
+      "topic": "width-and-wrapping",
+      "question": "Does Console(_environ=...) isolate COLUMNS where the process environment does not?",
+      "source": "import os, io\nos.environ['COLUMNS'] = '30'\nfrom rich.console import Console\nemit([Console(file=io.StringIO(), _environ={}).width, Console(file=io.StringIO()).width])",
+      "expect": "ok",
+      "note": "A shape probe with no control: it records both numbers side by side, and the pair IS the finding -- the isolated Console falls back to 80 while the ordinary one takes 30."
+    },
+    {
+      "id": "E005",
+      "subject": "rich",
+      "topic": "width-and-wrapping",
+      "question": "Does UNICODE_VERSION change how wide a character is measured to be?",
+      "source": "import os\nos.environ['UNICODE_VERSION'] = '4.1.0'\nfrom rich.cells import cell_len\nemit(cell_len('\\u231a'))",
+      "expect": "ok",
+      "control": "from rich.cells import cell_len\nemit(cell_len('\\u231a'))",
+      "control_expect": "ok",
+      "note": "Read from os.environ directly in rich/_unicode_data, so Console(_environ=...) never sees it and the loader is cached -- which makes it order-dependent as well as environment-dependent. One character changes width and every table containing it changes shape."
+    },
+    {
+      "id": "V001",
+      "subject": "rich",
+      "topic": "version-truth",
+      "question": "Does `from rich import Console` raise at runtime, though type checkers accept it?",
+      "source": "try:\n    from rich import Console\n    emit('imported')\nexcept ImportError as e:\n    emit(type(e).__name__ + ': ' + str(e).split(' (')[0])",
+      "expect": "contains:ImportError",
+      "control": "from rich.console import Console\nemit('imported ' + Console.__name__)",
+      "control_expect": "contains:imported",
+      "note": "rich/__init__.py imports Console under `if TYPE_CHECKING:` and nowhere else. Measured: `ty check` and `pyrefly check` both report zero errors on the failing line. Two static analysers certify an import Python refuses, which is this repository's thesis in one row. The message is cut at the opening parenthesis because CPython appends the absolute path of the module it searched, which is a fact about this machine rather than about rich.",
+      "normalise": []
+    },
+    {
+      "id": "V002",
+      "subject": "rich",
+      "topic": "version-truth",
+      "question": "Does rich.__version__ exist at 15.0.0?",
+      "source": "import rich\ntry:\n    emit(rich.__version__)\nexcept AttributeError as e:\n    emit('AttributeError: ' + str(e)[:60])",
+      "expect": "contains:AttributeError",
+      "control": "import typer\nemit(typer.__version__)",
+      "control_expect": "contains:0.27.2",
+      "note": "Removed by the lazy-loading change in 14.3.4. The control is typer, which DOES carry __version__ -- so the asymmetry between the two libraries is the finding, and importlib.metadata.version is the answer for both."
+    },
+    {
+      "id": "V003",
+      "subject": "click",
+      "topic": "vendored-click",
+      "question": "Does the command Typer hands back descend from its OWN vendored Click?",
+      "source": "import typer\napp = typer.Typer()\n@app.command()\ndef go(): ...\ncmd = typer.main.get_command(app)\nemit([c.__module__ + '.' + c.__name__ for c in type(cmd).__mro__])",
+      "expect": "contains:typer._click.core.Command",
+      "control": "import importlib.util\nemit('installed' if importlib.util.find_spec('click') else 'click is not installed in this environment')",
+      "control_expect": "contains:not installed",
+      "note": "get_command returns a Command, so the call site reads exactly as an agent expects -- but the MRO lands in typer._click, and no Click plugin will accept that class. The control is the other half of the trap: click is not in the resolved graph at all, so an `import click` in a project resolves to some unrelated copy typer has never seen, and it still type-checks.",
+      "capture": "plain"
+    },
+    {
+      "id": "O001",
+      "subject": "both",
+      "topic": "printing-and-styling",
+      "question": "Do typer.echo and Console.print treat the same string differently?",
+      "source": "import typer, io, contextlib\nb = io.StringIO()\nwith contextlib.redirect_stdout(b):\n    typer.echo('[bold]hi[/bold] [path]')\nemit(b.getvalue())",
+      "expect": "contains:[path]",
+      "control": "emit(render('[bold]hi[/bold] [path]'))",
+      "control_expect": "absent:[path]",
+      "note": "The overlap row that justifies one skill rather than two. Same input, two functions an agent treats as interchangeable, and one of them deletes a word. typer.echo is literal and width-unaware; Console.print parses markup and wraps.",
+      "capture": "plain"
+    },
+    {
+      "id": "O002",
+      "subject": "both",
+      "topic": "printing-and-styling",
+      "question": "Do typer.style and rich Style emit different bytes for the same intent?",
+      "source": "import typer\nemit(typer.style('hi', fg=typer.colors.RED, bold=True))",
+      "expect": "ansi",
+      "control": "from rich.style import Style\nemit(Style(color='red', bold=True).render('hi'))",
+      "control_expect": "ansi",
+      "note": "Measured: typer emits two separate SGR sequences, rich emits one combined. Identical on screen, different in a file -- which matters to anyone asserting on captured CLI output in a test.",
+      "capture": "ansi"
+    },
+    {
+      "id": "R001",
+      "subject": "rich",
+      "topic": "layout-and-tables",
+      "question": "What does a Table actually look like at a pinned width?",
+      "source": "from rich.table import Table\nt = Table(title='demo')\nt.add_column('name')\nt.add_column('qty', justify='right')\nt.add_row('widget', '3')\nemit(render(t, width=40))",
+      "expect": "ok",
+      "control": "from rich.table import Table\nfrom rich import box\nt = Table(title='demo', box=box.ASCII)\nt.add_column('name')\nt.add_column('qty', justify='right')\nt.add_row('widget', '3')\nemit(render(t, width=40))",
+      "control_expect": "ok",
+      "note": "The question a signature cannot answer. The control swaps the box style, so the capture is shown to reflect the box rather than being the only way a table can look.",
+      "capture": "plain"
+    },
+    {
+      "id": "R002",
+      "subject": "rich",
+      "topic": "errors-and-tracebacks",
+      "question": "Does a rendered Traceback carry absolute source paths?",
+      "source": "from rich.traceback import Traceback\nsource = 'def boom():\\n    1 / 0\\n'\nns = {}\nexec(compile(source, '<probe>', 'exec'), ns)\ntry:\n    ns['boom']()\nexcept ZeroDivisionError:\n    emit(render(Traceback(show_locals=False, width=60), width=60))",
+      "expect": "contains:ZeroDivisionError",
+      "control": "from rich.traceback import Traceback\nsource = 'def boom():\\n    1 / 0\\n'\nns = {}\nexec(compile(source, '<probe>', 'exec'), ns)\ntry:\n    ns['boom']()\nexcept ZeroDivisionError:\n    emit(render(Traceback(show_locals=True, width=60), width=60))",
+      "control_expect": "contains:locals",
+      "normalise": [
+        "home",
+        "path",
+        "address"
+      ],
+      "note": "Compiled under the synthetic filename '<probe>' precisely so no real path reaches the frame headers -- rich.traceback renders absolute source paths verbatim, which is a transferability leak into content/ as well as a determinism hazard. The control turns locals on and demonstrates why Typer leaves them off: the locals panel prints the environment and the interpreter path. Those are elided by the `home` normaliser, recorded on this row.",
+      "capture": "plain"
+    },
+    {
+      "id": "R003",
+      "subject": "rich",
+      "topic": "progress-and-liveness",
+      "question": "Is a disabled Progress a clean no-op, given animation is refused?",
+      "source": "from rich.progress import Progress\nc = console(width=40)\nwith Progress(console=c, disable=True) as p:\n    task = p.add_task('work', total=10)\n    p.advance(task, 5)\nemit(c._probe_buffer.getvalue())",
+      "expect": "ok",
+      "note": "The one exception to refusing animated rendering. disable=True is deterministic, is what belongs in CI, and recording it means the refusal elsewhere reads as a boundary rather than an omission. A shape probe: there is nothing to falsify about emptiness."
+    }
+  ]
+}

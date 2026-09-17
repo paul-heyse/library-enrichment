@@ -207,7 +207,7 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             searched.join(", "),
             offset
         ),
-        data: common::to_object(&data),
+        data: common::payload(&data),
         coverage,
         freshness: Freshness {
             registry_checked_at: None,
@@ -226,35 +226,29 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         artifacts: vec![],
     };
     let mut result = research.ok_with_page(Page::new(0, Some(page.total), false, None));
-    loop {
-        let returned = data.hits.len() as u64;
-        let more = page.has_more || page.total > offset + returned;
-        let next_cursor = if more && let Some(key) = keys.get(data.hits.len().saturating_sub(1)) {
-            match SearchCursor::new(
-                scope.clone(),
-                digest.clone(),
-                offset + returned,
-                key.clone(),
-            )
-            .encode()
-            {
-                Ok(value) => Some(value),
-                Err(e) => return common::operation_error(&e, "search_projection"),
-            }
-        } else {
-            None
-        };
-        data.page = Page::new(returned, Some(page.total), more, next_cursor);
-        result.data = common::to_object(&data);
-        if partial {
-            result = result.into_partial();
+    let returned = data.hits.len() as u64;
+    let more = page.has_more || page.total > offset + returned;
+    let next_cursor = if more && let Some(key) = keys.get(data.hits.len().saturating_sub(1)) {
+        match SearchCursor::new(
+            scope.clone(),
+            digest.clone(),
+            offset + returned,
+            key.clone(),
+        )
+        .encode()
+        {
+            Ok(value) => Some(value),
+            Err(e) => return common::operation_error(&e, "search_projection"),
         }
-        if common::json_size(&result) <= budget || data.hits.len() <= 1 {
-            break;
-        }
-        data.hits.pop();
-        result.evidence.pop();
+    } else {
+        None
+    };
+    data.page = Page::new(returned, Some(page.total), more, next_cursor);
+    result.data = common::payload(&data);
+    if partial {
+        result = result.into_partial();
     }
+
     // An oversized first hit is complete in an immutable overflow artifact, including its
     // continuation. It is never silently skipped and cannot trap the caller on an empty page.
     common::enforce_budget(service, result, request.max_bytes).await
@@ -263,40 +257,16 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
 fn render(
     row: RankedEvidence,
     excerpt_chars: usize,
-) -> Result<(SearchHit, Evidence), serde_json::Error> {
-    let evidence_id = format!(
-        "ev_{}",
-        enrichment_core::canonical::digest_hex(&serde_json::json!([
-            row.key.candidate_id,
-            row.source
-        ]))
-    );
-    let value = serde_json::to_value(&row.source.locator)?;
-    let locator = match value {
-        serde_json::Value::Object(value) => value,
-        _ => {
-            return Err(serde::ser::Error::custom(
-                "typed locator must encode as an object",
-            ));
-        }
-    };
+) -> Result<(SearchHit, Evidence), enrichment_store::QueryError> {
     let excerpt = common::truncate(&row.excerpt, excerpt_chars);
-    let citation = Evidence {
-        evidence_id: evidence_id.clone(),
-        subject: row.key.subject.clone(),
-        artifact_id: row.source.artifact_id.clone(),
-        source_uri: row
-            .source
-            .source_uri
-            .clone()
-            .unwrap_or_else(|| common::artifact_uri_for(&row.source.artifact_id)),
-        locator,
-        evidence_class: row.source.evidence_class,
-        source_version_match: row.source.source_version_match,
-        producer: row.source.extractor,
-        producer_version: row.source.extractor_version,
-        excerpt: excerpt.clone(),
-    };
+    let citation = Evidence::new(
+        row.fact_id,
+        row.subject,
+        row.key.subject.clone(),
+        row.source,
+        excerpt.clone(),
+    )?;
+    let evidence_id = citation.evidence_id.clone();
     Ok((
         SearchHit {
             hit: row.hit,

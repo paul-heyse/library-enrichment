@@ -1,0 +1,111 @@
+{
+  "module": "ra_ap_span::map",
+  "crate": "ra_ap_span",
+  "api": "api/ra_ap_span.map.md",
+  "items": [
+    {
+      "path": "ra_ap_span::map::RealSpanMap",
+      "name": "RealSpanMap",
+      "kind": "struct",
+      "crate": "ra_ap_span",
+      "signature": "struct RealSpanMap",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_span::RealSpanMap"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "absolute",
+          "signature": "fn absolute(file_id: EditionedFileId) -> Self",
+          "summary": "Creates a real file span map that returns absolute ranges (relative ranges to the root ast id)."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_file",
+          "signature": "fn from_file(file_id: EditionedFileId, pairs: Box<[(TextSize, ErasedFileAstId)]>, end: TextSize) -> Self"
+        },
+        {
+          "name": "span_for_range",
+          "signature": "fn span_for_range(&self, range: TextRange) -> Span"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_span::map::SpanMap",
+      "name": "SpanMap",
+      "kind": "struct",
+      "crate": "ra_ap_span",
+      "signature": "struct SpanMap",
+      "summary": "Maps absolute text ranges for the corresponding file to the relevant span data.",
+      "doc": "api/ra_ap_span.map.md#spanmap",
+      "aliases": [
+        "ra_ap_span::SpanMap"
+      ],
+      "fields": [
+        "matched_arm"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Creates a new empty [`SpanMap`]."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self)",
+          "summary": "Finalizes the [`SpanMap`], shrinking its backing storage and validating that the offsets are in order."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (TextSize, Span)> + '_"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(&mut self, other_range: TextRange, other_size: TextSize, other: &SpanMap)",
+          "summary": "Merges this span map with another span map, where `other` is inserted at (and replaces) `other_range`."
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, offset: TextSize, span: Span)",
+          "summary": "Pushes a new span onto the [`SpanMap`]."
+        },
+        {
+          "name": "ranges_with_span",
+          "signature": "fn ranges_with_span(&self, span: Span) -> impl Iterator<Item = (TextRange, SyntaxContext)> + '_",
+          "summary": "Returns all [`TextRange`]s whose spans contain the given span."
+        },
+        {
+          "name": "ranges_with_span_exact",
+          "signature": "fn ranges_with_span_exact(&self, span: Span) -> impl Iterator<Item = (TextRange, SyntaxContext)> + '_",
+          "summary": "Returns all [`TextRange`]s that correspond to the given span."
+        },
+        {
+          "name": "span_at",
+          "signature": "fn span_at(&self, offset: TextSize) -> Span",
+          "summary": "Returns the span at the given position."
+        },
+        {
+          "name": "spans_for_range",
+          "signature": "fn spans_for_range(&self, range: TextRange) -> impl Iterator<Item = Span> + '_",
+          "summary": "Returns the spans associated with the given range. In other words, this will return all spans that correspond to all offsets within the given range."
+        }
+      ]
+    }
+  ]
+}

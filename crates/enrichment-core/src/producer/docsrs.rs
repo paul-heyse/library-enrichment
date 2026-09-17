@@ -198,33 +198,25 @@ fn read_bounded<R: Read>(
     Ok(out)
 }
 
-/// The nine `[package.metadata.docs.rs]` keys, with docs.rs' documented defaults (§4.3).
-///
-/// This is the *observed* configuration of the hosted build -- evidence for that documented
-/// configuration, never the API enabled in a caller's project. `declared` says whether the
-/// manifest carried the table at all, so a default is never mistaken for a maintainer choice.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct DocsRsMetadata {
-    /// Whether the manifest declared the table.
-    pub declared: bool,
-    /// Features enabled for the docs build.
-    pub features: Vec<String>,
-    /// Whether all features were enabled.
-    pub all_features: bool,
-    /// Whether default features were disabled.
-    pub no_default_features: bool,
-    /// The default target.
-    pub default_target: String,
-    /// Explicit target list, when set; `None` means docs.rs' tier-one default set.
-    pub targets: Option<Vec<String>>,
-    /// Targets added to the default set.
-    pub additional_targets: Vec<String>,
-    /// Extra `rustc` arguments; these can change what compiles at all.
-    pub rustc_args: Vec<String>,
-    /// Extra `rustdoc` arguments.
-    pub rustdoc_args: Vec<String>,
-    /// Extra `cargo` arguments; these can change what compiles at all.
-    pub cargo_args: Vec<String>,
+crate::native_struct! {
+    /// The nine `[package.metadata.docs.rs]` keys, with docs.rs' documented defaults (§4.3).
+    ///
+    /// This is the *observed* configuration of the hosted build -- evidence for that documented
+    /// configuration, never the API enabled in a caller's project. `declared` says whether the
+    /// manifest carried the table at all, so a default is never mistaken for a maintainer choice.
+    pub struct DocsRsMetadata {
+        declared: bool => crate::native_union::Rule::Text,
+        features: Vec<String> => crate::native_union::Rule::Set,
+        all_features: bool => crate::native_union::Rule::Text,
+        no_default_features: bool => crate::native_union::Rule::Text,
+        default_target: String => crate::native_union::Rule::NonEmpty,
+        /// None means the provider's default target set; an empty list is an explicit selection.
+        targets: Option<Vec<String>> => crate::native_union::Rule::Set,
+        additional_targets: Vec<String> => crate::native_union::Rule::Set,
+        rustc_args: Vec<String> => crate::native_union::Rule::Sequence,
+        rustdoc_args: Vec<String> => crate::native_union::Rule::Sequence,
+        cargo_args: Vec<String> => crate::native_union::Rule::Sequence,
+    }
 }
 
 impl Default for DocsRsMetadata {

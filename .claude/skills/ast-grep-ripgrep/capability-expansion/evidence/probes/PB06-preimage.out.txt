@@ -1,0 +1,109 @@
+warning: use of deprecated method `datafusion::physical_plan::ExecutionPlan::partition_statistics`: Use StatisticsContext::compute instead
+   --> examples/pb06_preimage.rs:402:14
+    |
+402 |             .partition_statistics(None)
+    |              ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `datafusion::physical_plan::ExecutionPlan::partition_statistics`: Use StatisticsContext::compute instead
+   --> examples/pb06_preimage.rs:406:14
+    |
+406 |             .partition_statistics(Some(0))
+    |              ^^^^^^^^^^^^^^^^^^^^
+
+PB06 — does `preimage` fire for a Delta-backed scan, and does it prune files?
+
+  4 files x 100 rows; file i holds 99 rows from i*4096 plus one at i*4096+4095.
+  A successful rewrite prunes to ONE file: Rows=Exact(100), not Exact(400).
+
+  wrote 4 files
+
+== rewrite and pruning ==
+
+  1 UDF preimage HALF-OPEN   count=100
+      sql:       SELECT count(*) FROM t WHERE offset_bucket(off) = 2
+      rewritten: YES  (UDF `offset_bucket` absent in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: t.off >= Int64(8192) AND t.off < Int64(12288)
+      logical  |         TableScan: t projection=[off], partial_filters=[t.off >= Int64(8192), t.off < Int64(12288)]
+      pruning  | DeltaScanExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+
+  2 UDF preimage CLOSED      count=99
+      sql:       SELECT count(*) FROM t WHERE offset_bucket_closed(off) = 2
+      rewritten: YES  (UDF `offset_bucket_closed` absent in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: t.off >= Int64(8192) AND t.off < Int64(12287)
+      logical  |         TableScan: t projection=[off], partial_filters=[t.off >= Int64(8192), t.off < Int64(12287)]
+      pruning  | DeltaScanExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+
+  3 CONTROL no preimage      count=100
+      sql:       SELECT count(*) FROM t WHERE offset_bucket_np(off) = 2
+      rewritten: no   (UDF `offset_bucket_np` present in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: offset_bucket_np(t.off) = Int64(2)
+      logical  |         TableScan: t projection=[off], partial_filters=[offset_bucket_np(t.off) = Int64(2)]
+      pruning  | DeltaScanExec statistics=[Rows=Inexact(400), Bytes=Inexact(7306), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Inexact(400), Bytes=Inexact(7306), [(Col[0]
+
+  4 CONTROL volatile         count=100
+      sql:       SELECT count(*) FROM t WHERE offset_bucket_vol(off) = 2
+      rewritten: no   (UDF `offset_bucket_vol` present in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: offset_bucket_vol(t.off) = Int64(2)
+      logical  |         TableScan: t projection=[off]
+      pruning  | DeltaScanExec statistics=[Rows=Exact(400), Bytes=Inexact(7306), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Exact(400), Bytes=Inexact(7306), [(Col[0]
+
+  5 GOLD hand-written range  count=100
+      sql:       SELECT count(*) FROM t WHERE off >= 8192 AND off <= 12287
+      rewritten: YES  (UDF `off >= 8192 AND off <= 12287` absent in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: t.off >= Int64(8192) AND t.off <= Int64(12287)
+      logical  |         TableScan: t projection=[off], partial_filters=[t.off >= Int64(8192), t.off <= Int64(12287)]
+      pruning  | DeltaScanExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]
+
+  6 CONTROL built-in floor   count=100
+      sql:       SELECT count(*) FROM t WHERE floor(off / 4096.0) = 2.0
+      rewritten: YES  (UDF `floor` absent in optimised plan)
+      logical  | Projection: count(Int64(1)) AS count(*)
+      logical  |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      logical  |     Projection:
+      logical  |       Filter: __common_expr_3 >= Float64(2) AND __common_expr_3 < Float64(3)
+      logical  |         Projection: CAST(t.off AS Float64) / Float64(4096) AS __common_expr_3
+      logical  |           TableScan: t projection=[off], partial_filters=[CAST(t.off AS Float64) / Float64(4096) >= Float64(2), CAST(t.off AS Float64) / Float64(4096) < Float64(3)]
+      pruning  | DeltaScanExec statistics=[Rows=Inexact(400), Bytes=Inexact(7306), [(Col[0]
+      pruning  | DataSourceExec statistics=[Rows=Inexact(400), Bytes=Inexact(7306), [(Col[0]
+
+== PB11 · three statistics channels, Delta and MemTable ==
+
+  partition_statistics  -- DEPRECATED (this is what evidence 11 read)
+  StatisticsContext     -- the replacement the deprecation names
+  rendered plan text    -- what EXPLAIN shows
+
+  delta scan     
+      DEPRECATED partition_statistics  None=Absent  Some(0)=Absent
+      StatisticsContext::compute       None=Exact(400)  Some(0)=Exact(400)
+      rendered root | DeltaScanExec, statistics=[Rows=Exact(400), Bytes=Inexact(7306), [(Col[0]:)]]
+  delta filtered 
+      DEPRECATED partition_statistics  None=Absent  Some(0)=Absent
+      StatisticsContext::compute       None=Inexact(100)  Some(0)=Inexact(3)
+      rendered root | DeltaScanExec, statistics=[Rows=Inexact(100), Bytes=Inexact(1811), [(Col[0]: Min=Inexact(Int64(8192)) Max=Inexact(Int64(12287)) Null=Inexact(0))]]
+  memtable scan  
+      DEPRECATED partition_statistics  None=Absent  Some(0)=Absent
+      StatisticsContext::compute       None=Exact(3)  Some(0)=Exact(3)
+      rendered root | DataSourceExec: partitions=1, partition_sizes=[1], statistics=[Rows=Exact(3), Bytes=Exact(120), [(Col[0]: Null=Exact(0))]]
+

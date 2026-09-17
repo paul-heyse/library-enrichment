@@ -16,7 +16,7 @@ const CLASS_SCOPE: &str = r#"
         SELECT unnest(payload.python.bases) AS base FROM observed
     ), unsupported AS (
         SELECT count(*) AS unsupported_bases FROM bases
-        WHERE base IS NULL OR base NOT IN ('object', 'builtins.object')
+        WHERE base IS NULL OR base.rendering NOT IN ('object', 'builtins.object')
     )
     SELECT observations, unsupported_observations, unsupported_bases
     FROM declarations CROSS JOIN unsupported
@@ -101,8 +101,8 @@ mod tests {
         let observations = session.sql("SELECT observation_id,
             named_struct('declared_kind', declared_kind, 'python',
                 CASE WHEN has_python THEN named_struct('bases',
-                    CASE WHEN has_base THEN make_array(CASE WHEN binding_id = 'unknown' THEN 'Unknown' ELSE 'object' END)
-                    ELSE CAST(make_array() AS VARCHAR[]) END) ELSE NULL END) AS payload
+                    CASE WHEN has_base THEN make_array(named_struct('ordinal', 0, 'rendering', CASE WHEN binding_id = 'unknown' THEN 'Unknown' ELSE 'object' END))
+                    ELSE array_slice(make_array(named_struct('ordinal', 0, 'rendering', 'object')), 1, 0) END) ELSE NULL END) AS payload
             FROM fixtures").await.unwrap();
 
         let bindings = session

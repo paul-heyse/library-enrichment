@@ -86,7 +86,7 @@ pub async fn complete_answer_measured(
     tokio::time::timeout(std::time::Duration::from_secs(30), async {
         loop {
             let frame = serde_json::json!({"jsonrpc":"2.0","id":2,"method":"artifact.read",
-                "params":{"artifact_id":id,"cursor":cursor,"max_bytes":4096}})
+                "params":{"artifact_id":id,"section":{"kind":"result","name":"envelope"},"cursor":cursor,"max_bytes":4096}})
             .to_string();
             let result = server::dispatch(service, &frame)
                 .await
@@ -121,9 +121,8 @@ pub async fn complete_answer_measured(
     })
     .await
     .expect("bounded artifact delivery");
-    let document: Value = serde_json::from_str(&content).expect("complete indexed answer JSON");
-    assert_eq!(document["index"]["format"], "research-result/3");
-    let mut decoded = document["result"].clone();
+    let mut decoded: Value =
+        serde_json::from_str(&content).expect("complete native envelope section");
     assert_eq!(decoded["context_id"], response["context_id"]);
     assert_eq!(decoded["snapshot_id"], response["snapshot_id"]);
     decoded["request_id"] = response["request_id"].clone();

@@ -35,7 +35,7 @@ pub(crate) trait RelationContract: Copy {
             .enumerate()
             .filter(|(_, field)| field.name() == self.key())
             .collect();
-        if keys.len() != 1 || keys[0].1.is_nullable() {
+        if keys.len() != 1 || !enrichment_core::native_schema::required(keys[0].1) {
             return Err(DataFusionError::Internal(format!(
                 "{} requires one non-null key field {}",
                 self.name(),
@@ -85,10 +85,6 @@ impl RelationContract for crate::admission::Relation {
                 nullable: false,
                 when: None,
             }],
-            Self::ApiObservations
-            | Self::ExecutionObservations
-            | Self::Relationships
-            | Self::Fragments => SUBJECT_REFERENCES,
             Self::Coverage => COVERAGE_REFERENCES,
             Self::InputArtifacts => &[ReferenceRule {
                 id: "semantic_producer_binding",
@@ -103,37 +99,14 @@ impl RelationContract for crate::admission::Relation {
     }
 }
 
-const SUBJECT_REFERENCES: &[ReferenceRule] = &[
-    ReferenceRule {
-        id: "subject_symbol",
-        field: "subject.symbol_id",
-        target: "symbols",
-        target_field: "symbol_id",
-        nullable: false,
-        when: Some(("subject.kind", "symbol")),
-    },
-    ReferenceRule {
-        id: "subject_definition",
-        field: "subject.definition_id",
-        target: "definitions",
-        target_field: "definition_id",
-        nullable: false,
-        when: Some(("subject.kind", "definition")),
-    },
-];
-
-const COVERAGE_REFERENCES: &[ReferenceRule] = &[
-    SUBJECT_REFERENCES[0],
-    SUBJECT_REFERENCES[1],
-    ReferenceRule {
-        id: "semantic_producer_binding",
-        field: "producer_binding_id",
-        target: "producer_runs",
-        target_field: "producer_binding_id",
-        nullable: false,
-        when: None,
-    },
-];
+const COVERAGE_REFERENCES: &[ReferenceRule] = &[ReferenceRule {
+    id: "semantic_producer_binding",
+    field: "producer_binding_id",
+    target: "producer_runs",
+    target_field: "producer_binding_id",
+    nullable: false,
+    when: None,
+}];
 
 impl RelationContract for crate::control::Table {
     fn name(self) -> &'static str {

@@ -44,6 +44,8 @@ pub(crate) fn rows(batch: &RecordBatch) -> Result<Vec<RankedEvidence>, ArrowErro
                     candidate_id: r.text("candidate_id")?.into(),
                 },
                 hit,
+                fact_id: r.text("fact_id")?.into(),
+                subject: decode::subject(r.structure("subject_ref")?)?,
                 path: r.owned("path")?,
                 signature: r.owned("signature")?,
                 symbol_kind: r

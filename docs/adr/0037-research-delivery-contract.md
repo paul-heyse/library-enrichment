@@ -1,7 +1,7 @@
 ---
 id: ADR-0037
 title: Separate research outcome from bounded result delivery
-status: accepted
+status: superseded
 date: 2026-09-15
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§6.3, §7.2, §7.3, §7.4, §8.2, §8.3]
 review: docs/design_review/reviews/design_review_research-v2-contract_2026-09-15.md
 evidence: Implemented
 supersedes: [ADR-0030]
-superseded-by: null
+superseded-by: ADR-0047
 revisit: A supported result requires a new representation beyond bounded pages and artifacts.
 verification: delivery_preserves_outcome_and_scope_and_indexes_independent_sections; overflow_delivery_recovers_from_read_only_bytes_without_regeneration; individual_large_values_are_complete_readable_and_content_addressed; schema-conformance
 ---
@@ -139,3 +139,4 @@ raw-MCP smoke passed at 13:49–13:50 UTC; prior state/configuration remain inac
 The [final qualification report](../reports/plan13-final-qualification-2026-09-15.md) records exact
 receipts, current component identities and limits. This evidence closes the earlier pending
 implementation qualification; historical status entries retain their original meaning.
+- 2026-09-16 — superseded by ADR-0047.

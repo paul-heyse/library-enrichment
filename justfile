@@ -313,19 +313,28 @@ schemas-generate:
 rustdoc-format-matrix:
     @"{{ root }}/scripts/rustdoc-format-matrix.sh"
 
-# Regenerates the pinned capability repository the datafusion skill ships. Self-contained: the
-# builder lives in the skill and imports nothing from this workspace, so the skill directory is
-# copyable to any repository. First run downloads from docs.rs, crates.io and GitHub into a
-# gitignored cache; later runs are offline.
-[doc("Rebuild the datafusion skill's pinned capability repository from upstream sources.")]
+# Regenerates the pinned capability repository a skill ships. Self-contained: each builder lives
+# in its own skill and imports nothing from this workspace, so a skill directory is copyable to
+# any repository. First run downloads into a gitignored cache; later runs are offline.
+#
+# Takes the skill name, so one recipe serves every capability repository rather than growing a
+# pair per skill. `ast-grep-ripgrep` additionally requires the pinned ast-grep and ripgrep
+# binaries on PATH: its build refuses to run against any other version, because three of its
+# indexes are executed observations rather than readings.
+[doc("Rebuild a capability repository from its pinned sources. Defaults to datafusion.")]
 [group('mutating')]
-knowledge-build:
-    @python3 "{{ root }}/.claude/skills/datafusion/build/build.py"
+knowledge-build skill="datafusion":
+    @python3 "{{ root }}/.claude/skills/{{ skill }}/build/build.py"
 
-[doc("Verify the datafusion capability repository: determinism, integrity, rules, navigation.")]
+[doc("Verify a capability repository: determinism, integrity, rules, navigation. Defaults to datafusion.")]
 [group('gate')]
-knowledge-check:
-    @python3 "{{ root }}/.claude/skills/datafusion/build/verify.py"
+knowledge-check skill="datafusion":
+    @python3 "{{ root }}/.claude/skills/{{ skill }}/build/verify.py"
+
+[doc("Fetch the pinned upstream inputs for a capability repository. The only networked stage.")]
+[group('mutating')]
+knowledge-acquire skill="ast-grep-ripgrep":
+    @python3 "{{ root }}/.claude/skills/{{ skill }}/build/acquire.py"
 
 # Rebuilds the fixture crate captures (rustdoc JSON, .crate tarballs, index and API documents)
 # with the dated nightly from config/toolchains.toml, and records their provenance. The

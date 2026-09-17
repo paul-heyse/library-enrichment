@@ -150,7 +150,7 @@ def test_teardown_failure_replaces_success_instead_of_hiding_behind_it(tmp_path,
 
 def test_complete_result_pages_can_restart_with_a_smaller_page_size():
     document = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
-    raw = json.dumps({"index": {"format": "research-result/3"}, "result": document}).encode()
+    raw = json.dumps(document).encode()
     artifact = {
         "artifact_id": "art_result",
         "sha256": hashlib.sha256(raw).hexdigest(),
@@ -159,7 +159,7 @@ def test_complete_result_pages_can_restart_with_a_smaller_page_size():
         "kind": "other",
         "source_uri": "service:bounded-result",
         "final_url": None,
-        "retrieved_at": "2026-09-14T00:00:00Z",
+        "retrieved_at": "2026-09-14T00:00:00.000000Z",
         "etag": None,
         "last_modified": None,
         "compression": None,
@@ -177,7 +177,7 @@ def test_complete_result_pages_can_restart_with_a_smaller_page_size():
                 "content": chunk.decode(),
                 "content_digest": hashlib.sha256(chunk).hexdigest(),
                 "remaining": len(raw) - end,
-                "section": None,
+                "section": "envelope",
                 "page": {
                     "returned": 1,
                     "count": {"kind": "unknown"},
@@ -190,7 +190,11 @@ def test_complete_result_pages_can_restart_with_a_smaller_page_size():
             f"page-{position}",
             SERVICE,
             "read_artifact",
-            {"artifact_id": "art_result", "cursor": cursor},
+            {
+                "artifact_id": "art_result",
+                "section": {"kind": "result", "name": "envelope"},
+                "cursor": cursor,
+            },
             position,
             position + 1,
             envelope,
@@ -226,7 +230,7 @@ def test_direct_data_section_requires_its_own_complete_digest_checked_cursor_cha
         "kind": "other",
         "source_uri": "service:bounded-result",
         "final_url": None,
-        "retrieved_at": "2026-09-15T00:00:00Z",
+        "retrieved_at": "2026-09-15T00:00:00.000000Z",
         "etag": None,
         "last_modified": None,
         "compression": None,

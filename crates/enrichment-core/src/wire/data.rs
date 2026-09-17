@@ -9,11 +9,10 @@
 use std::collections::BTreeMap;
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::evidence::{
-    Artifact, Availability, EvidenceFragment, FragmentKind, Gap, ObservedConfiguration,
-    SnapshotCounts, Symbol, SymbolKind,
+    Artifact, Availability, FragmentKind, Gap, ObservedConfiguration, SnapshotCounts, SymbolHeader,
+    SymbolKind, TextFragment,
 };
 use crate::identity::{Context, Environment, Release};
 use crate::producer::ProducerRun;
@@ -24,424 +23,508 @@ use crate::registry::UpstreamCheck;
 /// The file the tool payload schemas are emitted to.
 pub const TOOL_DATA_SCHEMA_FILE: &str = "tool-data.schema.json";
 
+crate::native_vocabulary! {
 /// What docs.rs had for the resolved release.
 ///
 /// The values are, in order: `available`, `missing`, `unsupported`, `not_attempted`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 #[schemars(inline)]
 pub enum HostedJsonState {
-    Available,
-    Missing,
-    Unsupported,
-    NotAttempted,
+    Available = "available",
+    Missing = "missing",
+    Unsupported = "unsupported",
+    NotAttempted = "not_attempted",
+}
 }
 
+crate::native_struct! {
 /// The hosted rustdoc JSON facet of a resolution.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct HostedJsonReport {
     /// What was found.
-    pub state: HostedJsonState,
+    state: HostedJsonState => crate::native_union::Rule::Text,
     /// The format version the payload declared, when one was read.
-    pub format_version: Option<u32>,
+    format_version: Option<u32> => crate::native_union::Rule::Text,
     /// The format versions this build can interpret.
-    pub supported_formats: Vec<u32>,
+    supported_formats: Vec<u32> => crate::native_union::Rule::Sequence,
     /// The target the JSON was requested for.
-    pub target: String,
+    target: String => crate::native_union::Rule::Text,
     /// The URL that was asked.
-    pub url: String,
+    url: String => crate::native_union::Rule::Text,
     /// `crate_version` as the JSON itself declares it, when available.
-    pub declared_crate_version: Option<String>,
+    declared_crate_version: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// What the published snapshot holds, summarized.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct SnapshotSummary {
     /// The snapshot identity.
-    pub snapshot_id: String,
+    snapshot_id: String => crate::native_union::Rule::Text,
     /// Normalizer version that produced it.
-    pub normalizer_version: String,
+    normalizer_version: String => crate::native_union::Rule::Text,
     /// Counts.
-    pub counts: SnapshotCounts,
+    counts: SnapshotCounts => crate::native_union::Rule::Text,
     /// Publication time.
-    pub published_at: String,
+    published_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The `resolve_library` payload.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ResolveData {
     /// The release that was resolved. Its version is the one asked for, never an upgrade.
-    pub release: Release,
+    release: Release => crate::native_union::Rule::Text,
     /// The environment the context binds, with its resolution status.
-    pub environment: Environment,
+    environment: Environment => crate::native_union::Rule::Text,
     /// The context identity every later call takes.
-    pub context: Context,
+    context: Context => crate::native_union::Rule::Text,
     /// What the registry said about newer releases, kept apart from the resolution.
-    pub upstream: Option<UpstreamCheck>,
+    upstream: Option<UpstreamCheck> => crate::native_union::Rule::Text,
     /// The maintainer's docs.rs build configuration, read from the crate manifest.
-    pub observed_configuration: Option<DocsRsMetadata>,
+    observed_configuration: Option<DocsRsMetadata> => crate::native_union::Rule::Text,
     /// Hosted rustdoc JSON availability.
-    pub hosted_rustdoc_json: Option<HostedJsonReport>,
+    hosted_rustdoc_json: Option<HostedJsonReport> => crate::native_union::Rule::Text,
     /// Distribution metadata and file inventory, only for Python.
     #[serde(default)]
-    pub python: Option<crate::producer::python::Distribution>,
+    python: Option<crate::producer::python::Distribution> => crate::native_union::Rule::Text,
     /// The snapshot published from this resolution, when normalization succeeded.
-    pub snapshot: Option<SnapshotSummary>,
+    snapshot: Option<SnapshotSummary> => crate::native_union::Rule::Text,
     /// Every artifact this resolution stored or reused.
-    pub artifacts: Vec<Artifact>,
+    artifacts: Vec<Artifact> => crate::native_union::Rule::Sequence,
     /// Expected evidence that is absent, each with a reason and a planned fallback.
-    pub gaps: Vec<Gap>,
+    gaps: Vec<Gap> => crate::native_union::Rule::Sequence,
     /// Provenance for each producer that ran.
-    pub producer_runs: Vec<ProducerRun>,
+    producer_runs: Vec<ProducerRun> => crate::native_union::Rule::Sequence,
     /// Whether this answer was replayed from a recorded resolution rather than fetched.
-    pub answered_from_cache: bool,
+    answered_from_cache: bool => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// One child in a namespace sample.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct OverviewChild {
     /// Public path.
-    pub path: String,
+    path: String => crate::native_union::Rule::Text,
     /// Kind.
-    pub kind: SymbolKind,
+    kind: SymbolKind => crate::native_union::Rule::Text,
     /// Summary, when documented.
-    pub doc_summary: Option<String>,
+    doc_summary: Option<String> => crate::native_union::Rule::Text,
     /// Whether this path re-exports a definition elsewhere.
-    pub is_reexport: bool,
+    is_reexport: bool => crate::native_union::Rule::Text,
     /// Whether deprecated.
-    pub deprecated: bool,
+    deprecated: bool => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// A namespace facet in an overview.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct NamespaceFacet {
     /// The module path.
-    pub path: String,
+    path: String => crate::native_union::Rule::Text,
     /// First paragraph of the module docs.
-    pub doc_summary: Option<String>,
+    doc_summary: Option<String> => crate::native_union::Rule::Text,
     /// Distinct definitions directly under this module, by kind.
-    pub counts_by_kind: BTreeMap<String, u64>,
+    counts_by_kind: BTreeMap<String, u64> => crate::native_union::Rule::Map,
     /// A bounded sample of direct children, definitions counted once.
-    pub children: Vec<OverviewChild>,
+    children: Vec<OverviewChild> => crate::native_union::Rule::Sequence,
     /// Children beyond the sample.
-    pub truncated_children: u64,
+    truncated_children: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The `library_overview` payload (§7.1: a tree and facets, never a symbol dump).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct OverviewData {
     /// The crate's root module name.
-    pub crate_name: String,
+    crate_name: String => crate::native_union::Rule::Text,
     /// The crate version the documentation declares.
-    pub crate_version: Option<String>,
+    crate_version: Option<String> => crate::native_union::Rule::Text,
     /// The snapshot read.
-    pub snapshot: SnapshotSummary,
+    snapshot: SnapshotSummary => crate::native_union::Rule::Text,
     /// The documentation build's configuration.
-    pub observed_configuration: Option<ObservedConfiguration>,
+    observed_configuration: Option<ObservedConfiguration> => crate::native_union::Rule::Text,
     /// The subtree the overview was narrowed to, when any.
-    pub area: Option<String>,
+    area: Option<String> => crate::native_union::Rule::Text,
     /// Distinct definitions by kind across the area.
-    pub definitions_by_kind: BTreeMap<String, u64>,
+    definitions_by_kind: BTreeMap<String, u64> => crate::native_union::Rule::Map,
     /// Namespaces, root first.
-    pub namespaces: Vec<NamespaceFacet>,
+    namespaces: Vec<NamespaceFacet> => crate::native_union::Rule::Sequence,
     /// Namespaces beyond the returned set.
-    pub truncated_namespaces: u64,
+    truncated_namespaces: u64 => crate::native_union::Rule::Text,
     /// Library-level retained fragments, preserving independently sourced alternatives.
-    pub discovery: Vec<DiscoveryFacet>,
+    discovery: Vec<DiscoveryFacet> => crate::native_union::Rule::Sequence,
     /// Paths that re-export a definition reachable elsewhere.
-    pub reexports: u64,
+    reexports: u64 => crate::native_union::Rule::Text,
     /// Re-exports whose target is outside this crate.
-    pub unresolved_reexports: u64,
+    unresolved_reexports: u64 => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct DiscoveryFacet {
-    pub kind: crate::wire::research::DiscoveryKind,
-    pub state: super::research::AspectState,
-    pub reason: Option<String>,
-    pub diagnostic: Option<super::research::Diagnostic>,
-    pub items: Vec<FragmentProjection>,
-    pub page: Option<super::Page>,
+    kind: crate::wire::research::DiscoveryKind => crate::native_union::Rule::Text,
+    state: super::research::AspectState => crate::native_union::Rule::Text,
+    reason: Option<String> => crate::native_union::Rule::Text,
+    diagnostic: Option<super::research::Diagnostic> => crate::native_union::Rule::Text,
+    items: Vec<FragmentProjection> => crate::native_union::Rule::Sequence,
+    page: Option<super::Page> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_vocabulary! {
 /// What kind of thing a search hit is.
 ///
 /// The values are, in order: `symbol`, `fragment`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 #[schemars(inline)]
 pub enum HitKind {
-    Symbol,
-    Fragment,
+    Symbol = "symbol",
+    Fragment = "fragment",
+}
 }
 
+crate::native_struct! {
 /// One scoring factor that fired.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ScoreFactor {
     /// Factor name.
-    pub name: String,
+    name: String => crate::native_union::Rule::Text,
     /// Points contributed.
-    pub points: u32,
+    points: u32 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// One search hit.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct SearchHit {
     /// Symbol or fragment.
-    pub hit: HitKind,
+    hit: HitKind => crate::native_union::Rule::Text,
     /// Total score.
-    pub score: u32,
+    score: u32 => crate::native_union::Rule::Text,
     /// The factors behind the score.
-    pub factors: Vec<ScoreFactor>,
+    factors: Vec<ScoreFactor> => crate::native_union::Rule::Sequence,
     /// The evidence entry this hit is cited by.
-    pub evidence_id: String,
+    evidence_id: String => crate::native_union::Rule::Text,
     /// Symbol path, for symbol hits.
-    pub path: Option<String>,
+    path: Option<String> => crate::native_union::Rule::Text,
     /// Symbol kind, for symbol hits.
-    pub symbol_kind: Option<SymbolKind>,
+    symbol_kind: Option<SymbolKind> => crate::native_union::Rule::Text,
     /// Rendered signature, for symbol hits.
-    pub signature: Option<String>,
+    signature: Option<String> => crate::native_union::Rule::Text,
     /// Other public paths to the same definition.
-    pub also_at: Vec<String>,
+    also_at: Vec<String> => crate::native_union::Rule::Sequence,
     /// Whether the symbol is deprecated.
-    pub deprecated: bool,
+    deprecated: bool => crate::native_union::Rule::Text,
     /// Fragment kind, for fragment hits.
-    pub fragment_kind: Option<FragmentKind>,
+    fragment_kind: Option<FragmentKind> => crate::native_union::Rule::Text,
     /// Fragment subject, for fragment hits.
-    pub subject: Option<String>,
+    subject: Option<String> => crate::native_union::Rule::Text,
     /// Bounded excerpt.
-    pub excerpt: String,
+    excerpt: String => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The `search_evidence` payload.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct SearchData {
     /// Bounded page over this payload, not over the whole research envelope.
-    pub page: super::job::Page,
+    page: super::job::Page => crate::native_union::Rule::Text,
     /// The query as asked.
-    pub query: String,
+    query: String => crate::native_union::Rule::Text,
     /// The tokens it was split into.
-    pub tokens: Vec<String>,
+    tokens: Vec<String> => crate::native_union::Rule::Sequence,
     /// The evidence families searched.
-    pub kinds: Vec<String>,
+    kinds: Vec<String> => crate::native_union::Rule::Sequence,
     /// Namespace subtree that was searched, when requested.
     #[serde(default)]
-    pub area: Option<String>,
+    area: Option<String> => crate::native_union::Rule::Text,
     /// The hits on this page.
-    pub hits: Vec<SearchHit>,
+    hits: Vec<SearchHit> => crate::native_union::Rule::Sequence,
     /// The scoring legend, in rank order.
-    pub scoring: Vec<ScoreFactor>,
+    scoring: Vec<ScoreFactor> => crate::native_union::Rule::Sequence,
     /// Which sources were searched.
-    pub searched: Vec<String>,
+    searched: Vec<String> => crate::native_union::Rule::Sequence,
     /// Page offset.
-    pub offset: u64,
+    offset: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// A selected projection of an admitted API observation, never a replacement stored fact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ApiObservationProjection {
     /// Identity of the complete admitted fact, not a hash of this query projection.
-    pub observation_id: String,
-    pub subject: crate::evidence::relational::SubjectRef,
-    pub origin: crate::evidence::relational::ApiOrigin,
-    pub environment_id: String,
-    pub payload: crate::evidence::relational::ApiPayload,
-    pub source: crate::evidence::relational::FactSource,
+    observation_id: String => crate::native_union::Rule::Text,
+    subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
+    origin: crate::evidence::relational::ApiOrigin => crate::native_union::Rule::Text,
+    environment_id: String => crate::native_union::Rule::Text,
+    payload: crate::evidence::relational::ApiPayload => crate::native_union::Rule::Text,
+    source: crate::evidence::relational::FactSource => crate::native_union::Rule::Text,
     /// False means docs were omitted by projection; it does not assert absent documentation.
-    pub docs_included: bool,
+    docs_included: bool => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// One exact definition a caller can select when a public path is ambiguous.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct InspectionCandidate {
-    pub path: String,
-    pub definition_id: String,
-    pub kind: SymbolKind,
-    pub qualifier: Option<String>,
+    path: String => crate::native_union::Rule::Text,
+    definition_id: String => crate::native_union::Rule::Text,
+    kind: SymbolKind => crate::native_union::Rule::Text,
+    qualifier: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// A requested projection of a retained fragment; its identity still names the full fact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct FragmentProjection {
-    pub fragment: EvidenceFragment,
-    pub text_complete: bool,
+    fragment: TextFragment => crate::native_union::Rule::Text,
+    text_complete: bool => crate::native_union::Rule::Text,
     /// A complete-text request for this selection when text was projected.
-    pub complete: Option<super::research::RecoveryAction>,
+    complete: Option<super::research::RecoveryAction> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Bounded inspection payload with independently qualified observation projections.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct InspectData {
     /// Lexical direct children, independently paged; this does not establish typed membership.
-    pub children: Vec<InspectionCandidate>,
+    children: Vec<InspectionCandidate> => crate::native_union::Rule::Sequence,
     /// Bindings reached by qualified member_of relationships, independently paged.
-    pub members: Vec<InspectionCandidate>,
+    members: Vec<InspectionCandidate> => crate::native_union::Rule::Sequence,
     /// Independent aspect states and continuations.
-    pub aspect_outcomes: Vec<super::research::AspectOutcome>,
+    aspect_outcomes: Vec<super::research::AspectOutcome> => crate::native_union::Rule::Section("aspects".into()),
     /// The symbol, when one was selected. Its `docs` are bounded here.
-    pub symbol: Option<Symbol>,
+    symbol: Option<SymbolHeader> => crate::native_union::Rule::Text,
     /// Whether `docs` was cut to fit.
-    pub docs_truncated: bool,
+    docs_truncated: bool => crate::native_union::Rule::Text,
     /// Other public paths to the same definition.
-    pub also_at: Vec<String>,
+    also_at: Vec<String> => crate::native_union::Rule::Sequence,
     /// Distinct selectable definitions; public paths alone may collide across kinds.
-    pub candidates: Vec<InspectionCandidate>,
+    candidates: Vec<InspectionCandidate> => crate::native_union::Rule::Sequence,
     /// The aspects actually returned.
-    pub aspects: Vec<String>,
+    aspects: Vec<String> => crate::native_union::Rule::Sequence,
     /// What can and cannot be said about availability.
-    pub availability: Option<Availability>,
+    availability: Option<Availability> => crate::native_union::Rule::Text,
     /// Typed edges touching the symbol.
-    pub relationships: Vec<crate::evidence::relational::RelationshipObservation>,
+    relationships: Vec<crate::evidence::relational::RelationshipObservation> => crate::native_union::Rule::Sequence,
     /// Qualified projections; complete immutable observations remain in the snapshot.
-    pub observations: Vec<ApiObservationProjection>,
+    observations: Vec<ApiObservationProjection> => crate::native_union::Rule::Section("signature".into()),
     /// Fragments about the symbol, bounded.
-    pub fragments: Vec<FragmentProjection>,
+    fragments: Vec<FragmentProjection> => crate::native_union::Rule::Sequence,
     /// Source excerpt at `source` depth.
-    pub source: Option<SourceExcerpt>,
+    source: Option<SourceExcerpt> => crate::native_union::Rule::Text,
     /// Retained execution facts selected natively by symbol/document and exact scope.
-    pub execution_observations: Vec<crate::evidence::execution::ExecutionObservation>,
+    execution_observations: Vec<crate::evidence::execution::ExecutionObservation> => crate::native_union::Rule::Sequence,
     /// Actual attempt attribution for an execution job result.
-    pub producer_runs: Vec<crate::producer::ProducerRun>,
+    producer_runs: Vec<crate::producer::ProducerRun> => crate::native_union::Rule::Sequence,
+}
 }
 
+crate::native_vocabulary! {
 /// How a slice is encoded.
 ///
 /// The values are, in order: `utf8`, `base64`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 #[schemars(inline)]
 pub enum SliceEncoding {
-    Utf8,
-    Base64,
+    Utf8 = "utf8",
+    Base64 = "base64",
+}
 }
 
+crate::native_struct! {
 /// The `read_artifact` payload.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ArtifactSliceData {
     /// Bounded page over this payload, not over the whole research envelope.
-    pub page: super::job::Page,
+    page: super::job::Page => crate::native_union::Rule::Text,
     /// The artifact record.
-    pub artifact: Artifact,
+    artifact: Artifact => crate::native_union::Rule::Text,
     /// How `content` is encoded.
-    pub encoding: SliceEncoding,
+    encoding: SliceEncoding => crate::native_union::Rule::Text,
     /// First byte offset of the slice.
-    pub start: u64,
+    start: u64 => crate::native_union::Rule::Text,
     /// One past the last byte offset of the slice.
-    pub end: u64,
+    end: u64 => crate::native_union::Rule::Text,
     /// Total artifact size.
-    pub total: u64,
+    total: u64 => crate::native_union::Rule::Text,
     /// The slice.
-    pub content: String,
+    content: String => crate::native_union::Rule::Text,
     /// SHA-256 of the slice bytes.
-    pub content_digest: String,
+    content_digest: String => crate::native_union::Rule::Text,
     /// Bytes after `end`.
-    pub remaining: u64,
+    remaining: u64 => crate::native_union::Rule::Text,
     /// The section that was selected, when one was.
-    pub section: Option<String>,
+    section: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The snapshot manifest resource: what a snapshot contains.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ManifestData {
     /// The immutable manifest as published.
-    pub manifest: crate::evidence::snapshot::EvidenceManifest,
+    manifest: crate::evidence::snapshot::EvidenceManifest => crate::native_union::Rule::Text,
     /// Whether this snapshot is the context's current one.
-    pub is_current: bool,
+    is_current: bool => crate::native_union::Rule::Text,
     /// Operational attribution from the catalog generation pinned by this request.
-    pub producer_runs: Vec<crate::producer::ProducerRun>,
-    pub control_version: u64,
-    pub previous_snapshot_id: Option<String>,
-    pub publication_changes: Vec<RelationChanges>,
+    producer_runs: Vec<crate::producer::ProducerRun> => crate::native_union::Rule::Sequence,
+    control_version: u64 => crate::native_union::Rule::Text,
+    previous_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    publication_changes: Vec<RelationChanges> => crate::native_union::Rule::Sequence,
+}
 }
 
+crate::native_struct! {
 /// Semantic row changes between publication cohorts, derived from bounded native CDF inputs.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct RelationChanges {
-    pub relation: String,
-    pub inserted: u64,
-    pub removed: u64,
-    pub updated: u64,
+    relation: String => crate::native_union::Rule::Text,
+    inserted: u64 => crate::native_union::Rule::Text,
+    removed: u64 => crate::native_union::Rule::Text,
+    updated: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Identity of one side of an immutable comparison.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ComparisonSide {
-    pub coverage: super::Coverage,
-    pub context_id: String,
-    pub snapshot_id: String,
-    pub release: Release,
-    pub environment: Environment,
+    coverage: super::Coverage => crate::native_union::Rule::Text,
+    context_id: String => crate::native_union::Rule::Text,
+    snapshot_id: String => crate::native_union::Rule::Text,
+    release: Release => crate::native_union::Rule::Text,
+    environment: Environment => crate::native_union::Rule::Text,
+}
 }
 
-/// A changed environment/configuration field, separate from release changes.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct ConfigurationDifference {
-    pub field: String,
-    pub before: serde_json::Value,
-    pub after: serde_json::Value,
+crate::native_union! { @tag "field";
+/// A typed environment/configuration difference, separate from release changes.
+pub enum ConfigurationDifference {
+    Toolchain = "toolchain" {
+        before: Option<String> => crate::native_union::Rule::Text,
+        after: Option<String> => crate::native_union::Rule::Text,
+    },
+    Target = "target" {
+        before: Option<String> => crate::native_union::Rule::Text,
+        after: Option<String> => crate::native_union::Rule::Text,
+    },
+    Features = "features" {
+        before: Vec<String> => crate::native_union::Rule::Set,
+        after: Vec<String> => crate::native_union::Rule::Set,
+    },
+    FeaturesKnown = "features_known" {
+        before: bool => crate::native_union::Rule::Text,
+        after: bool => crate::native_union::Rule::Text,
+    },
+    DefaultFeatures = "default_features" {
+        before: Option<bool> => crate::native_union::Rule::Text,
+        after: Option<bool> => crate::native_union::Rule::Text,
+    },
+    LockDigest = "lock_digest" {
+        before: Option<String> => crate::native_union::Rule::Text,
+        after: Option<String> => crate::native_union::Rule::Text,
+    },
+    Resolution = "resolution" {
+        before: crate::identity::EnvironmentResolution => crate::native_union::Rule::Text,
+        after: crate::identity::EnvironmentResolution => crate::native_union::Rule::Text,
+    },
+    ObservedConfiguration = "observed_configuration" {
+        before: Option<ObservedConfiguration> => crate::native_union::Rule::Text,
+        after: Option<ObservedConfiguration> => crate::native_union::Rule::Text,
+    },
+}
 }
 
+crate::native_struct! {
 /// An observed diff with explicit completeness and environment confounders.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct CompareData {
     /// Bounded page over this payload, not over the whole research envelope.
-    pub page: super::job::Page,
-    pub before: ComparisonSide,
-    pub after: ComparisonSide,
-    pub comparable: bool,
-    pub same_release: bool,
-    pub configuration_differences: Vec<ConfigurationDifference>,
-    pub confounders: Vec<String>,
-    pub scopes: Vec<crate::compare::Scope>,
-    pub api_complete: bool,
-    pub total_changes: u64,
-    pub changes: Vec<crate::compare::Change>,
-    pub offset: u64,
+    page: super::job::Page => crate::native_union::Rule::Text,
+    before: ComparisonSide => crate::native_union::Rule::Text,
+    after: ComparisonSide => crate::native_union::Rule::Text,
+    comparable: bool => crate::native_union::Rule::Text,
+    same_release: bool => crate::native_union::Rule::Text,
+    configuration_differences: Vec<ConfigurationDifference> => crate::native_union::Rule::Sequence,
+    confounders: Vec<String> => crate::native_union::Rule::Sequence,
+    scopes: Vec<crate::compare::Scope> => crate::native_union::Rule::Sequence,
+    api_complete: bool => crate::native_union::Rule::Text,
+    total_changes: u64 => crate::native_union::Rule::Text,
+    changes: Vec<crate::compare::Change> => crate::native_union::Rule::Section("changes".into()),
+    offset: u64 => crate::native_union::Rule::Text,
+}
 }
 
-/// Every tool payload, for schema emission. Never sent on the wire as a union.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "tool", rename_all = "snake_case")]
+crate::native_struct! {
+/// An explicit absence of inline tool data; never an untyped dictionary.
+#[derive(Default)]
+pub struct EmptyData {}
+}
+crate::native_struct! {
+/// Adapter-observed daemon availability; it establishes no library evidence.
+pub struct AdapterDaemonStatus {
+    available: bool => crate::native_union::Rule::Text,
+    detail: String => crate::native_union::Rule::Text,
+}
+}
+crate::native_struct! {
+pub struct AdapterStatus {
+    available: bool => crate::native_union::Rule::Text,
+    tools: Vec<String> => crate::native_union::Rule::Set,
+}
+}
+crate::native_struct! {
+pub struct LocalStatus {
+    daemon: AdapterDaemonStatus => crate::native_union::Rule::Text,
+    adapter: AdapterStatus => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_payload! { @untagged "tool";
+/// Finite native tool payloads. The transport emits the selected record without its native tag.
+#[derive(JsonSchema)]
 #[schemars(rename = "LibraryEnrichmentToolData")]
 pub enum ToolData {
-    VerifyUsage(Box<crate::execution::VerificationData>),
-    JobControl(Box<crate::execution::JobData>),
-    /// `compare_releases`.
-    CompareReleases(Box<CompareData>),
-    /// `resolve_library`.
-    ResolveLibrary(Box<ResolveData>),
-    /// `library_overview`.
-    LibraryOverview(Box<OverviewData>),
-    /// `search_evidence`.
-    SearchEvidence(Box<SearchData>),
-    /// `inspect_symbol`.
-    InspectSymbol(Box<InspectData>),
-    /// `read_artifact`.
-    ReadArtifact(Box<ArtifactSliceData>),
-    /// The snapshot manifest resource.
-    SnapshotManifest(Box<ManifestData>),
-    /// `service_status`.
-    ServiceStatus(Box<super::status::StatusData>),
+    Empty(EmptyData) = "empty",
+    AdapterStatus(Box<LocalStatus>) = "adapter_status",
+    VerifyUsage(Box<crate::execution::VerificationData>) = "verify_usage",
+    JobControl(Box<crate::execution::JobData>) = "job_control",
+    CompareReleases(Box<CompareData>) = "compare_releases",
+    ResolveLibrary(Box<ResolveData>) = "resolve_library",
+    LibraryOverview(Box<OverviewData>) = "library_overview",
+    SearchEvidence(Box<SearchData>) = "search_evidence",
+    InspectSymbol(Box<InspectData>) = "inspect_symbol",
+    ReadArtifact(Box<ArtifactSliceData>) = "read_artifact",
+    SnapshotManifest(Box<ManifestData>) = "snapshot_manifest",
+    ServiceStatus(Box<super::status::StatusData>) = "service_status",
+}
+}
+impl Default for ToolData {
+    fn default() -> Self {
+        Self::Empty(EmptyData {})
+    }
+}
+impl ToolData {
+    pub fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty(_))
+    }
+    pub fn set_page(&mut self, page: super::Page) {
+        match self {
+            Self::CompareReleases(data) => data.page = page,
+            Self::SearchEvidence(data) => data.page = page,
+            Self::ReadArtifact(data) => data.page = page,
+            _ => panic!("pagination requires a declared paged payload"),
+        }
+    }
+}
+macro_rules! payload_from {
+    ($($ty:ty => $variant:ident),* $(,)?) => { $(
+        impl From<$ty> for ToolData { fn from(value: $ty) -> Self { Self::$variant(Box::new(value)) } }
+    )* };
+}
+payload_from! {
+    crate::execution::VerificationData => VerifyUsage,
+    crate::execution::JobData => JobControl,
+    CompareData => CompareReleases,
+    ResolveData => ResolveLibrary,
+    OverviewData => LibraryOverview,
+    SearchData => SearchEvidence,
+    InspectData => InspectSymbol,
+    ArtifactSliceData => ReadArtifact,
+    ManifestData => SnapshotManifest,
+    super::status::StatusData => ServiceStatus,
 }
 
 /// The tool payload schema, canonicalized like the envelope schema.
@@ -496,7 +579,7 @@ mod tests {
             "SearchData",
             "InspectData",
             "ArtifactSliceData",
-            "Symbol",
+            "SymbolHeader",
             "Artifact",
         ] {
             assert!(defs.contains_key(name), "{name} missing from $defs");

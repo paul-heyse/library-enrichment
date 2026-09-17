@@ -1,0 +1,25 @@
+id: recursive-cte-has-a-depth-bound
+language: rust
+severity: error
+message: A recursive CTE must carry an explicit `depth` bound.
+note: |
+  PB09 measured a cyclic graph timing out at 20 s where the same query with an explicit bound
+  returns in 24 ms. PB14 then measured that `UNION` (`is_distinct = true`) is NOT an alternative:
+  the deduplicator runs over the full output tuple, so a projection carrying `depth` is unique by
+  construction and distinct-based termination never fires. The two mitigations are mutually
+  exclusive, and this codebase takes the bound.
+
+  This rule checks that a bound is PRESENT. That it is inside the recursive term rather than in an
+  outer `WHERE` -- which is the part PB09 showed actually matters -- is checked by the termination
+  test over a planted two-node cycle, because placement is not a shape a pattern can see.
+files:
+  - "crates/*/src/**/*.rs"
+rule:
+  kind: raw_string_literal
+  has:
+    kind: string_content
+    regex: '(?i)WITH\s+RECURSIVE'
+  not:
+    has:
+      kind: string_content
+      regex: '(?i)depth\s*<'

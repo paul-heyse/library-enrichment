@@ -1,0 +1,895 @@
+{
+  "module": "regex_syntax::hir",
+  "crate": "regex-syntax",
+  "api": "api/regex_syntax.hir.md",
+  "items": [
+    {
+      "path": "regex_syntax::hir::Class",
+      "name": "Class",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum Class",
+      "summary": "The high-level intermediate representation of a character class.",
+      "doc": "api/regex_syntax.hir.md#class",
+      "variants": [
+        "Unicode",
+        "Bytes"
+      ],
+      "methods": [
+        {
+          "name": "case_fold_simple",
+          "signature": "fn case_fold_simple(&mut self)",
+          "summary": "Apply Unicode simple case folding to this character class, in place. The character class will be expanded to include all simple case folded character variants."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this character class is empty. That is, it has no elements."
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "summary": "Returns true if and only if this character class will only ever match valid UTF-8."
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal(&self) -> Option<Vec<u8>>",
+          "summary": "If this class consists of exactly one element (whether a codepoint or a byte), then return it as a literal byte string."
+        },
+        {
+          "name": "maximum_len",
+          "signature": "fn maximum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the longest string matched by this character class."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the smallest string matched by this character class."
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&mut self)",
+          "summary": "Negate this character class in place."
+        },
+        {
+          "name": "try_case_fold_simple",
+          "signature": "fn try_case_fold_simple(&mut self) -> core::result::Result<(), CaseFoldError>",
+          "summary": "Apply Unicode simple case folding to this character class, in place. The character class will be expanded to include all simple case folded character variants."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Dot",
+      "name": "Dot",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum Dot",
+      "summary": "A type describing the different flavors of `.`.",
+      "doc": "api/regex_syntax.hir.md#dot",
+      "variants": [
+        "AnyChar",
+        "AnyByte",
+        "AnyCharExcept",
+        "AnyCharExceptLF",
+        "AnyCharExceptCRLF",
+        "AnyByteExcept",
+        "AnyByteExceptLF",
+        "AnyByteExceptCRLF"
+      ],
+      "methods": []
+    },
+    {
+      "path": "regex_syntax::hir::ErrorKind",
+      "name": "ErrorKind",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum ErrorKind",
+      "summary": "The type of an error that occurred while building an `Hir`.",
+      "doc": "api/regex_syntax.hir.md#errorkind",
+      "variants": [
+        "UnicodeNotAllowed",
+        "InvalidUtf8",
+        "InvalidLineTerminator",
+        "UnicodePropertyNotFound",
+        "UnicodePropertyValueNotFound",
+        "UnicodePerlClassNotFound",
+        "UnicodeCaseUnavailable"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::HirKind",
+      "name": "HirKind",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum HirKind",
+      "summary": "The underlying kind of an arbitrary [`Hir`] expression.",
+      "doc": "api/regex_syntax.hir.md#hirkind",
+      "variants": [
+        "Empty",
+        "Literal",
+        "Class",
+        "Look",
+        "Repetition",
+        "Capture",
+        "Concat",
+        "Alternation"
+      ],
+      "methods": [
+        {
+          "name": "subs",
+          "signature": "fn subs(&self) -> &[Hir]",
+          "summary": "Returns a slice of this kind's sub-expressions, if any."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Look",
+      "name": "Look",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum Look",
+      "summary": "The high-level intermediate representation for a look-around assertion.",
+      "doc": "api/regex_syntax.hir.md#look",
+      "variants": [
+        "Start",
+        "End",
+        "StartLF",
+        "EndLF",
+        "StartCRLF",
+        "EndCRLF",
+        "WordAscii",
+        "WordAsciiNegate",
+        "WordUnicode",
+        "WordUnicodeNegate",
+        "WordStartAscii",
+        "WordEndAscii",
+        "WordStartUnicode",
+        "WordEndUnicode",
+        "WordStartHalfAscii",
+        "WordEndHalfAscii",
+        "WordStartHalfUnicode",
+        "WordEndHalfUnicode"
+      ],
+      "methods": [
+        {
+          "name": "as_char",
+          "signature": "const fn as_char(self) -> char",
+          "summary": "Returns a convenient single codepoint representation of this look-around assertion. Each assertion is guaranteed to be represented by a distinct character."
+        },
+        {
+          "name": "as_repr",
+          "signature": "const fn as_repr(self) -> u32",
+          "summary": "Return the underlying representation of this look-around enumeration as an integer. Giving the return value to the [`Look::from_repr`] constructor is guaranteed to return the same look-around variant that one started with within a semver c…"
+        },
+        {
+          "name": "from_repr",
+          "signature": "const fn from_repr(repr: u32) -> Option<Look>",
+          "summary": "Given the underlying representation of a `Look` value, return the corresponding `Look` value if the representation is valid. Otherwise `None` is returned."
+        },
+        {
+          "name": "reversed",
+          "signature": "const fn reversed(self) -> Look",
+          "summary": "Flip the look-around assertion to its equivalent for reverse searches. For example, `StartLF` gets translated to `EndLF`."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Capture",
+      "name": "Capture",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Capture",
+      "summary": "The high-level intermediate representation for a capturing group.",
+      "doc": "api/regex_syntax.hir.md#capture",
+      "fields": [
+        "index",
+        "name",
+        "sub"
+      ],
+      "methods": []
+    },
+    {
+      "path": "regex_syntax::hir::ClassBytes",
+      "name": "ClassBytes",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassBytes",
+      "summary": "A set of characters represented by arbitrary bytes.",
+      "doc": "api/regex_syntax.hir.md#classbytes",
+      "methods": [
+        {
+          "name": "case_fold_simple",
+          "signature": "fn case_fold_simple(&mut self)",
+          "summary": "Expand this character class such that it contains all case folded characters. For example, if this class consists of the range `a-z`, then applying case folding will result in the class containing both the ranges `a-z` and `A-Z`."
+        },
+        {
+          "name": "difference",
+          "signature": "fn difference(&mut self, other: &ClassBytes)",
+          "summary": "Subtract the given byte class from this byte class, in place."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> ClassBytes",
+          "summary": "Create a new class with no ranges."
+        },
+        {
+          "name": "intersect",
+          "signature": "fn intersect(&mut self, other: &ClassBytes)",
+          "summary": "Intersect this byte class with the given byte class, in place."
+        },
+        {
+          "name": "is_ascii",
+          "signature": "fn is_ascii(&self) -> bool",
+          "summary": "Returns true if and only if this character class will either match nothing or only ASCII bytes. Stated differently, this returns false if and only if this class contains a non-ASCII byte."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> ClassBytesIter<'_>",
+          "summary": "Return an iterator over all ranges in this class."
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal(&self) -> Option<Vec<u8>>",
+          "summary": "If this class consists of exactly one byte, then return it as a literal byte string."
+        },
+        {
+          "name": "maximum_len",
+          "signature": "fn maximum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the longest string matched by this character class."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the smallest string matched by this character class."
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&mut self)",
+          "summary": "Negate this byte class."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I>(ranges: I) -> ClassBytes where I: IntoIterator<Item = ClassBytesRange>",
+          "summary": "Create a new class from a sequence of ranges."
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, range: ClassBytesRange)",
+          "summary": "Add a new range to this set."
+        },
+        {
+          "name": "ranges",
+          "signature": "fn ranges(&self) -> &[ClassBytesRange]",
+          "summary": "Return the underlying ranges as a slice."
+        },
+        {
+          "name": "symmetric_difference",
+          "signature": "fn symmetric_difference(&mut self, other: &ClassBytes)",
+          "summary": "Compute the symmetric difference of the given byte classes, in place."
+        },
+        {
+          "name": "to_unicode_class",
+          "signature": "fn to_unicode_class(&self) -> Option<ClassUnicode>",
+          "summary": "If this class consists of only ASCII ranges, then return its corresponding and equivalent Unicode class."
+        },
+        {
+          "name": "union",
+          "signature": "fn union(&mut self, other: &ClassBytes)",
+          "summary": "Union this byte class with the given byte class, in place."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::ClassBytesIter",
+      "name": "ClassBytesIter",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassBytesIter<'a>",
+      "summary": "An iterator over all ranges in a byte character class.",
+      "doc": "api/regex_syntax.hir.md#classbytesiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a ClassBytesRange>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::ClassBytesRange",
+      "name": "ClassBytesRange",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassBytesRange",
+      "summary": "A single range of characters represented by arbitrary bytes.",
+      "doc": "api/regex_syntax.hir.md#classbytesrange",
+      "methods": [
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> u8",
+          "summary": "Return the end of this range."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of bytes in this range."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(start: u8, end: u8) -> ClassBytesRange",
+          "summary": "Create a new byte range for a character class."
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> u8",
+          "summary": "Return the start of this range."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::ClassUnicode",
+      "name": "ClassUnicode",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassUnicode",
+      "summary": "A set of characters represented by Unicode scalar values.",
+      "doc": "api/regex_syntax.hir.md#classunicode",
+      "methods": [
+        {
+          "name": "case_fold_simple",
+          "signature": "fn case_fold_simple(&mut self)",
+          "summary": "Expand this character class such that it contains all case folded characters, according to Unicode's \"simple\" mapping. For example, if this class consists of the range `a-z`, then applying case folding will result in the class containing b…"
+        },
+        {
+          "name": "difference",
+          "signature": "fn difference(&mut self, other: &ClassUnicode)",
+          "summary": "Subtract the given character class from this character class, in place."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> ClassUnicode",
+          "summary": "Create a new class with no ranges."
+        },
+        {
+          "name": "intersect",
+          "signature": "fn intersect(&mut self, other: &ClassUnicode)",
+          "summary": "Intersect this character class with the given character class, in place."
+        },
+        {
+          "name": "is_ascii",
+          "signature": "fn is_ascii(&self) -> bool",
+          "summary": "Returns true if and only if this character class will either match nothing or only ASCII bytes. Stated differently, this returns false if and only if this class contains a non-ASCII codepoint."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> ClassUnicodeIter<'_>",
+          "summary": "Return an iterator over all ranges in this class."
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal(&self) -> Option<Vec<u8>>",
+          "summary": "If this class consists of exactly one codepoint, then return it as a literal byte string."
+        },
+        {
+          "name": "maximum_len",
+          "signature": "fn maximum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the longest string matched by this character class."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> Option<usize>",
+          "summary": "Returns the length, in bytes, of the smallest string matched by this character class."
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&mut self)",
+          "summary": "Negate this character class."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I>(ranges: I) -> ClassUnicode where I: IntoIterator<Item = ClassUnicodeRange>",
+          "summary": "Create a new class from a sequence of ranges."
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, range: ClassUnicodeRange)",
+          "summary": "Add a new range to this set."
+        },
+        {
+          "name": "ranges",
+          "signature": "fn ranges(&self) -> &[ClassUnicodeRange]",
+          "summary": "Return the underlying ranges as a slice."
+        },
+        {
+          "name": "symmetric_difference",
+          "signature": "fn symmetric_difference(&mut self, other: &ClassUnicode)",
+          "summary": "Compute the symmetric difference of the given character classes, in place."
+        },
+        {
+          "name": "to_byte_class",
+          "signature": "fn to_byte_class(&self) -> Option<ClassBytes>",
+          "summary": "If this class consists of only ASCII ranges, then return its corresponding and equivalent byte class."
+        },
+        {
+          "name": "try_case_fold_simple",
+          "signature": "fn try_case_fold_simple(&mut self) -> core::result::Result<(), CaseFoldError>",
+          "summary": "Expand this character class such that it contains all case folded characters, according to Unicode's \"simple\" mapping. For example, if this class consists of the range `a-z`, then applying case folding will result in the class containing b…"
+        },
+        {
+          "name": "union",
+          "signature": "fn union(&mut self, other: &ClassUnicode)",
+          "summary": "Union this character class with the given character class, in place."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::ClassUnicodeIter",
+      "name": "ClassUnicodeIter",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassUnicodeIter<'a>",
+      "summary": "An iterator over all ranges in a Unicode character class.",
+      "doc": "api/regex_syntax.hir.md#classunicodeiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a ClassUnicodeRange>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::ClassUnicodeRange",
+      "name": "ClassUnicodeRange",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct ClassUnicodeRange",
+      "summary": "A single range of characters represented by Unicode scalar values.",
+      "doc": "api/regex_syntax.hir.md#classunicoderange",
+      "methods": [
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> char",
+          "summary": "Return the end of this range."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of codepoints in this range."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(start: char, end: char) -> ClassUnicodeRange",
+          "summary": "Create a new Unicode scalar value range for a character class."
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> char",
+          "summary": "Return the start of this range."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Error",
+      "name": "Error",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Error",
+      "summary": "An error that can occur while translating an `Ast` to a `Hir`.",
+      "doc": "api/regex_syntax.hir.md#error",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &ErrorKind",
+          "summary": "Return the type of this error."
+        },
+        {
+          "name": "pattern",
+          "signature": "fn pattern(&self) -> &str",
+          "summary": "The original pattern string in which this error occurred."
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> &Span",
+          "summary": "Return the span at which this error occurred."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Hir",
+      "name": "Hir",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Hir",
+      "summary": "A high-level intermediate representation (HIR) for a regular expression.",
+      "doc": "api/regex_syntax.hir.md#hir",
+      "implements": [
+        "core::fmt::Display",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "alternation",
+          "signature": "fn alternation(subs: Vec<Hir>) -> Hir",
+          "summary": "Returns the alternation of the given expressions."
+        },
+        {
+          "name": "capture",
+          "signature": "fn capture(capture: Capture) -> Hir",
+          "summary": "Creates a capture HIR expression."
+        },
+        {
+          "name": "class",
+          "signature": "fn class(class: Class) -> Hir",
+          "summary": "Creates a class HIR expression. The class may either be defined over ranges of Unicode codepoints or ranges of raw byte values."
+        },
+        {
+          "name": "concat",
+          "signature": "fn concat(subs: Vec<Hir>) -> Hir",
+          "summary": "Returns the concatenation of the given expressions."
+        },
+        {
+          "name": "dot",
+          "signature": "fn dot(dot: Dot) -> Hir",
+          "summary": "Returns an HIR expression for `.`."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Hir",
+          "summary": "Returns an empty HIR expression."
+        },
+        {
+          "name": "fail",
+          "signature": "fn fail() -> Hir",
+          "summary": "Returns an HIR expression that can never match anything. That is, the size of the set of strings in the language described by the HIR returned is `0`."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "into_kind",
+          "signature": "fn into_kind(self) -> HirKind",
+          "summary": "Consumes ownership of this HIR expression and returns its underlying `HirKind`."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &HirKind",
+          "summary": "Returns a reference to the underlying HIR kind."
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal<B: Into<Box<[u8]>>>(lit: B) -> Hir",
+          "summary": "Creates a literal HIR expression."
+        },
+        {
+          "name": "look",
+          "signature": "fn look(look: Look) -> Hir",
+          "summary": "Creates a look-around assertion HIR expression."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Properties",
+          "summary": "Returns the properties computed for this `Hir`."
+        },
+        {
+          "name": "repetition",
+          "signature": "fn repetition(rep: Repetition) -> Hir",
+          "summary": "Creates a repetition HIR expression."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Literal",
+      "name": "Literal",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Literal",
+      "summary": "The high-level intermediate representation of a literal.",
+      "doc": "api/regex_syntax.hir.md#literal",
+      "methods": []
+    },
+    {
+      "path": "regex_syntax::hir::LookSet",
+      "name": "LookSet",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct LookSet",
+      "summary": "A set of look-around assertions.",
+      "doc": "api/regex_syntax.hir.md#lookset",
+      "fields": [
+        "bits"
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains(self, look: Look) -> bool",
+          "summary": "Returns true if and only if the given look-around assertion is in this set."
+        },
+        {
+          "name": "contains_anchor",
+          "signature": "fn contains_anchor(&self) -> bool",
+          "summary": "Returns true if and only if this set contains any anchor assertions. This includes both \"start/end of haystack\" and \"start/end of line.\""
+        },
+        {
+          "name": "contains_anchor_crlf",
+          "signature": "fn contains_anchor_crlf(&self) -> bool",
+          "summary": "Returns true if and only if this set contains any \"start/end of line\" anchors that are CRLF-aware. This doesn't include \"start/end of haystack\" or \"start/end of line-feed\" anchors."
+        },
+        {
+          "name": "contains_anchor_haystack",
+          "signature": "fn contains_anchor_haystack(&self) -> bool",
+          "summary": "Returns true if and only if this set contains any \"start/end of haystack\" anchors. This doesn't include \"start/end of line\" anchors."
+        },
+        {
+          "name": "contains_anchor_lf",
+          "signature": "fn contains_anchor_lf(&self) -> bool",
+          "summary": "Returns true if and only if this set contains any \"start/end of line\" anchors that only treat `\\n` as line terminators. This does not include haystack anchors or CRLF aware line anchors."
+        },
+        {
+          "name": "contains_anchor_line",
+          "signature": "fn contains_anchor_line(&self) -> bool",
+          "summary": "Returns true if and only if this set contains any \"start/end of line\" anchors. This doesn't include \"start/end of haystack\" anchors. This includes both `\\n` line anchors and CRLF (`\\r\\n`) aware line anchors."
+        },
+        {
+          "name": "contains_word",
+          "signature": "fn contains_word(self) -> bool",
+          "summary": "Returns true if and only if this set contains any word boundary or negated word boundary assertions. This include both Unicode and ASCII word boundaries."
+        },
+        {
+          "name": "contains_word_ascii",
+          "signature": "fn contains_word_ascii(self) -> bool",
+          "summary": "Returns true if and only if this set contains any ASCII word boundary or negated ASCII word boundary assertions."
+        },
+        {
+          "name": "contains_word_unicode",
+          "signature": "fn contains_word_unicode(self) -> bool",
+          "summary": "Returns true if and only if this set contains any Unicode word boundary or negated Unicode word boundary assertions."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> LookSet",
+          "summary": "Create an empty set of look-around assertions."
+        },
+        {
+          "name": "full",
+          "signature": "fn full() -> LookSet",
+          "summary": "Create a full set of look-around assertions."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(self, look: Look) -> LookSet",
+          "summary": "Return a new set that is equivalent to the original, but with the given assertion added to it. If the assertion is already in the set, then the returned set is equivalent to the original."
+        },
+        {
+          "name": "intersect",
+          "signature": "fn intersect(self, other: LookSet) -> LookSet",
+          "summary": "Returns a new set that is the intersection of this and the one given."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(self) -> bool",
+          "summary": "Returns true if and only if this set is empty."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(self) -> LookSetIter",
+          "summary": "Returns an iterator over all of the look-around assertions in this set."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(self) -> usize",
+          "summary": "Returns the total number of look-around assertions in this set."
+        },
+        {
+          "name": "read_repr",
+          "signature": "fn read_repr(slice: &[u8]) -> LookSet",
+          "summary": "Return a `LookSet` from the slice given as a native endian 32-bit integer."
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove(self, look: Look) -> LookSet",
+          "summary": "Return a new set that is equivalent to the original, but with the given assertion removed from it. If the assertion is not in the set, then the returned set is equivalent to the original."
+        },
+        {
+          "name": "set_insert",
+          "signature": "fn set_insert(&mut self, look: Look)",
+          "summary": "Updates this set in place with the result of inserting the given assertion into this set."
+        },
+        {
+          "name": "set_intersect",
+          "signature": "fn set_intersect(&mut self, other: LookSet)",
+          "summary": "Updates this set in place with the result of intersecting it with the one given."
+        },
+        {
+          "name": "set_remove",
+          "signature": "fn set_remove(&mut self, look: Look)",
+          "summary": "Updates this set in place with the result of removing the given assertion from this set."
+        },
+        {
+          "name": "set_subtract",
+          "signature": "fn set_subtract(&mut self, other: LookSet)",
+          "summary": "Updates this set in place with the result of subtracting the given set from this set."
+        },
+        {
+          "name": "set_union",
+          "signature": "fn set_union(&mut self, other: LookSet)",
+          "summary": "Updates this set in place with the result of unioning it with the one given."
+        },
+        {
+          "name": "singleton",
+          "signature": "fn singleton(look: Look) -> LookSet",
+          "summary": "Create a look-around set containing the look-around assertion given."
+        },
+        {
+          "name": "subtract",
+          "signature": "fn subtract(self, other: LookSet) -> LookSet",
+          "summary": "Returns a new set that is the result of subtracting the given set from this set."
+        },
+        {
+          "name": "union",
+          "signature": "fn union(self, other: LookSet) -> LookSet",
+          "summary": "Returns a new set that is the union of this and the one given."
+        },
+        {
+          "name": "write_repr",
+          "signature": "fn write_repr(self, slice: &mut [u8])",
+          "summary": "Write a `LookSet` as a native endian 32-bit integer to the beginning of the slice given."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::LookSetIter",
+      "name": "LookSetIter",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct LookSetIter",
+      "summary": "An iterator over all look-around assertions in a [`LookSet`].",
+      "doc": "api/regex_syntax.hir.md#looksetiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Look>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Properties",
+      "name": "Properties",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Properties",
+      "summary": "A type that collects various properties of an HIR value.",
+      "doc": "api/regex_syntax.hir.md#properties",
+      "methods": [
+        {
+          "name": "explicit_captures_len",
+          "signature": "fn explicit_captures_len(&self) -> usize",
+          "summary": "Returns the total number of explicit capturing groups in the corresponding HIR."
+        },
+        {
+          "name": "is_alternation_literal",
+          "signature": "fn is_alternation_literal(&self) -> bool",
+          "summary": "Return true if and only if this HIR is either a simple literal or an alternation of simple literals. This is only true when this HIR expression is either itself a `Literal` or a concatenation of only `Literal`s or an alternation of only `L…"
+        },
+        {
+          "name": "is_literal",
+          "signature": "fn is_literal(&self) -> bool",
+          "summary": "Return true if and only if this HIR is a simple literal. This is only true when this HIR expression is either itself a `Literal` or a concatenation of only `Literal`s."
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "summary": "Return true if and only if the corresponding HIR will always match valid UTF-8."
+        },
+        {
+          "name": "look_set",
+          "signature": "fn look_set(&self) -> LookSet",
+          "summary": "Returns a set of all look-around assertions that appear at least once in this HIR value."
+        },
+        {
+          "name": "look_set_prefix",
+          "signature": "fn look_set_prefix(&self) -> LookSet",
+          "summary": "Returns a set of all look-around assertions that appear as a prefix for this HIR value. That is, the set returned corresponds to the set of assertions that must be passed before matching any bytes in a haystack."
+        },
+        {
+          "name": "look_set_prefix_any",
+          "signature": "fn look_set_prefix_any(&self) -> LookSet",
+          "summary": "Returns a set of all look-around assertions that appear as a _possible_ prefix for this HIR value. That is, the set returned corresponds to the set of assertions that _may_ be passed before matching any bytes in a haystack."
+        },
+        {
+          "name": "look_set_suffix",
+          "signature": "fn look_set_suffix(&self) -> LookSet",
+          "summary": "Returns a set of all look-around assertions that appear as a suffix for this HIR value. That is, the set returned corresponds to the set of assertions that must be passed in order to be considered a match after all other consuming HIR expr…"
+        },
+        {
+          "name": "look_set_suffix_any",
+          "signature": "fn look_set_suffix_any(&self) -> LookSet",
+          "summary": "Returns a set of all look-around assertions that appear as a _possible_ suffix for this HIR value. That is, the set returned corresponds to the set of assertions that _may_ be passed before matching any bytes in a haystack."
+        },
+        {
+          "name": "maximum_len",
+          "signature": "fn maximum_len(&self) -> Option<usize>",
+          "summary": "Returns the length (in bytes) of the longest string matched by this HIR."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the total amount of heap memory usage, in bytes, used by this `Properties` value."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> Option<usize>",
+          "summary": "Returns the length (in bytes) of the smallest string matched by this HIR."
+        },
+        {
+          "name": "static_explicit_captures_len",
+          "signature": "fn static_explicit_captures_len(&self) -> Option<usize>",
+          "summary": "Returns the total number of explicit capturing groups that appear in every possible match."
+        },
+        {
+          "name": "union",
+          "signature": "fn union<I, P>(props: I) -> Properties where I: IntoIterator<Item = P>, P: core::borrow::Borrow<Properties>",
+          "summary": "Returns a new set of properties that corresponds to the union of the iterator of properties given."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::Repetition",
+      "name": "Repetition",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Repetition",
+      "summary": "The high-level intermediate representation of a repetition operator.",
+      "doc": "api/regex_syntax.hir.md#repetition",
+      "fields": [
+        "min",
+        "max",
+        "greedy",
+        "sub"
+      ],
+      "methods": [
+        {
+          "name": "with",
+          "signature": "fn with(&self, sub: Hir) -> Repetition",
+          "summary": "Returns a new repetition with the same `min`, `max` and `greedy` values, but with its sub-expression replaced with the one given."
+        }
+      ]
+    }
+  ]
+}

@@ -1,105 +1,63 @@
 //! Deterministic differences between immutable observations, not a compatibility proof.
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
-
-use crate::canonical;
+use serde_json::Value;
 
 pub mod page;
 
+crate::native_vocabulary! {
 /// Independent axes of a release comparison.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(PartialOrd,Ord)]
 pub enum Scope {
-    Api,
-    Docs,
-    Configuration,
-    ReleaseNotes,
-    Examples,
-    Relationships,
+    Api = "api",
+    Docs = "docs",
+    Configuration = "configuration",
+    ReleaseNotes = "release_notes",
+    Examples = "examples",
+    Relationships = "relationships",
+}
 }
 
+crate::native_vocabulary! {
 /// A set or field difference, not a compatibility verdict.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum ChangeKind {
-    Added,
-    Removed,
-    Changed,
+    Added = "added",
+    Removed = "removed",
+    Changed = "changed",
+}
 }
 
+crate::native_struct! {
 /// Each value retains its own qualified source, including a legitimate absent observation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Alternative {
-    pub value: AlternativeValue,
-    pub source: Option<crate::evidence::relational::FactSource>,
+    value: AlternativeValue => crate::native_union::Rule::Text,
+    source: Option<crate::evidence::relational::FactSource> => crate::native_union::Rule::Text,
+}
 }
 
-/// Complete value delivery, independent of the alternative's fact provenance.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
+crate::native_union! { @tag "mode";
+/// A final encoded comparison cell or its exact immutable artifact.
 pub enum AlternativeValue {
-    Inline {
-        value: Value,
-    },
-    Artifact {
-        artifact: crate::wire::ArtifactHandle,
-        size_bytes: u64,
-        sha256: String,
+    Inline = "inline" { value: Value => crate::native_union::Rule::Text },
+    Artifact = "artifact" {
+        artifact: crate::wire::ArtifactHandle => crate::native_union::Rule::Text,
+        size_bytes: u64 => crate::native_union::Rule::Text,
+        sha256: String => crate::native_union::Rule::NonEmpty,
     },
 }
+}
 
+crate::native_struct! {
 /// A changed key with independently paged observational alternatives.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Change {
-    pub change_id: String,
-    pub scope: Scope,
-    pub kind: ChangeKind,
-    pub subject: String,
-    pub before: Option<Vec<Alternative>>,
-    pub after: Option<Vec<Alternative>>,
-    pub interpretation: String,
+    change_id: String => crate::native_union::Rule::Text,
+    scope: Scope => crate::native_union::Rule::Text,
+    kind: ChangeKind => crate::native_union::Rule::Text,
+    subject: String => crate::native_union::Rule::Text,
+    before: Option<Vec<Alternative>> => crate::native_union::Rule::Sequence,
+    after: Option<Vec<Alternative>> => crate::native_union::Rule::Sequence,
+    interpretation: String => crate::native_union::Rule::Text,
     /// Values and their source references share this bounded alternative order.
-    pub before_page: crate::wire::Page,
-    pub after_page: crate::wire::Page,
+    before_page: crate::wire::Page => crate::native_union::Rule::Text,
+    after_page: crate::wire::Page => crate::native_union::Rule::Text,
 }
-
-/// Construct a stable change from selected observations.
-#[must_use]
-pub fn change(
-    scope: Scope,
-    key: &str,
-    subject: &str,
-    before: Option<Vec<Alternative>>,
-    after: Option<Vec<Alternative>>,
-) -> Change {
-    let kind = if before.is_none() {
-        ChangeKind::Added
-    } else if after.is_none() {
-        ChangeKind::Removed
-    } else {
-        ChangeKind::Changed
-    };
-    let interpretation = match (scope, kind) {
-        (Scope::Api, ChangeKind::Added) => "API observed only on the after side; confirm coverage before treating this as an addition. Execution and project compatibility have not been established.",
-        (Scope::Api, _) => "Observed API representation changed; producer rendering, including Infallible versus never-type (!), can differ without a source-level compatibility change. Verify consequential usage.",
-        _ => "Evidence changed within this scope; this is not an executed behavior assertion.",
-    }.into();
-    Change {
-        change_id: format!(
-            "change_{}",
-            canonical::digest_hex(&json!(["typed-comparison/2", scope, key, before, after]))
-        ),
-        scope,
-        kind,
-        subject: subject.into(),
-        before,
-        after,
-        interpretation,
-        before_page: crate::wire::Page::default(),
-        after_page: crate::wire::Page::default(),
-    }
 }

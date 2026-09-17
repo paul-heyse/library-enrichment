@@ -158,11 +158,14 @@ impl QueryFamily {
                 "catalog_artifact",
                 vec![Field::new(
                     "artifact",
-                    crate::projection::catalog::job_publications(&[])?
-                        .schema()
-                        .field_with_name("delivery")?
-                        .data_type()
-                        .clone(),
+                    enrichment_core::evidence::arrow_model::cells::native_read_field(
+                        crate::projection::catalog::job_publications(&[])?
+                            .schema()
+                            .field_with_name("delivery")?,
+                        true,
+                    )
+                    .data_type()
+                    .clone(),
                     true,
                 )],
             ),
@@ -186,6 +189,7 @@ impl QueryFamily {
                 for name in ["kind", "definition_path", "defined_in_package"] {
                     fields.push(definition.field_with_name(name)?.clone());
                 }
+                fields.push(Field::new("parent_path", DataType::Utf8, true));
                 ("symbol_headers", fields)
             }
             Self::Observations { docs } => {
@@ -206,6 +210,12 @@ impl QueryFamily {
                     .into_iter()
                     .map(|name| schema.field_with_name(name).cloned())
                     .collect::<std::result::Result<Vec<_>, _>>()?;
+                fields.push(
+                    schema
+                        .field_with_name("subject")?
+                        .clone()
+                        .with_name("subject_ref"),
+                );
                 // DataFusion 55.1's substring result is conservatively nullable even with
                 // non-null bound arguments. Do not invent a stronger native guarantee.
                 fields.push(Field::new("text", DataType::Utf8, bounded));
@@ -295,6 +305,12 @@ impl QueryFamily {
                             .schema()?
                             .field_with_name("source")?
                             .clone()
+                            .with_nullable(true),
+                        Relation::ApiObservations
+                            .schema()?
+                            .field_with_name("subject")?
+                            .clone()
+                            .with_name("subject_ref")
                             .with_nullable(true),
                     ]);
                 }
@@ -457,7 +473,15 @@ pub(crate) fn result(actual: &Schema, expected: &Schema, stage: &str) -> Result<
                 "native result field",
                 stage,
                 vec![expected.name().clone()],
-            ));
+            )
+            .context(format!(
+                "actual field {}; expected field {}",
+                format!("{actual:?}").chars().take(2048).collect::<String>(),
+                format!("{expected:?}")
+                    .chars()
+                    .take(2048)
+                    .collect::<String>()
+            )));
         }
     }
     Ok(())
@@ -471,7 +495,9 @@ fn compatible(actual: &Field, expected: &Field, all_metadata: bool) -> bool {
             .metadata()
             .iter()
             .filter(|(key, _)| {
-                all_metadata || matches!(key.as_str(), "enrichment.role" | "enrichment.function")
+                all_metadata
+                    || key.starts_with("enrichment.")
+                    || key.starts_with("ARROW:extension:")
             })
             .all(|(key, value)| actual.metadata().get(key) == Some(value))
 }

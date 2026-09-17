@@ -1,0 +1,230 @@
+{
+  "module": "grep_searcher::sink",
+  "crate": "grep-searcher",
+  "api": "api/grep_searcher.sink.md",
+  "items": [
+    {
+      "path": "grep_searcher::sink::SinkContextKind",
+      "name": "SinkContextKind",
+      "kind": "enum",
+      "crate": "grep-searcher",
+      "signature": "enum SinkContextKind",
+      "summary": "The type of context reported by a searcher.",
+      "doc": "api/grep_searcher.sink.md#sinkcontextkind",
+      "aliases": [
+        "grep_searcher::SinkContextKind"
+      ],
+      "variants": [
+        "Before",
+        "After",
+        "Other"
+      ],
+      "methods": []
+    },
+    {
+      "path": "grep_searcher::sink::SinkContext",
+      "name": "SinkContext",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct SinkContext<'b>",
+      "summary": "A type that describes a contextual line reported by a searcher.",
+      "doc": "api/grep_searcher.sink.md#sinkcontext",
+      "aliases": [
+        "grep_searcher::SinkContext"
+      ],
+      "methods": [
+        {
+          "name": "absolute_byte_offset",
+          "signature": "fn absolute_byte_offset(&self) -> u64",
+          "summary": "Returns the absolute byte offset of the start of this context. This offset is absolute in that it is relative to the very beginning of the input in a search, and can never be relied upon to be a valid index into an in-memory slice."
+        },
+        {
+          "name": "bytes",
+          "signature": "fn bytes(&self) -> &'b [u8]",
+          "summary": "Returns the context bytes, including line terminators."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &SinkContextKind",
+          "summary": "Returns the type of context."
+        },
+        {
+          "name": "line_number",
+          "signature": "fn line_number(&self) -> Option<u64>",
+          "summary": "Returns the line number of the first line in this context, if available."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::sink::SinkFinish",
+      "name": "SinkFinish",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct SinkFinish",
+      "summary": "Summary data reported at the end of a search.",
+      "doc": "api/grep_searcher.sink.md#sinkfinish",
+      "aliases": [
+        "grep_searcher::SinkFinish"
+      ],
+      "methods": [
+        {
+          "name": "binary_byte_offset",
+          "signature": "fn binary_byte_offset(&self) -> Option<u64>",
+          "summary": "If binary detection is enabled and if binary data was found, then this returns the absolute byte offset of the first detected byte of binary data."
+        },
+        {
+          "name": "byte_count",
+          "signature": "fn byte_count(&self) -> u64",
+          "summary": "Return the total number of bytes searched."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::sink::SinkMatch",
+      "name": "SinkMatch",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct SinkMatch<'b>",
+      "summary": "A type that describes a match reported by a searcher.",
+      "doc": "api/grep_searcher.sink.md#sinkmatch",
+      "aliases": [
+        "grep_searcher::SinkMatch"
+      ],
+      "methods": [
+        {
+          "name": "absolute_byte_offset",
+          "signature": "fn absolute_byte_offset(&self) -> u64",
+          "summary": "Returns the absolute byte offset of the start of this match. This offset is absolute in that it is relative to the very beginning of the input in a search, and can never be relied upon to be a valid index into an in-memory slice."
+        },
+        {
+          "name": "buffer",
+          "signature": "fn buffer(&self) -> &'b [u8]",
+          "summary": "Exposes as much of the underlying buffer that was search as possible."
+        },
+        {
+          "name": "bytes",
+          "signature": "fn bytes(&self) -> &'b [u8]",
+          "summary": "Returns the bytes for all matching lines, including the line terminators, if they exist."
+        },
+        {
+          "name": "bytes_range_in_buffer",
+          "signature": "fn bytes_range_in_buffer(&self) -> std::ops::Range<usize>",
+          "summary": "Returns a range that corresponds to where [`SinkMatch::bytes`] appears in [`SinkMatch::buffer`]."
+        },
+        {
+          "name": "line_number",
+          "signature": "fn line_number(&self) -> Option<u64>",
+          "summary": "Returns the line number of the first line in this match, if available."
+        },
+        {
+          "name": "lines",
+          "signature": "fn lines(&self) -> LineIter<'b>",
+          "summary": "Return an iterator over the lines in this match."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::sink::Sink",
+      "name": "Sink",
+      "kind": "trait",
+      "crate": "grep-searcher",
+      "signature": "trait Sink",
+      "summary": "A trait that defines how results from searchers are handled.",
+      "doc": "api/grep_searcher.sink.md#sink",
+      "aliases": [
+        "grep_searcher::Sink"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "grep_printer::json::JSONSink",
+        "grep_printer::standard::StandardSink",
+        "grep_printer::summary::SummarySink",
+        "grep_searcher::sink::sinks::Bytes",
+        "grep_searcher::sink::sinks::Lossy",
+        "grep_searcher::sink::sinks::UTF8"
+      ],
+      "required_methods": [
+        "matched"
+      ],
+      "provided_methods": [
+        "begin",
+        "binary_data",
+        "context",
+        "context_break",
+        "finish"
+      ],
+      "methods": [
+        {
+          "name": "begin",
+          "signature": "fn begin(&mut self, _searcher: &Searcher) -> Result<bool, Self::Error>",
+          "summary": "This method is called when a search has begun, before any search is executed. By default, this does nothing."
+        },
+        {
+          "name": "binary_data",
+          "signature": "fn binary_data(&mut self, _searcher: &Searcher, _binary_byte_offset: u64) -> Result<bool, Self::Error>",
+          "summary": "This method is called whenever binary detection is enabled and binary data is found. If binary data is found, then this is called at least once for the first occurrence with the absolute byte offset at which the binary data begins."
+        },
+        {
+          "name": "context",
+          "signature": "fn context(&mut self, _searcher: &Searcher, _context: &SinkContext<'_>) -> Result<bool, Self::Error>",
+          "summary": "This method is called whenever a context line is found, and is optional to implement. By default, it does nothing and returns `true`."
+        },
+        {
+          "name": "context_break",
+          "signature": "fn context_break(&mut self, _searcher: &Searcher) -> Result<bool, Self::Error>",
+          "summary": "This method is called whenever a break in contextual lines is found, and is optional to implement. By default, it does nothing and returns `true`."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self, _searcher: &Searcher, _: &SinkFinish) -> Result<(), Self::Error>",
+          "summary": "This method is called when a search has completed. By default, this does nothing."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched(&mut self, _searcher: &Searcher, _mat: &SinkMatch<'_>) -> Result<bool, Self::Error>",
+          "summary": "This method is called whenever a match is found."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::sink::SinkError",
+      "name": "SinkError",
+      "kind": "trait",
+      "crate": "grep-searcher",
+      "signature": "trait SinkError: Sized",
+      "summary": "A trait that describes errors that can be reported by searchers and implementations of `Sink`.",
+      "doc": "api/grep_searcher.sink.md#sinkerror",
+      "aliases": [
+        "grep_searcher::SinkError"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "core::io::error::Error"
+      ],
+      "required_methods": [
+        "error_message"
+      ],
+      "provided_methods": [
+        "error_config",
+        "error_io"
+      ],
+      "methods": [
+        {
+          "name": "error_config",
+          "signature": "fn error_config(err: ConfigError) -> Self",
+          "summary": "A constructor for converting configuration errors that occur while building a searcher into an error of this type."
+        },
+        {
+          "name": "error_io",
+          "signature": "fn error_io(err: io::Error) -> Self",
+          "summary": "A constructor for converting I/O errors that occur while searching into an error of this type."
+        },
+        {
+          "name": "error_message",
+          "signature": "fn error_message<T: std::fmt::Display>(message: T) -> Self",
+          "summary": "A constructor for converting any value that satisfies the `std::fmt::Display` trait into an error."
+        }
+      ]
+    }
+  ]
+}

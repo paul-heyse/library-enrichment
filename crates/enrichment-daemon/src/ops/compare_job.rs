@@ -15,7 +15,9 @@ use std::{
 pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelope {
     let (record, token, new) = match service
         .jobs
-        .submit(jobs::JobSpec::Compare(request.clone()))
+        .submit(jobs::Arguments::Compare {
+            request: request.clone(),
+        })
         .await
     {
         Ok(value) => value,
@@ -177,7 +179,7 @@ pub(super) async fn recover(
     blobs: &enrichment_store::BlobStore,
     record: &jobs::JobRecord,
 ) -> io::Result<Option<(JobState, Envelope)>> {
-    let jobs::JobSpec::Compare(request) = &record.specification else {
+    let jobs::Arguments::Compare { request } = &record.specification else {
         return Err(io::Error::other(
             "comparison publication has a different journal kind",
         ));
@@ -216,7 +218,18 @@ pub(super) async fn recover(
         .validate_comparison_delivery(&publication)
         .await
         .map_err(fail)?;
-    let result = crate::delivery::recover_result(blobs, &publication.delivery)?;
+    let result = crate::delivery::recover_result(
+        blobs,
+        &repository.runtime,
+        repository
+            .catalog
+            .pin()
+            .await
+            .map_err(io::Error::other)?
+            .as_ref(),
+        &publication.delivery,
+    )
+    .await?;
     Ok(Some((publication.state, result)))
 }
 
@@ -247,7 +260,10 @@ async fn child_context(
             let result = record
                 .result
                 .ok_or_else(|| io::Error::other("terminal acquisition lacks result"))?;
-            if matches!(record.state, JobState::Succeeded | JobState::Partial) {
+            if matches!(
+                record.snapshot.state,
+                JobState::Succeeded | JobState::Partial
+            ) {
                 // A large successful resolve can have a BUDGET_EXCEEDED delivery envelope.
                 // Its durable terminal state and preserved context identify the prerequisite;
                 // comparison does not need to deserialize the unrelated full resolve payload.
@@ -283,12 +299,14 @@ mod tests {
         )
         .unwrap()
     }
-    fn specification() -> jobs::JobSpec {
-        jobs::JobSpec::Resolve(ResolveRequest {
-            name: "enr-fixture".into(),
-            version: Some("0.1.0".into()),
-            ..Default::default()
-        })
+    fn specification() -> jobs::Arguments {
+        jobs::Arguments::Resolve {
+            request: ResolveRequest {
+                name: "enr-fixture".into(),
+                version: Some("0.1.0".into()),
+                ..Default::default()
+            },
+        }
     }
     #[tokio::test]
     async fn comparison_cancellation_preserves_another_subscriber() {
@@ -306,7 +324,7 @@ mod tests {
         );
         let record = service.jobs.get(&child.job_id).await.unwrap();
         assert_eq!(record.state, JobState::Running);
-        assert_eq!(record.interests, [surviving_interest].into());
+        assert_eq!(record.interests, vec![surviving_interest]);
         assert!(
             !service
                 .jobs
@@ -332,7 +350,7 @@ mod tests {
         service.jobs.start(&child.job_id).await.unwrap();
         let mut result = envelope::ok(
             "resolved",
-            common::to_object(&serde_json::json!({"text":"\\🌎".repeat(200_000)})),
+            envelope::fixture_payload(&"\\🌎".repeat(200_000)),
             Coverage {
                 details: None,
                 assessments: Vec::new(),

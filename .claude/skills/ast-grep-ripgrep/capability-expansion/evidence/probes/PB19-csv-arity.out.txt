@@ -1,0 +1,51 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running `/home/paul/library-enrichment/target/debug/examples/pb19_csv_arity`
+PB19 — CSV reader arity against an explicit 3-column Utf8 schema
+
+  defaults   has_header=true  delimiter=','  quote='"'
+             file_extension=".csv"  truncated_rows=false
+
+  A  CONTROL  three conforming 3-field rows       must read 3 rows, cells intact
+     conforming             3 row(s)
+                              ["1", "x", "p"]
+                              ["2", "y", "q"]
+                              ["3", "z", "r"]
+
+  A' CONTROL  same bytes, file_extension DEFAULT  resolves that default
+     default extension      ERROR  plan: Execution error: File path 'file:///tmp/pb19-csv-arity/a2.tsv' does not match the expected extension '.csv'
+
+  B  a 2-field row among conforming ones          error, or null-padded?
+     short row              ERROR  execute: Arrow error: Csv error: incorrect number of fields for line 2, expected 3 got 2
+
+  C  a 4-field row among conforming ones          error, or truncated?
+     long row               ERROR  execute: Arrow error: Csv error: incorrect number of fields for line 2, expected 3 got 4
+
+  D  arm B's bytes with truncated_rows(true)      names which default B exercised
+     truncated_rows(true)   3 row(s)
+                              ["1", "x", "p"]
+                              ["2", "y", NULL]
+                              ["3", "z", "r"]
+     -> B errored and D did not: the default REJECTS short rows
+
+  E  a cell containing a double quote             contract says no quoting
+     embedded quote         2 row(s)
+                              ["1", "a\"b", "p"]
+                              ["2", "y", "q"]
+     -> the quote is DATA; the contract survives
+
+  F  a cell STARTING with a double quote         quotes are special at field start
+     leading quote          2 row(s)
+                              ["1", "quoted", "p"]
+                              ["2", "y", "q"]
+     -> REINTERPRETED at field start; the reader must disable quoting
+
+  F' arm F with quoting disabled                 the fix, if F needs one
+     quote(b'\0')           2 row(s)
+                              ["1", "\"quoted\"", "p"]
+                              ["2", "y", "q"]
+     -> quoting disabled reads the cell verbatim
+
+VERDICT
+  every arm behaved as the staging reader needs.

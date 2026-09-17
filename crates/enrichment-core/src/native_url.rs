@@ -1,12 +1,13 @@
 //! Bounded URL syntax decoding. Scheme, network and endpoint policy are native expressions.
 use arrow::{
     array::{Array, StringArray, StringBuilder, StructArray, UInt64Builder},
-    datatypes::{DataType, Field, Fields},
+    datatypes::{DataType, Field, FieldRef, Fields},
 };
 use datafusion::{
     error::{DataFusionError, Result},
     logical_expr::{
-        ColumnarValue, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature, Volatility,
+        ColumnarValue, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature,
+        Volatility,
     },
 };
 use std::sync::Arc;
@@ -18,6 +19,7 @@ fn fields() -> Fields {
         Field::new("authority", DataType::Utf8, true),
         Field::new("ipv4", DataType::UInt64, true),
         Field::new("ipv6", DataType::Utf8, true),
+        Field::new("has_credentials", DataType::Boolean, true),
     ]
     .into()
 }
@@ -32,7 +34,7 @@ struct UrlParts {
 }
 impl ScalarUDFImpl for UrlParts {
     fn name(&self) -> &str {
-        "url_parts_v1"
+        "url_parts_v2"
     }
     fn signature(&self) -> &Signature {
         &self.signature
@@ -40,7 +42,17 @@ impl ScalarUDFImpl for UrlParts {
     fn return_type(&self, _: &[DataType]) -> Result<DataType> {
         Ok(DataType::Struct(fields()))
     }
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        crate::native_schema::text_function_output(
+            &args,
+            1,
+            self.name(),
+            DataType::Struct(fields()),
+            true,
+        )
+    }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        crate::native_schema::function_call(self, &args)?;
         if args.args.len() != 1 {
             return Err(DataFusionError::Plan(
                 "URL parser requires one argument".into(),
@@ -58,6 +70,7 @@ impl ScalarUDFImpl for UrlParts {
         let mut authority = StringBuilder::new();
         let mut ipv4 = UInt64Builder::new();
         let mut ipv6 = StringBuilder::new();
+        let mut credentials = arrow::array::BooleanBuilder::new();
         let mut validity = Vec::with_capacity(input.len());
         for value in input {
             if value.is_some_and(|v| v.len() > 65_536) {
@@ -66,6 +79,11 @@ impl ScalarUDFImpl for UrlParts {
                 ));
             }
             let parsed = value.and_then(|v| url::Url::parse(v).ok());
+            credentials.append_option(
+                parsed
+                    .as_ref()
+                    .map(|url| !url.username().is_empty() || url.password().is_some()),
+            );
             scheme.append_option(parsed.as_ref().map(url::Url::scheme));
             host.append_option(parsed.as_ref().and_then(url::Url::host_str));
             authority.append_option(parsed.as_ref().and_then(|u| {
@@ -97,6 +115,7 @@ impl ScalarUDFImpl for UrlParts {
                 Arc::new(authority.finish()),
                 Arc::new(ipv4.finish()),
                 Arc::new(ipv6.finish()),
+                Arc::new(credentials.finish()),
             ],
             Some(arrow::buffer::NullBuffer::from(validity)),
         )?)))

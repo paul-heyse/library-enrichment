@@ -1,7 +1,7 @@
 ---
 id: ADR-0043
 title: Preserve typed semantics across Arrow and Delta
-status: accepted
+status: superseded
 date: 2026-09-15
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§6.2, §6.3]
 review: docs/design_review/reviews/design_review_unified-datafusion-delta-runtime_2026-09-15.md
 evidence: Interface-checked
 supersedes: [ADR-0022, ADR-0031]
-superseded-by: null
+superseded-by: ADR-0047
 revisit: A required Plan 15 consumer cannot use the qualified native route or preserve its semantic and ownership contract.
 verification: Plan 15 native-evidence-check; delta-mutation-check (implementation oracles; not yet qualified).
 ---
@@ -72,3 +72,7 @@ At the pinned Delta revision, alloc-stdlib 0.2.2 is required while the resolved 
 stack also uses 0.3.0; changing upstream APIs merely to remove that duplicate does not improve
 native type compatibility. Source restrictions, wildcard bans, licenses and banned dependency
 classes remain enforced. Verified from the resolved Cargo.lock and `cargo deny` on 2026-09-15.
+
+## Status history
+
+- 2026-09-16 — superseded by ADR-0047.

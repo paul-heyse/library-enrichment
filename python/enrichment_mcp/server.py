@@ -25,14 +25,14 @@ import json
 import sys
 from pathlib import Path
 from time import monotonic
-from typing import Annotated, Any, Literal
+from typing import Any
 from uuid import uuid4
 
 from fastmcp import FastMCP
 from fastmcp.exceptions import ValidationError as ToolValidationError
 from fastmcp.resources.base import ResourceResult
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
-from fastmcp.tools.base import ToolResult
+from fastmcp.tools import Tool, ToolResult
 from jsonschema import Draft202012Validator, validators
 from mcp.types import (
     CallToolRequestParams,
@@ -42,65 +42,19 @@ from mcp.types import (
     TextContent,
     ToolAnnotations,
 )
-from pydantic import BeforeValidator, Field
 
 from enrichment_mcp import envelope, presentation
-from enrichment_mcp._generated.request_schema import (
-    ArtifactSection,
-    DiscoverySelection,
-    InspectionOptions,
-    ResearchSelection,
-)
+from enrichment_mcp._generated.request_schema import ArtifactSection
 from enrichment_mcp._generated.research_envelope_schema import Code, Coverage, Diagnostic
 from enrichment_mcp.daemon_client import (
-    ACQUISITION_TIMEOUT_SECONDS,
     DaemonClient,
     DaemonUnavailableError,
 )
 
 __all__ = ["TOOL_NAMES", "build_server", "log"]
 
-#: Every tool the companion skill's contract names, in the order it lists them.
-TOOL_NAMES = (
-    "resolve_library",
-    "library_overview",
-    "search_evidence",
-    "inspect_symbol",
-    "compare_releases",
-    "verify_usage",
-    "read_artifact",
-    "job_control",
-    "service_status",
-)
-
-Ecosystem = Literal["rust", "python"]
-ResearchMode = Literal["project", "upstream", "compare", "revision"]
-FreshnessMode = Literal["cache_ok", "revalidate", "offline"]
-EvidenceFamily = Literal["api", "docs", "examples", "release_notes", "features", "source"]
-
-
-def _selection_from_json(value: object) -> ResearchSelection:
-    return ResearchSelection.model_validate_json(json.dumps(value), strict=True)
-
-
-def _discovery_from_json(value: object) -> DiscoverySelection:
-    return DiscoverySelection.model_validate_json(json.dumps(value), strict=True)
-
-
-DiscoveryInput = Annotated[DiscoverySelection, BeforeValidator(_discovery_from_json)]
-
-
-def _execution_from_json(value: object) -> InspectionOptions:
-    return InspectionOptions.model_validate_json(json.dumps(value), strict=True)
-
-
-def _section_from_json(value: object) -> ArtifactSection:
-    return ArtifactSection.model_validate_json(json.dumps(value), strict=True)
-
-
-SectionInput = Annotated[ArtifactSection, BeforeValidator(_section_from_json)]
-SelectionInput = Annotated[ResearchSelection, BeforeValidator(_selection_from_json)]
-ExecutionInput = Annotated[InspectionOptions, BeforeValidator(_execution_from_json)]
+#: Names, contracts and annotations are emitted from the Rust operation declaration.
+TOOL_NAMES = tuple(name for name, entry in presentation.bindings().items() if entry["published"])
 
 
 # Retrieval reads a published snapshot: no network, so a short bound is enough to tell a
@@ -300,33 +254,19 @@ class OperationBoundary(Middleware):
             )
 
 
-# Annotations are disclosure, never enforcement -- policy is enforced in the Rust core
-# (blueprint §10). They are set explicitly rather than left unset because `destructiveHint` and
-# `openWorldHint` are read as **true** when absent, so silence is the permissive answer.
-#
-# Written with the snake_case field names rather than the camelCase aliases. Both populate the
-# model (`populate_by_name=True`) and both serialize to the camelCase wire form, but the field
-# names are what the class actually declares, and `ty` cannot see through the alias generator.
-_ACQUIRES = ToolAnnotations(
-    read_only_hint=False,
-    destructive_hint=False,
-    idempotent_hint=True,
-    open_world_hint=True,
-)
-_CACHED_READ = ToolAnnotations(
-    read_only_hint=True,
-    destructive_hint=False,
-    idempotent_hint=True,
-    open_world_hint=False,
-)
-# `verify_usage` builds an environment and executes code in an isolated profile. Blueprint §7.4
-# is explicit that it "must not be portrayed as a pure read-only operation".
-_EXECUTES = ToolAnnotations(
-    read_only_hint=False,
-    destructive_hint=False,
-    idempotent_hint=False,
-    open_world_hint=True,
-)
+class NativeTool(Tool):
+    """One FastMCP execution mechanism for every generated core operation binding."""
+
+    rpc_method: str
+    rpc_timeout: float
+
+    async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        if self.name == "service_status":
+            payload, _ = await _service_status(arguments.get("component"))
+        else:
+            wait = arguments.get("wait_seconds", 0) if self.name == "job_control" else 0
+            payload = await _research(self.rpc_method, arguments, timeout=self.rpc_timeout + wait)
+        return _tool_result(payload, tool=self.name)
 
 
 def build_server() -> FastMCP:
@@ -350,390 +290,18 @@ def build_server() -> FastMCP:
         ),
     )
 
-    @mcp.tool(
-        output_schema=presentation.output_schema("service_status"),
-        name="service_status",
-        description="Inspect readiness and capabilities, without indexing.",
-        annotations=_CACHED_READ,
-    )
-    async def service_status(
-        component: Annotated[
-            str | None,
-            Field(description="Restrict the report to one producer or component."),
-        ] = None,
-    ) -> ToolResult:
-        """Report what this build can actually do, including what is absent."""
-        payload, _from_core = await _service_status(component)
-        # The payload schema is checked only for an answer the core composed. The
-        # daemon-unreachable envelope below is adapter-local by necessity -- there is no core to
-        # ask -- and its data is deliberately *not* a status payload. Validating it against one
-        # would turn a truthful "the daemon is down" into a reported internal defect.
-        return _tool_result(payload, tool="service_status")
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("resolve_library"),
-        name="resolve_library",
-        description="Establish exact identity and environment before research.",
-        annotations=_ACQUIRES,
-    )
-    async def resolve_library(
-        ecosystem: Annotated[Ecosystem, Field(description="Which package ecosystem.")],
-        name: Annotated[str, Field(description="Crate or distribution name.", min_length=1)],
-        version: Annotated[
-            str | None,
-            Field(description="Exact version. Omit only for an explicit upstream question."),
-        ] = None,
-        mode: Annotated[
-            ResearchMode | None,
-            Field(
-                description=(
-                    "Research mode. Defaults to `project` with a version and `upstream` without."
-                )
-            ),
-        ] = None,
-        features: Annotated[
-            list[str] | None,
-            Field(description="Rust features your project enables; use extras for Python."),
-        ] = None,
-        default_features: Annotated[
-            bool | None,
-            Field(description="Whether your project enables default features, if known."),
-        ] = None,
-        target: Annotated[
-            str | None, Field(description="Your project's target triple or platform, if known.")
-        ] = None,
-        repository: str | None = None,
-        revision: str | None = None,
-        package_subdir: str | None = None,
-        python_version: str | None = None,
-        extras: list[str] | None = None,
-        allow_prerelease: bool = False,
-        allow_yanked: bool = False,
-        freshness: Annotated[
-            FreshnessMode,
-            Field(
-                description=(
-                    "`cache_ok` retains exact-version evidence indefinitely; "
-                    "latest selection has a TTL. "
-                    "`revalidate` "
-                    "always consults the registry; `offline` never opens a socket."
-                )
-            ),
-        ] = "cache_ok",
-        allow_local_build: Annotated[
-            bool,
-            Field(
-                description=(
-                    "Accept a local rustdoc build when docs.rs JSON is missing or in an "
-                    "unreadable format, or its observed build differs from requested "
-                    "features/target. "
-                    "Compiles the crate on a dated nightly in an isolated "
-                    "capsule and can take minutes. Requires the operator-enabled `build` "
-                    "profile; asking never grants it."
-                )
-            ),
-        ] = False,
-    ) -> ToolResult:
-        """Resolve a release to a stable context identity."""
-        params: dict[str, Any] = {
-            "ecosystem": ecosystem,
-            "name": name,
-            "version": version,
-            "mode": mode,
-            "features": features,
-            "default_features": default_features,
-            "target": target,
-            "repository": repository,
-            "revision": revision,
-            "package_subdir": package_subdir,
-            "python_version": python_version,
-            "extras": extras,
-            "allow_prerelease": allow_prerelease,
-            "allow_yanked": allow_yanked,
-            "allow_local_build": allow_local_build,
-            "freshness": freshness,
-        }
-        return _tool_result(
-            await _research("library.resolve", params, timeout=ACQUISITION_TIMEOUT_SECONDS),
-            tool="resolve_library",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("library_overview"),
-        name="library_overview",
-        description="Discover unfamiliar capabilities without knowing symbol names.",
-        annotations=_CACHED_READ,
-    )
-    async def library_overview(
-        context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
-        discovery: Annotated[
-            list[DiscoveryInput] | None,
-            Field(
-                description=(
-                    "Independent feature, README, release-note and example pages. "
-                    "Omit for bounded previews; use an empty list for namespace navigation alone."
-                ),
-                max_length=4,
-            ),
-        ] = None,
-        area: Annotated[
-            str | None, Field(description="Narrow the map to one module or feature area.")
-        ] = None,
-        snapshot_id: Annotated[
-            str | None,
-            Field(description="Read a specific snapshot; the context's current one otherwise."),
-        ] = None,
-        max_items: Annotated[
-            int | None,
-            Field(description="Child entries per namespace; the server caps it.", ge=1),
-        ] = None,
-        max_bytes: Annotated[
-            int | None,
-            Field(description="Inline byte budget; the server caps it.", ge=1024),
-        ] = None,
-    ) -> ToolResult:
-        """Return the module/feature map and documentation headings."""
-        return _tool_result(
-            await _research(
-                "library.overview",
-                {
-                    "discovery": None
-                    if discovery is None
-                    else [
-                        item.model_dump(mode="json", by_alias=True, warnings="error")
-                        for item in discovery
-                    ],
-                    "context_id": context_id,
-                    "snapshot_id": snapshot_id,
-                    "area": area,
-                    "max_items": max_items,
-                    "max_bytes": max_bytes,
-                },
-                timeout=RETRIEVAL_TIMEOUT_SECONDS,
-            ),
-            tool="library_overview",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("search_evidence"),
-        name="search_evidence",
-        description="Search a bounded set of API, docs, examples, source, or release evidence.",
-        annotations=_CACHED_READ,
-    )
-    async def search_evidence(
-        context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
-        query: Annotated[str, Field(description="What to look for.", min_length=1)],
-        kinds: Annotated[
-            list[EvidenceFamily] | None,
-            Field(description="Restrict to evidence kinds; all but `source` when omitted."),
-        ] = None,
-        area: Annotated[
-            str | None, Field(description="Restrict to this namespace subtree.")
-        ] = None,
-        cursor: Annotated[
-            str | None,
-            Field(description="Continue a previous search. Same query, filters and snapshot."),
-        ] = None,
-        snapshot_id: Annotated[
-            str | None,
-            Field(description="Read a specific snapshot; the context's current one otherwise."),
-        ] = None,
-        max_items: Annotated[
-            int | None, Field(description="Page size; the server caps it.", ge=1)
-        ] = None,
-        max_bytes: Annotated[
-            int | None,
-            Field(description="Inline byte budget; the server caps it.", ge=1024),
-        ] = None,
-    ) -> ToolResult:
-        """Search bounded evidence for a context."""
-        return _tool_result(
-            await _research(
-                "evidence.search",
-                {
-                    "context_id": context_id,
-                    "snapshot_id": snapshot_id,
-                    "query": query,
-                    "kinds": kinds,
-                    "area": area,
-                    "cursor": cursor,
-                    "max_items": max_items,
-                    "max_bytes": max_bytes,
-                },
-                timeout=RETRIEVAL_TIMEOUT_SECONDS,
-            ),
-            tool="search_evidence",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("inspect_symbol"),
-        name="inspect_symbol",
-        description=(
-            "Read retained symbol evidence; explicit execution options can run "
-            "isolated semantic or runtime inspection."
-        ),
-        annotations=_EXECUTES,
-    )
-    async def inspect_symbol(
-        context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
-        symbol_path: Annotated[
-            str, Field(description="Fully qualified symbol path.", min_length=1)
-        ],
-        definition_id: Annotated[
-            str | None,
-            Field(
-                description="Select a definition from candidates when the public path is ambiguous."
-            ),
-        ] = None,
-        selection: SelectionInput | None = None,
-        snapshot_id: Annotated[
-            str | None,
-            Field(description="Read a specific snapshot; the context's current one otherwise."),
-        ] = None,
-        execution: Annotated[
-            ExecutionInput | None,
-            Field(description="Read retained evidence or explicitly select an execution profile."),
-        ] = None,
-        max_bytes: Annotated[
-            int | None,
-            Field(description="Inline byte budget; the server caps it.", ge=1024),
-        ] = None,
-    ) -> ToolResult:
-        """Describe one symbol and what deploying it requires."""
-        return _tool_result(
-            await _research(
-                "symbol.inspect",
-                {
-                    "context_id": context_id,
-                    "snapshot_id": snapshot_id,
-                    "symbol_path": symbol_path,
-                    "definition_id": definition_id,
-                    "selection": selection.model_dump(mode="json", by_alias=True, warnings="error")
-                    if selection is not None
-                    else {"mode": "default"},
-                    "execution": execution.model_dump(mode="json", by_alias=True, warnings="error")
-                    if execution is not None
-                    else None,
-                    "max_bytes": max_bytes,
-                },
-                timeout=RETRIEVAL_TIMEOUT_SECONDS,
-            ),
-            tool="inspect_symbol",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("compare_releases"),
-        name="compare_releases",
-        description="Discover additions/removals and non-API changes.",
-        annotations=_ACQUIRES,
-    )
-    async def compare_releases(
-        ecosystem: Ecosystem | None = None,
-        name: str | None = None,
-        from_version: str | None = None,
-        to_version: str | None = None,
-        before_context_id: str | None = None,
-        after_context_id: str | None = None,
-        before_snapshot_id: str | None = None,
-        alternative_cursor: str | None = None,
-        after_snapshot_id: str | None = None,
-        scopes: list[
-            Literal["api", "docs", "configuration", "release_notes", "examples", "relationships"]
-        ]
-        | None = None,
-        cursor: str | None = None,
-        max_items: Annotated[int | None, Field(ge=1)] = None,
-        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
-    ) -> ToolResult:
-        """Compare pinned contexts locally, or explicitly resolve a version pair first.
-
-        Use exactly one input form. Environment differences and incomplete coverage are reported
-        before interpreting API additions/removals, documentation and behavior notes.
-        """
-        params = {
-            "ecosystem": ecosystem,
-            "name": name,
-            "from_version": from_version,
-            "to_version": to_version,
-            "before_context_id": before_context_id,
-            "after_context_id": after_context_id,
-            "before_snapshot_id": before_snapshot_id,
-            "alternative_cursor": alternative_cursor,
-            "after_snapshot_id": after_snapshot_id,
-            "scopes": scopes,
-            "cursor": cursor,
-            "max_items": max_items,
-            "max_bytes": max_bytes,
-        }
-        return _tool_result(
-            await _research("library.compare", params, timeout=ACQUISITION_TIMEOUT_SECONDS),
-            tool="compare_releases",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("verify_usage"),
-        name="verify_usage",
-        description="Test a proposed invocation or composition in isolation.",
-        annotations=_EXECUTES,
-    )
-    async def verify_usage(
-        context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
-        snippet: Annotated[str, Field(description="The code to verify.", min_length=1)],
-        mode: Annotated[
-            Literal["typecheck", "compile", "runtime"],
-            Field(description="What to establish. These prove different things."),
-        ] = "typecheck",
-        profile: Literal["build", "runtime"] = "build",
-        snapshot_id: str | None = None,
-        test_intent: str | None = None,
-        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
-    ) -> ToolResult:
-        """Verify a usage pattern in a service-owned isolated environment."""
-        return _tool_result(
-            await _research(
-                "usage.verify",
-                {
-                    "context_id": context_id,
-                    "snapshot_id": snapshot_id,
-                    "snippet": snippet,
-                    "mode": mode,
-                    "profile": profile,
-                    "test_intent": test_intent,
-                    "max_bytes": max_bytes,
-                },
-                timeout=RETRIEVAL_TIMEOUT_SECONDS,
-            ),
-            tool="verify_usage",
-        )
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("read_artifact"),
-        name="read_artifact",
-        description="Retrieve large result sections without flooding context.",
-        annotations=_CACHED_READ,
-    )
-    async def read_artifact(
-        artifact_id: Annotated[
-            str,
-            Field(
-                description="From `artifacts[].receipt.artifact_id` or `delivery.artifact_id`.",
-                min_length=1,
-            ),
-        ],
-        section: Annotated[
-            SectionInput | None,
-            Field(description="Read a typed result section or a Markdown heading."),
-        ] = None,
-        cursor: Annotated[str | None, Field(description="Continue a previous read.")] = None,
-        max_bytes: Annotated[
-            int | None,
-            Field(description="Bytes per slice; the server caps it.", ge=1024),
-        ] = None,
-    ) -> ToolResult:
-        """Read a bounded section of a stored artifact, addressed by ID and never by path."""
-        return _tool_result(
-            await _read_artifact(artifact_id, section, cursor, max_bytes),
-            tool="read_artifact",
+    for name in TOOL_NAMES:
+        binding = presentation.bindings()[name]
+        mcp.add_tool(
+            NativeTool(
+                name=name,
+                description=binding["description"],
+                parameters=binding["input_schema"],
+                output_schema=binding["output_schema"],
+                annotations=ToolAnnotations.model_validate(binding["annotations"]),
+                rpc_method=binding["rpc"],
+                rpc_timeout=float(binding["timeout_seconds"]),
+            )
         )
 
     # Resource templates (blueprint §7.4) delegate to the same core reads as the tools, so a
@@ -786,40 +354,6 @@ def build_server() -> FastMCP:
             timeout=RETRIEVAL_TIMEOUT_SECONDS,
         )
         return json.dumps(_emit(payload, tool="snapshot_manifest"))
-
-    @mcp.tool(
-        output_schema=presentation.output_schema("job_control"),
-        name="job_control",
-        description="Observe or cancel an explicitly submitted long-running operation.",
-        annotations=_EXECUTES,
-    )
-    async def job_control(
-        job_id: Annotated[str, Field(description="From a `pending` result.", min_length=1)],
-        action: Annotated[
-            Literal["status", "wait", "cancel"],
-            Field(description="`cancel` drops your interest; shared work may continue."),
-        ] = "status",
-        wait_seconds: Annotated[
-            int, Field(description="Bounded wait for `wait`.", ge=0, le=10)
-        ] = 0,
-        interest_token: str | None = None,
-        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
-    ) -> ToolResult:
-        """Observe or cancel a durable core job."""
-        return _tool_result(
-            await _research(
-                "job.control",
-                {
-                    "job_id": job_id,
-                    "action": action,
-                    "wait_seconds": wait_seconds,
-                    "interest_token": interest_token,
-                    "max_bytes": max_bytes,
-                },
-                timeout=RETRIEVAL_TIMEOUT_SECONDS + wait_seconds,
-            ),
-            tool="job_control",
-        )
 
     # The frozen template in blueprint 7.4 is `.../jobs/{job_id}/result`, and a resource URI is
     # part of the contract a client binds to -- an adapter that served a different one would be
@@ -928,17 +462,10 @@ async def _research(method: str, params: dict[str, Any], *, timeout: float) -> d
     ``error`` here rather than the ``partial`` `service_status` returns: with no daemon there
     is no evidence at all, and the next action is the same either way.
     """
-    tool = {
-        "usage.verify": "verify_usage",
-        "job.control": "job_control",
-        "library.resolve": "resolve_library",
-        "library.compare": "compare_releases",
-        "library.overview": "library_overview",
-        "evidence.search": "search_evidence",
-        "symbol.inspect": "inspect_symbol",
-        "artifact.read": "read_artifact",
-        "snapshot.manifest": "snapshot_manifest",
-    }.get(method)
+    tool = next(
+        (name for name, binding in presentation.bindings().items() if binding["rpc"] == method),
+        None,
+    )
     if tool is not None:
         valid, reason = envelope.validate_request(tool, params)
         if not valid:

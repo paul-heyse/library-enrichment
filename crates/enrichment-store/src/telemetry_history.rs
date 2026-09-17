@@ -9,10 +9,10 @@ use datafusion::{
     execution::memory_pool::{MemoryConsumer, MemoryPool, MemoryReservation},
     prelude::col,
 };
+use enrichment_core::native_union::NativeStruct;
 use enrichment_core::telemetry::{
-    self, OperationDiagnostics, OperationEnd, QueryDiagnostics, Summary,
+    self, Event, EventPayload, OperationDiagnostics, OperationEnd, QueryDiagnostics, Summary,
 };
-use serde::Serialize;
 use std::{
     path::Path,
     sync::{
@@ -50,21 +50,10 @@ enum Selection {
     Queries,
     Operations,
     Summary,
+    ServiceCounters,
     Failures,
     Flush,
     Close,
-}
-#[derive(Serialize)]
-struct Event<'a> {
-    runtime_id: &'a str,
-    sequence: u64,
-    recorded_at: String,
-    kind: &'a str,
-    operation_id: Option<&'a str>,
-    query: Option<&'a QueryDiagnostics>,
-    operation: Option<&'a OperationEnd>,
-    failure: Option<&'a telemetry::Failure>,
-    index_bytes: Option<u64>,
 }
 impl History {
     /// The writer uses the same executor/pool and an unobserved runtime clone. Its queue owns
@@ -107,35 +96,30 @@ impl History {
     pub(crate) fn enabled(&self) -> bool {
         self.0.is_some()
     }
-    fn emit(
-        &self,
-        kind: &str,
-        operation_id: Option<&str>,
-        query: Option<&QueryDiagnostics>,
-        operation: Option<&OperationEnd>,
-        failure: Option<&telemetry::Failure>,
-        index_bytes: Option<u64>,
-    ) {
+    fn emit(&self, operation_id: Option<&str>, payload: impl FnOnce() -> EventPayload) {
         let Some(h) = &self.0 else {
             return;
         };
         let write = || -> Result<()> {
-            let batch = crate::control_jobs::encode(
-                telemetry::schema::events(),
-                &[Event {
-                    runtime_id: &h.runtime_id,
-                    sequence: h.next_event.fetch_add(1, Ordering::Relaxed) + 1,
-                    recorded_at: enrichment_core::clock::now_rfc3339(),
-                    kind,
-                    operation_id,
-                    query,
-                    operation,
-                    failure,
-                    index_bytes,
-                }],
-            )?;
+            // Reserve the bounded ingress arena before cloning or Arrow encoding. The
+            // resulting buffers retain their reservation until the writer releases them.
             let memory = MemoryConsumer::new("native_telemetry_ingress").register(&h.pool);
-            memory.try_grow(batch.get_array_memory_size())?;
+            memory.try_grow(READ_BYTES)?;
+            let event = Event {
+                runtime_id: h.runtime_id.clone(),
+                sequence: h.next_event.fetch_add(1, Ordering::Relaxed) + 1,
+                recorded_at: enrichment_core::native_time::EventTime::now()?,
+                operation_id: operation_id.map(str::to_owned),
+                payload: payload(),
+            };
+            let batch = Event::batch(&[event])?;
+            let bytes = datafusion::common::utils::memory::get_record_batch_memory_size(&batch);
+            if bytes > READ_BYTES {
+                return Err(DataFusionError::ResourcesExhausted(
+                    "diagnostic Arrow ingress bound".into(),
+                ));
+            }
+            memory.shrink(READ_BYTES - bytes);
             h.send
                 .try_send(Message::Entry(Entry {
                     batch,
@@ -151,49 +135,38 @@ impl History {
         }
     }
     pub(crate) fn query(&self, query: &QueryDiagnostics) {
-        self.emit(
-            "query",
-            query.operation_id.as_deref(),
-            Some(query),
-            None,
-            None,
-            None,
-        );
+        self.emit(query.operation_id.as_deref(), || EventPayload::Query {
+            value: Box::new(query.clone()),
+        });
     }
     pub(crate) fn operation(&self, operation: OperationEnd) {
-        self.emit(
-            "operation",
-            Some(&operation.operation_id),
-            None,
-            Some(&operation),
-            None,
-            None,
-        );
+        let id = operation.operation_id.clone();
+        self.emit(Some(&id), || EventPayload::Operation { value: operation });
     }
     pub(crate) fn index(&self, operation_id: Option<&str>, bytes: Option<u64>) {
-        self.emit(
-            if bytes.is_some() {
-                "index_materialization"
-            } else {
-                "index_read"
-            },
-            operation_id,
-            None,
-            None,
-            None,
-            bytes,
-        );
+        self.emit(operation_id, || {
+            bytes.map_or(EventPayload::IndexRead, |bytes| {
+                EventPayload::IndexMaterialization { bytes }
+            })
+        });
+    }
+    pub(crate) fn service(&self, observation: telemetry::ServiceObservation) {
+        let id = crate::runtime::operation_id();
+        self.emit(id.as_deref(), || EventPayload::Service {
+            value: observation,
+        });
+    }
+    pub(crate) async fn service_counters(&self) -> Result<telemetry::ServiceCounters> {
+        decode::<telemetry::ServiceCounters>(self.select(Selection::ServiceCounters).await?)?
+            .pop()
+            .ok_or_else(|| invalid("native service diagnostic aggregate missing"))
     }
     pub(crate) fn failure(&self, diagnostic: enrichment_core::wire::Diagnostic) {
         match telemetry::Failure::try_from(diagnostic) {
-            Ok(failure) => self.emit(
-                "failure",
-                failure.correlation_id.as_deref(),
-                None,
-                None,
-                Some(&failure),
-                None,
-            ),
+            Ok(failure) => {
+                let id = failure.correlation_id.clone();
+                self.emit(id.as_deref(), || EventPayload::Failure { value: failure });
+            }
             Err(error) => {
                 if let Some(h) = &self.0 {
                     h.dropped.fetch_add(1, Ordering::AcqRel);
@@ -255,11 +228,15 @@ impl History {
         }
     }
 }
-fn decode<T: serde::de::DeserializeOwned>(batches: Vec<RecordBatch>) -> Result<Vec<T>> {
-    let mut writer = arrow::json::ArrayWriter::new(Vec::new());
-    writer.write_batches(&batches.iter().collect::<Vec<_>>())?;
-    writer.finish()?;
-    serde_json::from_slice(&writer.into_inner()).map_err(|e| DataFusionError::External(Box::new(e)))
+fn decode<T: NativeStruct>(batches: Vec<RecordBatch>) -> Result<Vec<T>> {
+    let mut output = Vec::new();
+    for batch in batches {
+        let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(&batch)?;
+        for index in 0..batch.num_rows() {
+            output.push(T::decode(rows.row(index))?);
+        }
+    }
+    Ok(output)
 }
 
 async fn actor(
@@ -357,7 +334,7 @@ async fn persist(
 }
 fn aggregate(grouped: bool) -> String {
     format!(
-        "SELECT {} CAST(count(*) FILTER (WHERE kind='query') AS BIGINT UNSIGNED) AS executions, CAST(count(*) FILTER (WHERE kind='query' AND query.completed) AS BIGINT UNSIGNED) AS completed, CAST(count(*) FILTER (WHERE kind='query' AND NOT query.completed) AS BIGINT UNSIGNED) AS incomplete, coalesce(sum(query.planning_micros),0) AS planning_micros, coalesce(sum(query.elapsed_micros),0) AS elapsed_micros, CAST(count(*) FILTER (WHERE kind='index_materialization') AS BIGINT UNSIGNED) AS index_materializations, coalesce(sum(index_bytes),0) AS index_spill_bytes, CAST(count(*) FILTER (WHERE kind='index_read') AS BIGINT UNSIGNED) AS index_reads, coalesce(sum(query.queue_micros),0) AS queue_micros, coalesce(sum(query.output_rows),0) AS output_rows, coalesce(sum(query.output_arrow_bytes),0) AS output_arrow_bytes FROM current_events {}",
+        "SELECT {} CAST(count(*) FILTER (WHERE kind='query') AS BIGINT UNSIGNED) AS executions, CAST(count(*) FILTER (WHERE kind='query' AND query.completed) AS BIGINT UNSIGNED) AS completed, CAST(count(*) FILTER (WHERE kind='query' AND NOT query.completed) AS BIGINT UNSIGNED) AS incomplete, CAST(coalesce(sum(query.planning_micros),0) AS BIGINT UNSIGNED) AS planning_micros, CAST(coalesce(sum(query.elapsed_micros),0) AS BIGINT UNSIGNED) AS elapsed_micros, CAST(count(*) FILTER (WHERE kind='index_materialization') AS BIGINT UNSIGNED) AS index_materializations, CAST(coalesce(sum(index_bytes),0) AS BIGINT UNSIGNED) AS index_spill_bytes, CAST(count(*) FILTER (WHERE kind='index_read') AS BIGINT UNSIGNED) AS index_reads, CAST(coalesce(sum(query.queue_micros),0) AS BIGINT UNSIGNED) AS queue_micros, CAST(coalesce(sum(query.output_rows),0) AS BIGINT UNSIGNED) AS output_rows, CAST(coalesce(sum(query.output_arrow_bytes),0) AS BIGINT UNSIGNED) AS output_arrow_bytes FROM current_events {}",
         if grouped { "operation_id," } else { "" },
         if grouped { "GROUP BY operation_id" } else { "" }
     )
@@ -396,6 +373,8 @@ async fn select(
             )?,
         Err(error) => return Err(error),
     };
+    crate::native_catalog::work(&session, "event_records", all.into_view())?;
+    let all = session.sql("SELECT runtime_id,sequence,recorded_at,operation_id,payload.kind AS kind,payload.query.value AS query,payload.operation.value AS operation,payload.failure.value AS failure,payload.index_materialization.bytes AS index_bytes,payload.service.value AS service FROM event_records").await?;
     crate::native_catalog::work(&session, "all_events", all.clone().into_view())?;
     crate::native_catalog::work(
         &session,
@@ -410,6 +389,7 @@ async fn select(
             format!("SELECT {fields} FROM (SELECT sequence, query FROM current_events WHERE kind='query' ORDER BY sequence DESC LIMIT 8) ORDER BY sequence")
         }
         Selection::Summary => aggregate(false),
+        Selection::ServiceCounters => service_totals(),
         Selection::Operations => {
             crate::native_catalog::work(&session, "operation_totals", session.sql(&aggregate(true)).await?.into_view())?;
             let arrow::datatypes::DataType::Struct(fields) = telemetry::schema::operation() else { unreachable!() };
@@ -424,4 +404,92 @@ async fn select(
 }
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Execution(message.into())
+}
+
+/// Native reductions share the finite observed vocabulary and generated output schema.
+fn service_totals() -> String {
+    fn count(predicate: &str) -> String {
+        format!("CAST(count(*) FILTER (WHERE {predicate}) AS BIGINT UNSIGNED)")
+    }
+    fn sum(value: &str, predicate: &str) -> String {
+        format!("CAST(coalesce(sum({value}) FILTER (WHERE {predicate}),0) AS BIGINT UNSIGNED)")
+    }
+    fn record(fields: Vec<(&str, String)>) -> String {
+        format!(
+            "named_struct({})",
+            fields
+                .into_iter()
+                .map(|(name, value)| format!("'{name}',{value}"))
+                .collect::<Vec<_>>()
+                .join(",")
+        )
+    }
+    let fetch = record(vec![
+        (
+            "hits",
+            count("service.kind='fetch' AND service.fetch.outcome='hit'"),
+        ),
+        (
+            "revalidated",
+            count("service.kind='fetch' AND service.fetch.outcome='revalidated'"),
+        ),
+        (
+            "misses",
+            count("service.kind='fetch' AND service.fetch.outcome='miss'"),
+        ),
+        ("failures", count("service.kind='fetch_failure'")),
+        (
+            "fetched_bytes",
+            sum(
+                "service.fetch.transferred",
+                "service.kind='fetch' AND service.fetch.outcome='miss'",
+            ),
+        ),
+    ]);
+    let evidence = record(vec![
+        ("requests", count("service.kind='response'")),
+        (
+            "ok",
+            count("service.kind='response' AND service.response.status='ok'"),
+        ),
+        (
+            "partial",
+            count("service.kind='response' AND service.response.status='partial'"),
+        ),
+        (
+            "pending",
+            count("service.kind='response' AND service.response.status='pending'"),
+        ),
+        (
+            "errors",
+            count(
+                "service.kind='response' AND (service.response.status='error' OR service.response.status IS NULL)",
+            ),
+        ),
+        (
+            "gaps",
+            count("service.kind='response' AND service.response.has_gap"),
+        ),
+        (
+            "response_bytes",
+            sum("service.response.bytes", "service.kind='response'"),
+        ),
+    ]);
+    let verification = record(vec![
+        (
+            "succeeded",
+            count("service.kind='probe' AND service.probe.outcome='succeeded'"),
+        ),
+        (
+            "failed",
+            count("service.kind='probe' AND service.probe.outcome='failed'"),
+        ),
+        (
+            "unresolved",
+            count("service.kind='probe' AND service.probe.outcome='unresolved'"),
+        ),
+    ]);
+    format!(
+        "SELECT {fetch} AS fetch,{evidence} AS evidence,{verification} AS verification FROM current_events WHERE kind='service'"
+    )
 }

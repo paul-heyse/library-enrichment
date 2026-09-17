@@ -1,0 +1,120 @@
+{
+  "_comment": [
+    "Capabilities: the abstract querying abilities a mechanism exercises.",
+    "",
+    "This is the ONE input to the catalog that cannot be extracted. Every other row is derived",
+    "from the skill's own indexes, which are themselves derived from the tools. A capability is an",
+    "authored judgement about what an agent is actually trying to DO, and it is the axis above",
+    "`Mechanism` that makes `discover` answer a question rather than list flags.",
+    "",
+    "Grounded, not invented: each `ability` corresponds to a topic page the skill already ships,",
+    "so the vocabulary is the one the repository already teaches rather than a parallel ontology.",
+    "The `facets` follow the proposal's composable-facet model -- orthogonal fields, deliberately",
+    "not a hierarchy of prewritten use cases.",
+    "",
+    "`bindings` are match rules over minted mechanism keys, evaluated by the build. A binding that",
+    "matches nothing is a build error: a capability with no mechanisms is either a typo or a claim",
+    "the catalog cannot support, and both should be loud."
+  ],
+  "capabilities": [
+    {
+      "ability": "match-literal-or-regex-text",
+      "topic": "literal-and-regex-search",
+      "summary": "Find text by literal or regular-expression match, without regard to syntax.",
+      "facets": {
+        "subject": "text",
+        "required_relationship": "equality",
+        "requested_result": "matching-text",
+        "semantic_requirement": "lexical"
+      },
+      "bindings": [{ "prefix": "mech:rg/cli/" }, { "prefix": "mech:rg/pattern/" }]
+    },
+    {
+      "ability": "use-advanced-regex-constructs",
+      "topic": "pcre2-advanced-regex",
+      "summary": "Use constructs the default engine lacks: lookaround, backreferences, atomic groups, conditionals.",
+      "facets": {
+        "subject": "text",
+        "required_relationship": "identity",
+        "requested_result": "matching-text",
+        "semantic_requirement": "lexical"
+      },
+      "bindings": [{ "prefix": "mech:pcre2/pattern/" }]
+    },
+    {
+      "ability": "match-by-syntactic-shape",
+      "topic": "structural-patterns",
+      "summary": "Match code by its parsed shape rather than its text, with metavariable capture.",
+      "facets": {
+        "subject": "source-code",
+        "required_relationship": "identity",
+        "requested_result": "nodes",
+        "semantic_requirement": "syntactic"
+      },
+      "bindings": [{ "prefix": "mech:sg/cli/" }]
+    },
+    {
+      "ability": "constrain-target-by-contained-syntax",
+      "topic": "rule-authoring",
+      "summary": "Select a construct by what it contains, encloses, follows or precedes.",
+      "facets": {
+        "subject": "source-code",
+        "required_relationship": "containment",
+        "requested_result": "nodes",
+        "semantic_requirement": "syntactic"
+      },
+      "bindings": [
+        { "prefix": "mech:sg/rule/relation." },
+        { "prefix": "mech:sg/rule/ruleObject." }
+      ]
+    },
+    {
+      "ability": "rewrite-matched-code",
+      "topic": "codemods-and-rewrites",
+      "summary": "Produce a replacement for a matched construct, preserving captured bindings.",
+      "facets": {
+        "subject": "source-code",
+        "required_relationship": "identity",
+        "requested_result": "rewritten-text",
+        "semantic_requirement": "syntactic"
+      },
+      "bindings": [{ "prefix": "mech:sg/rule/fix." }]
+    },
+    {
+      "ability": "select-the-search-corpus",
+      "topic": "search-space",
+      "summary": "Decide which files are searched at all: ignore layers, globs, file types, traversal.",
+      "facets": {
+        "subject": "paths",
+        "required_relationship": "exclusion",
+        "requested_result": "paths",
+        "semantic_requirement": "lexical"
+      },
+      "bindings": [{ "regex": "^mech:rg/cli/--(glob|type|ignore|hidden|binary|max-depth)" }]
+    },
+    {
+      "ability": "match-across-line-boundaries",
+      "topic": "multiline-matching",
+      "summary": "Allow a match to span input lines, and control whether dot matches newline.",
+      "facets": {
+        "subject": "text",
+        "required_relationship": "ordering",
+        "requested_result": "matching-text",
+        "semantic_requirement": "lexical"
+      },
+      "bindings": [{ "regex": "^mech:rg/cli/--(multiline|null-data)" }]
+    },
+    {
+      "ability": "emit-machine-readable-output",
+      "topic": "machine-output",
+      "summary": "Produce output a program can consume without reparsing human formatting.",
+      "facets": {
+        "subject": "text",
+        "required_relationship": "equality",
+        "requested_result": "structured-records",
+        "semantic_requirement": "lexical"
+      },
+      "bindings": [{ "regex": "^mech:(rg|sg)/cli/.*--json" }]
+    }
+  ]
+}

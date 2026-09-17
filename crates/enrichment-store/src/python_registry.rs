@@ -5,22 +5,13 @@ use arrow::{
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
 };
-use datafusion::{
-    common::ScalarValue, datasource::MemTable, error::Result, prelude::SessionContext,
-};
+use datafusion::{common::ScalarValue, datasource::MemTable, error::Result};
 use enrichment_core::{
     producer::python::{DistributionFile, facts},
     request::ResolveRequest,
 };
 use serde::Deserialize;
 use std::{collections::BTreeMap, sync::Arc};
-
-fn session(runtime: &QueryRuntime) -> SessionContext {
-    let session = runtime.session();
-    session.register_udf(enrichment_core::native_version::pep440_value());
-    session.register_udf(enrichment_core::native_version::pep440_matches());
-    session
-}
 
 /// Compile all marker decisions into one native plan over explicit environment/extra facts.
 /// Keep the selected ordinals relational so callers join the requirement facts natively.
@@ -41,7 +32,7 @@ pub async fn active_requirement_plan(
             "requirement command bound".into(),
         ));
     }
-    let session = session(runtime);
+    let session = runtime.session();
     if requirements.is_empty() {
         return session.read_batch(RecordBatch::new_empty(Arc::new(Schema::new(vec![
             Field::new("index", DataType::UInt64, false),
@@ -91,7 +82,7 @@ pub async fn ordered_versions(
     allow_prerelease: bool,
     limit: usize,
 ) -> Result<Vec<String>> {
-    let session = session(runtime);
+    let session = runtime.session();
     let schema = Arc::new(Schema::new(vec![Field::new(
         "version",
         DataType::Utf8,
@@ -133,7 +124,7 @@ pub async fn select(
     constraint: Option<&str>,
     wheels_only: bool,
 ) -> Result<Option<Selected>> {
-    let session = session(runtime);
+    let session = runtime.session();
     session.register_table(
         "python_files",
         Arc::new(MemTable::try_new(

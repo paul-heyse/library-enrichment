@@ -1,0 +1,55 @@
+# codesearch -- a machine-queryable code-search capability catalog.
+#
+# `[workspace]` is declared here so this tree is its OWN workspace and is not absorbed by whatever
+# repository happens to host the skill. The sibling probe crate under evidence/probes/ does the
+# same thing for the same reason. Verify with `cargo metadata --no-deps` in the host repository:
+# its member count must not change when this directory exists.
+[workspace]
+resolver = "3"
+members = [
+    "crates/codesearch-bridge",
+    "crates/codesearch-model",
+    "crates/codesearch-build",
+    "crates/codesearch-query",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+publish = false
+
+# Pinned to exactly the versions PLAN-V2 targets, verified in evidence/09 P02.
+#
+# deltalake is a GIT REV, not a crates.io release -- a `1.0.0` from crates.io is a different
+# artifact. DataFusion is pinned first and arrow/parquet/object_store are derived from it, because
+# a second arrow major in the graph is a type-universe split that shows up as baffling trait
+# errors rather than as a version conflict.
+[workspace.dependencies]
+datafusion = "=55.1.0"
+deltalake = { version = "1.0.0", git = "https://github.com/delta-io/delta-rs.git", rev = "58f07cd62bfbce3649a7e1c87c696288068ae184", default-features = false, features = [
+    "datafusion",
+    "rustls",
+] }
+arrow = { version = "59.3.0", features = ["canonical_extension_types"] }
+arrow-schema = { version = "59.3.0", features = ["canonical_extension_types"] }
+object_store = "=0.13.2"
+# Pinned to the version DataFusion already resolves, so there is exactly one `RwLock` type in the
+# graph: `SessionContext::state_weak_ref` hands back a `Weak<parking_lot::RwLock<SessionState>>`,
+# and a second copy of the crate would make that type unnameable here.
+parking_lot = "=0.12.5"
+
+async-trait = "0.1"
+blake3 = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+url = "2"
+
+codesearch-bridge = { path = "crates/codesearch-bridge", version = "0.0.0" }
+codesearch-model = { path = "crates/codesearch-model", version = "0.0.0" }
+
+[profile.dev]
+debug = 1

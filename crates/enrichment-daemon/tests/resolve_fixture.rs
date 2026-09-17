@@ -144,9 +144,9 @@ async fn resolve_keeps_the_requested_version_while_a_newer_release_exists() {
     // The registry line is cited as declared evidence with a locator.
     let evidence = envelope["evidence"].as_array().expect("evidence");
     assert!(evidence.iter().any(|e| {
-        e["evidence_class"] == "declared"
-            && e["producer"] == "crates-io-registry"
-            && e["locator"]["kind"] == "index_line"
+        e["source"]["evidence_class"] == "declared"
+            && e["source"]["extractor"] == "crates-io-registry"
+            && e["source"]["locator"]["kind"] == "registry_line"
     }));
 }
 
@@ -436,19 +436,19 @@ async fn owned_fetch(
 ) -> Result<enrichment_daemon::fetch::Fetched, FetchError> {
     let (record, _, fresh) = service
         .jobs
-        .submit(enrichment_daemon::jobs::JobSpec::Resolve(
-            enrichment_core::request::ResolveRequest {
+        .submit(enrichment_daemon::jobs::Arguments::Resolve {
+            request: enrichment_core::request::ResolveRequest {
                 name: "enr-fixture".into(),
                 version: Some("0.1.0".into()),
                 ..Default::default()
             },
-        ))
+        })
         .await
         .unwrap();
     assert!(fresh);
     let jobs = service.jobs.clone();
     let driver_jobs = jobs.clone();
-    let id = record.job_id;
+    let id = record.snapshot.job_id;
     let fetcher = service.fetcher.clone();
     let (send, receive) = tokio::sync::oneshot::channel();
     jobs.spawn(&service.repository.runtime, id.clone(), async move {

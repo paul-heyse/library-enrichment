@@ -1,0 +1,25 @@
+id: no-unescaped-console-print
+language: python
+severity: error
+message: A `Console.print` of a bare string needs `escape()` or `markup=False`.
+note: |
+  Probe P01 measured that Rich's markup parser SILENTLY DELETES 11 of 24 bracketed forms --
+  `[a-z]`, `[a-zA-Z_]`, and the entire ast-grep rule vocabulary `[pattern] [kind] [inside] [has]
+  [stopBy] [regex]`. Not escaped, not mangled: removed, with no warning and no error. The output
+  looks fine and is wrong, which is the whole reason this is a rule rather than a review note.
+
+  `render.safe()` is the measured remedy for a value; `markup=False` is the remedy for a whole
+  call. Both were confirmed to rescue all 11 forms. A renderable built by `render.rows_table()` or
+  `render.pattern()` is already safe by construction -- `rows_table` escapes every cell and
+  `Syntax` does not markup-parse at all (PB08) -- so passing one is not caught here and should
+  not be.
+  Scope, stated rather than implied: this matches a string ARGUMENT. A value built by
+  concatenation or by a helper is equally at risk and is not caught, because "is this text
+  markup-safe" is not decidable from the call site. What IS decidable is a bare string, which is
+  the form the mistake actually takes -- and `render.safe()` exists so that the other form has an
+  obvious answer.
+rule:
+  pattern: $CONSOLE.print($ARG)
+constraints:
+  ARG:
+    kind: string

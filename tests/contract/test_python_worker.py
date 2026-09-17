@@ -71,12 +71,17 @@ def test_source_stub_overloads_exports_and_aliases_remain_separate(tmp_path):
     assert alias.alias_target == "different.api.Thing"
     assert alias.publicness.exported is True
     methods = [o for o in observations if o.path == "different.api.Thing.convert"]
-    assert len(methods) == 2
+    assert len(methods) == 3
     assert {o.origin.value for o in methods} == {"source", "stub"}
-    stub = next(o for o in methods if o.origin.value == "stub")
-    assert len(stub.overloads) == 2
-    assert "-> str" in stub.overloads[0]
-    assert "-> bytes" in stub.overloads[1]
+    stubs = sorted(
+        (o for o in methods if o.origin.value == "stub"), key=lambda o: o.overload_ordinal
+    )
+    assert [o.overload_ordinal for o in stubs] == [0, 1]
+    assert all(not o.overloads for o in stubs)
+    assert "-> str" in stubs[0].signature
+    assert "-> bytes" in stubs[1].signature
+    assert stubs[0].callable.returns == "str"
+    assert stubs[1].callable.returns == "bytes"
 
 
 def test_separate_worker_does_not_execute_target_or_use_its_cwd(tmp_path):
@@ -144,3 +149,43 @@ def test_long_documentation_is_retained_and_oversized_declarations_are_explicit(
     assert not processed
     assert not observations
     assert "declaration exceeds Arrow batch byte budget" in gaps[0]["detail"]
+
+
+def test_callable_fields_preserve_parameter_kinds_and_explicit_none_default(tmp_path):
+    root = tmp_path / "archive"
+    root.mkdir()
+    (root / "shapes.py").write_text(
+        "async def shaped(a: int, /, b=None, *args: str, flag: bool=True, **kwargs: bytes) -> str:\n"
+        "    return str(a)\n"
+    )
+    observations, gaps, _ = facts(request(root, [("shapes.py", "shapes", "source")]))
+    assert not gaps
+    function = next(o for o in observations if o.path == "shapes.shaped")
+    callable_value = function.callable
+    assert callable_value is not None
+    assert [p.ordinal for p in callable_value.parameters] == [0, 1, 2, 3, 4]
+    assert [p.kind.value for p in callable_value.parameters] == [
+        "positional-only",
+        "positional or keyword",
+        "variadic positional",
+        "keyword-only",
+        "variadic keyword",
+    ]
+    assert [p.reported_default for p in callable_value.parameters] == [
+        None,
+        "None",
+        "()",
+        "True",
+        "{}",
+    ]
+    # The worker preserves Griffe's implicit variadic values; native normalization derives origin.
+    assert all(p.default_origin is None for p in callable_value.parameters)
+    assert [p.annotation for p in callable_value.parameters] == [
+        "int",
+        None,
+        "str",
+        "bool",
+        "bytes",
+    ]
+    assert callable_value.returns == "str"
+    assert "async" in callable_value.labels

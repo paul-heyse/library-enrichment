@@ -40,7 +40,13 @@ async fn execute(
 ) -> enrichment_core::execution::ProcessObservation {
     let capsule = tempfile::tempdir().unwrap();
     let cache = tempfile::tempdir().unwrap();
-    let runner = Runner::new(config, cache.path(), supervisor(config)).unwrap();
+    let runner = Runner::new(
+        config,
+        cache.path(),
+        supervisor(config),
+        ownership(cache.path()),
+    )
+    .unwrap();
     runner
         .run(
             config.python_image.as_ref().unwrap(),
@@ -190,7 +196,13 @@ async fn executor_handoff_preserves_read_only_inputs_and_reaps_detached_children
     let cache = tempfile::tempdir().unwrap();
     std::fs::write(inputs.path().join("input.txt"), b"immutable input").unwrap();
     let supervisor = supervisor(&config);
-    let runner = Runner::new(&config, cache.path(), supervisor.clone()).unwrap();
+    let runner = Runner::new(
+        &config,
+        cache.path(),
+        supervisor.clone(),
+        ownership(cache.path()),
+    )
+    .unwrap();
     let code = r#"import os,pathlib,subprocess
 assert os.getpid()!=1
 assert os.readlink('/proc/1/exe') if False else True
@@ -318,7 +330,13 @@ async fn identical_rust_consumer_and_lock_fail_stable_and_pass_dated_nightly() {
     let image = std::env::var("LIBENR_EXECUTION_TEST_RUST").unwrap();
     let cache = tempfile::tempdir().unwrap();
     let input = tempfile::tempdir().unwrap();
-    let runner = Runner::new(&config, cache.path(), supervisor(&config)).unwrap();
+    let runner = Runner::new(
+        &config,
+        cache.path(),
+        supervisor(&config),
+        ownership(cache.path()),
+    )
+    .unwrap();
     let tarball = include_bytes!("../../../tests/fixtures/upstream/static/enr-fixture-0.1.0.crate");
     archive::extract_tar_gz(
         &tarball[..],
@@ -394,4 +412,14 @@ async fn identical_rust_consumer_and_lock_fail_stable_and_pass_dated_nightly() {
             canonical::sha256_hex(tarball)
         );
     }
+}
+
+fn ownership(cache: &std::path::Path) -> enrichment_store::physical_ownership::OwnershipStore {
+    let runtime =
+        enrichment_store::runtime::QueryRuntime::new(&cache.join("test-spill"), Default::default())
+            .unwrap();
+    let control =
+        enrichment_store::control::ControlStore::open(&cache.join("test-control"), runtime.clone())
+            .unwrap();
+    enrichment_store::physical_ownership::OwnershipStore::new(control, runtime, cache).unwrap()
 }

@@ -1,0 +1,22 @@
+id: project-rustdoc-format-unasserted
+language: rust
+severity: hint
+message: "Deserializing rustdoc JSON without asserting `format_version` first."
+note: |
+  rustdoc's JSON is not self-describing in any useful sense: an unsupported version parses far
+  enough to produce confident nonsense rather than failing. `rustdoc_types::FORMAT_VERSION`
+  exists so a consumer can refuse instead, and the upstream documentation says so directly --
+  "Consuming code should assert that this value matches the format version(s) that it supports."
+
+  This matters more than a usual version check because four breaking bumps landed in five weeks
+  in mid-2026, and because the version of a document is a property of whichever rustdoc built
+  it, not of the toolchain reading it.
+metadata:
+  record: capability-gap
+  capability: api-surface
+rule:
+  any:
+    - pattern: serde_json::from_str::<Crate>($$$ARGS)
+    - pattern: serde_json::from_slice::<Crate>($$$ARGS)
+    - pattern: serde_json::from_str::<rustdoc_types::Crate>($$$ARGS)
+    - pattern: serde_json::from_slice::<rustdoc_types::Crate>($$$ARGS)

@@ -1,0 +1,37 @@
+PB08 -- does `Syntax` have a regex lexer, and does it markup-parse its content?
+  rich version: 15.0.0
+
+== Q1 - lexer resolution ==
+
+  regex                        -> None                     aliases=None
+  yaml                         -> YamlLexer                aliases=['yaml', 'yml']
+  rust                         -> RustLexer                aliases=['rust', 'rs']
+  text                         -> TextLexer                aliases=['text']
+  definitely-not-a-lexer-9f3a  -> None                     aliases=None
+
+== Q2 - does Syntax markup-parse its content? ==
+
+  Each subject is a string P01 measured as DELETED by `Console.print` with markup on.
+
+  [a-z]          Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [a-zA-Z_]      Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [pattern]      Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [kind]         Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [inside]       Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [has]          Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [stopBy]       Syntax=kept   print(markup)=LOST   print(no markup)=kept
+  [regex]        Syntax=kept   print(markup)=LOST   print(no markup)=kept
+
+  Syntax lost 0/8
+  CONTROL print(markup=True)  lost 8/8 (P01: expect all)
+  CONTROL print(markup=False) lost 0/8 (expect 0)
+
+== Q3 - real patterns through the best available lexer ==
+
+  kept  \b[a-z][a-zA-Z0-9_]*\b
+        rendered: '\\b[a-z][a-zA-Z0-9_]*\\b'
+  kept  (?P<name>[[:alpha:]]+)
+        rendered: '(?P<name>[[:alpha:]]+)'
+  kept  ^\s*fn\s+([a-z_][a-z0-9_]*)
+        rendered: '^\\s*fn\\s+([a-z_][a-z0-9_]*)'
+

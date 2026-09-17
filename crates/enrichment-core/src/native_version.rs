@@ -1,12 +1,13 @@
 //! Library-parsed version values expressed in a form native Arrow sorting can compare.
 use arrow::{
     array::{Array, BinaryBuilder, StringArray},
-    datatypes::DataType,
+    datatypes::{DataType, FieldRef},
 };
 use datafusion::{
     error::{DataFusionError, Result},
     logical_expr::{
-        ColumnarValue, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature, Volatility,
+        ColumnarValue, ReturnFieldArgs, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature,
+        Volatility,
     },
 };
 use std::sync::Arc;
@@ -32,7 +33,11 @@ impl ScalarUDFImpl for SemverKey {
     fn return_type(&self, _: &[DataType]) -> Result<DataType> {
         Ok(DataType::Binary)
     }
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        crate::native_schema::text_function_output(&args, 1, self.name(), DataType::Binary, true)
+    }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        crate::native_schema::function_call(self, &args)?;
         if args.args.len() != 1 {
             return Err(DataFusionError::Plan(
                 "version key requires one input".into(),
@@ -126,7 +131,17 @@ impl ScalarUDFImpl for Pep440Value {
     fn return_type(&self, _: &[DataType]) -> Result<DataType> {
         Ok(DataType::Struct(pep440_fields()))
     }
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        crate::native_schema::text_function_output(
+            &args,
+            1,
+            self.name(),
+            DataType::Struct(pep440_fields()),
+            true,
+        )
+    }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        crate::native_schema::function_call(self, &args)?;
         use arrow::array::{BooleanBuilder, ListBuilder, StructArray, UInt64Builder};
         let arrays = string_inputs(&args, 1)?;
         let values = arrays[0]
@@ -215,7 +230,18 @@ impl ScalarUDFImpl for Pep440Matches {
     fn return_type(&self, _: &[DataType]) -> Result<DataType> {
         Ok(DataType::Boolean)
     }
+    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {
+        let nullable = args.arg_fields.iter().any(|field| field.is_nullable());
+        crate::native_schema::text_function_output(
+            &args,
+            2,
+            self.name(),
+            DataType::Boolean,
+            nullable,
+        )
+    }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
+        crate::native_schema::function_call(self, &args)?;
         let arrays = string_inputs(&args, 2)?;
         let arrays = arrays
             .iter()

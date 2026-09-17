@@ -11,7 +11,7 @@ pytestmark = [pytest.mark.live, daemon.requires_daemon_binary]
 async def test_real_rust_crate_cold_then_offline(tmp_path):
     state = tmp_path / "state"
     config = tmp_path / "service.toml"
-    config.write_text('config_version = "1.0"\n[policy]\nenabled_profiles = ["static"]\n')
+    config.write_text('[policy]\nenabled_profiles = ["static"]\n')
     env = daemon.daemon_env(state, config)
     with daemon.running(env):
         async with Client(daemon.transport(env)) as client:

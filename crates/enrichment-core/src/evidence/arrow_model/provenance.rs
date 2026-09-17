@@ -1,119 +1,34 @@
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use crate::evidence::{
-    EvidenceKind, Gap, GapReason, PlannedFallback,
+    EvidenceKind, Gap,
     relational::{CoverageFact, CoverageOutcome, InputArtifact},
 };
-use crate::producer::{ProducerRun, RunOutcome};
-use arrow::array::{ArrayRef, BooleanArray, UInt64Array};
+use crate::native_union::NativeStruct;
+use crate::producer::ProducerRun;
+use arrow::array::{ArrayRef, UInt64Array};
 use arrow::error::ArrowError;
 use arrow::record_batch::RecordBatch;
 
 use super::{
-    cells::{Row, RowSet, batch, column, invalid, optional, record_list, structure, text},
+    cells::{Row, RowSet, batch, column, invalid, record_list, text},
     decode, encode,
 };
 
 pub fn gaps(rows: &[&[Gap]]) -> Result<ArrayRef, ArrowError> {
-    let flat = rows.iter().flat_map(|r| r.iter()).collect::<Vec<_>>();
-    let fallback = structure(
-        vec![
-            column(
-                "producer",
-                optional(
-                    flat.iter()
-                        .map(|g| g.planned_fallback.as_ref().map(|p| p.producer.as_str())),
-                ),
-                true,
-                "producer-name",
-            ),
-            column(
-                "profile",
-                optional(
-                    flat.iter()
-                        .map(|g| g.planned_fallback.as_ref().map(|p| p.profile.as_str())),
-                ),
-                true,
-                "vocabulary:execution-profile/1",
-            ),
-            column(
-                "enabled",
-                Arc::new(BooleanArray::from_iter(
-                    flat.iter()
-                        .map(|g| g.planned_fallback.as_ref().map(|p| p.enabled)),
-                )),
-                true,
-                "profile-enabled",
-            ),
-            column(
-                "next_action",
-                optional(
-                    flat.iter()
-                        .map(|g| g.planned_fallback.as_ref().map(|p| p.next_action.as_str())),
-                ),
-                true,
-                "operator-action",
-            ),
-        ],
-        Some(flat.iter().map(|g| g.planned_fallback.is_some()).collect()),
-    )?;
-    let values = structure(
-        vec![
-            column(
-                "kind",
-                text(flat.iter().map(|g| g.kind.as_str())),
-                false,
-                "vocabulary:evidence-kind/1",
-            ),
-            column(
-                "reason",
-                text(flat.iter().map(|g| g.reason.as_str())),
-                false,
-                "vocabulary:gap-reason/1",
-            ),
-            column(
-                "detail",
-                text(flat.iter().map(|g| g.detail.as_str())),
-                false,
-                "gap-detail",
-            ),
-            column("planned_fallback", fallback, true, "planned-producer"),
-        ],
-        None,
-    )?;
-    record_list(rows.iter().map(|r| r.len()), values)
+    let flat = rows
+        .iter()
+        .flat_map(|row| row.iter().map(Some))
+        .collect::<Vec<_>>();
+    record_list(
+        rows.iter().map(|row| row.len()),
+        <Gap as NativeStruct>::encode(&flat)?,
+    )
+}
+fn gap_from_row(row: Row<'_>) -> Result<Gap, ArrowError> {
+    <Gap as NativeStruct>::decode(row)
 }
 
-fn gap_from_row(r: Row<'_>) -> Result<Gap, ArrowError> {
-    let planned_fallback = r
-        .optional_struct("planned_fallback")?
-        .map(|p| {
-            let profile = p.text("profile")?;
-            profile
-                .parse::<crate::policy::ExecutionProfile>()
-                .map_err(invalid)?;
-            Ok::<_, ArrowError>(PlannedFallback {
-                producer: p.text("producer")?.into(),
-                profile: profile.into(),
-                enabled: p.boolean("enabled")?,
-                next_action: p.text("next_action")?.into(),
-            })
-        })
-        .transpose()?;
-    Ok(Gap {
-        kind: EvidenceKind::parse(r.text("kind")?)
-            .ok_or_else(|| invalid("unknown evidence kind"))?,
-        reason: GapReason::parse(r.text("reason")?).ok_or_else(|| invalid("unknown gap reason"))?,
-        detail: r.text("detail")?.into(),
-        planned_fallback,
-    })
-}
-
-/// Operational attempts retain their actual clocks/logs alongside the semantic producer binding.
-///
-/// # Errors
-/// Invalid Arrow shapes cannot be encoded.
 pub fn producer_runs(rows: &[ProducerRun]) -> Result<RecordBatch, ArrowError> {
     let bindings: Vec<_> = rows.iter().map(ProducerRun::semantic_binding_id).collect();
     let fields = producer_fields(rows)?;
@@ -137,137 +52,24 @@ pub fn producer_runs(rows: &[ProducerRun]) -> Result<RecordBatch, ArrowError> {
 }
 
 pub fn producer_fields(rows: &[ProducerRun]) -> Result<RecordBatch, ArrowError> {
-    let inputs: Vec<_> = rows.iter().flat_map(|r| r.inputs.iter()).collect();
-    let inputs = record_list(
-        rows.iter().map(|r| r.inputs.len()),
-        structure(
-            vec![
-                column(
-                    "role",
-                    text(inputs.iter().map(|(role, _)| role.as_str())),
-                    false,
-                    "input-role",
-                ),
-                column(
-                    "digest",
-                    text(inputs.iter().map(|(_, digest)| digest.as_str())),
-                    false,
-                    "input-content-digest",
-                ),
-            ],
-            None,
-        )?,
-    )?;
-    batch(
-        "producer_runs",
-        vec![
-            column(
-                "attempt_id",
-                text(rows.iter().map(|r| r.attempt_id.as_str())),
-                false,
-                "key:producer-attempt",
-            ),
-            column(
-                "producer",
-                text(rows.iter().map(|r| r.producer.as_str())),
-                false,
-                "producer-name",
-            ),
-            column(
-                "producer_version",
-                text(rows.iter().map(|r| r.producer_version.as_str())),
-                false,
-                "producer-version",
-            ),
-            column(
-                "config_digest",
-                text(rows.iter().map(|r| r.config_digest.as_str())),
-                false,
-                "producer-config-digest",
-            ),
-            column("inputs", inputs, false, "producer-inputs"),
-            column(
-                "profile",
-                text(rows.iter().map(|r| r.profile.as_str())),
-                false,
-                "vocabulary:execution-profile/1",
-            ),
-            column(
-                "started_at",
-                text(rows.iter().map(|r| r.started_at.as_str())),
-                false,
-                "attempt-start-time",
-            ),
-            column(
-                "finished_at",
-                text(rows.iter().map(|r| r.finished_at.as_str())),
-                false,
-                "attempt-finish-time",
-            ),
-            column(
-                "outcome",
-                text(rows.iter().map(|r| r.outcome.as_str())),
-                false,
-                "vocabulary:run-outcome/1",
-            ),
-            column(
-                "gaps",
-                gaps(&rows.iter().map(|r| r.gaps.as_slice()).collect::<Vec<_>>())?,
-                false,
-                "producer-gaps",
-            ),
-            column(
-                "log",
-                optional(rows.iter().map(|r| r.log.as_deref())),
-                true,
-                "bounded-attempt-log",
-            ),
-        ],
-    )
+    ProducerRun::batch(rows)
 }
 
-/// Decode attempts and verify the semantic binding from actual version/configuration/inputs.
-///
-/// # Errors
-/// Duplicate input roles, unknown vocabulary and inconsistent semantic bindings are rejected.
+/// Decode the generated producer contract and verify its selected semantic binding.
 pub fn producer_runs_from_batch(batch: &RecordBatch) -> Result<Vec<ProducerRun>, ArrowError> {
-    let columns = RowSet::batch(batch)?;
+    let fields = ProducerRun::fields();
+    let indices = fields
+        .iter()
+        .map(|field| batch.schema().index_of(field.name()))
+        .collect::<Result<Vec<_>, _>>()?;
+    let payload = batch.project(&indices)?;
+    let rows = RowSet::batch(&payload)?;
+    let bindings = RowSet::batch(batch)?;
     (0..batch.num_rows())
-        .map(|i| {
-            let r = columns.row(i);
-            let mut inputs = BTreeMap::new();
-            for input in r.records("inputs")? {
-                if inputs
-                    .insert(input.text("role")?.into(), input.text("digest")?.into())
-                    .is_some()
-                {
-                    return Err(invalid("duplicate producer input role"));
-                }
-            }
-            let run = ProducerRun {
-                attempt_id: r.text("attempt_id")?.into(),
-                producer: r.text("producer")?.into(),
-                producer_version: r.text("producer_version")?.into(),
-                config_digest: r.text("config_digest")?.into(),
-                inputs,
-                profile: r.text("profile")?.parse().map_err(invalid)?,
-                started_at: r.text("started_at")?.into(),
-                finished_at: r.text("finished_at")?.into(),
-                outcome: RunOutcome::parse(r.text("outcome")?)
-                    .ok_or_else(|| invalid("unknown producer outcome"))?,
-                gaps: r
-                    .records("gaps")?
-                    .into_iter()
-                    .map(gap_from_row)
-                    .collect::<Result<_, _>>()?,
-                log: r.owned("log")?,
-            };
-            if run.attempt_id.is_empty()
-                || run.producer.is_empty()
-                || run.producer_version.is_empty()
-                || run.semantic_binding_id() != r.text("producer_binding_id")?
-            {
-                return Err(invalid("invalid producer binding or attempt"));
+        .map(|index| {
+            let run = <ProducerRun as NativeStruct>::decode(rows.row(index))?;
+            if run.semantic_binding_id() != bindings.row(index).text("producer_binding_id")? {
+                return Err(invalid("invalid producer binding"));
             }
             Ok(run)
         })
@@ -425,11 +227,12 @@ pub(crate) fn coverage_fields(rows: &[CoverageFact]) -> Result<RecordBatch, Arro
                 false,
                 "vocabulary:coverage-outcome/1",
             ),
-            column(
+            super::cells::ruled_column(
                 "gaps",
                 gaps(&rows.iter().map(|r| r.gaps.as_slice()).collect::<Vec<_>>())?,
                 false,
                 "coverage-gaps",
+                crate::native_union::Rule::Set,
             ),
         ],
     )

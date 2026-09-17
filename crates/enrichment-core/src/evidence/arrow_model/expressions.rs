@@ -1,14 +1,22 @@
 //! Native expressions for authoritative Arrow records, shared by all producer plans.
 use arrow::datatypes::DataType;
 use datafusion::{
-    common::ScalarValue,
+    common::{ScalarValue, metadata::FieldMetadata},
     error::{DataFusionError, Result},
-    functions::core::expr_fn::named_struct,
     logical_expr::{Expr, cast},
     prelude::lit,
 };
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Plan(message.into())
+}
+/// A bounded ingress literal retains the complete field declaration, including semantics.
+pub fn literal<T: crate::native_union::Cell>(value: &T) -> Result<Expr> {
+    let field = crate::native_union::field::<T>("value", crate::native_union::Rule::Text);
+    let array = T::encode(&[Some(value)])?;
+    Ok(Expr::Literal(
+        ScalarValue::try_from_array(array.as_ref(), 0)?,
+        Some(FieldMetadata::from(&field)),
+    ))
 }
 pub fn null(kind: &DataType) -> Result<Expr> {
     Ok(lit(ScalarValue::try_from(kind)?))
@@ -23,7 +31,8 @@ pub fn child(kind: &DataType, name: &str) -> Result<DataType> {
         .ok_or_else(|| invalid("native record field absent"))
 }
 /// Build a native named_struct in authoritative field order, with typed nulls for inactive
-/// variant members. Arrow's cast and the Delta admission rules own values and constraints.
+/// variant members. Preserve declared semantic children through native constructors; physical
+/// representation casts belong to the explicit ArrowContract boundary, not a domain-erasing CAST.
 pub fn record(kind: &DataType, values: &[(&str, Expr)]) -> Result<Expr> {
     let DataType::Struct(fields) = kind else {
         return Err(invalid("native record is not a struct"));
@@ -38,13 +47,87 @@ pub fn record(kind: &DataType, values: &[(&str, Expr)]) -> Result<Expr> {
     let mut args = Vec::with_capacity(fields.len() * 2);
     for field in fields {
         args.push(lit(field.name()));
-        args.push(cast(
-            match values.iter().find(|(name, _)| *name == field.name()) {
-                Some((_, expr)) => expr.clone(),
-                None => null(field.data_type())?,
-            },
-            field.data_type().clone(),
-        ));
+        let metadata = Some(FieldMetadata::from(field.as_ref()));
+        let value = match values.iter().find(|(name, _)| *name == field.name()) {
+            Some((_, expr)) => {
+                let expr = if crate::native_analysis::has_semantics(field)
+                    || matches!(
+                        field.data_type(),
+                        DataType::Struct(_)
+                            | DataType::List(_)
+                            | DataType::LargeList(_)
+                            | DataType::FixedSizeList(_, _)
+                            | DataType::Map(_, _)
+                    ) {
+                    expr.clone()
+                } else {
+                    cast(expr.clone(), field.data_type().clone())
+                };
+                expr.alias_with_metadata(field.name(), metadata)
+            }
+            None => Expr::Literal(ScalarValue::try_from(field.data_type())?, metadata),
+        };
+        args.push(value);
     }
-    Ok(cast(named_struct(args), kind.clone()))
+    Ok(crate::native_record::record(fields.clone(), args))
+}
+
+/// Construct one declared alternative. Inactive payloads are NULL structs, never shared cells.
+pub fn variant(kind: &DataType, tag: &str, values: &[(&str, Expr)]) -> Result<Expr> {
+    let payload = record(&child(kind, tag)?, values)?;
+    record(kind, &[("kind", lit(tag)), (tag, payload)])
+}
+
+/// A producer can select a declared variant through a native CASE while retaining each
+/// alternative's independent fields. No row-wise dispatch or semantic payload decoding occurs.
+pub fn variants(
+    kind: &DataType,
+    tag: Expr,
+    payloads: &[(&str, Vec<(&str, Expr)>)],
+) -> Result<Expr> {
+    let mut values = vec![("kind", tag.clone())];
+    for (name, fields) in payloads {
+        let payload_type = child(kind, name)?;
+        let payload = datafusion::logical_expr::when(
+            tag.clone().eq(lit(*name)),
+            record(&payload_type, fields)?,
+        )
+        .otherwise(null(&payload_type)?)?;
+        values.push((*name, payload));
+    }
+    record(kind, &values)
+}
+
+/// Derive a record by preserving every declared field and replacing named native expressions.
+/// Optional parent absence survives the projection; field additions propagate automatically.
+/// # Errors
+/// Unknown overrides or incompatible native field contracts refuse construction.
+pub fn derive_record(value: Expr, kind: &DataType, replacements: &[(&str, Expr)]) -> Result<Expr> {
+    use datafusion::functions::core::expr_ext::FieldAccessor;
+    let DataType::Struct(fields) = kind else {
+        return datafusion::common::plan_err!("derived record requires Struct");
+    };
+    if replacements
+        .iter()
+        .any(|(name, _)| fields.find(name).is_none())
+    {
+        return datafusion::common::plan_err!("derived record overrides unknown field");
+    }
+    let expressions = fields
+        .iter()
+        .map(|field| {
+            (
+                field.name().as_str(),
+                replacements
+                    .iter()
+                    .find(|(name, _)| *name == field.name())
+                    .map_or_else(
+                        || value.clone().field(field.name()),
+                        |(_, expr)| expr.clone(),
+                    ),
+            )
+        })
+        .collect::<Vec<_>>();
+    datafusion::logical_expr::when(value.is_null(), null(kind)?)
+        .otherwise(record(kind, &expressions)?)
 }

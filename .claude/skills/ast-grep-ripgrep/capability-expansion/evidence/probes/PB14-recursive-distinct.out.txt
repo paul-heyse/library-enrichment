@@ -1,0 +1,25 @@
+PB14 — does `is_distinct` tame a cyclic recursive CTE?
+
+  graph: a->b, b->c, c->a (CYCLE), c->d
+  timeout: 15s per arm; a timeout IS the result
+
+  A CONTROL  UNION ALL, (node,depth), unbounded
+      expectation: must NOT finish -- proves the graph is cyclic
+      plan node:   RecursiveQueryExec: name=closure, is_distinct=false
+      RESULT:      TIMED OUT after 15s — UNBOUNDED
+
+  B          UNION,     (node,depth), unbounded
+      expectation: predicted unbounded: depth makes every tuple unique
+      plan node:   RecursiveQueryExec: name=closure, is_distinct=true
+      RESULT:      TIMED OUT after 15s — UNBOUNDED
+
+  C          UNION,     (node),       unbounded
+      expectation: predicted terminating: finite node domain
+      plan node:   RecursiveQueryExec: name=closure, is_distinct=true
+      RESULT:      TERMINATED count=4 in 25.790765ms
+
+  D CONTROL  UNION ALL, (node,depth), BOUNDED  
+      expectation: must finish -- the reference answer
+      plan node:   RecursiveQueryExec: name=closure, is_distinct=false
+      RESULT:      TERMINATED count=4 in 29.499536ms
+

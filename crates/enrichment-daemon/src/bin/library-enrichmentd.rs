@@ -146,11 +146,10 @@ fn execution_operator(probe: bool, args: Vec<String>) -> ExitCode {
         if probe {
             let paths = enrichment_daemon::execution::description::qualification_paths(root)?;
             enrichment_store::state::initialize(&paths)?;
-            let cache = paths.cache_root;
             let runtime = tokio::runtime::Runtime::new()?;
             Ok(serde_json::to_value(runtime.block_on(
                 enrichment_daemon::execution::description::probe(
-                    &execution, &cache, &args[1], &args[2],
+                    &execution, &paths, &args[1], &args[2],
                 ),
             )?)?)
         } else {

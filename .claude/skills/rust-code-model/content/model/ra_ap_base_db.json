@@ -1,0 +1,744 @@
+{
+  "module": "ra_ap_base_db",
+  "crate": "ra_ap_base_db",
+  "api": "api/ra_ap_base_db.md",
+  "items": [
+    {
+      "path": "ra_ap_base_db::DEFAULT_BORROWCK_LRU_CAP",
+      "name": "DEFAULT_BORROWCK_LRU_CAP",
+      "kind": "constant",
+      "crate": "ra_ap_base_db",
+      "signature": "const DEFAULT_BORROWCK_LRU_CAP: u16 = 2024",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::DEFAULT_FILE_TEXT_LRU_CAP",
+      "name": "DEFAULT_FILE_TEXT_LRU_CAP",
+      "kind": "constant",
+      "crate": "ra_ap_base_db",
+      "signature": "const DEFAULT_FILE_TEXT_LRU_CAP: u16 = 16",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::DEFAULT_PARSE_LRU_CAP",
+      "name": "DEFAULT_PARSE_LRU_CAP",
+      "kind": "constant",
+      "crate": "ra_ap_base_db",
+      "signature": "const DEFAULT_PARSE_LRU_CAP: u16 = 128",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::all_crates",
+      "name": "all_crates",
+      "kind": "function",
+      "crate": "ra_ap_base_db",
+      "signature": "fn all_crates(db: &dyn salsa::Database) -> std::sync::Arc<[Crate]>",
+      "summary": "Returns the crates in topological order.",
+      "doc": "api/ra_ap_base_db.md#all_crates"
+    },
+    {
+      "path": "ra_ap_base_db::relevant_crates",
+      "name": "relevant_crates",
+      "kind": "function",
+      "crate": "ra_ap_base_db",
+      "signature": "fn relevant_crates(db: &dyn SourceDatabase, file_id: FileId) -> &[Crate]",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::set_all_crates_with_durability",
+      "name": "set_all_crates_with_durability",
+      "kind": "function",
+      "crate": "ra_ap_base_db",
+      "signature": "fn set_all_crates_with_durability(db: &mut dyn salsa::Database, crates: impl IntoIterator<Item = Crate>, durability: salsa::Durability)",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::source_root_crates",
+      "name": "source_root_crates",
+      "kind": "function",
+      "crate": "ra_ap_base_db",
+      "signature": "fn source_root_crates(db: &dyn SourceDatabase, id: SourceRootId) -> &[Crate]",
+      "summary": "Crates whose root file is in `id`.",
+      "doc": "api/ra_ap_base_db.md#source_root_crates"
+    },
+    {
+      "path": "ra_ap_base_db::toolchain_channel",
+      "name": "toolchain_channel",
+      "kind": "function",
+      "crate": "ra_ap_base_db",
+      "signature": "fn toolchain_channel(db: &dyn salsa::Database, krate: Crate) -> Option<ReleaseChannel>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::impl_intern_key",
+      "name": "impl_intern_key",
+      "kind": "macro",
+      "crate": "ra_ap_base_db",
+      "signature": "macro_rules! impl_intern_key",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::CrateWorkspaceData",
+      "name": "CrateWorkspaceData",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct CrateWorkspaceData",
+      "summary": "Crate related data shared by the whole workspace.",
+      "doc": "api/ra_ap_base_db.md#crateworkspacedata",
+      "fields": [
+        "target",
+        "toolchain"
+      ],
+      "methods": [
+        {
+          "name": "is_atleast_187",
+          "signature": "fn is_atleast_187(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::DbPanicContext",
+      "name": "DbPanicContext",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct DbPanicContext",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(frame: String) -> DbPanicContext"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::FileSourceRootInput",
+      "name": "FileSourceRootInput",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct FileSourceRootInput",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(source_root_id: SourceRootId) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> SourceRootId: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, source_root_id: SourceRootId) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_source_root_id",
+          "signature": "fn set_source_root_id<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = SourceRootId> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "source_root_id",
+          "signature": "fn source_root_id<'db, Db_>(self, db: &'db Db_) -> SourceRootId where Db_: ?Sized + zalsa_::Database"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::FileText",
+      "name": "FileText",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct FileText",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(text: Arc<str>, file_id: vfs::FileId) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> Arc<str>: ::std::fmt::Debug, for<'__trivial_bounds> vfs::FileId: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "file_id",
+          "signature": "fn file_id<'db, Db_>(self, db: &'db Db_) -> &'db vfs::FileId where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, text: Arc<str>, file_id: vfs::FileId) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_file_id",
+          "signature": "fn set_file_id<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = vfs::FileId> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "set_text",
+          "signature": "fn set_text<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = Arc<str>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "text",
+          "signature": "fn text<'db, Db_>(self, db: &'db Db_) -> &'db Arc<str> where Db_: ?Sized + zalsa_::Database"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::Files",
+      "name": "Files",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct Files",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "file_source_root",
+          "signature": "fn file_source_root(&self, db: &dyn SourceDatabase, id: vfs::FileId) -> FileSourceRootInput"
+        },
+        {
+          "name": "file_text",
+          "signature": "fn file_text(&self, file_id: vfs::FileId) -> FileText"
+        },
+        {
+          "name": "set_file_source_root_with_durability",
+          "signature": "fn set_file_source_root_with_durability(&self, db: &mut dyn SourceDatabase, id: vfs::FileId, source_root_id: SourceRootId, durability: Durability)"
+        },
+        {
+          "name": "set_file_text",
+          "signature": "fn set_file_text(&self, db: &mut dyn SourceDatabase, file_id: vfs::FileId, text: &str)"
+        },
+        {
+          "name": "set_file_text_with_durability",
+          "signature": "fn set_file_text_with_durability(&self, db: &mut dyn SourceDatabase, file_id: vfs::FileId, text: &str, durability: Durability)"
+        },
+        {
+          "name": "set_source_root_with_durability",
+          "signature": "fn set_source_root_with_durability(&self, db: &mut dyn SourceDatabase, source_root_id: SourceRootId, source_root: Arc<SourceRoot>, durability: Durability)"
+        },
+        {
+          "name": "source_root",
+          "signature": "fn source_root(&self, source_root_id: SourceRootId) -> SourceRootInput",
+          "summary": "Source root of the file."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::LibraryRoots",
+      "name": "LibraryRoots",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct LibraryRoots",
+      "summary": "The set of roots for crates.io libraries. Files in libraries are assumed to never change.",
+      "doc": "api/ra_ap_base_db.md#libraryroots",
+      "implements": [
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(roots: FxHashSet<SourceRootId>) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> FxHashSet<SourceRootId>: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<Db_>(db: &Db_) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, roots: FxHashSet<SourceRootId>) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "roots",
+          "signature": "fn roots<'db, Db_>(self, db: &'db Db_) -> &'db FxHashSet<SourceRootId> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_roots",
+          "signature": "fn set_roots<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = FxHashSet<SourceRootId>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "try_get",
+          "signature": "fn try_get<Db_>(db: &Db_) -> Option<Self> where Db_: ?Sized + salsa::Database"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::LocalRoots",
+      "name": "LocalRoots",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct LocalRoots",
+      "summary": "The set of \"local\" (that is, from the current workspace) roots. Files in local roots are assumed to change frequently.",
+      "doc": "api/ra_ap_base_db.md#localroots",
+      "implements": [
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(roots: FxHashSet<SourceRootId>) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> FxHashSet<SourceRootId>: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<Db_>(db: &Db_) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, roots: FxHashSet<SourceRootId>) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "roots",
+          "signature": "fn roots<'db, Db_>(self, db: &'db Db_) -> &'db FxHashSet<SourceRootId> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_roots",
+          "signature": "fn set_roots<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = FxHashSet<SourceRootId>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "try_get",
+          "signature": "fn try_get<Db_>(db: &Db_) -> Option<Self> where Db_: ?Sized + salsa::Database"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::Nonce",
+      "name": "Nonce",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct Nonce",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "invalid",
+          "signature": "const fn invalid() -> Nonce"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Nonce"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::SourceRootInput",
+      "name": "SourceRootInput",
+      "kind": "struct",
+      "crate": "ra_ap_base_db",
+      "signature": "struct SourceRootInput",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(source_root: Arc<SourceRoot>) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> Arc<SourceRoot>: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, source_root: Arc<SourceRoot>) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_source_root",
+          "signature": "fn set_source_root<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = Arc<SourceRoot>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "source_root",
+          "signature": "fn source_root<'db, Db_>(self, db: &'db Db_) -> Arc<SourceRoot> where Db_: ?Sized + zalsa_::Database"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::SourceDatabase",
+      "name": "SourceDatabase",
+      "kind": "trait",
+      "crate": "ra_ap_base_db",
+      "signature": "trait SourceDatabase: salsa::Database + std::fmt::Debug",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "file_source_root",
+        "file_text",
+        "line_column",
+        "nonce_and_revision",
+        "set_file_source_root_with_durability",
+        "set_file_text",
+        "set_file_text_with_durability",
+        "set_source_root_with_durability",
+        "source_root"
+      ],
+      "provided_methods": [
+        "resolve_path"
+      ],
+      "methods": [
+        {
+          "name": "file_source_root",
+          "signature": "fn file_source_root(&self, id: vfs::FileId) -> FileSourceRootInput"
+        },
+        {
+          "name": "file_text",
+          "signature": "fn file_text(&self, file_id: vfs::FileId) -> FileText",
+          "summary": "Text of the file."
+        },
+        {
+          "name": "line_column",
+          "signature": "fn line_column(&self, file: FileId, offset: TextSize) -> Result<(u32, u32), ()>"
+        },
+        {
+          "name": "nonce_and_revision",
+          "signature": "fn nonce_and_revision(&self) -> (Nonce, salsa::Revision)"
+        },
+        {
+          "name": "resolve_path",
+          "signature": "fn resolve_path(&self, path: AnchoredPath<'_>) -> Option<FileId>"
+        },
+        {
+          "name": "set_file_source_root_with_durability",
+          "signature": "fn set_file_source_root_with_durability(&mut self, id: vfs::FileId, source_root_id: SourceRootId, durability: Durability)"
+        },
+        {
+          "name": "set_file_text",
+          "signature": "fn set_file_text(&mut self, file_id: vfs::FileId, text: &str)"
+        },
+        {
+          "name": "set_file_text_with_durability",
+          "signature": "fn set_file_text_with_durability(&mut self, file_id: vfs::FileId, text: &str, durability: Durability)"
+        },
+        {
+          "name": "set_source_root_with_durability",
+          "signature": "fn set_source_root_with_durability(&mut self, source_root_id: SourceRootId, source_root: Arc<SourceRoot>, durability: Durability)",
+          "summary": "Source root of the file."
+        },
+        {
+          "name": "source_root",
+          "signature": "fn source_root(&self, id: SourceRootId) -> SourceRootInput",
+          "summary": "Contents of the source root."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_base_db::FxIndexMap",
+      "name": "FxIndexMap",
+      "kind": "type_alias",
+      "crate": "ra_ap_base_db",
+      "signature": "type FxIndexMap<K, V> = indexmap::IndexMap<K, V, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_base_db::FxIndexSet",
+      "name": "FxIndexSet",
+      "kind": "type_alias",
+      "crate": "ra_ap_base_db",
+      "signature": "type FxIndexSet<T> = indexmap::IndexSet<T, rustc_hash::FxBuildHasher>",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

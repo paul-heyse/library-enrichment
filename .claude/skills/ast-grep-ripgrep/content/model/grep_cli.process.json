@@ -1,0 +1,103 @@
+{
+  "module": "grep_cli::process",
+  "crate": "grep-cli",
+  "api": "api/grep_cli.process.md",
+  "items": [
+    {
+      "path": "grep_cli::process::CommandError",
+      "name": "CommandError",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct CommandError",
+      "summary": "An error that can occur while running a command and reading its output.",
+      "doc": "api/grep_cli.process.md#commanderror",
+      "aliases": [
+        "grep_cli::CommandError"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(ioerr: io::Error) -> CommandError",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "grep_cli::process::CommandReader",
+      "name": "CommandReader",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct CommandReader",
+      "summary": "A streaming reader for a command's output.",
+      "doc": "api/grep_cli.process.md#commandreader",
+      "aliases": [
+        "grep_cli::CommandReader"
+      ],
+      "implements": [
+        "alloc::io::read::Read",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(&mut self) -> io::Result<()>",
+          "summary": "Closes the CommandReader, freeing any resources used by its underlying child process. If the child process exits with a nonzero exit code, the returned Err value will include its stderr."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(cmd: &mut process::Command) -> Result<CommandReader, CommandError>",
+          "summary": "Create a new streaming reader for the given command using the default configuration."
+        },
+        {
+          "name": "read",
+          "signature": "fn read(&mut self, buf: &mut [u8]) -> io::Result<usize>",
+          "via_trait": "alloc::io::read::Read"
+        }
+      ]
+    },
+    {
+      "path": "grep_cli::process::CommandReaderBuilder",
+      "name": "CommandReaderBuilder",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct CommandReaderBuilder",
+      "summary": "Configures and builds a streaming reader for process output.",
+      "doc": "api/grep_cli.process.md#commandreaderbuilder",
+      "aliases": [
+        "grep_cli::CommandReaderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "async_stderr",
+          "signature": "fn async_stderr(&mut self, yes: bool) -> &mut CommandReaderBuilder",
+          "summary": "When enabled, the reader will asynchronously read the contents of the command's stderr output. When disabled, stderr is only read after the stdout stream has been exhausted (or if the process quits with an error code)."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self, command: &mut process::Command) -> Result<CommandReader, CommandError>",
+          "summary": "Build a new streaming reader for the given command's output."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> CommandReaderBuilder",
+          "summary": "Create a new builder with the default configuration."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+id: project-rg-unrestricted-in-code-search
+language: bash
+severity: hint
+message: "`-uuu` disables every filter, including binary and VCS-directory skipping."
+note: |
+  `-uuu` is three decisions at once: ignore files off, hidden files on, binary files searched.
+  In an ordinary code search that means walking `.git`, `node_modules` and every build artifact,
+  which is usually slower and noisier than the problem it was reached for.
+
+  Almost always one specific layer is in the way. Name it -- `--no-ignore-vcs`, `--no-ignore-dot`,
+  `--hidden` -- and the search stays fast and stays honest. Probes P022 to P024 show each layer
+  in isolation.
+metadata:
+  record: capability-gap
+  capability: search-space
+rule:
+  kind: command
+  all:
+    - regex: '^rg\b'
+    - regex: '(^|\s)-[a-zA-Z]*uuu'

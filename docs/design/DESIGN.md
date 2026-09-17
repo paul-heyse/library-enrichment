@@ -310,6 +310,9 @@ revision revalidation and identical bytes acquired for different releases.*
 
 ### 4.1 Preferred path
 
+> Decision: ADR-0048. The Rust fact worker and pure renderer use one exact format-61 model;
+> stability and default-body facts are preserved independently of signature text.
+
 Exact release and target/features → registry metadata → docs.rs build metadata and hosted
 rustdoc JSON → normalize public API and re-exports → overview, exact-symbol search, public-API
 diff → targeted docs, examples, release notes → rust-analyzer or a compile probe only as needed.
@@ -454,6 +457,8 @@ semantic hashing are the single ingestion/query path.*
 
 ### 6.2 Separate epistemic classes
 
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
+
 > Decision: ADR-0043 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 Six, and they stay distinct: `declared`, `statically_extracted`, `compiler_derived`,
@@ -469,6 +474,8 @@ acceptance-gate states and charter §D evidence labels. Conflating them is a def
 one. No producer emits `agent_inferred`, which is correct: that class is the calling agent's.*
 
 ### 6.3 Schema ownership
+
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0043 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
@@ -566,6 +573,8 @@ reads, durable pending completion and explicit policy-controlled execution.*
 
 ### 7.2 Common response envelope
 
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
+
 > Decision: ADR-0037 — Research/2.0 replaces the prior root pagination and nested terminal-result contract.
 
 Research/2.0 retains explicit outcome, scope, freshness and source evidence while separating
@@ -588,6 +597,8 @@ catalog admission/export, with descriptors for offline reads of presentation-onl
 qualification remains open.*
 
 ### 7.3 Output budgets
+
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0045 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
@@ -619,6 +630,8 @@ and excerpt limits are enforced on the search and inspect paths. The limits are 
 defaults, **not measured performance claims**.*
 
 ### 7.4 FastMCP implementation
+
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0037 — FastMCP 4.0.3 validates original inputs and emitted tool variants; optional progress cannot replace a completed outcome.
 
@@ -652,6 +665,8 @@ other producers' evidence with a `partial` status.*
 
 ### 8.2 Single-flight and publication
 
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
+
 > Decision: ADR-0042 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 > Decision: ADR-0037 — Complete indexed result closure is admitted before job success; recovery reads committed bytes without generating replacement results.
@@ -683,6 +698,8 @@ selection. Read/export leases protect selected files. *Evidence: Implemented —
 publication, same-context distinct snapshots and failed precommit delivery have executable oracles.*
 
 ### 8.3 Job state
+
+> Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0044 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
@@ -1046,6 +1063,12 @@ blueprint §16, unchanged.
 
 ## 17. Unified native execution and Delta authority
 
+> Decision: ADR-0049 — bounded atomic native listing and controlled Delta factory opening preserve one owned session, store, exact snapshot and semantic scan contract.
+
+> Decision: ADR-0048 qualifies the shared format-61 producer/renderer model.
+
+> Decision: ADR-0047 — one semantic declaration and generated typed boundaries supersede the earlier schema/presentation mechanisms.
+
 > Decision: ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045.
 
 The owner selected the complete Plan 15 architecture. Where earlier sections describe procedural
@@ -1066,6 +1089,33 @@ Activation uses fresh state and removes old executable/state/artifact paths with
 Evidence: Interface-checked for upstream mechanisms; implementation and qualification are tracked
 in [Plan 15](../plans/15-unified-datafusion-delta-runtime-hard-pivot.md). Earlier Tested labels
 refer to the superseded implementation, not completion of this target.
+
+### Plan 17 semantic contract authority — decision, 2026-09-16
+
+The active target is [Plan 17](../plans/17-schema-governed-unified-runtime-hard-pivot.md), integrating
+all remaining runtime obligations with schema engineering. One finite Rust declaration using Arrow
+fields, enums and DataFusion expressions supplies variants, domains, requiredness, collection
+meaning, scoped references and wire rules. Generate every field-bearing boundary from it. No
+independent DTO schema, role-prefix policy, literal variant allowlist or historical epoch reader
+remains in the target. Native relations still own all service decisions and result selection.
+
+Full-field UDF contracts and a pre-coercion semantic analyzer enforce domains beyond metadata;
+validate derived logical/physical fields as well. Storage uses sound NOT NULL plus generated
+parent-aware native predicates and feature-enabled Delta CHECK operations, with native relational
+admission for collection/reference conditions. Exact names and field contracts must be checked
+before casts that could insert NULL. Typed clocks, digests, IDs and coordinates retain exact value
+meaning through canonical identity, storage and generated wire projections.
+
+Native result relations select bounded pages and recovery. Before encoding, establish a checked
+escaped-byte bound and reserve allocation; a capped Write after Arrow JSON buffers an entire row
+is insufficient. FastMCP receives explicit bounded/empty content and generated structured content,
+avoiding its automatic text duplication. Python remains a mechanical transport/extraction boundary.
+Complete results and retrieval actions remain precommitted with terminal outcomes.
+
+Evidence: Interface-checked decision, with executed library probes and an accepted document-stage
+review. Product implementation is in progress; Plan 17 SC/Q oracles remain unqualified. Activate
+one complete fresh epoch and delete replaced runtime/state without compatibility. Earlier dated
+implementation evidence below describes its own checkpoint, not completion of this target.
 
 ### Exact Arrow metadata boundary — implementation evidence, 2026-09-15
 
@@ -1202,6 +1252,9 @@ decided it. See [`README.md`](README.md) for the amendment rule.
 
 | Revision | Date | Change | Decided by |
 |---|---|---|---|
+| 27 | 2026-09-16 | Compose native providers through bounded discovery, exact owned opening and corrected nested CHECK formatting. | ADR-0049 |
+| 26 | 2026-09-16 | Qualify one format-61 model for facts and the patched pure renderer. | ADR-0048 |
+| 25 | 2026-09-16 | One native schema/variant/domain authority, generated typed storage and wire, semantic plan checks and preallocation-bounded MCP encoding; Plan 17 hard pivot. | ADR-0047 |
 | 1 | 2026-09-13 | Seeded from the frozen blueprint (revision 1.0, 2026-09-13) as the living design spine. §B1–§B13 given stable IDs; the eight existing decision records attached to the sections they govern. | ADR-0009 |
 | 2 | 2026-09-13 | Evidence labels corrected to the measured state of the tree after the Phase-1 slice landed. No design change; §B1–§B13 and every section number are unchanged. Prompted by finding F1 of the 2026-09-13 design review, which found the spine describing a system two phases behind the code. | — (maintenance; see the preamble) |
 | 3 | 2026-09-13 | Preserve feature knowledge and align comparison gates with Phase 3. | ADR-0011, ADR-0012 |

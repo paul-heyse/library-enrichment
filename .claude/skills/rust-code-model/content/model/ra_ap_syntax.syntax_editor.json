@@ -1,0 +1,189 @@
+{
+  "module": "ra_ap_syntax::syntax_editor",
+  "crate": "ra_ap_syntax",
+  "api": "api/ra_ap_syntax.syntax_editor.md",
+  "items": [
+    {
+      "path": "ra_ap_syntax::syntax_editor::Position",
+      "name": "Position",
+      "kind": "struct",
+      "crate": "ra_ap_syntax",
+      "signature": "struct Position",
+      "summary": "Position describing where to insert elements",
+      "doc": "api/ra_ap_syntax.syntax_editor.md#position",
+      "methods": [
+        {
+          "name": "after",
+          "signature": "fn after(elem: impl Element) -> Position"
+        },
+        {
+          "name": "before",
+          "signature": "fn before(elem: impl Element) -> Position"
+        },
+        {
+          "name": "first_child_of",
+          "signature": "fn first_child_of(node: &impl Into<SyntaxNode> + Clone) -> Position"
+        },
+        {
+          "name": "last_child_of",
+          "signature": "fn last_child_of(node: &impl Into<SyntaxNode> + Clone) -> Position"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_syntax::syntax_editor::SyntaxAnnotation",
+      "name": "SyntaxAnnotation",
+      "kind": "struct",
+      "crate": "ra_ap_syntax",
+      "signature": "struct SyntaxAnnotation",
+      "summary": "",
+      "doc": null,
+      "methods": []
+    },
+    {
+      "path": "ra_ap_syntax::syntax_editor::SyntaxEdit",
+      "name": "SyntaxEdit",
+      "kind": "struct",
+      "crate": "ra_ap_syntax",
+      "signature": "struct SyntaxEdit",
+      "summary": "Represents a completed [`SyntaxEditor`] operation.",
+      "doc": "api/ra_ap_syntax.syntax_editor.md#syntaxedit",
+      "methods": [
+        {
+          "name": "changed_elements",
+          "signature": "fn changed_elements(&self) -> &[SyntaxElement]",
+          "summary": "Which syntax elements in the modified syntax tree were inserted or modified as part of the edit."
+        },
+        {
+          "name": "find_annotation",
+          "signature": "fn find_annotation(&self, annotation: SyntaxAnnotation) -> &[SyntaxElement]",
+          "summary": "Finds which syntax elements have been annotated with the given annotation."
+        },
+        {
+          "name": "find_element",
+          "signature": "fn find_element(&self, old_node: &SyntaxNode) -> Option<SyntaxNode>"
+        },
+        {
+          "name": "new_root",
+          "signature": "fn new_root(&self) -> &SyntaxNode",
+          "summary": "Root of the modified syntax tree."
+        },
+        {
+          "name": "old_root",
+          "signature": "fn old_root(&self) -> &SyntaxNode",
+          "summary": "Root of the initial unmodified syntax tree."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_syntax::syntax_editor::SyntaxEditor",
+      "name": "SyntaxEditor",
+      "kind": "struct",
+      "crate": "ra_ap_syntax",
+      "signature": "struct SyntaxEditor",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "add_annotation",
+          "signature": "fn add_annotation(&self, element: impl Element, annotation: SyntaxAnnotation)"
+        },
+        {
+          "name": "add_annotation_all",
+          "signature": "fn add_annotation_all(&self, elements: Vec<impl Element>, annotation: SyntaxAnnotation)"
+        },
+        {
+          "name": "add_generic_param",
+          "signature": "fn add_generic_param(&self, node: &impl ast::HasGenericParams, new_param: ast::GenericParam)",
+          "summary": "Adds a new generic param to the node using `SyntaxEditor`"
+        },
+        {
+          "name": "delete",
+          "signature": "fn delete(&self, element: impl Element)"
+        },
+        {
+          "name": "delete_all",
+          "signature": "fn delete_all(&self, range: RangeInclusive<SyntaxElement>)"
+        },
+        {
+          "name": "deleted",
+          "signature": "fn deleted(&self, element: impl Element) -> bool"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> SyntaxEdit"
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(&self, position: Position, element: impl Element)"
+        },
+        {
+          "name": "insert_all",
+          "signature": "fn insert_all(&self, position: Position, elements: Vec<SyntaxElement>)"
+        },
+        {
+          "name": "insert_all_with_whitespace",
+          "signature": "fn insert_all_with_whitespace(&self, position: Position, elements: Vec<SyntaxElement>)"
+        },
+        {
+          "name": "insert_with_whitespace",
+          "signature": "fn insert_with_whitespace(&self, position: Position, element: impl Element)"
+        },
+        {
+          "name": "make",
+          "signature": "fn make(&self) -> &SyntaxFactory"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(&self, other: SyntaxEditor)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(root: SyntaxNode) -> (Self, SyntaxNode)",
+          "summary": "Creates a syntax editor from `root`."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace(&self, old: impl Element, new: impl Element)"
+        },
+        {
+          "name": "replace_all",
+          "signature": "fn replace_all(&self, range: RangeInclusive<SyntaxElement>, new: Vec<SyntaxElement>)"
+        },
+        {
+          "name": "replace_with_many",
+          "signature": "fn replace_with_many(&self, old: impl Element, new: Vec<SyntaxElement>)"
+        },
+        {
+          "name": "with_ast_node",
+          "signature": "fn with_ast_node<T>(root: &T) -> (Self, T) where T: AstNode",
+          "summary": "Typed-node variant of [`SyntaxEditor::new`]."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_syntax::syntax_editor::Element",
+      "name": "Element",
+      "kind": "trait",
+      "crate": "ra_ap_syntax",
+      "signature": "trait Element",
+      "summary": "Utility trait to allow calling syntax editor functions with references or owned nodes. Do not use outside of this module.",
+      "doc": "api/ra_ap_syntax.syntax_editor.md#element",
+      "implementors": [
+        "ra_ap_syntax::syntax_node::SyntaxElement",
+        "ra_ap_syntax::syntax_node::SyntaxNode",
+        "ra_ap_syntax::syntax_node::SyntaxToken"
+      ],
+      "required_methods": [
+        "syntax_element"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "syntax_element",
+          "signature": "fn syntax_element(self) -> SyntaxElement"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+alternation	a|b	yes	yes	yes			not-probed	either branch
+anchor-haystack	\A \z	yes	yes	yes		P020	confirmed	start or end of the whole haystack
+anchor-line	^ $	yes	yes	yes		P020	confirmed	start or end of a LINE, always, even under -U
+atomic-group	(?>...)	no	yes	requires -P		P009	confirmed	group that never backtracks into itself
+backreference	\1	no	yes	requires -P		P005	confirmed	require a repeat of an earlier capture
+branch-reset	(?|...)	no	yes	requires -P		P010	confirmed	reuse capture numbers across alternatives
+bsr-control	(*BSR_ANYCRLF)	no	yes	requires -P			unknown	control what \R matches
+callout	(?C1)	no	yes	no			unknown	invoke a host callback mid-match
+character-class	[a-z]	yes	yes	yes			not-probed	match one of a set
+class-nested-rust	[\w&&[^0-9]]	yes	no	default-only			unknown	set algebra, Rust engine syntax
+conditional	(?(1)a|b)	no	yes	requires -P		P011	confirmed	branch on whether a group matched
+control-verb-accept	(*ACCEPT) (*FAIL)	no	yes	requires -P			unknown	end the match early
+control-verb-commit	(*COMMIT) (*PRUNE) (*THEN)	no	yes	requires -P			unknown	control backtracking
+control-verb-skip-fail	(*SKIP)(*F)	no	yes	requires -P		P018	confirmed	discard a region so later alternatives cannot match inside it
+dot	.	yes	yes	yes			not-probed	any character except newline
+extended-class-perl	(?[A & B])	no	yes	requires -P	10.45	P015	confirmed	set algebra over classes, and since 10.48 it composes with lookarounds
+extended-class-uts18	[A&&[B]]	no	yes	no	10.45	P016	recorded	set algebra, UTS#18 form
+extended-class-with-lookaround	(?[\d-[1]]).(?<!x)	no	yes	requires -P	10.48	P035	confirmed	an extended class in the same pattern as a lookaround
+group-capturing	(...)	yes	yes	yes			not-probed	group and capture
+group-named	(?<n>...)	yes	yes	yes		P006	confirmed	group under a name
+group-non-capturing	(?:...)	yes	yes	yes			not-probed	group without capturing
+inline-flags	(?i)	yes	yes	yes			not-probed	set flags inside the pattern
+literal	abc	yes	yes	yes			not-probed	match text exactly
+lookahead	(?=...) (?!...)	no	yes	requires -P		P002	confirmed	assert what follows, without consuming
+lookbehind	(?<=...) (?<!...)	no	yes	requires -P		P003	confirmed	assert what precedes
+match-reset	\K	no	yes	requires -P		P007	confirmed	drop everything matched so far from the result
+named-backreference	\k<n>	no	yes	requires -P		P006	confirmed	require a repeat, by name
+negated-character-class	[^a-z]	yes	yes	yes			not-probed	match one outside a set
+newline-convention	(*CRLF) (*ANYCRLF)	no	yes	requires -P			unknown	set the newline convention
+no-jit	(*NO_JIT)	no	yes	requires -P			unknown	ask PCRE2 not to JIT this pattern
+possessive-quantifier	a++ a*+	no	yes	requires -P		P008	confirmed	repeat without giving back
+quantifier-greedy	a* a+ a?	yes	yes	yes			not-probed	repeat, preferring more
+quantifier-lazy	a*? a+?	yes	yes	yes			not-probed	repeat, preferring fewer
+recursion	(?R)	no	yes	requires -P		P012	confirmed	match a balanced, nested construct
+recursion-returned-captures	(?&name(<cap>))	no	yes	requires -P	10.47	P013	confirmed	return selected captures from a subroutine call to the caller
+repetition-bounded	a{2,5}	yes	yes	yes			not-probed	repeat a bounded number of times
+resource-limits	(*LIMIT_MATCH=n) (*LIMIT_DEPTH=n) (*LIMIT_HEAP=n)	no	yes	requires -P			unknown	lower the engine's own limits from inside the pattern
+scan-substring	(*scs:(1)...)	no	yes	requires -P	10.45	P014	confirmed	re-scan an already-captured substring
+script-run	(*sr:...)	no	yes	requires -P		P017	confirmed	require one Unicode script throughout
+subroutine	(?&name)	no	yes	requires -P			unknown	call a named group as a subpattern
+unicode-17-script	\p{Sidetic}	no	yes	requires -P	10.48	P036	confirmed	match one of the four scripts Unicode 17.0 added
+unicode-property	\p{L}	yes	yes	yes		P015	confirmed	match by Unicode property
+variable-lookbehind	(?<=.{0,20}x)	no	yes	requires -P	10.43	P004	confirmed	lookbehind of varying width, bounded
+word-boundary	\b	yes	yes	yes			not-probed	zero-width word edge

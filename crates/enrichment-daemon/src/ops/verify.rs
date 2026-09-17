@@ -389,6 +389,7 @@ async fn execute_inner(
         &service.config.execution,
         &service.paths.cache_root,
         std::sync::Arc::clone(&service.execution),
+        service.ownership.clone(),
     )
     .map_err(|e| capsule::PreparationError::from_runner(&e))?
     .using_lease(lease);
@@ -521,11 +522,7 @@ async fn execute_inner(
         observations: capsule.observations.clone(),
         limitations: limitations.clone(),
     };
-    let payload = serde_json::to_value(data)
-        .map_err(|e| e.to_string())?
-        .as_object()
-        .cloned()
-        .ok_or("verification payload is not an object")?;
+    let payload = data.into();
     let mut result = if success && cleanup_confirmed {
         envelope::ok(
             "The requested isolated consumer probe completed successfully within its recorded scope.",
@@ -593,9 +590,10 @@ async fn publish_completed(
         producer::{ProducerRun, RunOutcome},
         wire::SourceVersionMatch,
     };
-    let mut data: VerificationData =
-        serde_json::from_value(serde_json::Value::Object(result.data.clone()))
-            .map_err(|e| e.to_string())?;
+    let enrichment_core::wire::data::ToolData::VerifyUsage(data) = result.data.clone() else {
+        return Err("verification publication requires its native payload".into());
+    };
+    let mut data = *data;
     service
         .repository
         .catalog
@@ -666,8 +664,8 @@ async fn publish_completed(
     let canonical_result = store(
         service,
         &bytes,
-        "producer-result://usage-probe/2",
-        "application/json",
+        "producer-result://usage-probe/3",
+        "application/vnd.library-enrichment.canonical-arrow",
     )?;
     let environment = data
         .environment
@@ -688,8 +686,8 @@ async fn publish_completed(
         ]
         .into(),
         profile: request.profile,
-        started_at: last.started_at.clone(),
-        finished_at: last.finished_at.clone(),
+        started_at: last.started_at,
+        finished_at: last.finished_at,
         outcome: if last.end == ProcessEnd::Exited && last.exit_code == Some(0) {
             RunOutcome::Succeeded
         } else {
@@ -787,34 +785,18 @@ async fn publish_completed(
         })
         .collect();
     crate::delivery::size(&data, crate::delivery::MAX_RESULT_BYTES).map_err(|e| e.to_string())?;
-    result.data.clear();
-    let (prepare_delivery, delivery) = crate::delivery::prepare_job(
-        service.blobs.clone(),
-        move |manifest, coverage| {
-            let mut data = data.clone();
-            data.derived_snapshot_id = Some(manifest.snapshot_id.to_string());
-            let mut result = result.clone();
-            let payload = common::to_object(&data);
-            if state == JobState::Succeeded {
-                result = envelope::ok(
-                    "The isolated consumer probe succeeded; its scoped result is retained in the published snapshot.",
-                    payload,
-                    coverage.clone(),
-                );
-            } else {
-                result.data = payload;
-                result.coverage = coverage.clone();
-            }
-            result.coverage.limitations.extend(data.limitations);
-            if !result.coverage.complete() {
-                result = result.into_partial();
-            }
-            result.context_id = Some(context.context_id.to_string());
-            result.snapshot_id = Some(manifest.snapshot_id.to_string());
-            result.artifacts = handles.clone();
-            Ok(result)
-        },
-    );
+    if state == JobState::Succeeded {
+        result = envelope::ok(
+            "The isolated consumer probe succeeded; its scoped result is retained in the published snapshot.",
+            data.clone().into(),
+            result.coverage.clone(),
+        );
+    } else {
+        result.data = data.clone().into();
+    }
+    result.coverage.limitations = data.limitations;
+    result.artifacts = handles;
+    let result = enrichment_core::operation::results::ResultRecord::from_envelope(&result)?;
     let manifest = service
         .repository
         .publish_execution(
@@ -829,19 +811,21 @@ async fn publish_completed(
                     .map_err(|error| error.to_string())?,
                 job_id: job.into(),
                 kind: enrichment_core::evidence::catalog::PublishedJobKind::Verify,
-                state,
+
                 attempt_id: run.attempt_id.clone(),
                 result_artifact_ids: vec![canonical_result.artifact_id.clone()],
-                prepare_delivery,
+                result,
             },
         )
         .await
         .map_err(|e| e.to_string())?;
     Ok((
-        state,
-        delivery
-            .get(manifest.snapshot_id.as_str())
-            .map_err(|e| e.to_string())?,
+        manifest
+            .state
+            .ok_or("published verification lacks native state")?,
+        manifest
+            .result
+            .ok_or("published verification lacks native result")?,
     ))
 }
 
@@ -851,15 +835,17 @@ fn store(
     uri: &str,
     media: &str,
 ) -> Result<enrichment_core::evidence::Artifact, String> {
+    let retrieved_at =
+        enrichment_core::native_time::AcquisitionTime::now().map_err(|error| error.to_string())?;
     service
         .blobs
         .put(bytes, |_| {
-            enrichment_store::blob::describe_local(
+            enrichment_core::evidence::Artifact::describe(
                 bytes,
                 ArtifactKind::Other,
                 media,
                 uri,
-                &enrichment_core::clock::now_rfc3339(),
+                retrieved_at,
             )
         })
         // This call's record, not the stored one: these URIs are job-scoped
@@ -876,13 +862,13 @@ pub async fn recover(
     blobs: &enrichment_store::BlobStore,
     record: &jobs::JobRecord,
 ) -> std::io::Result<Option<(JobState, Envelope)>> {
-    if matches!(record.specification, jobs::JobSpec::Compare(_)) {
+    if matches!(record.specification, jobs::Arguments::Compare { .. }) {
         return super::compare_job::recover(repository, blobs, record).await;
     }
-    if matches!(record.specification, jobs::JobSpec::Resolve(_)) {
+    if matches!(record.specification, jobs::Arguments::Resolve { .. }) {
         return super::resolve_job::recover(repository, blobs, record).await;
     }
-    if matches!(record.specification, jobs::JobSpec::Inspect(_)) {
+    if matches!(record.specification, jobs::Arguments::Inspect { .. }) {
         return super::inspect_execution::recover(repository, blobs, record).await;
     }
     let fail = |e: String| std::io::Error::other(e);
@@ -898,7 +884,7 @@ pub async fn recover(
     else {
         return Ok(None);
     };
-    let jobs::JobSpec::Verify(request) = &record.specification else {
+    let jobs::Arguments::Verify { request } = &record.specification else {
         return Err(fail("unsupported committed job recovery variant".into()));
     };
     if publication.kind != enrichment_core::evidence::catalog::PublishedJobKind::Verify {
@@ -991,7 +977,18 @@ pub async fn recover(
         .map_err(|e| fail(e.to_string()))?;
     Ok(Some((
         publication.state,
-        crate::delivery::recover_job(blobs, &publication)?,
+        crate::delivery::recover_job(
+            blobs,
+            &repository.runtime,
+            repository
+                .catalog
+                .pin()
+                .await
+                .map_err(std::io::Error::other)?
+                .as_ref(),
+            &publication,
+        )
+        .await?,
     )))
 }
 
@@ -1023,11 +1020,7 @@ pub async fn control(service: &Service, request: JobRequest) -> Envelope {
     };
     match result {
         Ok(record) => {
-            let data = serde_json::to_value(record.data(request.interest_token))
-                .expect("job data serializes")
-                .as_object()
-                .cloned()
-                .expect("object");
+            let data = record.data(request.interest_token).into();
             envelope::ok(
                 "Job state read from the durable journal; inspect result for the probe outcome.",
                 data,
@@ -1071,11 +1064,7 @@ pub(super) fn pending(data: JobData) -> Envelope {
             .into(),
         context_id: None,
         snapshot_id: None,
-        data: serde_json::to_value(data)
-            .expect("job data")
-            .as_object()
-            .cloned()
-            .expect("object"),
+        data: data.into(),
         coverage: Coverage {
             details: None,
             assessments: Vec::new(),

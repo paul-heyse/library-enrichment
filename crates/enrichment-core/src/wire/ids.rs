@@ -70,6 +70,33 @@ impl fmt::Display for RequestId {
 #[schemars(inline, extend("pattern" = "^library-evidence://"))]
 pub struct ArtifactUri(String);
 
+macro_rules! native_text_cell {
+    ($type:ty) => {
+        impl crate::native_union::Cell for $type {
+            fn data_type() -> arrow::datatypes::DataType {
+                arrow::datatypes::DataType::Utf8
+            }
+            fn encode(
+                values: &[Option<&Self>],
+            ) -> Result<arrow::array::ArrayRef, arrow::error::ArrowError> {
+                Ok(crate::evidence::arrow_model::cells::optional(
+                    values.iter().map(|value| value.map(Self::as_str)),
+                ))
+            }
+            fn decode(
+                row: crate::evidence::arrow_model::cells::Row<'_>,
+                name: &str,
+            ) -> Result<Self, arrow::error::ArrowError> {
+                Self::try_from(row.text(name)?.to_owned()).map_err(|error| {
+                    crate::evidence::arrow_model::cells::invalid(error.to_string())
+                })
+            }
+        }
+    };
+}
+native_text_cell!(RequestId);
+native_text_cell!(ArtifactUri);
+
 /// The only way an [`ArtifactUri`] can fail to be built.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ArtifactUriError;

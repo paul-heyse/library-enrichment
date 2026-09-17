@@ -552,6 +552,79 @@ async fn diagnostics_observe_the_executed_scan_and_bound_failed_query_history() 
 }
 
 #[tokio::test]
+async fn service_counters_reduce_native_observations_and_keep_process_scope() {
+    use enrichment_core::telemetry::{CacheOutcome, ProbeOutcome, ServiceObservation};
+    use enrichment_core::wire::Status;
+    let dir = tempfile::tempdir().unwrap();
+    let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
+    for (outcome, transferred) in [
+        (CacheOutcome::Hit, 4096),
+        (CacheOutcome::Revalidated, 4096),
+        (CacheOutcome::Miss, 1024),
+    ] {
+        runtime.record_service(ServiceObservation::Fetch {
+            outcome,
+            transferred,
+        });
+    }
+    runtime.record_service(ServiceObservation::FetchFailure);
+    for (status, has_gap, bytes) in [(Some(Status::Ok), true, 100), (None, false, 50)] {
+        runtime.record_service(ServiceObservation::Response {
+            method: "fixture.insight".into(),
+            status,
+            has_gap,
+            elapsed_micros: 123,
+            bytes,
+        });
+    }
+    for outcome in [
+        ProbeOutcome::Succeeded,
+        ProbeOutcome::Failed,
+        ProbeOutcome::Unresolved,
+    ] {
+        runtime.record_service(ServiceObservation::Probe { outcome });
+    }
+    let counters = runtime.service_counters().await.unwrap();
+    assert_eq!(
+        (
+            counters.fetch.hits,
+            counters.fetch.revalidated,
+            counters.fetch.misses,
+            counters.fetch.failures
+        ),
+        (1, 1, 1, 1)
+    );
+    assert_eq!(counters.fetch.fetched_bytes, 1024);
+    assert_eq!(
+        (
+            counters.evidence.requests,
+            counters.evidence.ok,
+            counters.evidence.errors,
+            counters.evidence.gaps,
+            counters.evidence.response_bytes
+        ),
+        (2, 1, 1, 1, 150)
+    );
+    assert_eq!(
+        (
+            counters.verification.succeeded,
+            counters.verification.failed,
+            counters.verification.unresolved
+        ),
+        (1, 1, 1)
+    );
+    runtime.close_diagnostics().await.unwrap();
+    assert!(runtime.service_counters().await.is_err());
+    drop(runtime);
+    let reopened = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
+    assert_eq!(
+        reopened.service_counters().await.unwrap(),
+        Default::default()
+    );
+    reopened.close_diagnostics().await.unwrap();
+}
+
+#[tokio::test]
 async fn native_field_contracts_accept_outer_join_nulls_and_reject_missing_roles() {
     use datafusion::{common::metadata::FieldMetadata, prelude::col};
     use enrichment_store::preparation::require_fields;

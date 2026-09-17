@@ -1,0 +1,130 @@
+{
+  "module": "ast_grep_core::matcher",
+  "crate": "ast-grep-core",
+  "api": "api/ast_grep_core.matcher.md",
+  "items": [
+    {
+      "path": "ast_grep_core::matcher::MatchAll",
+      "name": "MatchAll",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct MatchAll",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ast_grep_core::matcher::Matcher"
+      ],
+      "methods": [
+        {
+          "name": "match_node_with_env",
+          "signature": "fn match_node_with_env<'tree, D: Doc>(&self, node: Node<'tree, D>, _env: &mut Cow<'_, MetaVarEnv<'tree, D>>) -> Option<Node<'tree, D>>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        },
+        {
+          "name": "potential_kinds",
+          "signature": "fn potential_kinds(&self) -> Option<BitSet>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::MatchNone",
+      "name": "MatchNone",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct MatchNone",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ast_grep_core::matcher::Matcher"
+      ],
+      "methods": [
+        {
+          "name": "match_node_with_env",
+          "signature": "fn match_node_with_env<'tree, D: Doc>(&self, _node: Node<'tree, D>, _env: &mut Cow<'_, MetaVarEnv<'tree, D>>) -> Option<Node<'tree, D>>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        },
+        {
+          "name": "potential_kinds",
+          "signature": "fn potential_kinds(&self) -> Option<BitSet>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::Matcher",
+      "name": "Matcher",
+      "kind": "trait",
+      "crate": "ast-grep-core",
+      "signature": "trait Matcher",
+      "summary": "`Matcher` defines whether a tree-sitter node matches certain pattern, and update the matched meta-variable values in `MetaVarEnv`. N.B. At least one positive term is required for matching",
+      "doc": "api/ast_grep_core.matcher.md#matcher",
+      "aliases": [
+        "ast_grep_core::Matcher"
+      ],
+      "implementors": [
+        "ast_grep_config::rule::Rule",
+        "ast_grep_config::rule_core::RuleCore",
+        "ast_grep_core::matcher::MatchAll",
+        "ast_grep_core::matcher::MatchNone",
+        "ast_grep_core::matcher::kind::KindMatcher",
+        "ast_grep_core::matcher::pattern::Pattern",
+        "ast_grep_core::matcher::text::RegexMatcher",
+        "ast_grep_core::ops::All",
+        "ast_grep_core::ops::And",
+        "ast_grep_core::ops::Any",
+        "ast_grep_core::ops::Not",
+        "ast_grep_core::ops::Op",
+        "ast_grep_core::ops::Or"
+      ],
+      "required_methods": [
+        "match_node_with_env"
+      ],
+      "provided_methods": [
+        "get_match_len",
+        "potential_kinds"
+      ],
+      "methods": [
+        {
+          "name": "get_match_len",
+          "signature": "fn get_match_len<D: Doc>(&self, _node: Node<'_, D>) -> Option<usize>",
+          "summary": "get_match_len will skip trailing anonymous child node to exclude punctuation."
+        },
+        {
+          "name": "match_node_with_env",
+          "signature": "fn match_node_with_env<'tree, D: Doc>(&self, _node: Node<'tree, D>, _env: &mut Cow<'_, MetaVarEnv<'tree, D>>) -> Option<Node<'tree, D>>",
+          "summary": "Returns the node why the input is matched or None if not matched. The return value is usually input node itself, but it can be different node. For example `Has` matcher can return the child or descendant node."
+        },
+        {
+          "name": "potential_kinds",
+          "signature": "fn potential_kinds(&self) -> Option<BitSet>",
+          "summary": "Returns a bitset for all possible target node kind ids. Returns None if the matcher needs to try against all node kind."
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::MatcherExt",
+      "name": "MatcherExt",
+      "kind": "trait",
+      "crate": "ast-grep-core",
+      "signature": "trait MatcherExt: Matcher",
+      "summary": "MatcherExt provides additional utility methods for `Matcher`. It is implemented for all types that implement `Matcher`. N.B. This trait is not intended to be implemented by users.",
+      "doc": "api/ast_grep_core.matcher.md#matcherext",
+      "required_methods": [],
+      "provided_methods": [
+        "find_node",
+        "match_node"
+      ],
+      "methods": [
+        {
+          "name": "find_node",
+          "signature": "fn find_node<'tree, D: Doc>(&self, node: Node<'tree, D>) -> Option<NodeMatch<'tree, D>>"
+        },
+        {
+          "name": "match_node",
+          "signature": "fn match_node<'tree, D: Doc>(&self, node: Node<'tree, D>) -> Option<NodeMatch<'tree, D>>"
+        }
+      ]
+    }
+  ]
+}

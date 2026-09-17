@@ -96,7 +96,7 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
             manifest.counts.fragments,
             manifest.published_at
         ),
-        data: common::to_object(&data),
+        data: common::payload(&data),
         coverage: match reader.assess_acquisition().await {
             Ok(value) => value,
             Err(error) => return common::query_error(&error),

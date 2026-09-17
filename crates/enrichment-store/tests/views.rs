@@ -2,7 +2,6 @@
 mod native_tables;
 pub mod support;
 
-use arrow::{array::UInt64Array, record_batch::RecordBatch};
 use datafusion::prelude::{col, lit};
 use enrichment_core::{evidence::path::PublicPath, identity::Ecosystem};
 use enrichment_store::{
@@ -11,15 +10,6 @@ use enrichment_store::{
     runtime::{QueryLimits, QueryRuntime},
     views,
 };
-
-fn count(batch: &RecordBatch) -> u64 {
-    batch
-        .column(0)
-        .as_any()
-        .downcast_ref::<UInt64Array>()
-        .expect("count")
-        .value(0)
-}
 
 #[tokio::test]
 async fn production_inspection_view_skips_large_documentation_leaves() {
@@ -171,19 +161,57 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
         .research_session(&runtime, None)
         .await
         .expect("bound domain catalog");
+    // A left surface preserves every public binding, including bindings without an
+    // observation. Definition observations fan out to each public alias independently.
+    let mut expected = Vec::new();
+    for symbol in &evidence.symbols {
+        let observations = evidence
+            .api_observations
+            .iter()
+            .filter(|observation| match &observation.subject {
+                enrichment_core::evidence::relational::SubjectRef::Symbol { symbol_id } => {
+                    symbol_id == &symbol.symbol_id
+                }
+                enrichment_core::evidence::relational::SubjectRef::Definition { definition_id } => {
+                    definition_id == &symbol.definition_id
+                }
+                _ => false,
+            })
+            .collect::<Vec<_>>();
+        if observations.is_empty() {
+            expected.push((symbol.symbol_id.clone(), None));
+        } else {
+            expected.extend(observations.into_iter().map(|observation| {
+                (
+                    symbol.symbol_id.clone(),
+                    Some(observation.observation_id.clone()),
+                )
+            }));
+        }
+    }
+    expected.sort();
     let api = runtime
         .execute(
             session
-                .sql("SELECT CAST(count(*) AS BIGINT UNSIGNED) FROM snapshot.domain.api_surface")
+                .sql("SELECT symbol_id, observation_id FROM snapshot.domain.api_surface")
                 .await
-                .expect("plan"),
+                .unwrap(),
         )
         .await
-        .expect("execute");
-    assert_eq!(
-        count(&api.batches[0]),
-        evidence.api_observations.len() as u64
-    );
+        .unwrap();
+    let mut actual = Vec::new();
+    for batch in &api.batches {
+        let symbols = TextColumn::new(batch.column(0).as_ref()).unwrap();
+        let observations = TextColumn::new(batch.column(1).as_ref()).unwrap();
+        actual.extend((0..batch.num_rows()).map(|row| {
+            (
+                symbols.get(row).unwrap().to_owned(),
+                observations.get(row).map(str::to_owned),
+            )
+        }));
+    }
+    actual.sort();
+    assert_eq!(actual, expected);
     let ancestry = session
         .table("snapshot.domain.namespace_members")
         .await
@@ -219,7 +247,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
             .await
             .expect("all descendants")
             .rows,
-        evidence.api_observations.len()
+        expected.len()
     );
     let impossible = PublicPath::new(Ecosystem::Rust, vec!["enr_%".into()]).expect("literal");
     let absent = session

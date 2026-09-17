@@ -13,8 +13,8 @@ use crate::{
     service::Service,
 };
 use enrichment_core::{
-    canonical, clock,
-    evidence::{Artifact, Symbol, execution::*, relational::SubjectRef},
+    canonical,
+    evidence::{Artifact, SymbolHeader, execution::*, relational::SubjectRef},
     identity::{Ecosystem, Release},
     policy::ExecutionProfile,
     request::InspectionOptions,
@@ -37,7 +37,7 @@ const QUERY_DEADLINE: Duration = Duration::from_secs(30);
 pub async fn produce(
     service: &Service,
     opened: &common::Opened,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     options: &InspectionOptions,
     cancel: Arc<AtomicBool>,
 ) -> io::Result<Produced> {
@@ -52,6 +52,7 @@ pub async fn produce(
         &service.config.execution,
         &service.paths.cache_root,
         service.execution.clone(),
+        service.ownership.clone(),
     )?;
     let containment = runner.containment_identity()?;
     let key = SessionKey {
@@ -127,7 +128,8 @@ async fn query(
     session: &mut Session,
     query: Query,
 ) -> io::Result<Produced> {
-    let started_at = clock::now_rfc3339();
+    let started_at =
+        enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
     let consumer = query.consumer;
     let document = inspect_execution::store(
         service,
@@ -305,7 +307,8 @@ async fn query(
         version: inspect_execution::producer_identity(false).1,
         profile: ExecutionProfile::Build,
         started_at,
-        finished_at: clock::now_rfc3339(),
+        finished_at: enrichment_core::native_time::ObservationTime::now()
+            .map_err(std::io::Error::other)?,
         facts,
         inputs: inputs.into_values().collect(),
         lock: session.lock.clone(),

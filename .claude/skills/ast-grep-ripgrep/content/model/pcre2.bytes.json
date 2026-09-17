@@ -1,0 +1,283 @@
+{
+  "module": "pcre2::bytes",
+  "crate": "pcre2",
+  "api": "api/pcre2.bytes.md",
+  "items": [
+    {
+      "path": "pcre2::bytes::CaptureLocations",
+      "name": "CaptureLocations",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct CaptureLocations",
+      "summary": "CaptureLocations is a low level representation of the raw offsets of each submatch.",
+      "doc": "api/pcre2.bytes.md#capturelocations",
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<(usize, usize)>",
+          "summary": "Returns the start and end positions of the Nth capture group."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the total number of capturing groups."
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::CaptureMatches",
+      "name": "CaptureMatches",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct CaptureMatches<'r, 's>",
+      "summary": "An iterator that yields all non-overlapping capture groups matching a particular regular expression.",
+      "doc": "api/pcre2.bytes.md#capturematches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Captures<'s>, Error>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::Captures",
+      "name": "Captures",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct Captures<'s>",
+      "summary": "Captures represents a group of captured byte strings for a single match.",
+      "doc": "api/pcre2.bytes.md#captures",
+      "implements": [
+        "core::ops::index::Index"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<Match<'s>>",
+          "summary": "Returns the match associated with the capture group at index `i`. If `i` does not correspond to a capture group, or if the capture group did not participate in the match, then `None` is returned."
+        },
+        {
+          "name": "index",
+          "signature": "fn index<'a>(&'a self, name: &'i str) -> &'a [u8]",
+          "via_trait": "core::ops::index::Index"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of captured groups."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, name: &str) -> Option<Match<'s>>",
+          "summary": "Returns the match for the capture group named `name`. If `name` isn't a valid capture group or didn't match anything, then `None` is returned."
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::Match",
+      "name": "Match",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct Match<'s>",
+      "summary": "Match represents a single match of a regex in a subject string.",
+      "doc": "api/pcre2.bytes.md#match",
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &'s [u8]",
+          "summary": "Returns the matched portion of the subject string."
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> usize",
+          "summary": "Returns the ending byte offset of the match in the subject."
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> usize",
+          "summary": "Returns the starting byte offset of the match in the subject."
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::Matches",
+      "name": "Matches",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct Matches<'r, 's>",
+      "summary": "An iterator over all non-overlapping matches for a particular subject string.",
+      "doc": "api/pcre2.bytes.md#matches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Match<'s>, Error>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::Regex",
+      "name": "Regex",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct Regex",
+      "summary": "A compiled PCRE2 regular expression.",
+      "doc": "api/pcre2.bytes.md#regex",
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns the original pattern string for this regex."
+        },
+        {
+          "name": "capture_locations",
+          "signature": "fn capture_locations(&self) -> CaptureLocations",
+          "summary": "Returns an empty set of capture locations that can be reused in multiple calls to `captures_read` or `captures_read_at`."
+        },
+        {
+          "name": "capture_names",
+          "signature": "fn capture_names(&self) -> &[Option<String>]",
+          "summary": "Returns a sequence of all capturing groups and their names, if present."
+        },
+        {
+          "name": "captures",
+          "signature": "fn captures<'s>(&self, subject: &'s [u8]) -> Result<Option<Captures<'s>>, Error>",
+          "summary": "Returns the capture groups corresponding to the leftmost-first match in `subject`. Capture group `0` always corresponds to the entire match. If no match is found, then `None` is returned."
+        },
+        {
+          "name": "captures_iter",
+          "signature": "fn captures_iter<'r, 's>(&'r self, subject: &'s [u8]) -> CaptureMatches<'r, 's>",
+          "summary": "Returns an iterator over all the non-overlapping capture groups matched in `subject`. This is operationally the same as `find_iter`, except it yields information about capturing group matches."
+        },
+        {
+          "name": "captures_len",
+          "signature": "fn captures_len(&self) -> usize",
+          "summary": "Returns the number of capturing groups in the pattern."
+        },
+        {
+          "name": "captures_read",
+          "signature": "fn captures_read<'s>(&self, locs: &mut CaptureLocations, subject: &'s [u8]) -> Result<Option<Match<'s>>, Error>",
+          "summary": "This is like `captures`, but uses [`CaptureLocations`](struct.CaptureLocations.html) instead of [`Captures`](struct.Captures.html) in order to amortize allocations."
+        },
+        {
+          "name": "captures_read_at",
+          "signature": "fn captures_read_at<'s>(&self, locs: &mut CaptureLocations, subject: &'s [u8], start: usize) -> Result<Option<Match<'s>>, Error>",
+          "summary": "Returns the same as `captures_read`, but starts the search at the given offset and populates the capture locations given."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'s>(&self, subject: &'s [u8]) -> Result<Option<Match<'s>>, Error>",
+          "summary": "Returns the start and end byte range of the leftmost-first match in `subject`. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "find_at",
+          "signature": "fn find_at<'s>(&self, subject: &'s [u8], start: usize) -> Result<Option<Match<'s>>, Error>",
+          "summary": "Returns the same as find, but starts the search at the given offset."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'r, 's>(&'r self, subject: &'s [u8]) -> Matches<'r, 's>",
+          "summary": "Returns an iterator for each successive non-overlapping match in `subject`, returning the start and end byte indices with respect to `subject`."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match(&self, subject: &[u8]) -> Result<bool, Error>",
+          "summary": "Returns true if and only if the regex matches the subject string given."
+        },
+        {
+          "name": "is_match_at",
+          "signature": "fn is_match_at(&self, subject: &[u8], start: usize) -> Result<bool, Error>",
+          "summary": "Returns the same as is_match, but starts the search at the given offset."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<Regex, Error>",
+          "summary": "Compiles a regular expression using the default configuration."
+        }
+      ]
+    },
+    {
+      "path": "pcre2::bytes::RegexBuilder",
+      "name": "RegexBuilder",
+      "kind": "struct",
+      "crate": "pcre2",
+      "signature": "struct RegexBuilder",
+      "summary": "A builder for configuring the compilation of a PCRE2 regex.",
+      "doc": "api/pcre2.bytes.md#regexbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<Regex, Error>",
+          "summary": "Compile the given pattern into a PCRE regex using the current configuration."
+        },
+        {
+          "name": "caseless",
+          "signature": "fn caseless(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enables case insensitive matching."
+        },
+        {
+          "name": "crlf",
+          "signature": "fn crlf(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable matching of CRLF as a line terminator."
+        },
+        {
+          "name": "disable_utf_check",
+          "signature": "fn disable_utf_check(&mut self) -> &mut RegexBuilder",
+          "summary": "This is now deprecated and is a no-op."
+        },
+        {
+          "name": "dotall",
+          "signature": "fn dotall(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enables \"dot all\" matching."
+        },
+        {
+          "name": "extended",
+          "signature": "fn extended(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable \"extended\" mode in the pattern, where whitespace is ignored."
+        },
+        {
+          "name": "jit",
+          "signature": "fn jit(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable PCRE2's JIT and return an error if it's not available."
+        },
+        {
+          "name": "jit_if_available",
+          "signature": "fn jit_if_available(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable PCRE2's JIT if it's available."
+        },
+        {
+          "name": "max_jit_stack_size",
+          "signature": "fn max_jit_stack_size(&mut self, bytes: Option<usize>) -> &mut RegexBuilder",
+          "summary": "Set the maximum size of PCRE2's JIT stack, in bytes. If the JIT is not enabled, then this has no effect."
+        },
+        {
+          "name": "multi_line",
+          "signature": "fn multi_line(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable multiline matching mode."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> RegexBuilder",
+          "summary": "Create a new builder with a default configuration."
+        },
+        {
+          "name": "ucp",
+          "signature": "fn ucp(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable Unicode matching mode."
+        },
+        {
+          "name": "utf",
+          "signature": "fn utf(&mut self, yes: bool) -> &mut RegexBuilder",
+          "summary": "Enable UTF matching mode."
+        }
+      ]
+    }
+  ]
+}

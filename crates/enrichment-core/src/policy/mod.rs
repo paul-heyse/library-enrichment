@@ -9,34 +9,24 @@ use std::collections::BTreeSet;
 use std::fmt;
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::config::Config;
 
+crate::native_vocabulary! {
 /// The three execution profiles (§10).
 ///
 /// The values are, in order: `static`, `build`, `runtime`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
 pub enum ExecutionProfile {
-    Static,
-    Build,
-    Runtime,
+    Static = "static",
+    Build = "build",
+    Runtime = "runtime",
+}
 }
 
 impl ExecutionProfile {
-    /// The configuration spelling of this profile.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Static => "static",
-            Self::Build => "build",
-            Self::Runtime => "runtime",
-        }
-    }
-
     /// Whether configuration has enabled this profile. Detection of a sandbox never enables one.
     #[must_use]
     pub fn is_enabled(self, config: &Config) -> bool {

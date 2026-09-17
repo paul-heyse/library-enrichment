@@ -227,14 +227,17 @@ pub(crate) fn claim_lease_seconds(state: &dyn Session) -> Result<u64> {
 /// Native UTC time and interval arithmetic own both initial and renewed lease deadlines.
 pub(crate) fn claim_deadline(state: &dyn Session) -> Result<datafusion::logical_expr::Expr> {
     let seconds = claim_lease_seconds(state)?;
-    Ok(datafusion::functions::datetime::expr_fn::now()
-        + datafusion::prelude::lit(datafusion::common::ScalarValue::new_interval_mdn(
-            0,
-            0,
-            i64::try_from(seconds * 1_000_000_000).map_err(|_| {
-                DataFusionError::Configuration("native lease interval overflow".into())
-            })?,
-        )))
+    Ok(enrichment_core::native_time::expression(
+        enrichment_core::native_types::ClockMeaning::Expiry,
+        enrichment_core::native_time::now_instant()
+            + datafusion::prelude::lit(datafusion::common::ScalarValue::new_interval_mdn(
+                0,
+                0,
+                i64::try_from(seconds * 1_000_000_000).map_err(|_| {
+                    DataFusionError::Configuration("native lease interval overflow".into())
+                })?,
+            )),
+    ))
 }
 
 pub(crate) fn normalization_depth(state: &dyn Session) -> Result<u32> {

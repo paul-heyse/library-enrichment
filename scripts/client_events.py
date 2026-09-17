@@ -11,7 +11,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from enrichment_mcp.envelope import validate_document, validate_tool_data
+from enrichment_mcp.envelope import validate_document
+from enrichment_mcp.presentation import validate_output
 
 SERVICE = "library-enrichment"
 SERVERS = {SERVICE, "context7"}
@@ -41,13 +42,12 @@ class Invocation:
             and (self.result.get("isError") or self.result.get("is_error"))
         )
         terminal = payload.get("data", {}).get("result")
-        failed_job = isinstance(terminal, dict) and terminal.get("outcome") == "error"
+        failed_job = (
+            isinstance(terminal, dict) and terminal.get("outcome", {}).get("status") == "error"
+        )
         if flagged and payload["status"] != "error" and not failed_job:
             raise ValueError(f"{self.call_id}: failed MCP result claims usable evidence")
-        if payload["status"] in {"ok", "partial"} and payload["delivery"]["mode"] == "inline":
-            valid, reason = validate_tool_data(self.tool, payload["data"])
-            if not valid:
-                raise ValueError(f"{self.call_id}: invalid {self.tool} payload: {reason}")
+        validate_output(self.tool, payload)
         return payload
 
     def failure_preview(self) -> dict[str, Any] | None:
@@ -137,10 +137,7 @@ class Trace:
         valid, reason = validate_document(json.dumps(payload))
         if not valid:
             raise ValueError(f"invalid completed envelope: {reason}")
-        if payload["status"] in {"ok", "partial"}:
-            valid, reason = validate_tool_data(call.tool, payload["data"])
-            if not valid:
-                raise ValueError(f"invalid completed {call.tool} payload: {reason}")
+        validate_output(call.tool, payload)
         return payload
 
     def expand(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -155,10 +152,10 @@ class Trace:
         if result["delivery"]["mode"] != "artifact":
             raise ValueError("terminal job result has no durable delivery")
         return response | {
-            "status": result["outcome"],
+            "status": result["outcome"]["status"],
             "summary": result["summary"],
             "coverage": result["coverage"],
-            "error": result["error"],
+            "error": result["outcome"].get("error"),
             "job": None,
             "data": {},
             "delivery": result["delivery"],
@@ -186,7 +183,7 @@ class Trace:
             section = data["section"]
             selected = call.arguments.get("section")
             expected = selected.get("name") if isinstance(selected, dict) else None
-            if section != expected or section not in {None, "data"}:
+            if section != expected or section not in {"envelope", "data"}:
                 continue
             raw = data["content"].encode()
             current = (data["artifact"]["sha256"], data["total"])
@@ -235,15 +232,7 @@ class Trace:
                         "limits": {"requested_max_bytes": None, "effective_max_bytes": None},
                     },
                 }, chain.completed
-            if hashlib.sha256(complete).hexdigest() != data["artifact"]["sha256"]:
-                raise ValueError("result artifact digest mismatch")
-            document = json.loads(complete)
-            if (
-                not isinstance(document, dict)
-                or document.get("index", {}).get("format") != "research-result/3"
-            ):
-                raise ValueError("result artifact is not an indexed research result")
-            result = document["result"]
+            result = json.loads(complete)
             if not isinstance(result, dict):
                 raise ValueError("result artifact has no research envelope")
             # The immutable document has a fixed retained request placeholder. This caller

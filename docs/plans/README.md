@@ -13,7 +13,13 @@ retention. Implementation is in progress; target acceptance remains **not_run**.
 completed installation is the baseline, not qualification of this new target.
 [Plan 16](16-unified-datafusion-delta-runtime-completion.md) reconciles the current implementation
 and receipts into the remaining dependency order, with concrete architecture, deletion,
-qualification and activation obligations. Use it to resume the remaining work.
+qualification and activation obligations.
+[Plan 17](17-schema-governed-unified-runtime-hard-pivot.md) is the **combined execution plan**:
+it carries forward all Plan 16 scope, all S01–S12 schema-review findings, and additional schema
+opportunities qualified through the pinned skills, exact source and a bounded library probe.
+Its 17 packages put shared semantic contracts, typed values, planning checks and generated wire
+encoding ahead of their runtime consumers. Use Plan 17 to resume the remaining work; all final
+target qualification remains `not_run`.
 
 **Completed and activated hard pivot, 2026-09-15:**
 [Plan 14](14-datafusion-catalog-policy-hard-pivot.md) implements the DataFusion capability/catalog
@@ -56,7 +62,8 @@ and [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
 | [13 — DataFusion research operations hard pivot](13-datafusion-research-operations-hard-pivot.md) | Shared scope/selection, native query integration, safe revision reachability, structured errors, durable delivery and faithful FastMCP; no compatibility paths | ADR-0036–ADR-0039 accepted | done and deployed; all required journeys and active gates passed |
 | [14 — DataFusion catalog and policy hard pivot](14-datafusion-catalog-policy-hard-pivot.md) | Full immutable catalog/schema binding, shared declarations/policy, physical statistics, native string coercion, completed-index facts, bounded diagnostics and measured layout choices; explicit replacement and deletion | Retains ADR-0022–0024, ADR-0031, ADR-0033–0034, ADR-0038 boundaries; ADR-0040 accepted | done; implemented, independently verified and activated |
 | [15 — Unified DataFusion and Delta runtime hard pivot](15-unified-datafusion-delta-runtime-hard-pivot.md) | Entire aggregate of F01–F14 and DFU-01–DFU-08; original destination, work packages, deletion obligations and native/installed acceptance | ADR-0041–ADR-0045 | in progress; source-integrated replacements with focused receipts; all full work packages and final qualification remain open |
-| [16 — Complete the remaining unified runtime pivot](16-unified-datafusion-delta-runtime-completion.md) | Current-tree review of Plan 15; 14 dependency-ordered remaining packages covering architecture, deletion, qualification and fresh activation, with full finding/oracle traceability | ADR-0041–ADR-0045 | draft; remaining-scope plan requested 2026-09-16; no new runtime implementation or terminal qualification claimed |
+| [16 — Complete the remaining unified runtime pivot](16-unified-datafusion-delta-runtime-completion.md) | Current-tree review of Plan 15; 14 remaining packages covering architecture, deletion, qualification and fresh activation | ADR-0041–ADR-0045 | planning checkpoint; execution sequence integrated into Plan 17 |
+| [17 — Schema-governed unified runtime hard pivot](17-schema-governed-unified-runtime-hard-pivot.md) | All Plan 16 obligations plus S01–S12 and E01–E09: one semantic contract, typed storage/identities, native planning/admission, generated wire, complete runtime, L01–L24 removal and final qualification | ADR-0041–ADR-0045; schema/planning/wire decision updates required before implementation | draft; combined plan requested 2026-09-16; library probes recorded, product implementation and final acceptance remain open |
 
 ## Norms
 

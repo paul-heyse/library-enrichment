@@ -1,0 +1,159 @@
+{
+  "module": "ignore::gitignore",
+  "crate": "ignore",
+  "api": "api/ignore.gitignore.md",
+  "items": [
+    {
+      "path": "ignore::gitignore::gitconfig_excludes_path",
+      "name": "gitconfig_excludes_path",
+      "kind": "function",
+      "crate": "ignore",
+      "signature": "fn gitconfig_excludes_path() -> Option<std::path::PathBuf>",
+      "summary": "Return the file path of the current environment's global gitignore file.",
+      "doc": "api/ignore.gitignore.md#gitconfig_excludes_path"
+    },
+    {
+      "path": "ignore::gitignore::Gitignore",
+      "name": "Gitignore",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct Gitignore",
+      "summary": "Gitignore is a matcher for the globs in one or more gitignore files in the same directory.",
+      "doc": "api/ignore.gitignore.md#gitignore",
+      "methods": [
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Gitignore",
+          "summary": "Creates a new empty gitignore matcher that never matches anything."
+        },
+        {
+          "name": "global",
+          "signature": "fn global() -> (Gitignore, Option<Error>)",
+          "summary": "Creates a new gitignore matcher from the global ignore file, if one exists."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this gitignore has zero globs, and therefore never matches any file path."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the total number of globs, which should be equivalent to `num_ignores + num_whitelists`."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched<P: AsRef<Path>>(&self, path: P, is_dir: bool) -> Match<&Glob>",
+          "summary": "Returns whether the given path (file or directory) matched a pattern in this gitignore matcher."
+        },
+        {
+          "name": "matched_path_or_any_parents",
+          "signature": "fn matched_path_or_any_parents<P: AsRef<Path>>(&self, path: P, is_dir: bool) -> Match<&Glob>",
+          "summary": "Returns whether the given path (file or directory, and expected to be under the root) or any of its parent directories (up to the root) matched a pattern in this gitignore matcher."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(gitignore_path: P) -> (Gitignore, Option<Error>)",
+          "summary": "Creates a new gitignore matcher from the gitignore file path given."
+        },
+        {
+          "name": "num_ignores",
+          "signature": "fn num_ignores(&self) -> u64",
+          "summary": "Returns the total number of ignore globs."
+        },
+        {
+          "name": "num_whitelists",
+          "signature": "fn num_whitelists(&self) -> u64",
+          "summary": "Returns the total number of whitelisted globs."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &Path",
+          "summary": "Returns the directory containing this gitignore matcher."
+        }
+      ]
+    },
+    {
+      "path": "ignore::gitignore::GitignoreBuilder",
+      "name": "GitignoreBuilder",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct GitignoreBuilder",
+      "summary": "Builds a matcher for a single set of globs from a .gitignore file.",
+      "doc": "api/ignore.gitignore.md#gitignorebuilder",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add<P: AsRef<Path>>(&mut self, path: P) -> Option<Error>",
+          "summary": "Add each glob from the file path given."
+        },
+        {
+          "name": "add_line",
+          "signature": "fn add_line(&mut self, from: Option<PathBuf>, line: &str) -> Result<&mut GitignoreBuilder, Error>",
+          "summary": "Add a line from a gitignore file to this builder."
+        },
+        {
+          "name": "allow_unclosed_class",
+          "signature": "fn allow_unclosed_class(&mut self, yes: bool) -> &mut GitignoreBuilder",
+          "summary": "Toggle whether unclosed character classes are allowed. When allowed, a `[` without a matching `]` is treated literally instead of resulting in a parse error."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<Gitignore, Error>",
+          "summary": "Builds a new matcher from the globs added so far."
+        },
+        {
+          "name": "build_global",
+          "signature": "fn build_global(self) -> (Gitignore, Option<Error>)",
+          "summary": "Build a global gitignore matcher using the configuration in this builder."
+        },
+        {
+          "name": "case_insensitive",
+          "signature": "fn case_insensitive(&mut self, yes: bool) -> Result<&mut GitignoreBuilder, Error>",
+          "summary": "Toggle whether the globs should be matched case insensitively or not."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(root: P) -> GitignoreBuilder",
+          "summary": "Create a new builder for a gitignore file."
+        }
+      ]
+    },
+    {
+      "path": "ignore::gitignore::Glob",
+      "name": "Glob",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct Glob",
+      "summary": "Glob represents a single glob in a gitignore file.",
+      "doc": "api/ignore.gitignore.md#glob",
+      "methods": [
+        {
+          "name": "actual",
+          "signature": "fn actual(&self) -> &str",
+          "summary": "The actual glob that was compiled to respect gitignore semantics."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(&self) -> Option<&Path>",
+          "summary": "Returns the file path that defined this glob."
+        },
+        {
+          "name": "is_only_dir",
+          "signature": "fn is_only_dir(&self) -> bool",
+          "summary": "Whether this glob must match a directory or not."
+        },
+        {
+          "name": "is_whitelist",
+          "signature": "fn is_whitelist(&self) -> bool",
+          "summary": "Whether this was a whitelisted glob or not."
+        },
+        {
+          "name": "original",
+          "signature": "fn original(&self) -> &str",
+          "summary": "The original glob as it was defined in a gitignore file."
+        }
+      ]
+    }
+  ]
+}

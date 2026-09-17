@@ -1,0 +1,58 @@
+{
+  "module": "regex_automata::util::pool",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.util.pool.md",
+  "items": [
+    {
+      "path": "regex_automata::util::pool::Pool",
+      "name": "Pool",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Pool<T, F = fn() -> T>",
+      "summary": "A thread safe pool that works in an `alloc`-only context.",
+      "doc": "api/regex_automata.util.pool.md#pool",
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> PoolGuard<'_, T, F>",
+          "summary": "Get a value from the pool. The caller is guaranteed to have exclusive access to the given value. Namely, it is guaranteed that this will never return a value that was returned by another call to `get` but was not put back into the pool."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(create: F) -> Pool<T, F>",
+          "summary": "Create a new pool. The given closure is used to create values in the pool when necessary."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::pool::PoolGuard",
+      "name": "PoolGuard",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct PoolGuard<'a, T: Send, F: Fn() -> T>",
+      "summary": "A guard that is returned when a caller requests a value from the pool.",
+      "doc": "api/regex_automata.util.pool.md#poolguard",
+      "implements": [
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &T",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut T",
+          "via_trait": "core::ops::deref::DerefMut"
+        },
+        {
+          "name": "put",
+          "signature": "fn put(this: PoolGuard<'_, T, F>)",
+          "summary": "Consumes this guard and puts it back into the pool."
+        }
+      ]
+    }
+  ]
+}

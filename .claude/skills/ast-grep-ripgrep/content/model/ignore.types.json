@@ -1,0 +1,136 @@
+{
+  "module": "ignore::types",
+  "crate": "ignore",
+  "api": "api/ignore.types.md",
+  "items": [
+    {
+      "path": "ignore::types::FileTypeDef",
+      "name": "FileTypeDef",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct FileTypeDef",
+      "summary": "A single file type definition.",
+      "doc": "api/ignore.types.md#filetypedef",
+      "methods": [
+        {
+          "name": "globs",
+          "signature": "fn globs(&self) -> &[String]",
+          "summary": "Return the globs used to recognize this file type."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Return the name of this file type."
+        }
+      ]
+    },
+    {
+      "path": "ignore::types::Glob",
+      "name": "Glob",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct Glob<'a>",
+      "summary": "Glob represents a single glob in a set of file type definitions.",
+      "doc": "api/ignore.types.md#glob",
+      "methods": [
+        {
+          "name": "file_type_def",
+          "signature": "fn file_type_def(&self) -> Option<&FileTypeDef>",
+          "summary": "Return the file type definition that matched, if one exists. A file type definition always exists when a specific definition matches a file path."
+        }
+      ]
+    },
+    {
+      "path": "ignore::types::Types",
+      "name": "Types",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct Types",
+      "summary": "Types is a file type matcher.",
+      "doc": "api/ignore.types.md#types",
+      "methods": [
+        {
+          "name": "definitions",
+          "signature": "fn definitions(&self) -> &[FileTypeDef]",
+          "summary": "Return the set of current file type definitions."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Types",
+          "summary": "Creates a new file type matcher that never matches any path and contains no file type definitions."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this matcher has zero selections."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of selections used in this matcher."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched<'a, P: AsRef<Path>>(&'a self, path: P, is_dir: bool) -> Match<Glob<'a>>",
+          "summary": "Returns a match for the given path against this file type matcher."
+        }
+      ]
+    },
+    {
+      "path": "ignore::types::TypesBuilder",
+      "name": "TypesBuilder",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct TypesBuilder",
+      "summary": "TypesBuilder builds a type matcher from a set of file type definitions and a set of file type selections.",
+      "doc": "api/ignore.types.md#typesbuilder",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, name: &str, glob: &str) -> Result<(), Error>",
+          "summary": "Add a new file type definition. `name` can be arbitrary and `pat` should be a glob recognizing file paths belonging to the `name` type."
+        },
+        {
+          "name": "add_def",
+          "signature": "fn add_def(&mut self, def: &str) -> Result<(), Error>",
+          "summary": "Add a new file type definition specified in string form. There are two valid formats: 1. `{name}:{glob}`.  This defines a 'root' definition that associates the     given name with the given glob. 2. `{name}:include:{comma-separated list of…"
+        },
+        {
+          "name": "add_defaults",
+          "signature": "fn add_defaults(&mut self) -> &mut TypesBuilder",
+          "summary": "Add a set of default file type definitions."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<Types, Error>",
+          "summary": "Build the current set of file type definitions *and* selections into a file type matcher."
+        },
+        {
+          "name": "clear",
+          "signature": "fn clear(&mut self, name: &str) -> &mut TypesBuilder",
+          "summary": "Clear any file type definitions for the type name given."
+        },
+        {
+          "name": "definitions",
+          "signature": "fn definitions(&self) -> Vec<FileTypeDef>",
+          "summary": "Return the set of current file type definitions."
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&mut self, name: &str) -> &mut TypesBuilder",
+          "summary": "Ignore the file type given by `name`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> TypesBuilder",
+          "summary": "Create a new builder for a file type matcher."
+        },
+        {
+          "name": "select",
+          "signature": "fn select(&mut self, name: &str) -> &mut TypesBuilder",
+          "summary": "Select the file type given by `name`."
+        }
+      ]
+    }
+  ]
+}

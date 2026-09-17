@@ -6,7 +6,6 @@
 
 use std::io;
 
-use enrichment_core::clock;
 use enrichment_core::config::Config;
 use enrichment_store::{
     BlobStore, StatePaths,
@@ -29,6 +28,7 @@ pub struct Service {
     pub jobs: std::sync::Arc<crate::jobs::Jobs>,
     /// Owns container cleanup until absence is confirmed, and quarantines admission until then.
     pub execution: std::sync::Arc<crate::execution::cleanup::Supervisor>,
+    pub ownership: enrichment_store::physical_ownership::OwnershipStore,
     /// Warm language-server sessions, keyed by server, image and capsule digest.
     pub lsp: std::sync::Arc<crate::lsp::Manager>,
     /// One producer run per distinct extraction, however many callers ask for it (§8.2).
@@ -46,8 +46,7 @@ pub struct Service {
     /// Releases, contexts and current-snapshot pointers.
     pub repository: EvidenceRepository,
     /// When this service started, RFC 3339.
-    pub started_at: String,
-    /// The same instant as `started_at`, monotonic, for `health.uptime_seconds`.
+    /// Monotonic process start for `health.uptime_seconds`.
     pub started_instant: std::time::Instant,
     /// True only after the pinned static worker completed a valid job in this process.
     pub python_worker_qualified: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -132,7 +131,7 @@ impl Service {
                 request
             ])),
             policy_digest: enrichment_core::native_key::Key::OperationPolicy
-                .value(&self.config)
+                .record(&self.config)
                 .expect("validated typed effective configuration"),
         }
     }
@@ -170,8 +169,6 @@ impl Service {
                     )))
                 })?;
         let blobs = BlobStore::open(&paths.data_root).map_err(store_err(&paths.data_root))?;
-        crate::execution::ownership::validate_for_state(&paths, &config.execution)
-            .map_err(store_err(&paths.cache_root))?;
         let arrow = &config.arrow;
         let runtime = QueryRuntime::with_diagnostics(
             &paths.cache_root.join("query-spill"),
@@ -207,7 +204,7 @@ impl Service {
             },
         )
         .map_err(|e| store_err(&paths.data_root)(io::Error::other(e.to_string())))?;
-        let metrics = crate::metrics::Metrics::new();
+        let metrics = crate::metrics::Metrics::new(&repository.runtime);
         let fetcher = Fetcher::new(&config, &repository.runtime, &paths.data_root)?
             // The fetcher is the only code that opens a socket, so it is the only place that
             // can tell a cache hit from a revalidation from a download (§14.3).
@@ -221,16 +218,36 @@ impl Service {
             config.execution.cleanup_deadline_seconds,
             concurrency,
         );
-        // Reconcile owned containers before the journal turns interrupted work terminal, so a
-        // job is never reported finished while its container may still be running.
-        crate::execution::Runner::new(
-            &config.execution,
+        let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
+            repository.catalog.clone(),
+            repository.runtime.clone(),
             &paths.cache_root,
-            std::sync::Arc::clone(&execution),
         )
-        .and_then(|runner| runner.recover_owned())
         .map_err(store_err(&paths.cache_root))?;
-        crate::execution::budget::recover_orphans(&paths.cache_root)
+        let recovery_owner = ownership.clone();
+        let recovery_config = config.execution.clone();
+        let recovery_paths = paths.clone();
+        let recovery_supervisor = execution.clone();
+        repository
+            .runtime
+            .bootstrap(async move {
+                crate::execution::ownership::validate_for_state(
+                    &recovery_paths,
+                    &recovery_config,
+                    &recovery_owner,
+                )
+                .await?;
+                crate::execution::Runner::new(
+                    &recovery_config,
+                    &recovery_paths.cache_root,
+                    recovery_supervisor,
+                    recovery_owner.clone(),
+                )?
+                .recover_owned()
+                .await?;
+                crate::execution::budget::recover_orphans(&recovery_owner).await
+            })
+            .map_err(|error| store_err(&paths.cache_root)(io::Error::other(error)))?
             .map_err(store_err(&paths.cache_root))?;
         let recovery_repository = repository.clone();
         let recovery_blobs = blobs.clone();
@@ -240,6 +257,10 @@ impl Service {
         let jobs = repository
             .runtime
             .bootstrap(async move {
+                let _storage = recovery_repository
+                    .prepare_storage()
+                    .await
+                    .map_err(io::Error::other)?;
                 crate::jobs::Jobs::open_recover(
                 enrichment_store::control_jobs::JobStore::new(
                     recovery_repository.catalog.clone(),
@@ -267,6 +288,7 @@ impl Service {
             cache_writer_lock: std::sync::Arc::new(cache_writer_lock),
             jobs: std::sync::Arc::new(jobs),
             execution,
+            ownership,
             // `limits.warm_lsp_sessions` is the key the frozen example configuration
             // documents (blueprint §7.3 budgets two), so it is the key that governs.
             single_flight: crate::single_flight::SingleFlight::new(),
@@ -280,7 +302,6 @@ impl Service {
             fetcher,
             blobs,
             repository,
-            started_at: clock::now_rfc3339(),
             started_instant: std::time::Instant::now(),
             python_worker_qualified: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })

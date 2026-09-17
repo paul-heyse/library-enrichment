@@ -1,0 +1,387 @@
+{
+  "_comment": [
+    "Curated data the model cannot produce, joined against the model at build time.",
+    "",
+    "Two lists, and the split is deliberate.",
+    "",
+    "  current_facts    -- present-tense statements about the PINNED release. These generate the",
+    "                      typer project-* rules, so a rule describes what is true at 0.27.2",
+    "                      rather than what changed on the way here.",
+    "",
+    "  breaking_changes -- kept only where the change is within a pinned release's own line",
+    "                      (typer 0.27.0) or belongs to the other subject (rich). Typer's",
+    "                      pre-0.27 history was removed deliberately: this repository describes",
+    "                      typer 0.27.2 and says nothing about earlier releases.",
+    "",
+    "Every `rejected` name and every `answer` is checked against symbols.tsv by verify.py -- a row",
+    "that rejects a spelling which does not exist teaches an agent that a non-existent API exists,",
+    "which is worse than no row at all."
+  ],
+  "breaking_changes": [
+    {
+      "version": "0.27.0",
+      "date": "2026-07-15",
+      "subject": "typer",
+      "symbol": "-",
+      "before": "Metavar printing changed; an argument now renders as `<str>` in the second help column.",
+      "after": "Nothing to change. Update any test asserting on the old help text.",
+      "rule": "-",
+      "probe": "T002"
+    },
+    {
+      "version": "15.0.0",
+      "date": "2026-04-12",
+      "subject": "rich",
+      "symbol": "-",
+      "before": "Support for Python 3.8 dropped.",
+      "after": "Require Python 3.9 or later.",
+      "rule": "-",
+      "probe": ""
+    },
+    {
+      "version": "14.3.4",
+      "date": "2026-04-11",
+      "subject": "rich",
+      "symbol": "rich.__version__",
+      "before": "Import time was improved with lazy loading, and `rich.__version__` stopped existing.",
+      "after": "`importlib.metadata.version(\"rich\")`.",
+      "rule": "project-rich-version-attr",
+      "probe": "V002"
+    },
+    {
+      "version": "14.3.0",
+      "date": "2026-01-24",
+      "subject": "rich",
+      "symbol": "UNICODE_VERSION",
+      "before": "`cell_len` gained a `unicode_version` parameter and a `UNICODE_VERSION` environment variable.",
+      "after": "Leave both alone. Setting the variable changes the measured width of characters and reshapes every table containing one.",
+      "rule": "-",
+      "probe": "E005"
+    },
+    {
+      "version": "14.1.0",
+      "date": "2025-06-25",
+      "subject": "rich",
+      "symbol": "TTY_INTERACTIVE",
+      "before": "`TTY_INTERACTIVE` was added to force interactive mode off or on.",
+      "after": "Nothing to change; know it exists when output differs in CI.",
+      "rule": "-",
+      "probe": ""
+    },
+    {
+      "version": "14.0.0",
+      "date": "2025-03-30",
+      "subject": "rich",
+      "symbol": "NO_COLOR",
+      "before": "An empty `NO_COLOR` or `FORCE_COLOR` is now considered disabled, and `TTY_COMPATIBLE` was added.",
+      "after": "Unset the variable rather than setting it empty; empty no longer means set.",
+      "rule": "-",
+      "probe": "E002"
+    }
+  ],
+  "overlap": [
+    {
+      "question": "print a line of plain text from a CLI",
+      "answer": "typer.echo",
+      "rejected": [
+        "rich.print",
+        "rich.console.Console.print"
+      ],
+      "why": "Both Rich surfaces parse markup, so any bracketed word in the string may be silently deleted. `typer.echo` is literal.",
+      "probe": "O001"
+    },
+    {
+      "question": "print text I did not write myself",
+      "answer": "rich.markup.escape",
+      "rejected": [
+        "rich.console.Console.print"
+      ],
+      "why": "Untrusted text reaching a Console is parsed as markup. Escape it, or pass `markup=False`.",
+      "probe": "M003"
+    },
+    {
+      "question": "print a table, a panel or anything laid out",
+      "answer": "rich.console.Console.print",
+      "rejected": [
+        "typer.echo"
+      ],
+      "why": "`typer.echo` has no concept of a renderable or a width; it writes the string it is given.",
+      "probe": ""
+    },
+    {
+      "question": "colour one line of output",
+      "answer": "typer.secho",
+      "rejected": [
+        "typer.style",
+        "rich.style.Style"
+      ],
+      "why": "`typer.style` returns a string you still have to echo. A rich `Style` object is not accepted by either Typer function -- they take colour strings.",
+      "probe": "O002"
+    },
+    {
+      "question": "reuse a colour in several places",
+      "answer": "rich.style.Style",
+      "rejected": [
+        "typer.colors.RED"
+      ],
+      "why": "`typer.colors.RED` is the plain string \"red\". It is legal in Rich markup only because the spellings coincide, and it carries no other attributes.",
+      "probe": "O002"
+    },
+    {
+      "question": "show a progress bar",
+      "answer": "rich.progress.Progress",
+      "rejected": [
+        "typer.progressbar"
+      ],
+      "why": "`typer.progressbar` is the vendored Click one: no columns, no transient mode, and it writes to a stream Rich does not own, so it fights a live Console.",
+      "probe": ""
+    },
+    {
+      "question": "ask the user a question",
+      "answer": "rich.prompt.Prompt.ask",
+      "rejected": [
+        "typer.prompt",
+        "typer.confirm"
+      ],
+      "why": "Both Typer prompts bypass the Console, so under a `Live` or `Progress` the prompt is overwritten. Fine standalone.",
+      "probe": ""
+    },
+    {
+      "question": "exit with a code I choose",
+      "answer": "typer.Exit",
+      "rejected": [
+        "typer.Abort"
+      ],
+      "why": "`Abort` always exits 1 and prints \"Aborted.\"; `Exit` takes the code.",
+      "probe": ""
+    },
+    {
+      "question": "catch any error Typer raises",
+      "answer": "typer.TyperException",
+      "rejected": [
+        "typer.BadParameter"
+      ],
+      "why": "`BadParameter` is the only vendored Click exception re-exported at top level; the other six are reached through the `TyperException` ancestor.",
+      "probe": ""
+    },
+    {
+      "question": "assert on CLI output in a test",
+      "answer": "typer.testing.CliRunner",
+      "rejected": [
+        "rich.console.Console"
+      ],
+      "why": "A recording Console sees only what you printed through it, not what the vendored Click wrote. `CliRunner` also pins the plain formatter's width, though not the Rich one.",
+      "probe": ""
+    },
+    {
+      "question": "control how wide the output is",
+      "answer": "rich.console.Console",
+      "rejected": [
+        "typer.get_terminal_size"
+      ],
+      "why": "Width is a property of the Console, not of the thing you print -- and even an explicitly passed width loses to `TERM=dumb`.",
+      "probe": "E003"
+    },
+    {
+      "question": "get the installed version at runtime",
+      "answer": "importlib.metadata.version",
+      "rejected": [
+        "rich.__version__"
+      ],
+      "why": "Does not exist at rich 15.0.0. `typer.__version__` does, which makes the asymmetry easy to trip over.",
+      "probe": "V002"
+    }
+  ],
+  "env_vars": [
+    {
+      "name": "NO_COLOR",
+      "read_by": "rich Console",
+      "effect": "Drops colour but keeps other attributes, even with force_terminal and an explicit color_system.",
+      "empty": "**ignored** since 14.0",
+      "since": "rich 14.0",
+      "probe": "E001"
+    },
+    {
+      "name": "FORCE_COLOR",
+      "read_by": "rich Console, typer rich_utils",
+      "effect": "Treats the stream as a terminal. Yields the `standard` colour system on its own, not truecolor.",
+      "empty": "**ignored** since 14.0",
+      "since": "rich 14.0",
+      "probe": ""
+    },
+    {
+      "name": "TTY_COMPATIBLE",
+      "read_by": "rich Console",
+      "effect": "Overrides TTY auto-detection. Beats FORCE_COLOR.",
+      "empty": "ignored",
+      "since": "rich 14.0",
+      "probe": ""
+    },
+    {
+      "name": "TTY_INTERACTIVE",
+      "read_by": "rich Console",
+      "effect": "Forces interactive mode off or on, which governs Live and Progress.",
+      "empty": "ignored",
+      "since": "rich 14.1",
+      "probe": ""
+    },
+    {
+      "name": "TERM",
+      "read_by": "rich Console",
+      "effect": "`dumb` overrides a width passed explicitly to the constructor and reports 80.",
+      "empty": "treated as absent",
+      "since": "rich (long-standing)",
+      "probe": "E003"
+    },
+    {
+      "name": "COLORTERM",
+      "read_by": "rich Console",
+      "effect": "`truecolor` or `24bit` raises the colour system above `standard`.",
+      "empty": "ignored",
+      "since": "rich (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "COLUMNS",
+      "read_by": "rich Console",
+      "effect": "Sets the width when none was passed. Does not override an explicit width.",
+      "empty": "ignored",
+      "since": "rich (long-standing)",
+      "probe": "E004"
+    },
+    {
+      "name": "LINES",
+      "read_by": "rich Console",
+      "effect": "Sets the height when none was passed.",
+      "empty": "ignored",
+      "since": "rich (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "UNICODE_VERSION",
+      "read_by": "rich._unicode_data, via os.environ **directly**",
+      "effect": "Changes how many cells a character measures, reshaping every table containing one. Not covered by `Console(_environ=...)`, and cached, so it is order-dependent too.",
+      "empty": "ignored",
+      "since": "rich 14.3",
+      "probe": "E005"
+    },
+    {
+      "name": "JUPYTER_COLUMNS",
+      "read_by": "rich.jupyter",
+      "effect": "Width inside a notebook. Never exercised here -- see known limit 6.",
+      "empty": "ignored",
+      "since": "rich (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "JUPYTER_LINES",
+      "read_by": "rich.jupyter",
+      "effect": "Height inside a notebook. Never exercised here.",
+      "empty": "ignored",
+      "since": "rich (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "TERMINAL_WIDTH",
+      "read_by": "typer.rich_utils, **at first import**",
+      "effect": "Fixes the width of Typer's Rich help output. Read once into `MAX_WIDTH`, so setting it after the module is imported does nothing.",
+      "empty": "treated as absent",
+      "since": "typer (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "_TYPER_FORCE_DISABLE_TERMINAL",
+      "read_by": "typer.rich_utils",
+      "effect": "Forces Typer's help Console to render as a non-terminal. Private, and named as such.",
+      "empty": "treated as absent",
+      "since": "typer (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "PY_COLORS",
+      "read_by": "typer.rich_utils",
+      "effect": "Collapsed into FORCE_TERMINAL at import, alongside FORCE_COLOR.",
+      "empty": "treated as absent",
+      "since": "typer (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "GITHUB_ACTIONS",
+      "read_by": "typer.rich_utils",
+      "effect": "Presence forces terminal mode, so help output is coloured in CI logs.",
+      "empty": "treated as present",
+      "since": "typer (long-standing)",
+      "probe": ""
+    },
+    {
+      "name": "DATABRICKS_RUNTIME_VERSION",
+      "read_by": "rich.console, via os.getenv **directly**",
+      "effect": "Participates in Jupyter detection. Not covered by `Console(_environ=...)`.",
+      "empty": "treated as present",
+      "since": "rich (long-standing)",
+      "probe": ""
+    }
+  ],
+  "refused": [
+    {
+      "what": "`Progress`, `Live`, `Status` animation",
+      "why": "Output depends on elapsed time and refresh rate; there is no construction that produces stable bytes, and a normalised capture would be a fiction dressed as evidence.",
+      "instead": "`content/corpus/rich/tests/test_progress.py` -- upstream's own executable statement. Probe `R003` covers the deterministic `disable=True` path."
+    },
+    {
+      "what": "`Spinner` frames",
+      "why": "The frame index is a function of elapsed time.",
+      "instead": "`rich/_spinners.py` is the data table; read the frames rather than a capture of one."
+    },
+    {
+      "what": "Terminal capability negotiation on a real TTY",
+      "why": "Every probe writes to a `StringIO`, which is not a terminal. What a real TTY negotiates is indexed from source and never asserted.",
+      "instead": "`catalogs/env-vars.md` for the variables, and `rich/docs/source/console.rst` in the corpus for upstream's account."
+    },
+    {
+      "what": "`Syntax` token colours",
+      "why": "Lexers and token boundaries belong to Pygments, not Rich. A captured highlight would be a claim about Pygments wearing Rich's name.",
+      "instead": "The frame -- gutter, line numbers, padding, background -- is stable and indexed. Pygments is pinned at 2.21.0 in `resolved.json`."
+    },
+    {
+      "what": "`Traceback` bytes",
+      "why": "A real traceback carries absolute paths, an interpreter version and frame counts that differ per machine -- and the paths are a transferability leak into `content/`, not merely a determinism one.",
+      "instead": "Probe `R002` captures the structure under a synthetic filename, with the normalisation recorded on the row."
+    },
+    {
+      "what": "Windows console paths",
+      "why": "`_win32_console.py`, `_windows_renderer.py`, `legacy_windows=True` and Typer's conditional `colorama` are never executed. Every probe passes `legacy_windows=False` explicitly, which is part of why they are deterministic.",
+      "instead": "Indexed from source. A box glyph shown here may be substituted on a legacy Windows console."
+    },
+    {
+      "what": "Jupyter rendering",
+      "why": "No probe imports IPython, and `is_jupyter()` is False in all of them.",
+      "instead": "`content/seams/jupyter.md`, marked `supported: observed-only` for exactly this reason."
+    },
+    {
+      "what": "Shell completion installation",
+      "why": "`shellingham` inspects the parent process and `--install-completion` writes to the user's home directory. Neither is safe or stable to execute in a build.",
+      "instead": "Indexed from source, plus `typer/docs/tutorial/options-autocompletion.md` in the corpus."
+    }
+  ],
+  "current_facts": [
+    {
+      "id": "vendored-click",
+      "subject": "typer",
+      "fact": "Typer 0.27.2 carries its own adapted copy of Click at `typer/_click/` and does not depend on the `click` distribution.",
+      "evidence": "Requires-Dist lists shellingham, rich, annotated-doc and colorama (Windows). `click` is absent, and is not in the resolved graph.",
+      "consequence": "An `import click` in a Typer project resolves to an unrelated copy installed for some other reason -- a different library from the one Typer runs -- and it type-checks either way. `typer.main.get_command(app)` returns a `typer._click` Command that no Click plugin accepts.",
+      "rule": "project-vendored-click-import",
+      "probe": "V003"
+    },
+    {
+      "id": "typer-slim-is-a-wrapper",
+      "subject": "typer",
+      "fact": "At 0.27.2 `typer-slim` is a shallow wrapper around `typer` and requires `rich` and `shellingham` unconditionally.",
+      "evidence": "Its distribution metadata declares both as hard requirements.",
+      "consequence": "Depending on `typer-slim` to keep Rich out of the dependency tree keeps nothing out. Depend on `typer`.",
+      "rule": "project-typer-slim-install",
+      "probe": ""
+    }
+  ]
+}

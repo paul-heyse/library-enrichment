@@ -1,0 +1,158 @@
+{
+  "module": "grep_cli::decompress",
+  "crate": "grep-cli",
+  "api": "api/grep_cli.decompress.md",
+  "items": [
+    {
+      "path": "grep_cli::decompress::resolve_binary",
+      "name": "resolve_binary",
+      "kind": "function",
+      "crate": "grep-cli",
+      "signature": "fn resolve_binary<P: AsRef<std::path::Path>>(prog: P) -> Result<std::path::PathBuf, process::CommandError>",
+      "summary": "Resolves a path to a program to a path by searching for the program in `PATH`.",
+      "doc": "api/grep_cli.decompress.md#resolve_binary",
+      "aliases": [
+        "grep_cli::resolve_binary"
+      ]
+    },
+    {
+      "path": "grep_cli::decompress::DecompressionMatcher",
+      "name": "DecompressionMatcher",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct DecompressionMatcher",
+      "summary": "A matcher for determining how to decompress files.",
+      "doc": "api/grep_cli.decompress.md#decompressionmatcher",
+      "aliases": [
+        "grep_cli::DecompressionMatcher"
+      ],
+      "methods": [
+        {
+          "name": "command",
+          "signature": "fn command<P: AsRef<Path>>(&self, path: P) -> Option<Command>",
+          "summary": "Return a pre-built command based on the given file path that can decompress its contents. If no such decompressor is known, then this returns `None`."
+        },
+        {
+          "name": "has_command",
+          "signature": "fn has_command<P: AsRef<Path>>(&self, path: P) -> bool",
+          "summary": "Returns true if and only if the given file path has at least one matching command to perform decompression on."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> DecompressionMatcher",
+          "summary": "Create a new matcher with default rules."
+        }
+      ]
+    },
+    {
+      "path": "grep_cli::decompress::DecompressionMatcherBuilder",
+      "name": "DecompressionMatcherBuilder",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct DecompressionMatcherBuilder",
+      "summary": "A builder for a matcher that determines which files get decompressed.",
+      "doc": "api/grep_cli.decompress.md#decompressionmatcherbuilder",
+      "aliases": [
+        "grep_cli::DecompressionMatcherBuilder"
+      ],
+      "methods": [
+        {
+          "name": "associate",
+          "signature": "fn associate<P, I, A>(&mut self, glob: &str, program: P, args: I) -> &mut DecompressionMatcherBuilder where P: AsRef<OsStr>, I: IntoIterator<Item = A>, A: AsRef<OsStr>",
+          "summary": "Associates a glob with a command to decompress files matching the glob."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<DecompressionMatcher, CommandError>",
+          "summary": "Build a matcher for determining how to decompress files."
+        },
+        {
+          "name": "defaults",
+          "signature": "fn defaults(&mut self, yes: bool) -> &mut DecompressionMatcherBuilder",
+          "summary": "When enabled, the default matching rules will be compiled into this matcher before any other associations. When disabled, only the rules explicitly given to this builder will be used."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> DecompressionMatcherBuilder",
+          "summary": "Create a new builder for configuring a decompression matcher."
+        },
+        {
+          "name": "try_associate",
+          "signature": "fn try_associate<P, I, A>(&mut self, glob: &str, program: P, args: I) -> Result<&mut DecompressionMatcherBuilder, CommandError> where P: AsRef<OsStr>, I: IntoIterator<Item = A>, A: AsRef<OsStr>",
+          "summary": "Associates a glob with a command to decompress files matching the glob."
+        }
+      ]
+    },
+    {
+      "path": "grep_cli::decompress::DecompressionReader",
+      "name": "DecompressionReader",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct DecompressionReader",
+      "summary": "A streaming reader for decompressing the contents of a file.",
+      "doc": "api/grep_cli.decompress.md#decompressionreader",
+      "aliases": [
+        "grep_cli::DecompressionReader"
+      ],
+      "implements": [
+        "alloc::io::read::Read"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(&mut self) -> io::Result<()>",
+          "summary": "Closes this reader, freeing any resources used by its underlying child process, if one was used. If the child process exits with a nonzero exit code, the returned Err value will include its stderr."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(path: P) -> Result<DecompressionReader, CommandError>",
+          "summary": "Build a new streaming reader for decompressing data."
+        },
+        {
+          "name": "read",
+          "signature": "fn read(&mut self, buf: &mut [u8]) -> io::Result<usize>",
+          "via_trait": "alloc::io::read::Read"
+        }
+      ]
+    },
+    {
+      "path": "grep_cli::decompress::DecompressionReaderBuilder",
+      "name": "DecompressionReaderBuilder",
+      "kind": "struct",
+      "crate": "grep-cli",
+      "signature": "struct DecompressionReaderBuilder",
+      "summary": "Configures and builds a streaming reader for decompressing data.",
+      "doc": "api/grep_cli.decompress.md#decompressionreaderbuilder",
+      "aliases": [
+        "grep_cli::DecompressionReaderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "async_stderr",
+          "signature": "fn async_stderr(&mut self, yes: bool) -> &mut DecompressionReaderBuilder",
+          "summary": "When enabled, the reader will asynchronously read the contents of the command's stderr output. When disabled, stderr is only read after the stdout stream has been exhausted (or if the process quits with an error code)."
+        },
+        {
+          "name": "build",
+          "signature": "fn build<P: AsRef<Path>>(&self, path: P) -> Result<DecompressionReader, CommandError>",
+          "summary": "Build a new streaming reader for decompressing data."
+        },
+        {
+          "name": "get_matcher",
+          "signature": "fn get_matcher(&self) -> &DecompressionMatcher",
+          "summary": "Get the underlying matcher currently used by this builder."
+        },
+        {
+          "name": "matcher",
+          "signature": "fn matcher(&mut self, matcher: DecompressionMatcher) -> &mut DecompressionReaderBuilder",
+          "summary": "Set the matcher to use to look up the decompression command for each file path."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> DecompressionReaderBuilder",
+          "summary": "Create a new builder with the default configuration."
+        }
+      ]
+    }
+  ]
+}

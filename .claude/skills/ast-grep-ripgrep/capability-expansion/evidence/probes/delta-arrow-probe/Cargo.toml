@@ -1,0 +1,27 @@
+# Round-2 gating probes PB01 and PB03 for the code-search capability catalog.
+#
+# `[workspace]` is present and empty on purpose: this crate lives inside the library-enrichment
+# repository tree but is NOT a member of its workspace. The repository does the same thing for
+# its acceptance fixture crates -- "Each declares its own `[workspace]`; excluding them here is
+# what lets `cargo rustdoc` run inside one without Cargo deciding it belongs to us."
+[workspace]
+
+[package]
+name = "delta-arrow-probe"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+publish = false
+
+# Pinned to exactly the versions the plan targets, verified in evidence/09 P02 against the
+# host workspace. deltalake is a GIT REV, not a crates.io release -- a `1.0.0` from crates.io
+# is a different artifact.
+[dependencies]
+deltalake = { version = "1.0.0", git = "https://github.com/delta-io/delta-rs.git", rev = "58f07cd62bfbce3649a7e1c87c696288068ae184", default-features = false, features = ["datafusion", "rustls"] }
+arrow = { version = "59.3.0", features = ["canonical_extension_types"] }
+arrow-schema = { version = "59.3.0", features = ["canonical_extension_types"] }
+datafusion = "=55.1.0"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+url = "2"
+# Needed to implement TableProvider; DataFusion does not re-export async_trait.
+async-trait = "0.1"

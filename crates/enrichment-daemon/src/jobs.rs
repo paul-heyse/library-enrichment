@@ -1,15 +1,12 @@
 //! Native Delta job coordination; in-memory handles only signal owned running effects.
 use enrichment_core::{
-    execution::{JobData, VerifyRequest},
+    execution::JobData,
     wire::{Envelope, JobState},
 };
-use enrichment_store::{
-    BlobStore,
-    control_jobs::{Arguments, JobStore, Resolution},
-};
+use enrichment_store::{BlobStore, control_jobs::JobStore};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     io,
     sync::{
         Arc, Mutex,
@@ -17,100 +14,20 @@ use std::{
     },
 };
 
-/// Closed durable operation inputs; no generic workflow or arbitrary command payload.
+pub use enrichment_core::operation::{Arguments, jobs::Resolution};
+
+/// Native selected state plus its mechanically decoded retained delivery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(
-    tag = "operation",
-    content = "request",
-    rename_all = "snake_case",
-    deny_unknown_fields
-)]
-pub enum JobSpec {
-    Verify(VerifyRequest),
-    Inspect(enrichment_core::request::InspectRequest),
-    Resolve(enrichment_core::request::ResolveRequest),
-    Compare(enrichment_core::request::CompareRequest),
-}
-/// Immutable inputs selected by an acquisition before its publication is admitted.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ResolutionStage {
-    pub release_id: String,
-    pub environment_id: String,
-    pub context_id: String,
-    pub attempt_id: String,
-    pub input_artifact_ids: Vec<String>,
-    pub result_artifact_id: String,
-}
-impl ResolutionStage {
-    fn validate(&self) -> io::Result<()> {
-        if self.release_id.is_empty()
-            || self.environment_id.is_empty()
-            || self.context_id.is_empty()
-            || self.attempt_id.is_empty()
-            || self.input_artifact_ids.is_empty()
-            || self.input_artifact_ids.len() > 8192
-            || !self.input_artifact_ids.contains(&self.result_artifact_id)
-            || self
-                .input_artifact_ids
-                .iter()
-                .any(|id| !enrichment_core::evidence::is_artifact_id(id))
-            || self.input_artifact_ids.windows(2).any(|w| w[0] >= w[1])
-        {
-            return Err(io::Error::other(
-                "invalid exact resolution publication stage",
-            ));
-        }
-        Ok(())
-    }
-}
-impl From<VerifyRequest> for JobSpec {
-    fn from(r: VerifyRequest) -> Self {
-        Self::Verify(r)
-    }
-}
-impl JobSpec {
-    fn validate(&self) -> io::Result<()> {
-        let pinned = |context: &str, snapshot: &Option<String>| {
-            if context.is_empty() || snapshot.as_ref().is_none_or(|s| s.is_empty()) {
-                Err(io::Error::other(
-                    "durable inspection/verification requires a pinned context and snapshot",
-                ))
-            } else {
-                Ok(())
-            }
-        };
-        match self {
-            Self::Verify(r) => pinned(&r.context_id, &r.snapshot_id),
-            Self::Inspect(r) => {
-                pinned(&r.context_id, &r.snapshot_id)?;
-                let options = r.execution.as_ref().ok_or_else(|| {
-                    io::Error::other("durable inspection requires explicit execution intent")
-                })?;
-                if options.intent == enrichment_core::request::InspectionIntent::Retained {
-                    return Err(io::Error::other("retained reads are not producer jobs"));
-                }
-                options.validate(32768).map_err(io::Error::other)
-            }
-            Self::Resolve(r) => r.validate().map_err(io::Error::other),
-            Self::Compare(r) => r.resolutions().map(|_| ()).map_err(io::Error::other),
-        }
-    }
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct JobRecord {
-    pub job_id: String,
-    pub key: String,
-    pub specification: JobSpec,
-    pub state: JobState,
-    pub stage: String,
-    pub interests: BTreeSet<String>,
-    pub detached_interests: BTreeSet<String>,
-    pub submitted_at: String,
-    pub updated_at: String,
+    #[serde(flatten)]
+    pub snapshot: enrichment_core::operation::jobs::JobSnapshot,
     pub result: Option<Envelope>,
-    pub resolution: Option<ResolutionStage>,
+}
+impl std::ops::Deref for JobRecord {
+    type Target = enrichment_core::operation::jobs::JobSnapshot;
+    fn deref(&self) -> &Self::Target {
+        &self.snapshot
+    }
 }
 impl JobRecord {
     pub fn data(&self, token: Option<String>) -> JobData {
@@ -119,9 +36,9 @@ impl JobRecord {
             state: self.state,
             stage: self.stage.clone(),
             interest_token: token,
-            active_interests: self.interests.len(),
-            submitted_at: self.submitted_at.clone(),
-            updated_at: self.updated_at.clone(),
+            active_interests: self.active_interests,
+            submitted_at: self.submitted_at.to_string(),
+            updated_at: self.updated_at.to_string(),
             result: self.result.as_ref().map(Into::into),
         }
     }
@@ -208,24 +125,17 @@ impl Jobs {
     }
     pub async fn submit(
         &self,
-        request: impl Into<JobSpec>,
+        request: impl Into<Arguments>,
     ) -> io::Result<(JobRecord, String, bool)> {
         self.reconcile_finished().await?;
         let specification = request.into();
-        specification.validate()?;
         let kind = match &specification {
-            JobSpec::Resolve(_) => enrichment_store::native_effect::CommandKind::Resolve,
-            JobSpec::Compare(_) => enrichment_store::native_effect::CommandKind::Compare,
-            JobSpec::Inspect(_) => enrichment_store::native_effect::CommandKind::Inspect,
-            JobSpec::Verify(_) => enrichment_store::native_effect::CommandKind::Verify,
+            Arguments::Resolve { .. } => enrichment_store::native_effect::CommandKind::Resolve,
+            Arguments::Compare { .. } => enrichment_store::native_effect::CommandKind::Compare,
+            Arguments::Inspect { .. } => enrichment_store::native_effect::CommandKind::Inspect,
+            Arguments::Verify { .. } => enrichment_store::native_effect::CommandKind::Verify,
         };
-        let mut arguments = Arguments::default();
-        match specification {
-            JobSpec::Verify(request) => arguments.verify = Some(request),
-            JobSpec::Inspect(request) => arguments.inspect = Some(request),
-            JobSpec::Resolve(request) => arguments.resolve = Some(request),
-            JobSpec::Compare(request) => arguments.compare = Some(request),
-        }
+        let arguments = specification;
         let interest = format!("interest_{}", uuid::Uuid::new_v4().simple());
         let (id, fresh) = self
             .native
@@ -258,74 +168,19 @@ impl Jobs {
     }
     pub async fn get(&self, id: &str) -> io::Result<JobRecord> {
         let pin = self.native.pin().await.map_err(io::Error::other)?;
-        let command = self
+        let snapshot = self
             .native
-            .command(&pin, id)
-            .await
-            .map_err(io::Error::other)?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unknown native job"))?;
-        let state = self
-            .native
-            .transition(&pin, id)
-            .await
-            .map_err(io::Error::other)?
-            .ok_or_else(|| io::Error::other("job transition absent"))?;
-        let arguments = command.arguments;
-        let specification = match (
-            arguments.verify,
-            arguments.inspect,
-            arguments.resolve,
-            arguments.compare,
-        ) {
-            (Some(value), None, None, None) => JobSpec::Verify(value),
-            (None, Some(value), None, None) => JobSpec::Inspect(value),
-            (None, None, Some(value), None) => JobSpec::Resolve(value),
-            (None, None, None, Some(value)) => JobSpec::Compare(value),
-            _ => return Err(io::Error::other("invalid typed native command union")),
-        };
-        let interests = self
-            .native
-            .interests(&pin, id)
+            .snapshot(&pin, id)
             .await
             .map_err(io::Error::other)?;
-        let result = state
-            .result
-            .as_ref()
-            .map(|artifact| {
-                // Publication may settle the job atomically with its complete result.
-                // Project the retained descriptor from that selected artifact as well as
-                // from ordinary finish; never expose a complete stored envelope as inline.
-                crate::delivery::recover_result(&self.blobs, artifact)
-            })
-            .transpose()?;
-        Ok(JobRecord {
-            job_id: id.into(),
-            key: command.job_key,
-            specification,
-            state: state.state,
-            stage: state.stage,
-            interests: interests
-                .iter()
-                .filter(|i| i.attached)
-                .map(|i| i.interest_id.clone())
-                .collect(),
-            detached_interests: interests
-                .iter()
-                .filter(|i| !i.attached)
-                .map(|i| i.interest_id.clone())
-                .collect(),
-            submitted_at: command.submitted_at,
-            updated_at: state.updated_at,
-            result,
-            resolution: state.resolution.map(|value| ResolutionStage {
-                release_id: value.release_id,
-                environment_id: value.environment_id,
-                context_id: value.context_id,
-                attempt_id: value.attempt_id,
-                input_artifact_ids: value.input_artifact_ids,
-                result_artifact_id: value.result_artifact_id,
-            }),
-        })
+        let result = match &snapshot.result_artifact {
+            Some(artifact) => Some(
+                crate::delivery::recover_result(&self.blobs, self.native.runtime(), &pin, artifact)
+                    .await?,
+            ),
+            None => None,
+        };
+        Ok(JobRecord { snapshot, result })
     }
     pub async fn counts(&self) -> io::Result<(usize, usize)> {
         self.native.counts().await.map_err(io::Error::other)
@@ -462,21 +317,13 @@ impl Jobs {
             .ok_or_else(|| io::Error::other("unknown effect owner"))?
             .fence)
     }
-    pub async fn pin_resolution(&self, id: &str, stage: ResolutionStage) -> io::Result<()> {
-        stage.validate()?;
+    pub async fn pin_resolution(&self, id: &str, stage: Resolution) -> io::Result<()> {
         self.native
             .pin_resolution(
                 id,
                 self.fence(id)?
                     .ok_or_else(|| io::Error::other("acquisition has no claim"))?,
-                Resolution {
-                    release_id: stage.release_id,
-                    environment_id: stage.environment_id,
-                    context_id: stage.context_id,
-                    attempt_id: stage.attempt_id,
-                    input_artifact_ids: stage.input_artifact_ids,
-                    result_artifact_id: stage.result_artifact_id,
-                },
+                stage,
             )
             .await
             .map_err(io::Error::other)
@@ -631,11 +478,13 @@ mod tests {
         .unwrap();
         let (record, _, _) = service
             .jobs
-            .submit(JobSpec::Resolve(enrichment_core::request::ResolveRequest {
-                name: "fixture".into(),
-                version: Some("1.0.0".into()),
-                ..Default::default()
-            }))
+            .submit(Arguments::Resolve {
+                request: enrichment_core::request::ResolveRequest {
+                    name: "fixture".into(),
+                    version: Some("1.0.0".into()),
+                    ..Default::default()
+                },
+            })
             .await
             .unwrap();
         let id = record.job_id.clone();
@@ -651,7 +500,7 @@ mod tests {
                     JobState::Succeeded,
                     crate::envelope::ok(
                         "Native driver result retained",
-                        serde_json::Map::new(),
+                        Default::default(),
                         enrichment_core::wire::Coverage {
                             details: None,
                             assessments: vec![],
@@ -673,7 +522,7 @@ mod tests {
         let record = service.jobs.get(&record.job_id).await.unwrap();
         assert_eq!(record.state, JobState::Succeeded);
         assert!(matches!(
-            record.result.unwrap().delivery,
+            record.result.as_ref().unwrap().delivery,
             enrichment_core::wire::DeliveryDescriptor::Artifact { .. }
         ));
         let pin = service.jobs.native.pin().await.unwrap();
@@ -685,7 +534,8 @@ mod tests {
                 .await
                 .unwrap()
                 .unwrap()
-                .cleanup_state,
+                .cleanup_state
+                .as_str(),
             "unresolved"
         );
         service.jobs.reconcile_finished().await.unwrap();
@@ -710,7 +560,8 @@ mod tests {
                 .await
                 .unwrap()
                 .unwrap()
-                .cleanup_state,
+                .cleanup_state
+                .as_str(),
             "settled"
         );
     }

@@ -1,0 +1,356 @@
+{
+  "module": "ignore::walk",
+  "crate": "ignore",
+  "api": "api/ignore.walk.md",
+  "items": [
+    {
+      "path": "ignore::walk::WalkState",
+      "name": "WalkState",
+      "kind": "enum",
+      "crate": "ignore",
+      "signature": "enum WalkState",
+      "summary": "WalkState is used in the parallel recursive directory iterator to indicate whether walking should continue as normal, skip descending into a particular directory or quit the walk entirely.",
+      "doc": "api/ignore.walk.md#walkstate",
+      "aliases": [
+        "ignore::WalkState"
+      ],
+      "variants": [
+        "Continue",
+        "Skip",
+        "Quit"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ignore::walk::DirEntry",
+      "name": "DirEntry",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct DirEntry",
+      "summary": "A directory entry with a possible error attached.",
+      "doc": "api/ignore.walk.md#direntry",
+      "aliases": [
+        "ignore::DirEntry"
+      ],
+      "methods": [
+        {
+          "name": "depth",
+          "signature": "fn depth(&self) -> usize",
+          "summary": "Returns the depth at which this entry was created relative to the root."
+        },
+        {
+          "name": "error",
+          "signature": "fn error(&self) -> Option<&Error>",
+          "summary": "Returns an error, if one exists, associated with processing this entry."
+        },
+        {
+          "name": "file_name",
+          "signature": "fn file_name(&self) -> &OsStr",
+          "summary": "Return the file name of this entry."
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> Option<FileType>",
+          "summary": "Return the file type for the file that this entry points to."
+        },
+        {
+          "name": "ino",
+          "signature": "fn ino(&self) -> Option<u64>",
+          "summary": "Returns the underlying inode number if one exists."
+        },
+        {
+          "name": "into_path",
+          "signature": "fn into_path(self) -> PathBuf",
+          "summary": "The full path that this entry represents. Analogous to [`DirEntry::path`], but moves ownership of the path."
+        },
+        {
+          "name": "is_stdin",
+          "signature": "fn is_stdin(&self) -> bool",
+          "summary": "Returns true if and only if this entry corresponds to stdin."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> Result<Metadata, Error>",
+          "summary": "Return the metadata for the file that this entry points to."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &Path",
+          "summary": "The full path that this entry represents."
+        },
+        {
+          "name": "path_is_symlink",
+          "signature": "fn path_is_symlink(&self) -> bool",
+          "summary": "Whether this entry corresponds to a symbolic link or not."
+        }
+      ]
+    },
+    {
+      "path": "ignore::walk::Walk",
+      "name": "Walk",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct Walk",
+      "summary": "Walk is a recursive directory iterator over file paths in one or more directories.",
+      "doc": "api/ignore.walk.md#walk",
+      "aliases": [
+        "ignore::Walk"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<P: AsRef<Path>, I: IntoIterator<Item = P>>(paths: I) -> Walk",
+          "summary": "Create a new recursive directory iterator from the sequence of paths given."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(path: P) -> Walk",
+          "summary": "Creates a new recursive directory iterator for the file path given."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<DirEntry, Error>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "ignore::walk::WalkBuilder",
+      "name": "WalkBuilder",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct WalkBuilder",
+      "summary": "WalkBuilder builds a recursive directory iterator.",
+      "doc": "api/ignore.walk.md#walkbuilder",
+      "aliases": [
+        "ignore::WalkBuilder"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add<P: AsRef<Path>>(&mut self, path: P) -> &mut WalkBuilder",
+          "summary": "Add a file path to the iterator."
+        },
+        {
+          "name": "add_custom_ignore_filename",
+          "signature": "fn add_custom_ignore_filename<S: AsRef<OsStr>>(&mut self, file_name: S) -> &mut WalkBuilder",
+          "summary": "Add a custom ignore file name"
+        },
+        {
+          "name": "add_ignore",
+          "signature": "fn add_ignore<P: AsRef<Path>>(&mut self, path: P) -> Option<Error>",
+          "summary": "Add a global ignore file to the matcher."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Walk",
+          "summary": "Build a new `Walk` iterator."
+        },
+        {
+          "name": "build_parallel",
+          "signature": "fn build_parallel(&self) -> WalkParallel",
+          "summary": "Build a new `WalkParallel` iterator."
+        },
+        {
+          "name": "current_dir",
+          "signature": "fn current_dir(&mut self, cwd: impl Into<PathBuf>) -> &mut WalkBuilder",
+          "summary": "Set the current working directory used for matching global gitignores."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> WalkBuilder",
+          "summary": "Create an empty builder to which paths can be added."
+        },
+        {
+          "name": "filter_entry",
+          "signature": "fn filter_entry<P>(&mut self, filter: P) -> &mut WalkBuilder where P: Fn(&DirEntry) -> bool + Send + Sync + 'static",
+          "summary": "Yields only entries which satisfy the given predicate and skips descending into directories that do not satisfy the given predicate."
+        },
+        {
+          "name": "follow_links",
+          "signature": "fn follow_links(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Whether to follow symbolic links or not."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<P: AsRef<Path>, I: IntoIterator<Item = P>>(paths: I) -> WalkBuilder",
+          "summary": "Create a new builder for a recursive directory iterator from the sequence of paths."
+        },
+        {
+          "name": "git_exclude",
+          "signature": "fn git_exclude(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables reading `.git/info/exclude` files."
+        },
+        {
+          "name": "git_global",
+          "signature": "fn git_global(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables reading a global gitignore file, whose path is specified in git's `core.excludesFile` config option."
+        },
+        {
+          "name": "git_ignore",
+          "signature": "fn git_ignore(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables reading `.gitignore` files."
+        },
+        {
+          "name": "hidden",
+          "signature": "fn hidden(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables ignoring hidden files."
+        },
+        {
+          "name": "ignore",
+          "signature": "fn ignore(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables reading `.ignore` files."
+        },
+        {
+          "name": "ignore_case_insensitive",
+          "signature": "fn ignore_case_insensitive(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Process ignore files case insensitively"
+        },
+        {
+          "name": "max_depth",
+          "signature": "fn max_depth(&mut self, depth: Option<usize>) -> &mut WalkBuilder",
+          "summary": "The maximum depth to recurse."
+        },
+        {
+          "name": "max_filesize",
+          "signature": "fn max_filesize(&mut self, filesize: Option<u64>) -> &mut WalkBuilder",
+          "summary": "Whether to ignore files above the specified limit."
+        },
+        {
+          "name": "min_depth",
+          "signature": "fn min_depth(&mut self, depth: Option<usize>) -> &mut WalkBuilder",
+          "summary": "The minimum depth to recurse."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(path: P) -> WalkBuilder",
+          "summary": "Create a new builder for a recursive directory iterator for the directory given."
+        },
+        {
+          "name": "overrides",
+          "signature": "fn overrides(&mut self, overrides: Override) -> &mut WalkBuilder",
+          "summary": "Add an override matcher."
+        },
+        {
+          "name": "parents",
+          "signature": "fn parents(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables reading ignore files from parent directories."
+        },
+        {
+          "name": "require_git",
+          "signature": "fn require_git(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Whether a git repository is required to apply git-related ignore rules (global rules, .gitignore and local exclude rules)."
+        },
+        {
+          "name": "same_file_system",
+          "signature": "fn same_file_system(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Do not cross file system boundaries."
+        },
+        {
+          "name": "skip_stdout",
+          "signature": "fn skip_stdout(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Do not yield directory entries that are believed to correspond to stdout."
+        },
+        {
+          "name": "sort_by_file_name",
+          "signature": "fn sort_by_file_name<F>(&mut self, cmp: F) -> &mut WalkBuilder where F: Fn(&OsStr, &OsStr) -> Ordering + Send + Sync + 'static",
+          "summary": "Set a function for sorting directory entries by file name."
+        },
+        {
+          "name": "sort_by_file_path",
+          "signature": "fn sort_by_file_path<F>(&mut self, cmp: F) -> &mut WalkBuilder where F: Fn(&Path, &Path) -> Ordering + Send + Sync + 'static",
+          "summary": "Set a function for sorting directory entries by their path."
+        },
+        {
+          "name": "standard_filters",
+          "signature": "fn standard_filters(&mut self, yes: bool) -> &mut WalkBuilder",
+          "summary": "Enables all the standard ignore filters."
+        },
+        {
+          "name": "threads",
+          "signature": "fn threads(&mut self, n: usize) -> &mut WalkBuilder",
+          "summary": "The number of threads to use for traversal."
+        },
+        {
+          "name": "types",
+          "signature": "fn types(&mut self, types: Types) -> &mut WalkBuilder",
+          "summary": "Add a file type matcher."
+        }
+      ]
+    },
+    {
+      "path": "ignore::walk::WalkParallel",
+      "name": "WalkParallel",
+      "kind": "struct",
+      "crate": "ignore",
+      "signature": "struct WalkParallel",
+      "summary": "WalkParallel is a parallel recursive directory iterator over files paths in one or more directories.",
+      "doc": "api/ignore.walk.md#walkparallel",
+      "aliases": [
+        "ignore::WalkParallel"
+      ],
+      "methods": [
+        {
+          "name": "run",
+          "signature": "fn run<'s, F>(self, mkf: F) where F: FnMut() -> Box<dyn FnMut(Result<DirEntry, Error>) -> WalkState + Send + 's>",
+          "summary": "Execute the parallel recursive directory iterator. `mkf` is called for each thread used for iteration. The function produced by `mkf` is then in turn called for each visited file path."
+        },
+        {
+          "name": "visit",
+          "signature": "fn visit(self, builder: &mut dyn ParallelVisitorBuilder<'_>)",
+          "summary": "Execute the parallel recursive directory iterator using a custom visitor."
+        }
+      ]
+    },
+    {
+      "path": "ignore::walk::ParallelVisitor",
+      "name": "ParallelVisitor",
+      "kind": "trait",
+      "crate": "ignore",
+      "signature": "trait ParallelVisitor: Send",
+      "summary": "Receives files and directories for the current thread.",
+      "doc": "api/ignore.walk.md#parallelvisitor",
+      "aliases": [
+        "ignore::ParallelVisitor"
+      ],
+      "required_methods": [
+        "visit"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "visit",
+          "signature": "fn visit(&mut self, entry: Result<DirEntry, Error>) -> WalkState",
+          "summary": "Receives files and directories for the current thread. This is called once for every directory entry visited by traversal."
+        }
+      ]
+    },
+    {
+      "path": "ignore::walk::ParallelVisitorBuilder",
+      "name": "ParallelVisitorBuilder",
+      "kind": "trait",
+      "crate": "ignore",
+      "signature": "trait ParallelVisitorBuilder<'s>",
+      "summary": "A builder for constructing a visitor when using [`WalkParallel::visit`]. The builder will be called for each thread started by `WalkParallel`. The visitor returned from each builder is then called for every directory entry.",
+      "doc": "api/ignore.walk.md#parallelvisitorbuilder",
+      "aliases": [
+        "ignore::ParallelVisitorBuilder"
+      ],
+      "required_methods": [
+        "build"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&mut self) -> Box<dyn ParallelVisitor + 's>",
+          "summary": "Create per-thread `ParallelVisitor`s for `WalkParallel`."
+        }
+      ]
+    }
+  ]
+}

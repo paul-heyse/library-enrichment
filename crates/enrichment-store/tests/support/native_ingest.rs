@@ -156,6 +156,7 @@ pub async fn publish_rows(
     repository
         .publish_native(metadata, plans, attempts, expected, completion)
         .await
+        .map(|published| published.manifest)
 }
 
 pub fn normalize(context: IngestContext, input: DocumentBatch) -> Result<EvidenceRows, String> {
@@ -191,6 +192,10 @@ pub fn normalize(context: IngestContext, input: DocumentBatch) -> Result<Evidenc
                     result.collect(relation, &batch)?;
                 }
             }
+            runtime
+                .close_diagnostics()
+                .await
+                .map_err(|e| e.to_string())?;
             Ok::<_, String>(())
         })?;
         Ok(result)

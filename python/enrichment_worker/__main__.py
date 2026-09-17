@@ -20,6 +20,11 @@ import pyarrow as pa
 from enrichment_mcp._generated.worker_schema import (
     Observation,
     Publicness,
+    PythonBase,
+    PythonCallable,
+    PythonOverload,
+    PythonParameter,
+    PythonParameterKind,
     WorkerFile,
     WorkerRequest,
 )
@@ -45,21 +50,53 @@ def _publicness(obj: griffe.Object | griffe.Alias, parent: griffe.Object | None)
     )
 
 
+def _callable(function: griffe.Function) -> PythonCallable:
+    return PythonCallable(
+        parameters=[
+            PythonParameter(
+                ordinal=ordinal,
+                name=parameter.name,
+                kind=PythonParameterKind(parameter.kind.value)
+                if parameter.kind is not None
+                else None,
+                annotation=str(parameter.annotation) if parameter.annotation is not None else None,
+                reported_default=str(parameter.default) if parameter.default is not None else None,
+                default_origin=None,
+            )
+            for ordinal, parameter in enumerate(function.parameters)
+        ],
+        returns=str(function.returns) if function.returns is not None else None,
+        labels=sorted(function.labels),
+    )
+
+
 def _observation(
     obj: griffe.Object | griffe.Alias,
     file: WorkerFile,
     parent: griffe.Object | None,
-    overloads: list[griffe.Function] | None = None,
+    overload_ordinal: int | None = None,
 ) -> Observation:
     alias = isinstance(obj, griffe.Alias)
     signature = None
-    bases: list[str] = []
+    bases: list[PythonBase] = []
+    overloads: list[PythonOverload] = []
+    callable_value = None
     if isinstance(obj, griffe.Function):
         signature = obj.signature()
-        overloads = overloads or obj.overloads
+        callable_value = _callable(obj)
+        if overload_ordinal is None:
+            overloads = [
+                PythonOverload(
+                    ordinal=ordinal, signature=function.signature(), callable=_callable(function)
+                )
+                for ordinal, function in enumerate(obj.overloads or [])
+            ]
     elif isinstance(obj, griffe.Class):
-        bases = [str(base) for base in obj.bases]
-        signature = f"class {obj.name}({', '.join(bases)})"
+        bases = [
+            PythonBase(ordinal=ordinal, rendering=str(base))
+            for ordinal, base in enumerate(obj.bases)
+        ]
+        signature = f"class {obj.name}({', '.join(base.rendering for base in bases)})"
     elif isinstance(obj, griffe.Attribute):
         signature = f"{obj.name}: {obj.annotation}" if obj.annotation is not None else obj.name
     return Observation(
@@ -69,7 +106,9 @@ def _observation(
         file=file.file,
         line=obj.alias_lineno if alias else obj.lineno,
         signature=signature,
-        overloads=[function.signature() for function in (overloads or [])],
+        callable=callable_value,
+        overload_ordinal=overload_ordinal,
+        overloads=overloads,
         docs=None if alias or obj.docstring is None else obj.docstring.value,
         alias_target=obj.target_path if alias else None,
         bases=bases,
@@ -87,8 +126,9 @@ def _walk(
         yield from _walk(obj.members[name], file, obj)
     if isinstance(obj, griffe.Module | griffe.Class):
         for name, overloads in sorted(obj.overloads.items()):
-            if name not in obj.members and overloads:
-                yield _observation(overloads[0], file, obj, overloads)
+            if name not in obj.members:
+                for ordinal, function in enumerate(overloads):
+                    yield _observation(function, file, obj, ordinal)
 
 
 class BoundedSink(io.RawIOBase):

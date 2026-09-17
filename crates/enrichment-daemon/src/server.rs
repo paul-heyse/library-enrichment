@@ -299,8 +299,7 @@ async fn dispatch_request(
                     research_response(
                         service,
                         request.id,
-                        status::status_envelope(Some(service), status_request.component.as_deref())
-                            .await,
+                        status::status_envelope(service, status_request.component.as_deref()).await,
                         requested_budget,
                     )
                     .await
@@ -538,16 +537,11 @@ async fn dispatch_request(
 
     // These are observations of the already encoded response, never deserialization of a
     // result into a second semantic model. Research replies were bounded while still typed.
-    let status = response
-        .result
-        .as_ref()
-        .and_then(|value| match value["status"].as_str() {
-            Some("ok") => Some(enrichment_core::wire::Status::Ok),
-            Some("partial") => Some(enrichment_core::wire::Status::Partial),
-            Some("pending") => Some(enrichment_core::wire::Status::Pending),
-            Some("error") => Some(enrichment_core::wire::Status::Error),
-            _ => None,
-        });
+    let status = response.result.as_ref().and_then(|value| {
+        value["status"]
+            .as_str()
+            .and_then(enrichment_core::wire::Status::parse)
+    });
     let has_gap = response.result.as_ref().is_some_and(|value| {
         value["coverage"]["missing"]
             .as_array()
@@ -557,14 +551,12 @@ async fn dispatch_request(
     // Measured even for a notification: the work happened, and a counter that quietly skipped
     // it would understate what this process did.
     let bytes = serde_json::to_vec(&response).map_or(0, |v| v.len());
-    service
-        .metrics
-        .record_response(status, has_gap, bytes as u64);
-    crate::metrics::Metrics::log_request(
+    service.metrics.record_response(
         &request.method,
         status,
-        u64::try_from(began.elapsed().as_millis()).unwrap_or(u64::MAX),
-        bytes,
+        has_gap,
+        u64::try_from(began.elapsed().as_micros()).unwrap_or(u64::MAX),
+        bytes as u64,
     );
 
     Dispatched {

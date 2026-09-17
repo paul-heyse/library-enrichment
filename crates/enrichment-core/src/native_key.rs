@@ -20,12 +20,14 @@ pub enum Key {
     Environment,
     Context,
     Snapshot,
+    SnapshotDescriptor,
+    Projection,
     PublicPath,
     PublicBinding,
     Definition,
-    ProducerSymbol,
     ApiObservation,
     TextFragment,
+    Citation,
     InputArtifact,
     Coverage,
     Relationship,
@@ -70,12 +72,14 @@ impl Key {
             Self::Environment => "env",
             Self::Context => "ctx",
             Self::Snapshot => "snap",
+            Self::SnapshotDescriptor => "snapshot_descriptor",
+            Self::Projection => "projection",
             Self::PublicPath => "path",
             Self::PublicBinding => "symbol",
             Self::Definition => "def",
-            Self::ProducerSymbol => "sym",
             Self::ApiObservation => "obs",
             Self::TextFragment => "fragment",
+            Self::Citation => "ev",
             Self::InputArtifact => "input",
             Self::Coverage => "coverage",
             Self::Relationship => "relationship",
@@ -96,6 +100,10 @@ impl Key {
     }
     pub fn schema(self) -> SchemaRef {
         match self {
+            Self::Definition => return Arc::new(Schema::new(<crate::evidence::model::DefinitionIdentity as crate::native_union::NativeStruct>::fields())),
+            Self::Citation => return Arc::new(Schema::new(<crate::wire::evidence::CitationIdentity as crate::native_union::NativeStruct>::fields())),
+            Self::Projection => return Arc::new(Schema::new(<crate::operation::projections::ProjectionIdentity as crate::native_union::NativeStruct>::fields())),
+            Self::SnapshotDescriptor => return Arc::new(Schema::new(<crate::evidence::snapshot::SnapshotDescriptor as crate::native_union::NativeStruct>::fields())),
             Self::OperationPolicy => return crate::operation::policy_schema(),
             Self::OperationCommand => return crate::operation::command_key_schema(),
             Self::EffectGrant => return crate::operation::grant_key_schema(),
@@ -160,7 +168,7 @@ impl Key {
             ));
         }
         let fields = match self {
-            Self::ProcessBinding => vec![text("image", false), text("containment", false)],
+            Self::ProcessBinding => <crate::operation::jobs::ProcessBinding as crate::native_union::NativeStruct>::fields().iter().map(|field| field.as_ref().clone()).collect(),
             Self::SnapshotAttempt => vec![text("snapshot_id", false), text("attempt_id", false)],
             Self::Release => vec![
                 text("ecosystem", false),
@@ -173,7 +181,11 @@ impl Key {
                 text("resolution", false),
                 text("toolchain", true),
                 text("target", true),
-                strings("features"),
+                crate::native_union::field::<Vec<String>>(
+                    "features",
+                    crate::native_union::Rule::Set,
+                )
+                .with_nullable(false),
                 Field::new("features_known", DataType::Boolean, false),
                 Field::new("default_features", DataType::Boolean, true),
                 text("lock_digest", true),
@@ -198,12 +210,7 @@ impl Key {
                 text("kind", false),
                 text("qualifier", true),
             ],
-            Self::Definition | Self::ProducerSymbol => vec![
-                text("package", false),
-                text("path", false),
-                text("kind", false),
-                text("qualifier", true),
-            ],
+
             _ => unreachable!("native evidence schema returned above"),
         };
         Arc::new(Schema::new(fields))
@@ -227,36 +234,11 @@ impl Key {
         }
         Ok(self.expression_for(inputs))
     }
-    fn expression_for(self, mut inputs: Vec<Expr>) -> Expr {
-        use datafusion::functions_nested::expr_fn::{array_distinct, array_sort, map_entries};
-        let mut fields = self.schema().fields().to_vec();
-        for (field, input) in fields.iter_mut().zip(&mut inputs) {
-            match (self, field.name().as_str()) {
-                (Self::Environment, "features")
-                | (Self::Coverage | Self::ProducerBinding, "gaps")
-                | (Self::ProducerBinding | Self::ProducerPlan, "inputs") => {
-                    *input = array_sort(
-                        array_distinct(input.clone()),
-                        lit("ASC"),
-                        lit("NULLS FIRST"),
-                    );
-                }
-                (Self::Snapshot, "input_digests" | "producers")
-                | (Self::ProcessOperation, "inputs" | "outputs") => {
-                    *input = array_sort(map_entries(input.clone()), lit("ASC"), lit("NULLS FIRST"));
-                    let DataType::Map(entries, _) = field.data_type() else {
-                        unreachable!("declared map")
-                    };
-                    *field = Arc::new(field.as_ref().clone().with_data_type(DataType::List(
-                        Arc::new(Field::new("item", entries.data_type().clone(), false)),
-                    )));
-                }
-                _ => {}
-            }
-        }
+    fn expression_for(self, inputs: Vec<Expr>) -> Expr {
+        let fields = self.schema().fields().clone();
         let bytes = crate::native_identity::canonical_bytes(
-            format!("enrichment/identity/7/{}", self.prefix()),
-            fields.into(),
+            format!("enrichment/identity/8/{}", self.prefix()),
+            fields,
         )
         .call(inputs);
         concat(vec![
@@ -266,6 +248,10 @@ impl Key {
     }
     /// Mechanical single-record ingress, then DataFusion constant folding of the same graph.
     /// Corpus computation uses `expression`; this path never creates a private session/runtime.
+    /// Derive identity from generated native fields without a Serde/JSON intermediate.
+    pub fn record<T: crate::native_union::NativeStruct>(self, record: &T) -> Result<String> {
+        self.batch_value(&T::batch(std::slice::from_ref(record))?)
+    }
     pub fn value<T: serde::Serialize>(self, record: &T) -> Result<String> {
         let schema = self.schema();
         let mut decoder = arrow::json::ReaderBuilder::new(schema)

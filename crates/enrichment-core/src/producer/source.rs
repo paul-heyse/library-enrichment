@@ -7,9 +7,6 @@
 
 use std::path::Path;
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
 use super::docsrs::ManifestFacts;
 use crate::evidence::{FragmentKind, document::DocumentFact, relational::Locator};
 use crate::wire::EvidenceClass;
@@ -253,26 +250,27 @@ pub fn read_file_limited(path: &Path, limit: u64) -> std::io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+crate::native_struct! {
 /// A bounded source excerpt starting at a recorded line; it does not identify the end of an item.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SourceExcerpt {
-    pub window_kind: SourceWindowKind,
+    window_kind: SourceWindowKind => crate::native_union::Rule::Text,
     /// The file, relative to the crate root.
-    pub path: String,
+    path: String => crate::native_union::Rule::Text,
     /// First line included, 1-based.
-    pub start_line: usize,
+    start_line: usize => crate::native_union::Rule::Text,
     /// Last line included, 1-based.
-    pub end_line: usize,
+    end_line: usize => crate::native_union::Rule::Text,
     /// The text.
-    pub text: String,
+    text: String => crate::native_union::Rule::Text,
     /// Whether the file had more lines after `end_line`.
-    pub truncated: bool,
+    truncated: bool => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
 pub enum SourceWindowKind {
-    RecordedLineWindow,
+    RecordedLineWindow = "recorded_line_window",
+}
 }
 
 /// Cut up to `max_lines` lines starting at `line` from `file` under `crate_root`.

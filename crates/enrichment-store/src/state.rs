@@ -7,7 +7,7 @@ use crate::StatePaths;
 
 pub const MARKER: &str = ".library-enrichment-state.json";
 /// The native Delta epoch requires fresh service-owned roots; earlier formats are rejected.
-pub const GENERATION: u32 = 7;
+pub const GENERATION: u32 = 8;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -15,6 +15,7 @@ struct Identity {
     format: String,
     role: String,
     root: std::path::PathBuf,
+    peer_root: std::path::PathBuf,
 }
 
 /// Validate absolute, nonoverlapping, physical roots before creating service directories.
@@ -64,10 +65,13 @@ pub fn validate_paths(paths: &StatePaths) -> io::Result<()> {
 /// An incompatible or unmarked nonempty root needs the explicit development reset.
 pub fn initialize(paths: &StatePaths) -> io::Result<()> {
     validate_paths(paths)?;
-    for (root, role) in [(&paths.data_root, "evidence"), (&paths.cache_root, "cache")] {
+    for (root, role, peer) in [
+        (&paths.data_root, "evidence", &paths.cache_root),
+        (&paths.cache_root, "cache", &paths.data_root),
+    ] {
         fs::create_dir_all(root)?;
         if fs::symlink_metadata(root.join(MARKER)).is_ok() {
-            verify_root(root, role)?;
+            verify_root(root, role, peer)?;
         } else {
             if !only_coordination_files(root, role)? {
                 return Err(io::Error::other(format!(
@@ -75,7 +79,7 @@ pub fn initialize(paths: &StatePaths) -> io::Result<()> {
                     root.display()
                 )));
             }
-            mark_root(root, role)?;
+            mark_root(root, role, peer)?;
         }
     }
     Ok(())
@@ -107,9 +111,12 @@ fn only_coordination_files(root: &Path, role: &str) -> io::Result<bool> {
 /// prove ownership of this exact root before the first deletion.
 pub fn verify_existing_markers(paths: &StatePaths) -> io::Result<()> {
     validate_paths(paths)?;
-    for (root, role) in [(&paths.data_root, "evidence"), (&paths.cache_root, "cache")] {
+    for (root, role, peer) in [
+        (&paths.data_root, "evidence", &paths.cache_root),
+        (&paths.cache_root, "cache", &paths.data_root),
+    ] {
         match fs::symlink_metadata(root.join(MARKER)) {
-            Ok(_) => verify_root(root, role)?,
+            Ok(_) => verify_root(root, role, peer)?,
             Err(e) if e.kind() == io::ErrorKind::NotFound => {}
             Err(e) => return Err(e),
         }
@@ -122,26 +129,27 @@ pub fn verify_existing_markers(paths: &StatePaths) -> io::Result<()> {
 /// Missing or altered markers, links and unsupported formats fail closed.
 pub fn verify(paths: &StatePaths) -> io::Result<()> {
     validate_paths(paths)?;
-    verify_root(&paths.data_root, "evidence")?;
-    verify_root(&paths.cache_root, "cache")
+    verify_root(&paths.data_root, "evidence", &paths.cache_root)?;
+    verify_root(&paths.cache_root, "cache", &paths.data_root)
 }
 
-fn identity(root: &Path, role: &str) -> io::Result<Identity> {
+fn identity(root: &Path, role: &str, peer: &Path) -> io::Result<Identity> {
     Ok(Identity {
         format: format!("library-enrichment-state/{GENERATION}"),
         role: role.into(),
         root: root.canonicalize()?,
+        peer_root: peer.to_owned(),
     })
 }
 
-fn verify_root(root: &Path, role: &str) -> io::Result<()> {
+fn verify_root(root: &Path, role: &str, peer: &Path) -> io::Result<()> {
     let path = root.join(MARKER);
     let meta = fs::symlink_metadata(&path)?;
     if !meta.is_file() || meta.len() > 4096 {
         return Err(io::Error::other("invalid state ownership marker"));
     }
     let actual: Identity = serde_json::from_slice(&fs::read(path)?)?;
-    if actual != identity(root, role)? {
+    if actual != identity(root, role, peer)? {
         return Err(io::Error::other(
             "state ownership or format identity mismatch",
         ));
@@ -154,16 +162,16 @@ fn verify_root(root: &Path, role: &str) -> io::Result<()> {
 /// # Errors
 /// Existing incompatible markers and persistence failures are refused.
 pub fn mark_reset(paths: &StatePaths) -> io::Result<()> {
-    mark_root(&paths.data_root, "evidence")?;
-    mark_root(&paths.cache_root, "cache")
+    mark_root(&paths.data_root, "evidence", &paths.cache_root)?;
+    mark_root(&paths.cache_root, "cache", &paths.data_root)
 }
 
-fn mark_root(root: &Path, role: &str) -> io::Result<()> {
+fn mark_root(root: &Path, role: &str, peer: &Path) -> io::Result<()> {
     let marker = root.join(MARKER);
     if fs::symlink_metadata(&marker).is_ok() {
-        return verify_root(root, role);
+        return verify_root(root, role, peer);
     }
-    crate::atomic::write_atomic(&marker, &serde_json::to_vec(&identity(root, role)?)?)?;
+    crate::atomic::write_atomic(&marker, &serde_json::to_vec(&identity(root, role, peer)?)?)?;
     fs::File::open(root)?.sync_all()
 }
 
@@ -345,6 +353,16 @@ pub fn recover_staging(paths: &crate::StatePaths) -> std::io::Result<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cache_and_control_roots_cannot_be_repaired_to_an_unrelated_peer() {
+        let root = tempfile::tempdir().unwrap();
+        let first = StatePaths::explicit(root.path().join("cache"), root.path().join("data"));
+        initialize(&first).unwrap();
+        let changed =
+            StatePaths::explicit(first.cache_root.clone(), root.path().join("other-data"));
+        assert!(initialize(&changed).is_err());
+        verify(&first).unwrap();
+    }
     #[test]
     fn staging_recovery_validates_every_candidate_before_deleting_anything() {
         let temp = tempfile::tempdir().unwrap();

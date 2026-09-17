@@ -5,11 +5,9 @@
 //!
 //! # Why this exists as a separate step
 //!
-//! docs.rs serves JSON built by whatever rustdoc release produced it, and there is **no format
-//! negotiation**: exactly one `/json/{n}` returns 200 per build. Measured on four crates,
-//! hosted builds range from 53 (serde 1.0.219) up to 61, while this build's parser understands
-//! a narrower set. So the version has to be read from the payload and checked *before* any
-//! attempt to interpret the document.
+//! Hosted rebuilds can retain old-format downloads. The actual payload declares its
+//! format. Read that version before interpreting the document and refuse source formats
+//! outside the current qualified contract.
 //!
 //! Checking first is the whole point. Deserializing a format we do not understand and seeing
 //! whether it errors is not equivalent: rustdoc's format changes are largely additions and
@@ -37,26 +35,12 @@ pub const LOCAL_PRODUCER: &str = "locally_built_rustdoc";
 /// The normalizer version. Part of every snapshot identity (§6.3): bump it whenever the shape
 /// or meaning of a normalized symbol, relationship or fragment changes, so improved
 /// normalization of the same inputs is a new snapshot and the old one stays readable.
-pub const NORMALIZER_VERSION: &str = "rust-native-5";
+pub const NORMALIZER_VERSION: &str = "rust-native-6";
 
-/// Format versions this build can faithfully interpret.
-///
-/// `59` is `rustdoc_types::FORMAT_VERSION`, the version the vendored parser compiles against.
-/// `57`, `60` and `61` are measured: captures emitted by dated nightlies deserialize into
-/// `rustdoc_types::Crate` without error, checked by
-/// `tests::the_supported_set_matches_what_the_parser_actually_accepts` against the real
-/// artifacts in `$LIBENR_CACHE_HOME/rustdoc-format-matrix`.
-///
-/// **Be precise about what that measurement establishes.** It shows the document *deserializes*,
-/// not that every field still means what this build thinks it means. rustdoc's format changes
-/// are largely additive, so a neighbouring version usually parses — which is the whole reason
-/// the ordering guarantee in [`probe_format`] matters. Widening this set on the strength of
-/// "it parsed" alone would reintroduce the silent misparse R04 forbids, one version at a time.
-/// A version belongs here when a round trip has been checked against known-good output, and
-/// until then the honest move is to refuse it.
-///
-/// Verified 2026-09-13 against captures emitted by five dated nightlies.
-pub const SUPPORTED_FORMAT_VERSIONS: &[u32] = &[57, 59, 60, 61];
+/// Current source format qualified against one exact model shared with the renderer.
+/// ADR-0048 removes parse-success-only claims for older formats. They require an explicit
+/// current acquisition contract before use, never a historical internal-state adapter.
+pub const SUPPORTED_FORMAT_VERSIONS: &[u32] = &[rustdoc_types::FORMAT_VERSION];
 
 /// What an artifact declares about itself, read without interpreting the rest.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -193,86 +177,38 @@ mod tests {
         );
     }
 
-    /// Measure the supported set against real captures rather than trusting the constant.
-    ///
-    /// These are **real rustdoc output**, committed under `tests/fixtures/rustdoc/` precisely so
-    /// this always runs. An earlier revision read them from `$LIBENR_CACHE_HOME` and returned
-    /// early when that was unset — so the test passed while measuring nothing, and gate R04
-    /// rested on it. A test that silently does nothing is worse than no test: it reports
-    /// confidence it has not earned. Absent fixtures are now a failure, not a shrug.
     #[test]
-    fn the_supported_set_matches_what_the_parser_actually_accepts() {
-        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(2)
-            .expect("the crate sits two levels below the repository root")
-            .join("tests/fixtures/rustdoc");
-        let entries = std::fs::read_dir(&dir)
-            .unwrap_or_else(|err| panic!("{} is missing ({err})", dir.display()));
-
-        let mut measured = Vec::new();
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().is_none_or(|ext| ext != "json") {
-                continue;
-            }
-            let text = std::fs::read_to_string(&path).expect("capture is readable");
-            let declared = probe_format(&text)
-                .map(|probe| probe.format_version)
-                .unwrap_or_else(|err| panic!("{} was refused: {err}", path.display()));
-
-            // The independent half: does the parser ACTUALLY accept this document? Asserting
-            // only that our own probe accepts it would be circular -- the constant would be
-            // checked against itself.
-            //
-            // `rustdoc-types` is a dev-dependency pinned to the 0.59.0 that `public-api` 0.52.2
-            // resolves, rather than its `rustdoc_types` re-export: that re-export sits behind a
-            // feature named `experimental-feature-that-can-be-removed-in-a-patch-release_...`,
-            // and a name like that is a warning rather than an invitation.
-            let parsed = serde_json::from_str::<rustdoc_types::Crate>(&text).is_ok();
-            measured.push((declared, parsed, path));
-        }
-
-        assert!(
-            measured.len() >= 3,
-            "expected at least the v57/v60/v61 captures in {}, found {}",
-            dir.display(),
-            measured.len()
-        );
-
-        for (version, parsed, path) in &measured {
-            let claimed = SUPPORTED_FORMAT_VERSIONS.contains(version);
+    fn current_fixture_set_uses_the_qualified_format() {
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/rustdoc");
+        for name in [
+            "format-v61.json",
+            "enr-fixture-0.1.0-default.json",
+            "enr-fixture-0.2.0-all-features.json",
+            "schema-contract-format61.json",
+        ] {
+            let text = std::fs::read_to_string(dir.join(name)).expect("real capture");
             assert_eq!(
-                claimed,
-                *parsed,
-                "SUPPORTED_FORMAT_VERSIONS claims format {version} is {}, but the vendored \
-                 rustdoc_types parser {} {}. Correct the constant to the measurement, not the \
-                 other way round.",
-                if claimed { "supported" } else { "unsupported" },
-                if *parsed { "accepted" } else { "rejected" },
-                path.display()
+                probe_format(&text).expect("current format").format_version,
+                61
             );
+            let krate: rustdoc_types::Crate =
+                serde_json::from_str(&text).expect("exact source model");
+            assert_eq!(krate.format_version, 61);
         }
     }
 
-    /// `59` is in the supported set with no capture to measure it, so justify it explicitly.
-    ///
-    /// It is `rustdoc_types::FORMAT_VERSION` — the version the vendored parser was generated
-    /// from, and therefore the one it is definitionally correct for. Every other entry is
-    /// measured against a real artifact. If the dependency moves, this fails rather than
-    /// leaving a stale number that nothing checks.
     #[test]
-    fn the_unmeasured_entry_is_the_parsers_own_format_version() {
-        assert!(
-            SUPPORTED_FORMAT_VERSIONS.contains(&rustdoc_types::FORMAT_VERSION),
-            "the parser's own FORMAT_VERSION ({}) must be supported",
-            rustdoc_types::FORMAT_VERSION
-        );
-        assert_eq!(
-            rustdoc_types::FORMAT_VERSION,
-            59,
-            "rustdoc-types moved; re-measure SUPPORTED_FORMAT_VERSIONS against the fixtures \
-             rather than assuming the old set still holds"
-        );
+    fn current_source_format_is_shared_with_the_renderer() {
+        assert_eq!(rustdoc_types::FORMAT_VERSION, 61);
+        assert_eq!(SUPPORTED_FORMAT_VERSIONS, &[61]);
+        // This function's exact argument type unifies the model with the patched renderer.
+        let _: fn(&rustdoc_types::Crate, &rustdoc_types::Type) -> String =
+            public_api::type_rendering;
+        for version in [57, 59, 60, 62] {
+            assert!(matches!(
+                probe_format(&artifact(&format!("\"format_version\":{version},"))),
+                Err(ProducerError::UnsupportedFormat { .. })
+            ));
+        }
     }
 }

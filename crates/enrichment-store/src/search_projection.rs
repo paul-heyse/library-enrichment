@@ -1,7 +1,7 @@
 //! Publication-selected native search surfaces with bounded CDF lineage and atomic offsets.
 use crate::{delta_evidence::EvidenceTables, native_delta::DeltaStore, runtime::QueryRuntime};
 use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use datafusion::{
@@ -11,7 +11,6 @@ use datafusion::{
     prelude::{SessionContext, col, lit},
 };
 use enrichment_core::evidence::snapshot::{DeltaBinding, EvidenceManifest};
-use serde::{Deserialize, Serialize};
 use std::{path::Path, sync::Arc};
 
 /// Revision of the executable definition, native runtime policy code and exact dependency lock.
@@ -20,76 +19,48 @@ use std::{path::Path, sync::Arc};
 pub fn revision() -> &'static str {
     concat!("search-surfaces/2/", env!("ENR_NATIVE_SOURCE_DIGEST"))
 }
-const SURFACES: [(&str, &str); 2] = [
-    ("api_surface", "symbol_id"),
-    ("fragment_surface", "fragment_id"),
-];
-
-/// A single control row selects both output tables and their complete input offsets.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Checkpoint {
-    pub projection_id: String,
-    pub snapshot_id: String,
-    pub revision: String,
-    pub sequence: u64,
-    pub mode: String,
-    pub predecessor: Option<String>,
-    pub inputs: Vec<DeltaBinding>,
-    pub outputs: Vec<DeltaBinding>,
-}
+pub use enrichment_core::operation::projections::{Checkpoint, ProjectionMode};
+use enrichment_core::{
+    native_union::NativeStruct,
+    operation::projections::{ProjectionCommand, ProjectionDecision, ProjectionIdentity, SURFACES},
+};
 pub(crate) fn schema() -> SchemaRef {
-    let text = |name| Field::new(name, DataType::Utf8, false);
-    let bindings = |name| {
-        Field::new(
-            name,
-            DataType::List(Arc::new(Field::new(
-                "item",
-                crate::projection::publication::binding_type(),
-                false,
-            ))),
-            false,
-        )
-    };
-    Arc::new(Schema::new(vec![
-        text("projection_id"),
-        text("snapshot_id"),
-        text("revision"),
-        Field::new("sequence", DataType::UInt64, false),
-        text("mode"),
-        Field::new("predecessor", DataType::Utf8, true),
-        bindings("inputs"),
-        bindings("outputs"),
-    ]))
+    Arc::new(Schema::new(Checkpoint::fields()))
 }
 pub(crate) fn encode(rows: &[Checkpoint]) -> Result<RecordBatch> {
-    crate::control_jobs::encode(schema(), rows)
+    Ok(Checkpoint::batch(rows)?)
 }
 pub(crate) fn decode(batch: &RecordBatch) -> Result<Vec<Checkpoint>> {
     if batch.num_rows() > 1024 {
         return Err(invalid("projection checkpoint row bound exceeded"));
     }
-    let mut writer = arrow::json::ArrayWriter::new(Vec::new());
-    writer.write(batch)?;
-    writer.finish()?;
-    let rows: Vec<Checkpoint> = serde_json::from_slice(&writer.into_inner()).map_err(external)?;
-    for row in &rows {
-        if row.projection_id != format!("{}/{}", row.snapshot_id, row.revision)
-            || row.inputs.len() != crate::admission::Relation::ALL.len()
-            || row.outputs.len() != SURFACES.len()
-            || ![
-                "initial",
-                "incremental",
-                "revision_rebuild",
-                "source_rebuild",
-                "history_rebuild",
-                "export_rebuild",
-            ]
-            .contains(&row.mode.as_str())
-        {
-            return Err(invalid("invalid projection checkpoint"));
-        }
-    }
-    Ok(rows)
+    let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(batch)?;
+    (0..batch.num_rows())
+        .map(|index| Checkpoint::decode(rows.row(index)).map_err(Into::into))
+        .collect()
+}
+/// Complete native checkpoint admission, shared by every control publication path.
+pub(crate) async fn admission_rules(
+    invariants: &mut crate::invariants::Invariants,
+    session: &SessionContext,
+) -> Result<()> {
+    let checkpoints = session.table("state.records.search_projections").await?;
+    invariants.push(
+        checkpoints
+            .filter(
+                col("projection_id")
+                    .not_eq(enrichment_core::native_key::Key::Projection.expression()),
+            )?
+            .select(vec![col("projection_id")])?,
+        "projection_identity",
+        "catalog_admission",
+    )?;
+    let names = SURFACES
+        .iter()
+        .map(|(name, _)| format!("'{name}'"))
+        .collect::<Vec<_>>()
+        .join(",");
+    invariants.push(session.sql(&format!("WITH outputs AS (SELECT projection_id,unnest(outputs) AS binding FROM state.records.search_projections) SELECT projection_id FROM outputs GROUP BY projection_id HAVING count(*)<>{count} OR count(DISTINCT binding.relation)<>{count} OR count(*) FILTER (WHERE binding.relation NOT IN ({names}))>0", count=SURFACES.len())).await?, "projection_output_set", "catalog_admission")
 }
 
 #[derive(Clone)]
@@ -116,24 +87,61 @@ impl SearchProjection {
         previous: Option<&Checkpoint>,
         export: bool,
     ) -> Result<Checkpoint> {
-        let mode = if export {
-            "export_rebuild"
-        } else if previous.is_none() {
-            "initial"
-        } else if previous.is_some_and(|p| p.revision != revision()) {
-            "revision_rebuild"
-        } else if previous.is_some_and(|p| !ordered_sources(&p.inputs, &manifest.tables)) {
-            "source_rebuild"
-        } else {
-            "incremental"
-        };
+        let mode = self.mode(manifest, previous, export, true).await?;
         match self.prepare_once(manifest, full, previous, mode).await {
-            Err(error) if mode == "incremental" && missing_history(&error) => {
-                self.prepare_once(manifest, full, previous, "history_rebuild")
-                    .await
+            Err(error) if mode == ProjectionMode::Incremental && missing_history(&error) => {
+                self.prepare_once(
+                    manifest,
+                    full,
+                    previous,
+                    self.mode(manifest, previous, export, false).await?,
+                )
+                .await
             }
             result => result,
         }
+    }
+
+    async fn mode(
+        &self,
+        manifest: &EvidenceManifest,
+        previous: Option<&Checkpoint>,
+        export: bool,
+        history_available: bool,
+    ) -> Result<ProjectionMode> {
+        let session = self.runtime.session();
+        session.register_batch(
+            "projection_command",
+            ProjectionCommand::batch(&[ProjectionCommand {
+                revision: revision().into(),
+                prior: previous.cloned(),
+                inputs: manifest.tables.clone(),
+                export,
+                history_available,
+            }])?,
+        )?;
+        let decision = session.sql(r#"
+            WITH previous AS (SELECT unnest(prior.inputs) AS binding FROM projection_command WHERE prior IS NOT NULL),
+            current AS (SELECT unnest(inputs) AS binding FROM projection_command),
+            incompatible AS (
+                SELECT p.binding.relation FROM previous p FULL OUTER JOIN current c ON p.binding.relation=c.binding.relation
+                WHERE p.binding.relation IS NULL OR c.binding.relation IS NULL
+                    OR p.binding.table_uri<>c.binding.table_uri OR p.binding.table_id<>c.binding.table_id
+                    OR p.binding.contract_id<>c.binding.contract_id OR p.binding.version>c.binding.version
+            )
+            SELECT CASE WHEN export THEN 'export_rebuild'
+                WHEN prior IS NULL THEN 'initial'
+                WHEN prior.revision<>revision THEN 'revision_rebuild'
+                WHEN array_length(prior.inputs)<>array_length(inputs) OR incompatible_count>0 THEN 'source_rebuild'
+                WHEN NOT history_available THEN 'history_rebuild' ELSE 'incremental' END AS mode
+            FROM projection_command CROSS JOIN (SELECT count(*) AS incompatible_count FROM incompatible)
+        "#).await?;
+        self.runtime
+            .records::<ProjectionDecision>(decision, 1)
+            .await?
+            .pop()
+            .map(|decision| decision.mode)
+            .ok_or_else(|| invalid("projection decision missing"))
     }
 
     async fn prepare_once(
@@ -141,9 +149,9 @@ impl SearchProjection {
         manifest: &EvidenceManifest,
         full: &SessionContext,
         previous: Option<&Checkpoint>,
-        mode: &str,
+        mode: ProjectionMode,
     ) -> Result<Checkpoint> {
-        let incremental = previous.filter(|_| mode == "incremental");
+        let incremental = previous.filter(|_| mode == ProjectionMode::Incremental);
         let changes = match incremental {
             Some(previous) => Some(
                 self.evidence
@@ -196,11 +204,16 @@ impl SearchProjection {
             );
         }
         Ok(Checkpoint {
-            projection_id: format!("{}/{}", manifest.snapshot_id, revision()),
+            projection_id: enrichment_core::native_key::Key::Projection.record(
+                &ProjectionIdentity {
+                    snapshot_id: manifest.snapshot_id.to_string(),
+                    revision: revision().into(),
+                },
+            )?,
             snapshot_id: manifest.snapshot_id.to_string(),
             revision: revision().into(),
             sequence: 0,
-            mode: mode.into(),
+            mode,
             predecessor: previous.map(|p| p.projection_id.clone()),
             inputs: manifest.tables.clone(),
             outputs,
@@ -244,19 +257,6 @@ impl SearchProjection {
         }
         Ok(tables)
     }
-}
-
-fn ordered_sources(before: &[DeltaBinding], after: &[DeltaBinding]) -> bool {
-    before.len() == after.len()
-        && before.iter().all(|old| {
-            after.iter().any(|new| {
-                old.relation == new.relation
-                    && old.table_uri == new.table_uri
-                    && old.table_id == new.table_id
-                    && old.contract_id == new.contract_id
-                    && old.version <= new.version
-            })
-        })
 }
 
 // The pinned CDF reader reports a pruned log entry as InvalidVersion and a disabled interval

@@ -1,0 +1,124 @@
+delta-arrow-probe
+  deltalake git rev 58f07cd62bfbce3649a7e1c87c696288068ae184
+  arrow 59.3.0 (canonical_extension_types), datafusion 55.1.0
+  scratch root <SCRATCH>
+
+== PB03-A · deltalake::DataType::try_from_arrow(&ArrowDataType) ==
+   Does the Delta kernel have a representation for this Arrow type at all?
+
+   arrow type               accepted   delta type or error
+   ------------------------------------------------------------------------------------
+   Utf8                     true       Primitive(String)
+   Int64                    true       Primitive(Long)
+   Int32                    true       Primitive(Integer)
+   Boolean                  true       Primitive(Boolean)
+   Binary                   true       Primitive(Binary)
+   Timestamp(us,None)       true       Primitive(TimestampNtz)
+   Struct                   true       Struct(StructType { type_name: "struct", fiel…
+   List<Utf8>               true       Array(ArrayType { type_name: "array", element…
+   Map<Utf8,Utf8>           true       Map(MapType { type_name: "map", key_type: Pri…
+   Dictionary(Int32,Utf8)   true       Primitive(String)
+   FixedSizeBinary(32)      true       Primitive(Binary)
+   UInt32                   true       Primitive(Integer)
+   UInt64                   true       Primitive(Long)
+   Utf8View                 true       Primitive(String)
+   BinaryView               true       Primitive(Binary)
+   Float16                  false      Schema error: Invalid data type for Delta Lak…
+   LargeList<Utf8>          true       Array(ArrayType { type_name: "array", element…
+   LargeUtf8                true       Primitive(String)
+   Decimal128(10,2)         true       Primitive(Decimal(DecimalType { precision: 10…
+   Date32                   true       Primitive(Date)
+
+== PB03-B · deltalake::cast::normalize_for_delta(&SchemaRef) ==
+   Signature returns SchemaRef, not Result — so any change here is SILENT.
+
+   arrow type in            arrow type out
+   ------------------------------------------------------------------------------------
+   Utf8                       Utf8
+   Int64                      Int64
+   Int32                      Int32
+   Boolean                    Boolean
+   Binary                     Binary
+   Timestamp(us,None)         Timestamp(µs)
+   Struct                     Struct("start": non-null Int32, "end": non-null I…
+   List<Utf8>                 List(Utf8)
+   Map<Utf8,Utf8>             Map("entries": non-null Struct("keys": non-null U…
+   Dictionary(Int32,Utf8)     Dictionary(Int32, Utf8)
+   FixedSizeBinary(32)        FixedSizeBinary(32)
+   UInt32                     UInt32
+   UInt64                     UInt64
+   Utf8View                   Utf8View
+   BinaryView                 BinaryView
+   Float16                    Float16
+   LargeList<Utf8>            LargeList(Utf8)
+   LargeUtf8                  LargeUtf8
+   Decimal128(10,2)           Decimal128(10, 2)
+   Date32                     Date32
+
+   (* marks a silent rewrite)
+
+== PB03-C · CreateBuilder + WriteBuilder, one table per type ==
+   The path real ingestion takes. This is the authoritative answer.
+
+   arrow type               written    schema read back / error
+   ------------------------------------------------------------------------------------
+   Utf8                     true       Utf8
+   Int64                    true       Int64
+   Int32                    true       Int32
+   Boolean                  true       Boolean
+   Binary                   true       Binary
+   Timestamp(us,None)       true       Timestamp(µs)
+   Struct                   true       Struct("start": non-null Int32, "end": non-nu…
+   List<Utf8>               true       List(Utf8, field: 'element')
+   Map<Utf8,Utf8>           true       Map("key_value": non-null Struct("key": non-n…
+   Dictionary(Int32,Utf8)   true       Utf8
+   FixedSizeBinary(32)      true       Binary
+   UInt32                   true       Int32
+   UInt64                   true       Int64
+   Utf8View                 true       Utf8
+   BinaryView               true       Binary
+   Float16                  false      Schema error: Invalid data type for Delta Lak…
+   LargeList<Utf8>          true       List(Utf8, field: 'element')
+   LargeUtf8                true       Utf8
+   Decimal128(10,2)         true       Decimal128(10, 2)
+   Date32                   true       Date32
+
+== PB01 · Does Arrow extension-type metadata survive a Delta round trip? ==
+   Control: an ordinary metadata key on a second field.
+
+   wrote field `entity_id` metadata : [("ARROW:extension:metadata", "{\"v\":1}"), ("ARROW:extension:name", "codesearch.entity_id")]
+   wrote field `note`      metadata : [("codesearch.family", "rustdoc-json"), ("codesearch.precision", "exact")]
+   after normalize_for_delta         : entity_id=[("ARROW:extension:metadata", "{\"v\":1}"), ("ARROW:extension:name", "codesearch.entity_id")] note=[("codesearch.family", "rustdoc-json"), ("codesearch.precision", "exact")]
+   read back  `entity_id` metadata   : [("ARROW:extension:metadata", "{\"v\":1}"), ("ARROW:extension:name", "codesearch.entity_id")]
+   read back  `note`      metadata   : [("codesearch.family", "rustdoc-json"), ("codesearch.precision", "exact")]
+
+   VERDICT
+     extension metadata survived : true
+     control metadata survived   : true
+     interpretation              : all field metadata round-trips; extension types are a storage property
+
+== PB03 summary ==
+
+   arrow type               kernel    written   normalised to
+   ------------------------------------------------------------------------------------
+   Utf8                     true      true      Utf8
+   Int64                    true      true      Int64
+   Int32                    true      true      Int32
+   Boolean                  true      true      Boolean
+   Binary                   true      true      Binary
+   Timestamp(us,None)       true      true      Timestamp(µs)
+   Struct                   true      true      Struct("start": non-n…
+   List<Utf8>               true      true      List(Utf8)
+   Map<Utf8,Utf8>           true      true      Map("entries": non-nu…
+   Dictionary(Int32,Utf8)   true      true      Dictionary(Int32, Utf…  <-- CONTRADICTS evidence 04 §1
+   FixedSizeBinary(32)      true      true      FixedSizeBinary(32)  <-- CONTRADICTS evidence 04 §1
+   UInt32                   true      true      UInt32  <-- CONTRADICTS evidence 04 §1
+   UInt64                   true      true      UInt64  <-- CONTRADICTS evidence 04 §1
+   Utf8View                 true      true      Utf8View  <-- CONTRADICTS evidence 04 §1
+   BinaryView               true      true      BinaryView  <-- CONTRADICTS evidence 04 §1
+   Float16                  false     false     Float16
+   LargeList<Utf8>          true      true      LargeList(Utf8)  <-- CONTRADICTS evidence 04 §1
+   LargeUtf8                true      true      LargeUtf8  <-- CONTRADICTS evidence 04 §1
+   Decimal128(10,2)         true      true      Decimal128(10, 2)
+   Date32                   true      true      Date32
+

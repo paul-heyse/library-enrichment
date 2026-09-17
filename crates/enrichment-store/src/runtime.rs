@@ -166,12 +166,13 @@ impl OperationContext {
         work: impl std::future::Future<Output = T> + Send + 'static,
     ) -> datafusion::common::runtime::SpawnedTask<T> {
         let work = Box::pin(work);
-        datafusion::common::runtime::SpawnedTask::spawn(async move {
-            match self.0 {
-                Some(operation) => OPERATION.scope(operation, work).await,
-                None => work.await,
-            }
-        })
+        datafusion::common::runtime::SpawnedTask::spawn(self.scope(work))
+    }
+    pub(crate) async fn scope<T>(self, work: impl Future<Output = T>) -> T {
+        match self.0 {
+            Some(operation) => OPERATION.scope(operation, work).await,
+            None => work.await,
+        }
     }
     pub fn run<T>(self, work: impl FnOnce() -> T) -> T {
         match self.0 {
@@ -568,6 +569,7 @@ impl QueryRuntime {
         diagnostics_root: &Path,
         limits: QueryLimits,
     ) -> Result<Self> {
+        crate::task_context::install()?;
         if !(1..=16).contains(&limits.concurrency)
             || !(1..=16).contains(&limits.native.blocking_threads)
             || !(8 * 1024 * 1024..=64 * 1024 * 1024).contains(&limits.native.worker_stack_bytes)
@@ -636,8 +638,43 @@ impl QueryRuntime {
             inner: Arc::new(crate::arrow_contract::NativePlanner),
         });
         let config = template.config().clone();
+        let mut analyzer_rules = template.analyzer().rules.clone();
+        analyzer_rules.insert(
+            0,
+            Arc::new(enrichment_core::native_analysis::SemanticAnalyzer),
+        );
+        let functions = enrichment_core::native_types::ClockMeaning::VALUES
+            .iter()
+            .map(|value| {
+                Arc::new(enrichment_core::native_time::function(Some(
+                    enrichment_core::native_types::ClockMeaning::parse(value)
+                        .expect("declared clock"),
+                )))
+            })
+            .chain(std::iter::once(Arc::new(
+                enrichment_core::native_time::function(None),
+            )))
+            .chain(template.scalar_functions().values().cloned())
+            .chain(std::iter::once(Arc::new(
+                enrichment_core::native_collections::map_entries(),
+            )))
+            .chain(
+                [
+                    enrichment_core::native_version::semver_key(),
+                    enrichment_core::native_version::pep440_value(),
+                    enrichment_core::native_version::pep440_matches(),
+                    enrichment_core::native_url::parts(),
+                    enrichment_core::native_text::position(),
+                ]
+                .into_iter()
+                .map(Arc::new),
+            )
+            .collect();
         let template = SessionStateBuilder::new_from_existing(template)
             .with_config(config)
+            .with_analyzer_rules(analyzer_rules)
+            .with_scalar_functions(functions)
+            .with_extension_type_registry(enrichment_core::native_types::registry()?)
             .with_query_planner(planner)
             .build();
         let mut shared = Self {
@@ -662,6 +699,43 @@ impl QueryRuntime {
         shared.diagnostics =
             crate::telemetry_history::History::start(telemetry, diagnostics_root, pool)?;
         Ok(shared)
+    }
+
+    /// Decode a bounded declared record selection at an effect or transport boundary.
+    /// The native plan owns decisions; generated codecs only project the selected values.
+    pub async fn records<T: enrichment_core::native_union::NativeStruct>(
+        &self,
+        frame: datafusion::dataframe::DataFrame,
+        maximum: usize,
+    ) -> datafusion::common::Result<Vec<T>> {
+        let expected = arrow::datatypes::Schema::new(T::fields());
+        enrichment_core::native_schema::check_input(frame.schema().as_arrow(), &expected)?;
+        for field in expected.fields() {
+            let actual = frame.schema().field_with_unqualified_name(field.name())?;
+            enrichment_core::native_analysis::compatible(actual, field, "typed record decoder")?;
+        }
+        let limit = maximum.checked_add(1).ok_or_else(|| {
+            datafusion::common::DataFusionError::ResourcesExhausted("record bound overflow".into())
+        })?;
+        let output = self.execute(frame.limit(0, Some(limit))?).await?;
+        if output.rows > maximum {
+            return datafusion::common::exec_err!("native record selection exceeds its bound");
+        }
+        let mut records = Vec::with_capacity(output.rows);
+        for batch in &output.batches {
+            for field in expected.fields() {
+                enrichment_core::native_analysis::compatible(
+                    batch.schema().field_with_name(field.name())?,
+                    field,
+                    "physical record decoder",
+                )?;
+            }
+            let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(batch)?;
+            for index in 0..batch.num_rows() {
+                records.push(T::decode(rows.row(index))?);
+            }
+        }
+        Ok(records)
     }
 
     /// Fresh scoped tables with shared spill, memory accounting and metadata cache.
@@ -734,6 +808,15 @@ impl QueryRuntime {
             crate::query::QueryError::DataFusion(error) => error,
             _ => unreachable!("constructed DataFusion failure"),
         }
+    }
+
+    /// Capture a service observation in the same reserved native ingress as query diagnostics.
+    pub fn record_service(&self, observation: enrichment_core::telemetry::ServiceObservation) {
+        self.diagnostics.service(observation);
+    }
+    /// Process-scoped service totals selected from committed native observations.
+    pub async fn service_counters(&self) -> Result<enrichment_core::telemetry::ServiceCounters> {
+        self.diagnostics.service_counters().await
     }
 
     /// Cumulative observed query totals, separate from the bounded recent-plan history.
@@ -863,6 +946,7 @@ impl QueryRuntime {
         let planning = Instant::now();
         let (state, logical) = frame.into_parts();
         let logical = logical.resolve_lambda_variables()?.data;
+        enrichment_core::native_analysis::validate_plan(&logical)?;
         let mut trace =
             crate::query_diagnostics::Trace::new(&logical, self.diagnostics.clone(), start);
         trace.bound(&state);
@@ -965,6 +1049,33 @@ impl QueryRuntime {
     }
 
     /// Execute a domain query with independently declared decoder requirements.
+    pub(crate) async fn admit(&self, invariants: crate::invariants::Invariants) -> Result<()> {
+        use arrow::array::AsArray;
+        let plan = self.native_read(async move { invariants.plan() }).await?;
+        let output = self.execute(plan).await?;
+        for batch in &output.batches {
+            if batch.num_rows() == 0 {
+                continue;
+            }
+            let text = |index| -> Result<&str> {
+                batch
+                    .column(index)
+                    .as_string_opt::<i32>()
+                    .map(|values| values.value(0))
+                    .ok_or_else(|| {
+                        DataFusionError::Internal("native invariant witness is not text".into())
+                    })
+            };
+            return Err(self.failed(crate::preparation::InvariantFailure::error(
+                text(0)?,
+                text(1)?,
+                crate::preparation::witnesses(&[batch.project(&[2])?]),
+            )));
+        }
+        Ok(())
+    }
+
+    /// Execute a domain query with independently declared decoder requirements.
     pub async fn execute_family(
         &self,
         frame: DataFrame,
@@ -983,15 +1094,16 @@ impl QueryRuntime {
             let mut stream = stream;
             let mut batches = Vec::new();
             let mut rows = 0usize;
+            let mut memory = datafusion::common::utils::memory::RecordBatchMemoryCounter::new();
             let mut bytes = 0usize;
             while let Some(batch) = stream.try_next().await? {
                 crate::preparation::physical(&batch.schema(), &expected, "result_batch")?;
                 rows = rows
                     .checked_add(batch.num_rows())
                     .ok_or_else(|| budget("result rows"))?;
-                bytes = bytes
-                    .checked_add(batch.get_array_memory_size())
-                    .ok_or_else(|| budget("result bytes"))?;
+                let previous_bytes = bytes;
+                memory.count_batch(&batch);
+                bytes = memory.memory_usage();
                 if rows > self.limits.result_rows || bytes > self.limits.result_bytes {
                     return Err(if rows > self.limits.result_rows {
                         budget_limit("result rows", rows, self.limits.result_rows)
@@ -999,7 +1111,7 @@ impl QueryRuntime {
                         budget_limit("result Arrow bytes", bytes, self.limits.result_bytes)
                     });
                 }
-                charge_output(batch.get_array_memory_size())?;
+                charge_output(bytes - previous_bytes)?;
                 batches.push(batch);
             }
             drop(stream);

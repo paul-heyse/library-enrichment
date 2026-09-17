@@ -1,0 +1,16 @@
+id: project-sg-deprecated-executable
+language: bash
+severity: hint
+message: "Invoke `ast-grep`, not `sg`."
+note: |
+  `sg` is deprecated in the 0.45 line, and on most Linux systems `/usr/bin/sg` is already taken
+  by the setgroups utility. Which program runs then depends on PATH order, so a script that
+  works on one machine can silently run a completely different binary on another.
+
+  `ast-grep` is also self-documenting in an agent's command trace, where `sg` reads as noise.
+metadata:
+  record: capability-gap
+  capability: invocation
+rule:
+  kind: command
+  regex: '^sg\s'

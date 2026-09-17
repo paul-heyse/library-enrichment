@@ -4,9 +4,6 @@
 //! explanations, never for essential machine state. Everything here is Rust-owned; the Python
 //! boundary sees it only through the generated schemas.
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
 use crate::canonical;
 
 pub mod catalog;
@@ -20,243 +17,129 @@ pub mod relational;
 pub mod snapshot;
 pub mod text;
 
+pub use relational::TextFragment;
+
 pub use model::{
-    Availability, AvailabilityStatus, Deprecated, EvidenceFragment, FragmentKind,
-    ObservedConfiguration, RelationKind, RequestedConfiguration, SnapshotCounts, Symbol,
-    SymbolKind,
+    Availability, AvailabilityStatus, Deprecated, FragmentKind, ObservedConfiguration,
+    RelationKind, RequestedConfiguration, SnapshotCounts, SymbolHeader, SymbolKind,
 };
 
+crate::native_vocabulary! {
 /// The kinds of evidence a producer can require or yield, and that `coverage.indexed` and
 /// `coverage.missing` name.
 ///
 /// The values are, in order: `registry_metadata`, `crate_source`,
 /// `documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,
 /// `examples`, `release_notes`, `source_excerpts`.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum EvidenceKind {
-    RegistryMetadata,
-    CrateSource,
-    DocumentationBuildConfig,
-    HostedRustdocJson,
-    PublicApi,
-    Documentation,
-    Examples,
-    ReleaseNotes,
-    SourceExcerpts,
-    DistributionSource,
-    Stubs,
-    Inventory,
-    RuntimeApi,
-    SemanticQueries,
-    UsageProbes,
-}
-
-impl EvidenceKind {
-    pub const ALL: [Self; 15] = [
-        Self::RegistryMetadata,
-        Self::CrateSource,
-        Self::DocumentationBuildConfig,
-        Self::HostedRustdocJson,
-        Self::PublicApi,
-        Self::Documentation,
-        Self::Examples,
-        Self::ReleaseNotes,
-        Self::SourceExcerpts,
-        Self::DistributionSource,
-        Self::Stubs,
-        Self::Inventory,
-        Self::RuntimeApi,
-        Self::SemanticQueries,
-        Self::UsageProbes,
-    ];
-    /// Parse the one canonical evidence-kind vocabulary.
-    #[must_use]
-    pub fn parse(value: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|v| v.as_str() == value)
-    }
-    /// The `coverage` spelling of this kind.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::RegistryMetadata => "registry_metadata",
-            Self::CrateSource => "crate_source",
-            Self::DocumentationBuildConfig => "documentation_build_config",
-            Self::HostedRustdocJson => "hosted_rustdoc_json",
-            Self::PublicApi => "public_api",
-            Self::Documentation => "documentation",
-            Self::Examples => "examples",
-            Self::ReleaseNotes => "release_notes",
-            Self::SourceExcerpts => "source_excerpts",
-            Self::DistributionSource => "distribution_source",
-            Self::Stubs => "stubs",
-            Self::Inventory => "inventory",
-            Self::RuntimeApi => "runtime_api",
-            Self::SemanticQueries => "semantic_queries",
-            Self::UsageProbes => "usage_probes",
-        }
+    #[derive(Hash, PartialOrd, Ord)]
+    #[schemars(inline)]
+    pub enum EvidenceKind {
+        RegistryMetadata = "registry_metadata",
+        CrateSource = "crate_source",
+        DocumentationBuildConfig = "documentation_build_config",
+        HostedRustdocJson = "hosted_rustdoc_json",
+        PublicApi = "public_api",
+        Documentation = "documentation",
+        Examples = "examples",
+        ReleaseNotes = "release_notes",
+        SourceExcerpts = "source_excerpts",
+        DistributionSource = "distribution_source",
+        Stubs = "stubs",
+        Inventory = "inventory",
+        RuntimeApi = "runtime_api",
+        SemanticQueries = "semantic_queries",
+        UsageProbes = "usage_probes",
     }
 }
 
+crate::native_vocabulary! {
 /// Why an expected kind of evidence is absent. Each reason is a distinct fact (§10): a
 /// network failure, a missing upstream document, an unsupported format and a policy refusal
 /// call for different next actions.
 ///
 /// The values are, in order: `hosted_json_missing`, `hosted_json_unsupported`,
 /// `upstream_unavailable`, `policy_denied`, `extraction_failed`, `not_attempted`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum GapReason {
-    HostedJsonMissing,
-    HostedJsonUnsupported,
-    UpstreamUnavailable,
-    PolicyDenied,
-    ExtractionFailed,
-    NotAttempted,
-}
-
-impl GapReason {
-    /// Canonical token shared by Arrow and wire projections.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::HostedJsonMissing => "hosted_json_missing",
-            Self::HostedJsonUnsupported => "hosted_json_unsupported",
-            Self::UpstreamUnavailable => "upstream_unavailable",
-            Self::PolicyDenied => "policy_denied",
-            Self::ExtractionFailed => "extraction_failed",
-            Self::NotAttempted => "not_attempted",
-        }
-    }
-
-    /// Parse a canonical gap reason, rejecting unknown spellings.
-    #[must_use]
-    pub fn parse(value: &str) -> Option<Self> {
-        [
-            Self::HostedJsonMissing,
-            Self::HostedJsonUnsupported,
-            Self::UpstreamUnavailable,
-            Self::PolicyDenied,
-            Self::ExtractionFailed,
-            Self::NotAttempted,
-        ]
-        .into_iter()
-        .find(|v| v.as_str() == value)
+    #[derive(Hash)]
+    #[schemars(inline)]
+    pub enum GapReason {
+        HostedJsonMissing = "hosted_json_missing",
+        HostedJsonUnsupported = "hosted_json_unsupported",
+        UpstreamUnavailable = "upstream_unavailable",
+        PolicyDenied = "policy_denied",
+        ExtractionFailed = "extraction_failed",
+        NotAttempted = "not_attempted",
     }
 }
 
+crate::native_struct! {
 /// One piece of expected evidence that is absent, with why and what would supply it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Gap {
-    /// What is missing.
-    pub kind: EvidenceKind,
-    /// Why.
-    pub reason: GapReason,
-    /// Human-readable detail, e.g. the format version that was refused.
-    pub detail: String,
-    /// The producer and profile that would supply it, when one exists.
-    pub planned_fallback: Option<PlannedFallback>,
+    pub struct Gap {
+        kind: EvidenceKind => crate::native_union::Rule::Text,
+        reason: GapReason => crate::native_union::Rule::Text,
+        detail: String => crate::native_union::Rule::Text,
+        planned_fallback: Option<PlannedFallback> => crate::native_union::Rule::Text,
+    }
+}
+crate::native_struct! {
+    pub struct PlannedFallback {
+        producer: String => crate::native_union::Rule::NonEmpty,
+        profile: crate::policy::ExecutionProfile => crate::native_union::Rule::Text,
+        enabled: bool => crate::native_union::Rule::Text,
+        next_action: String => crate::native_union::Rule::NonEmpty,
+    }
 }
 
-/// A producer that could supply missing evidence, and whether policy currently allows it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct PlannedFallback {
-    /// Producer name.
-    pub producer: String,
-    /// The execution profile it needs.
-    pub profile: String,
-    /// Whether configuration currently enables that profile.
-    pub enabled: bool,
-    /// What a caller or operator would do to make it run.
-    pub next_action: String,
-}
-
+crate::native_vocabulary! {
 /// What kind of upstream object an artifact is.
 ///
 /// The values are, in order: `registry_index_entry`, `registry_version_metadata`,
 /// `crate_tarball`, `rustdoc_json`, `cargo_manifest`, `readme`, `changelog`, `source_file`,
 /// `other`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
 pub enum ArtifactKind {
-    RegistryIndexEntry,
-    RegistryVersionMetadata,
-    CrateTarball,
-    RustdocJson,
-    CargoManifest,
-    Readme,
-    Changelog,
-    SourceFile,
-    Other,
+    RegistryIndexEntry = "registry_index_entry",
+    RegistryVersionMetadata = "registry_version_metadata",
+    CrateTarball = "crate_tarball",
+    RustdocJson = "rustdoc_json",
+    CargoManifest = "cargo_manifest",
+    Readme = "readme",
+    Changelog = "changelog",
+    SourceFile = "source_file",
+    Other = "other",
+}
 }
 
-impl ArtifactKind {
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::RegistryIndexEntry => "registry_index_entry",
-            Self::RegistryVersionMetadata => "registry_version_metadata",
-            Self::CrateTarball => "crate_tarball",
-            Self::RustdocJson => "rustdoc_json",
-            Self::CargoManifest => "cargo_manifest",
-            Self::Readme => "readme",
-            Self::Changelog => "changelog",
-            Self::SourceFile => "source_file",
-            Self::Other => "other",
-        }
-    }
-
-    #[must_use]
-    pub fn parse(value: &str) -> Option<Self> {
-        Some(match value {
-            "registry_index_entry" => Self::RegistryIndexEntry,
-            "registry_version_metadata" => Self::RegistryVersionMetadata,
-            "crate_tarball" => Self::CrateTarball,
-            "rustdoc_json" => Self::RustdocJson,
-            "cargo_manifest" => Self::CargoManifest,
-            "readme" => Self::Readme,
-            "changelog" => Self::Changelog,
-            "source_file" => Self::SourceFile,
-            "other" => Self::Other,
-            _ => return None,
-        })
-    }
-}
-
+crate::native_struct! {
 /// An immutable, content-addressed artifact (§6.1).
 ///
 /// The digest identifies immutable bytes. Every acquisition keeps its own exact receipt,
 /// including source locator and retrieval time, in the native Delta catalog. Evidence resolves
 /// provenance through its selected attempt; byte delivery resolves the complete digest.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Artifact {
     /// `art_<64 hex>`, derived from the complete digest; used by `read_artifact`.
-    pub artifact_id: String,
+    artifact_id: String => crate::native_union::Rule::ArtifactIdentity { digest: "sha256".into() },
     /// Full SHA-256 of the stored bytes, lower-case hex.
-    pub sha256: String,
+    sha256: String => crate::native_union::Rule::Sha256,
     /// Media type of the stored bytes (after any transport decompression).
-    pub media_type: String,
+    media_type: String => crate::native_union::Rule::NonEmpty,
     /// Size of the stored bytes.
-    pub size_bytes: u64,
+    size_bytes: u64 => crate::native_union::Rule::Text,
     /// What the artifact is.
-    pub kind: ArtifactKind,
+    kind: ArtifactKind => crate::native_union::Rule::Text,
     /// Where it was requested from.
-    pub source_uri: String,
+    source_uri: String => crate::native_union::Rule::NonEmpty,
     /// Where it was actually served from after redirects, when different.
-    pub final_url: Option<String>,
+    final_url: Option<String> => crate::native_union::Rule::Text,
     /// When it was retrieved, RFC 3339. Provenance only; never part of any identity.
-    pub retrieved_at: String,
+    retrieved_at: crate::native_time::AcquisitionTime => crate::native_union::Rule::Text,
     /// HTTP validator, when the server supplied one.
-    pub etag: Option<String>,
+    etag: Option<String> => crate::native_union::Rule::Text,
     /// HTTP validator, when the server supplied one.
-    pub last_modified: Option<String>,
+    last_modified: Option<String> => crate::native_union::Rule::Text,
     /// Transport compression that was removed before storage, e.g. `zstd`.
-    pub compression: Option<String>,
+    compression: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 /// The number of hex digits of the digest kept in an artifact identity.
@@ -290,7 +173,7 @@ impl Artifact {
         kind: ArtifactKind,
         media_type: &str,
         source_uri: &str,
-        retrieved_at: &str,
+        retrieved_at: crate::native_time::AcquisitionTime,
     ) -> Self {
         let sha256 = canonical::sha256_hex(bytes);
         Self {
@@ -301,7 +184,7 @@ impl Artifact {
             kind,
             source_uri: source_uri.to_owned(),
             final_url: None,
-            retrieved_at: retrieved_at.to_owned(),
+            retrieved_at,
             etag: None,
             last_modified: None,
             compression: None,
@@ -315,7 +198,13 @@ mod tests {
 
     #[test]
     fn an_artifact_id_is_derived_from_the_digest() {
-        let artifact = Artifact::describe(b"abc", ArtifactKind::Other, "text/plain", "x://y", "t");
+        let artifact = Artifact::describe(
+            b"abc",
+            ArtifactKind::Other,
+            "text/plain",
+            "x://y",
+            crate::native_time::AcquisitionTime::from_micros(1).unwrap(),
+        );
         assert_eq!(
             artifact.sha256,
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
@@ -331,3 +220,5 @@ mod tests {
 }
 
 pub mod arrow_model;
+
+pub mod declarations;

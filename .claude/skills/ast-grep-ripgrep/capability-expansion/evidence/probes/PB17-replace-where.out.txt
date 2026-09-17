@@ -1,0 +1,24 @@
+PB17 — a run-scoped overwrite, on a table shaped like a canonical one
+
+  table     entity_id/entity_key/precision_rank carry ARROW:extension:name
+  constraint `precision_rank BETWEEN 0 AND 3`
+  predicate  run_id = 'run2'
+
+  A  run1 scoped -> run2 scoped        run1 must SURVIVE
+      write run1 (into EMPTY)   version=2  run1=2                        OK
+      write run2 scoped         version=3  run1=2 run2=2                 OK
+
+  B  run1 scoped -> run2 UNSCOPED      CONTROL: run1 must be DESTROYED
+      write run2 unscoped       version=3  run2=2                        OK
+
+  C  batch carries a foreign run_id    must be REJECTED
+      write mixed run_ids       version=2  run1=2                        ERR: Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+
+  D  re-run arm A's second write       rows unchanged, version advances
+      before re-run             version=3  run1=2 run2=2
+      after re-run              version=4  run1=2 run2=2                 OK
+
+  ---
+  CONFIRMED  a run-scoped overwrite preserves other runs, rejects a
+             misattributed batch, and is idempotent in content.
+             The control destroyed what the treatment preserved.

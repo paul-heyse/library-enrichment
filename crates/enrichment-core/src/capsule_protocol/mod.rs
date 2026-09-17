@@ -15,47 +15,46 @@ pub const HEADER_LIMIT: usize = 16 * 1024 * 1024;
 pub const ENTRY_LIMIT: usize = 100_000;
 pub const INVENTORY_METADATA_LIMIT: usize = HEADER_LIMIT / 2;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
 pub enum Mode {
-    Command,
-    LanguageServer,
+    Command = "command",
+    LanguageServer = "language_server",
+}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
 pub enum OutputKind {
-    File,
-    Directory,
+    File = "file",
+    Directory = "directory",
+}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct Operation {
-    pub version: u32,
-    pub mode: Mode,
-    pub argv: Vec<String>,
-    pub inputs: inventory::Inventory,
-    pub outputs: BTreeMap<String, OutputKind>,
-    pub data_bytes: u64,
-    pub output_bytes: usize,
-    pub deadline_millis: u64,
+    version: u32 => crate::native_union::Rule::Text,
+    mode: Mode => crate::native_union::Rule::Text,
+    argv: Vec<String> => crate::native_union::Rule::Sequence,
+    inputs: inventory::Inventory => crate::native_union::Rule::Map,
+    outputs: BTreeMap<String, OutputKind> => crate::native_union::Rule::Map,
+    data_bytes: u64 => crate::native_union::Rule::Text,
+    output_bytes: usize => crate::native_union::Rule::Text,
+    deadline_millis: u64 => crate::native_union::Rule::Text,
     /// Host-selected image, helper and containment description digest.
-    pub binding: String,
+    binding: String => crate::native_union::Rule::Text,
+}
 }
 
 impl Operation {
     pub fn binding(image: &str, containment: &str) -> datafusion::error::Result<String> {
-        #[derive(Serialize)]
-        struct Input<'a> {
-            image: &'a str,
-            containment: &'a str,
-        }
-        crate::native_key::Key::ProcessBinding.value(&Input { image, containment })
+        crate::native_key::Key::ProcessBinding.record(&crate::operation::jobs::ProcessBinding {
+            image: image.into(),
+            containment: containment.into(),
+        })
     }
+
     pub fn id(&self) -> String {
         crate::native_key::Key::ProcessOperation
-            .value(self)
+            .record(self)
             .expect("declared bounded executor Arrow contract")
     }
 

@@ -5,66 +5,81 @@
 //! lookup as an upgrade request").
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::identity::{Ecosystem, ResearchMode};
 
+crate::native_vocabulary! {
 /// The freshness options (§3.3).
 ///
 /// The values are, in order: `cache_ok`, `revalidate`, `offline`. `cache_ok` reuses a recorded
 /// exact resolution without age expiry; `revalidate` consults the registry; `offline` never opens
 /// a socket and fails clearly when nothing is recorded.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash,Default)]
 #[schemars(inline)]
 pub enum FreshnessMode {
     #[default]
-    CacheOk,
-    Revalidate,
-    Offline,
+    CacheOk = "cache_ok",
+    Revalidate = "revalidate",
+    Offline = "offline",
+}
 }
 
+crate::native_struct! {
 /// What `resolve_library` asks for.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
 pub struct ResolveRequest {
     /// Which ecosystem.
-    pub ecosystem: Ecosystem,
+    ecosystem: Ecosystem => crate::native_union::Rule::Text,
     /// Package name as the caller spelled it.
-    pub name: String,
+    #[schemars(length(min = 1))]
+    name: String => crate::native_union::Rule::NonEmpty,
     /// Exact version. Omitted only for an explicit upstream question.
-    pub version: Option<String>,
+    #[serde(default)]
+    version: Option<String> => crate::native_union::Rule::Text,
     /// Canonical public GitHub repository URL for revision mode.
-    pub repository: Option<String>,
+    #[serde(default)]
+    repository: Option<String> => crate::native_union::Rule::Text,
     /// Full immutable commit SHA; exclusive with version.
-    pub revision: Option<String>,
+    #[serde(default)]
+    revision: Option<String> => crate::native_union::Rule::Text,
     /// Explicit package root within the repository; omitted means root.
-    pub package_subdir: Option<String>,
+    #[serde(default)]
+    package_subdir: Option<String> => crate::native_union::Rule::Text,
     /// Research mode; defaults to `project` when a version is given and `upstream` otherwise.
-    pub mode: Option<ResearchMode>,
+    #[serde(default)]
+    mode: Option<ResearchMode> => crate::native_union::Rule::Text,
     /// Features the caller's project enables, when known.
-    pub features: Option<Vec<String>>,
+    #[serde(default)]
+    features: Option<Vec<String>> => crate::native_union::Rule::Sequence,
     /// Whether the caller's project enables default features, when known.
-    pub default_features: Option<bool>,
+    #[serde(default)]
+    default_features: Option<bool> => crate::native_union::Rule::Text,
     /// The caller's target triple, when known.
-    pub target: Option<String>,
+    #[serde(default)]
+    target: Option<String> => crate::native_union::Rule::Text,
     /// Exact analyzed Python interpreter version; never inferred from the worker.
-    pub python_version: Option<String>,
+    #[serde(default)]
+    python_version: Option<String> => crate::native_union::Rule::Text,
     /// Explicit Python extras, distinct from Rust feature selection.
-    pub extras: Option<Vec<String>>,
+    #[serde(default)]
+    extras: Option<Vec<String>> => crate::native_union::Rule::Sequence,
     /// Freshness policy for this call.
-    pub freshness: FreshnessMode,
+    #[serde(default)]
+    freshness: FreshnessMode => crate::native_union::Rule::Text,
     /// Whether a prerelease may satisfy an unversioned request.
-    pub allow_prerelease: bool,
+    #[serde(default)]
+    allow_prerelease: bool => crate::native_union::Rule::Text,
     /// Whether a yanked release may be resolved.
-    pub allow_yanked: bool,
+    #[serde(default)]
+    allow_yanked: bool => crate::native_union::Rule::Text,
     /// Whether the caller accepts a local rustdoc build when hosted JSON is unusable.
     ///
     /// Hosted docs.rs JSON comes first, always (§4.1). This opts into the §4.4 fallback, which
     /// compiles third-party code on a dated nightly inside a capsule and can take minutes. It is
     /// a request, not a grant: the `build` profile must also be enabled and its images qualified,
     /// or the answer is `POLICY_DENIED` with the setup action.
-    pub allow_local_build: bool,
+    #[serde(default)]
+    allow_local_build: bool => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for ResolveRequest {
@@ -174,100 +189,132 @@ impl ResolveRequest {
     }
 }
 
+crate::native_struct! {
 /// What `library_overview` asks for.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
 pub struct OverviewRequest {
     /// Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.
-    pub discovery: Option<Vec<crate::wire::research::DiscoverySelection>>,
+    #[serde(default)]
+    discovery: Option<Vec<crate::wire::research::DiscoverySelection>> => crate::native_union::Rule::Text,
     /// The context from `resolve_library`.
-    pub context_id: String,
+    #[schemars(length(min = 1))]
+    context_id: String => crate::native_union::Rule::NonEmpty,
     /// A specific snapshot; the context's current one when omitted.
-    pub snapshot_id: Option<String>,
+    #[serde(default)]
+    snapshot_id: Option<String> => crate::native_union::Rule::Text,
     /// Narrow to one module subtree.
-    pub area: Option<String>,
+    #[serde(default)]
+    area: Option<String> => crate::native_union::Rule::Text,
     /// Cap on child entries per namespace; the configured limit bounds it.
-    pub max_items: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1))]
+    max_items: Option<usize> => crate::native_union::Rule::Text,
     /// Advisory byte budget; the configured inline budget bounds it.
-    pub max_bytes: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1024))]
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// What `search_evidence` asks for.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
 pub struct SearchRequest {
     /// The context from `resolve_library`.
-    pub context_id: String,
+    #[schemars(length(min = 1))]
+    context_id: String => crate::native_union::Rule::NonEmpty,
     /// A specific snapshot; the context's current one when omitted.
-    pub snapshot_id: Option<String>,
+    #[serde(default)]
+    snapshot_id: Option<String> => crate::native_union::Rule::Text,
     /// The query.
-    pub query: String,
+    #[schemars(length(min = 1))]
+    query: String => crate::native_union::Rule::NonEmpty,
     /// Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.
-    pub kinds: Option<Vec<String>>,
+    #[serde(default)]
+    kinds: Option<Vec<String>> => crate::native_union::Rule::Text,
     /// Restrict symbol/fragment subjects to this namespace subtree.
-    pub area: Option<String>,
+    #[serde(default)]
+    area: Option<String> => crate::native_union::Rule::Text,
     /// Continue a previous page.
-    pub cursor: Option<String>,
+    #[serde(default)]
+    cursor: Option<String> => crate::native_union::Rule::Text,
     /// Page size; the configured limit bounds it.
-    pub max_items: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1))]
+    max_items: Option<usize> => crate::native_union::Rule::Text,
     /// Byte budget for the page; the configured inline budget bounds it.
-    pub max_bytes: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1024))]
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// How much `inspect_symbol` retrieves.
 ///
 /// What `inspect_symbol` asks for.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
 pub struct InspectRequest {
     /// The context from `resolve_library`.
-    pub context_id: String,
+    #[schemars(length(min = 1))]
+    context_id: String => crate::native_union::Rule::NonEmpty,
     /// A specific snapshot; the context's current one when omitted.
-    pub snapshot_id: Option<String>,
+    #[serde(default)]
+    snapshot_id: Option<String> => crate::native_union::Rule::Text,
     /// A qualified path, or a bare name when unambiguous.
-    pub symbol_path: String,
+    #[schemars(length(min = 1))]
+    symbol_path: String => crate::native_union::Rule::NonEmpty,
     /// Select one definition at this path, using an inspection candidate or search result.
-    pub definition_id: Option<String>,
+    #[serde(default)]
+    definition_id: Option<String> => crate::native_union::Rule::Text,
     /// One bounded preset or explicit independently paged aspects.
-    pub selection: crate::wire::ResearchSelection,
+    #[serde(default)]
+    selection: crate::wire::ResearchSelection => crate::native_union::Rule::Text,
     /// Byte budget; the configured inline budget bounds it.
-    pub max_bytes: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1024))]
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
     /// Retained execution selection and explicit execution intent (ADR-0026).
-    pub execution: Option<InspectionOptions>,
+    #[serde(default)]
+    execution: Option<InspectionOptions> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_vocabulary! {
 /// Reading retained evidence has no execution effects or qualification prerequisite.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum InspectionIntent {
     #[default]
-    Retained,
-    ExecuteOnMiss,
-    Rerun,
+    Retained = "retained",
+    ExecuteOnMiss = "execute_on_miss",
+    Rerun = "rerun",
+}
 }
 
+crate::native_struct! {
 /// A finite inspection request, never a shell command or arbitrary LSP method.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
+#[serde(default)]
 pub struct InspectionOptions {
-    pub intent: InspectionIntent,
+    intent: InspectionIntent => crate::native_union::Rule::Text,
     /// Required only for execution: build for semantics, runtime for runtime objects.
-    pub profile: Option<crate::policy::ExecutionProfile>,
+    profile: Option<crate::policy::ExecutionProfile> => crate::native_union::Rule::Text,
     /// Omitted uses the selected symbol's generated consumer.
-    pub snippet: Option<String>,
+    snippet: Option<String> => crate::native_union::Rule::Text,
     /// Advanced override; zero-based UTF-8 byte position at a character boundary.
-    pub position: Option<crate::evidence::execution::Utf8Position>,
+    position: Option<crate::evidence::execution::Utf8Position> => crate::native_union::Rule::Text,
     /// Empty selects hover, definition, references and diagnostics for semantic inspection.
-    pub methods: Vec<crate::evidence::execution::SemanticMethod>,
+    methods: Vec<crate::evidence::execution::SemanticMethod> => crate::native_union::Rule::Sequence,
     /// Explicit Python selection. Import and introspection hooks may execute in the runtime capsule.
-    pub runtime: Option<RuntimeSelection>,
+    runtime: Option<RuntimeSelection> => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct RuntimeSelection {
-    pub module: String,
-    pub attributes: Vec<String>,
+    module: String => crate::native_union::Rule::Text,
+    attributes: Vec<String> => crate::native_union::Rule::Sequence,
+}
 }
 
 impl InspectionOptions {
@@ -326,38 +373,46 @@ impl InspectionOptions {
     }
 }
 
+crate::native_struct! {
 /// What `read_artifact` asks for.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
 pub struct ReadArtifactRequest {
     /// A service-issued artifact handle.
-    pub artifact_id: String,
+    #[schemars(length(min = 1))]
+    artifact_id: String => crate::native_union::Rule::NonEmpty,
     /// One typed result projection or Markdown heading, instead of the complete artifact.
-    pub section: Option<crate::wire::research::ArtifactSection>,
+    #[serde(default)]
+    section: Option<crate::wire::research::ArtifactSection> => crate::native_union::Rule::Text,
     /// Continue a previous read.
-    pub cursor: Option<String>,
+    #[serde(default)]
+    cursor: Option<String> => crate::native_union::Rule::Text,
     /// Byte budget for this slice; the configured inline budget bounds it.
-    pub max_bytes: Option<usize>,
+    #[serde(default)]
+    #[schemars(range(min = 1024))]
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Compare a pinned snapshot pair, or explicitly acquire a version pair first.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
+#[serde(default)]
 pub struct CompareRequest {
     /// Continue alternatives within one changed key, independently of the changed-key page.
-    pub alternative_cursor: Option<String>,
-    pub before_context_id: Option<String>,
-    pub after_context_id: Option<String>,
-    pub before_snapshot_id: Option<String>,
-    pub after_snapshot_id: Option<String>,
-    pub ecosystem: Option<Ecosystem>,
-    pub name: Option<String>,
-    pub from_version: Option<String>,
-    pub to_version: Option<String>,
-    pub scopes: Option<Vec<crate::compare::Scope>>,
-    pub cursor: Option<String>,
-    pub max_items: Option<usize>,
-    pub max_bytes: Option<usize>,
+    alternative_cursor: Option<String> => crate::native_union::Rule::Text,
+    before_context_id: Option<String> => crate::native_union::Rule::Text,
+    after_context_id: Option<String> => crate::native_union::Rule::Text,
+    before_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    after_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    ecosystem: Option<Ecosystem> => crate::native_union::Rule::Text,
+    name: Option<String> => crate::native_union::Rule::Text,
+    from_version: Option<String> => crate::native_union::Rule::Text,
+    to_version: Option<String> => crate::native_union::Rule::Text,
+    scopes: Option<Vec<crate::compare::Scope>> => crate::native_union::Rule::Sequence,
+    cursor: Option<String> => crate::native_union::Rule::Text,
+    max_items: Option<usize> => crate::native_union::Rule::Text,
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
 impl CompareRequest {
@@ -398,44 +453,60 @@ impl CompareRequest {
     }
 }
 
+crate::native_struct! {
 /// What the snapshot-manifest resource asks for.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+#[derive(Default)]
 pub struct ManifestRequest {
     /// The snapshot to describe.
-    pub snapshot_id: String,
+    #[schemars(length(min = 1))]
+    snapshot_id: String => crate::native_union::Rule::NonEmpty,
+}
 }
 
-/// Authoritative request schemas for implemented research methods.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "method", content = "params")]
-pub enum ResearchRequest {
-    #[serde(rename = "service_status")]
-    ServiceStatus(StatusRequest),
-    #[serde(rename = "verify_usage")]
-    Verify(crate::execution::VerifyRequest),
-    #[serde(rename = "job_control")]
-    Job(crate::execution::JobRequest),
-    #[serde(rename = "compare_releases")]
-    Compare(CompareRequest),
-    #[serde(rename = "resolve_library")]
-    Resolve(ResolveRequest),
-    #[serde(rename = "library_overview")]
-    Overview(OverviewRequest),
-    #[serde(rename = "search_evidence")]
-    Search(SearchRequest),
-    #[serde(rename = "inspect_symbol")]
-    Inspect(InspectRequest),
-    #[serde(rename = "read_artifact")]
-    ReadArtifact(ReadArtifactRequest),
-    #[serde(rename = "snapshot_manifest")]
-    SnapshotManifest(ManifestRequest),
+macro_rules! research_operations {
+    ($($variant:ident($input:ty) = $name:literal => ($output:ty,$rpc:literal,$description:literal,$effect:ident,$published:literal)),* $(,)?) => {
+        crate::native_payload! { @tag "method", "params";
+            /// Every operation shares its native field, wire and MCP binding declaration.
+            #[derive(JsonSchema)]
+            pub enum ResearchRequest { $($variant($input) = $name),* }
+        }
+        /// Generated transport catalog, emitted with the request schema.
+        pub fn operation_bindings() -> Vec<serde_json::Value> {
+            vec![$(crate::wire::bindings::binding::<$input,$output>(
+                $name,$rpc,$description,crate::wire::bindings::Effect::$effect,$published
+            )),*]
+        }
+    };
+}
+research_operations! {
+    Resolve(ResolveRequest) = "resolve_library" => (crate::wire::data::ResolveData,"library.resolve","Establish exact identity and environment before research.",Acquire,true),
+    Overview(OverviewRequest) = "library_overview" => (crate::wire::data::OverviewData,"library.overview","Inspect published library capabilities, coverage and environment.",Read,true),
+    Search(SearchRequest) = "search_evidence" => (crate::wire::data::SearchData,"evidence.search","Find bounded evidence with native ranking and provenance.",Read,true),
+    Inspect(InspectRequest) = "inspect_symbol" => (crate::wire::data::InspectData,"symbol.inspect","Inspect a symbol and requested aspects; execution requires explicit intent and native authorization.",Execute,true),
+    Compare(CompareRequest) = "compare_releases" => (crate::wire::data::CompareData,"library.compare","Compare exact evidence scopes with explicit coverage and environment confounders.",Acquire,true),
+    Verify(crate::execution::VerifyRequest) = "verify_usage" => (crate::execution::VerificationData,"usage.verify","Test a proposed usage in an authorized isolated environment.",Execute,true),
+    ReadArtifact(ReadArtifactRequest) = "read_artifact" => (crate::wire::data::ArtifactSliceData,"artifact.read","Read bounded immutable content or an independently retained result section.",Read,true),
+    Job(crate::execution::JobRequest) = "job_control" => (crate::execution::JobData,"job.control","Observe, wait for or cancel your interest in durable work.",Execute,true),
+    ServiceStatus(StatusRequest) = "service_status" => (crate::wire::status::StatusData,"service.status","Inspect readiness and capabilities without indexing.",Read,true),
+    SnapshotManifest(ManifestRequest) = "snapshot_manifest" => (crate::wire::data::ManifestData,"snapshot.manifest","Read an exact published snapshot manifest.",Read,false),
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+/// The request schema also carries the generated transport catalog, outside its validation keywords.
+pub fn request_schema() -> serde_json::Value {
+    let mut schema = schemars::generate::SchemaSettings::draft2020_12()
+        .into_generator()
+        .into_root_schema_for::<ResearchRequest>()
+        .to_value();
+    schema["x-enrichment-operations"] = serde_json::Value::Array(operation_bindings());
+    schema
+}
+
+crate::native_struct! {
+#[derive(Default)]
+#[serde(default)]
 pub struct StatusRequest {
-    pub component: Option<String>,
+    component: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 #[cfg(test)]

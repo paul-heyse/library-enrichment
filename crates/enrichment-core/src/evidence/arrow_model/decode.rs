@@ -1,14 +1,11 @@
 use crate::evidence::{
-    Deprecated, SymbolKind,
+    SymbolKind,
     path::PublicPath,
     relational::{
-        ApiObservation, ApiOrigin, ApiPayload, Definition, FactSource, Locator, PublicBinding,
-        PythonDetails, SubjectRef,
+        ApiObservation, ApiOrigin, ApiPayload, Definition, FactSource, PublicBinding, SubjectRef,
     },
 };
 use crate::identity::Ecosystem;
-use crate::producer::python::Publicness;
-use crate::wire::{EvidenceClass, SourceVersionMatch};
 use arrow::error::ArrowError;
 use arrow::record_batch::RecordBatch;
 
@@ -71,240 +68,18 @@ pub fn bindings(batch: &RecordBatch) -> Result<Vec<PublicBinding>, ArrowError> {
 }
 
 pub fn subject(r: Row<'_>) -> Result<SubjectRef, ArrowError> {
-    Ok(match r.text("kind")? {
-        "symbol" => {
-            r.variant(&["symbol_id"])?;
-            SubjectRef::Symbol {
-                symbol_id: r.text("symbol_id")?.into(),
-            }
-        }
-        "definition" => {
-            r.variant(&["definition_id"])?;
-            SubjectRef::Definition {
-                definition_id: r.text("definition_id")?.into(),
-            }
-        }
-        "library" => {
-            r.variant(&["release_id"])?;
-            SubjectRef::Library {
-                release_id: r.text("release_id")?.into(),
-            }
-        }
-        "feature" => {
-            r.variant(&["feature"])?;
-            SubjectRef::Feature {
-                name: r.text("feature")?.into(),
-            }
-        }
-        "document" => {
-            r.variant(&["artifact_id", "heading"])?;
-            SubjectRef::Document {
-                artifact_id: r.text("artifact_id")?.into(),
-                heading: r.text("heading")?.into(),
-            }
-        }
-        "example" => {
-            r.variant(&["artifact_id", "path"])?;
-            SubjectRef::Example {
-                artifact_id: r.text("artifact_id")?.into(),
-                path: r.text("path")?.into(),
-            }
-        }
-        _ => return Err(invalid("unknown subject variant")),
-    })
-}
-
-fn small_number(r: Row<'_>, field: &str) -> Result<u32, ArrowError> {
-    u32::try_from(r.number(field)?).map_err(|e| invalid(e.to_string()))
-}
-
-fn optional_small_number(r: Row<'_>, field: &str) -> Result<Option<u32>, ArrowError> {
-    r.optional_number(field)?
-        .map(|v| u32::try_from(v).map_err(|e| invalid(e.to_string())))
-        .transpose()
-}
-
-fn locator(r: Row<'_>) -> Result<Locator, ArrowError> {
-    let value = match r.text("kind")? {
-        "artifact" => {
-            r.variant(&[])?;
-            Locator::Artifact
-        }
-        "lines" => {
-            r.variant(&["file", "start", "end"])?;
-            Locator::Lines {
-                file: r.owned("file")?,
-                start: small_number(r, "start")?,
-                end: small_number(r, "end")?,
-            }
-        }
-        "bytes" => {
-            r.variant(&["start", "end"])?;
-            Locator::Bytes {
-                start: r.number("start")?,
-                end: r.number("end")?,
-            }
-        }
-        "archive_member" => {
-            r.variant(&["file"])?;
-            Locator::ArchiveMember {
-                path: r.text("file")?.into(),
-            }
-        }
-        "heading" => {
-            r.variant(&["heading", "ordinal"])?;
-            Locator::Heading {
-                heading: r.text("heading")?.into(),
-                ordinal: small_number(r, "ordinal")?,
-            }
-        }
-        "producer_item" => {
-            r.variant(&["producer", "item"])?;
-            Locator::ProducerItem {
-                producer: r.text("producer")?.into(),
-                item: r.text("item")?.into(),
-            }
-        }
-        "rustdoc_item" => {
-            r.variant(&["rustdoc_id", "reported_file", "reported_line"])?;
-            Locator::RustdocItem {
-                item: small_number(r, "rustdoc_id")?,
-                reported_file: r.owned("reported_file")?,
-                reported_line: optional_small_number(r, "reported_line")?,
-            }
-        }
-        "python_declaration" => {
-            r.variant(&["file", "declaration", "start", "origin", "overload"])?;
-            Locator::PythonDeclaration {
-                file: r.text("file")?.into(),
-                declaration: r.text("declaration")?.into(),
-                line: optional_small_number(r, "start")?,
-                origin: match r.text("origin")? {
-                    "source" => ApiOrigin::Source,
-                    "stub" => ApiOrigin::Stub,
-                    _ => return Err(invalid("invalid Python declaration origin")),
-                },
-                overload: optional_small_number(r, "overload")?,
-            }
-        }
-        "manifest_key" => {
-            r.variant(&["file", "table", "key"])?;
-            Locator::ManifestKey {
-                file: r.text("file")?.into(),
-                table: r.text("table")?.into(),
-                key: r.text("key")?.into(),
-            }
-        }
-        "markdown_section" => {
-            r.variant(&["file", "heading", "start"])?;
-            Locator::MarkdownSection {
-                file: r.text("file")?.into(),
-                heading: r.text("heading")?.into(),
-                line: small_number(r, "start")?,
-            }
-        }
-        "source_start" => {
-            r.variant(&["file", "start"])?;
-            Locator::SourceStart {
-                file: r.text("file")?.into(),
-                line: small_number(r, "start")?,
-            }
-        }
-        "extension" => {
-            r.variant(&["format", "version", "extension"])?;
-            Locator::Extension {
-                format: r.text("format")?.into(),
-                version: r.text("version")?.into(),
-                value: serde_json::from_str(r.text("extension")?)
-                    .map_err(|e| ArrowError::JsonError(e.to_string()))?,
-            }
-        }
-        "sphinx_inventory" => {
-            r.variant(&["uri", "role", "project", "inventory_version"])?;
-            Locator::SphinxInventory {
-                uri: r.text("uri")?.into(),
-                role: r.text("role")?.into(),
-                project: r.text("project")?.into(),
-                inventory_version: r.text("inventory_version")?.into(),
-            }
-        }
-        "web_document" => {
-            r.variant(&["uri", "inventory_version"])?;
-            Locator::WebDocument {
-                uri: r.text("uri")?.into(),
-                inventory_version: r.text("inventory_version")?.into(),
-            }
-        }
-        _ => return Err(invalid("unknown locator variant")),
-    };
+    let value: SubjectRef = crate::native_union::NativeUnion::decode(r)?;
     value.validate().map_err(invalid)?;
     Ok(value)
 }
 
 pub fn source(r: Row<'_>) -> Result<FactSource, ArrowError> {
-    Ok(FactSource {
-        extractor: r.text("extractor")?.into(),
-        extractor_version: r.text("extractor_version")?.into(),
-        producer_binding_id: r.text("producer_binding_id")?.into(),
-        artifact_id: r.text("artifact_id")?.into(),
-        source_uri: r.owned("source_uri")?,
-        source_version_match: match r.text("source_version_match")? {
-            "exact" => SourceVersionMatch::Exact,
-            "compatible_claimed" => SourceVersionMatch::CompatibleClaimed,
-            "mismatched" => SourceVersionMatch::Mismatched,
-            "unknown" => SourceVersionMatch::Unknown,
-            _ => return Err(invalid("unknown source version match")),
-        },
-        evidence_class: match r.text("evidence_class")? {
-            "declared" => EvidenceClass::Declared,
-            "statically_extracted" => EvidenceClass::StaticallyExtracted,
-            "compiler_derived" => EvidenceClass::CompilerDerived,
-            "typechecker_observed" => EvidenceClass::TypecheckerObserved,
-            "runtime_observed" => EvidenceClass::RuntimeObserved,
-            "agent_inferred" => EvidenceClass::AgentInferred,
-            _ => return Err(invalid("unknown evidence class")),
-        },
-        locator: locator(r.structure("locator")?)?,
-    })
+    crate::native_union::NativeStruct::decode(r)
 }
 
-fn python(r: Row<'_>) -> Result<PythonDetails, ArrowError> {
-    let p = r.structure("publicness")?;
-    Ok(PythonDetails {
-        overloads: r.list("overloads")?,
-        alias_target: r.owned("alias_target")?,
-        bases: r.list("bases")?,
-        publicness: Publicness {
-            exported: p.optional_bool("exported")?,
-            underscore: p.boolean("underscore")?,
-            reexport: p.boolean("reexport")?,
-            docstring: p.boolean("docstring")?,
-            declared_exports: p.list("declared_exports")?,
-            unresolved_exports: p.list("unresolved_exports")?,
-        },
-    })
-}
-
-/// Reconstruct the bounded presentation payload from its compact struct and separate text.
+/// Recombine the declared compact record and its separately stored documentation.
 pub fn payload(r: Row<'_>, docs: Option<String>) -> Result<ApiPayload, ArrowError> {
-    Ok(ApiPayload {
-        declared_kind: SymbolKind::parse(r.text("declared_kind")?)
-            .ok_or_else(|| invalid("unknown API declaration kind"))?,
-        signature: r.owned("signature")?,
-        doc_summary: r.owned("doc_summary")?,
-        docs,
-        deprecated: r
-            .optional_struct("deprecated")?
-            .map(|d| {
-                Ok::<_, ArrowError>(Deprecated {
-                    since: d.owned("since")?,
-                    note: d.owned("note")?,
-                })
-            })
-            .transpose()?,
-        cfg_hints: r.list("cfg_hints")?,
-        python: r.optional_struct("python")?.map(python).transpose()?,
-    })
+    ApiPayload::decode_body(r, docs)
 }
 
 /// Decode observations and recompute semantic IDs. Row order and string encoding are immaterial.

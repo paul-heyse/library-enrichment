@@ -50,7 +50,6 @@ __all__ = [
     "ok",
     "partial",
     "validate_document",
-    "validate_tool_data",
 ]
 
 #: The schema emitted from the Rust wire types by `just schemas-generate`.
@@ -59,27 +58,6 @@ SCHEMA_PATH = Path(__file__).with_name("_schemas") / "research-envelope.schema.j
 
 #: The per-tool `data` payload schema, emitted alongside the envelope schema.
 TOOL_DATA_SCHEMA_PATH = SCHEMA_PATH.with_name("tool-data.schema.json")
-
-
-@cache
-def _tool_data_validator() -> Validator:
-    """Load the generated tool-data schema once per process."""
-    return Draft202012Validator(json.loads(TOOL_DATA_SCHEMA_PATH.read_text()))
-
-
-def validate_tool_data(tool: str, data: dict[str, Any]) -> tuple[bool, str | None]:
-    """Validate one tool's ``data`` payload against the schema the Rust wire types emit.
-
-    The envelope schema deliberately leaves ``data`` open (it is the tool-specific half of the
-    result); this closes it per tool. The generated schema is a tagged union keyed by ``tool``,
-    so the payload is checked as that variant. Only ``ok`` and ``partial`` results carry data
-    worth checking; an error envelope's ``data`` is empty by construction.
-    """
-    tagged = {"tool": tool, **data}
-    errors = sorted(_tool_data_validator().iter_errors(tagged), key=lambda e: list(e.absolute_path))
-    if errors:
-        return False, errors[0].message
-    return True, None
 
 
 @cache

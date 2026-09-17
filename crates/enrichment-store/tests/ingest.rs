@@ -33,13 +33,19 @@ fn context(
             attempt_id: "attempt-fixture".into(),
             producer: producer.into(),
             producer_version: "2".into(),
-            config_digest: "configuration".into(),
+            config_digest: enrichment_core::canonical::sha256_hex(b"configuration"),
             inputs: [(role.into(), artifact.sha256.clone())]
                 .into_iter()
                 .collect(),
             profile: ExecutionProfile::Static,
-            started_at: "2026-09-14T00:00:00Z".into(),
-            finished_at: "2026-09-14T00:00:01Z".into(),
+            started_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+            finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:01.000000Z".to_owned(),
+            )
+            .unwrap(),
             outcome: RunOutcome::Succeeded,
             gaps: vec![],
             log: None,
@@ -59,7 +65,10 @@ fn checked_in_rustdoc_normalizes_shared_definitions_and_qualified_members() {
         ArtifactKind::RustdocJson,
         "application/json",
         "https://docs.rs/enr-fixture/0.1.0.json",
-        "2026-09-14T00:00:00Z",
+        enrichment_core::native_time::AcquisitionTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
     );
     let context = context(
         artifact,
@@ -96,7 +105,10 @@ fn malformed_or_unbound_producer_evidence_is_rejected() {
         ArtifactKind::Readme,
         "text/markdown",
         "https://example.org/README.md",
-        "2026-09-14T00:00:00Z",
+        enrichment_core::native_time::AcquisitionTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
     );
     let fragment = DocumentFact::new(
         FragmentKind::ReadmeSection,

@@ -1,8 +1,9 @@
 //! Job handles and pagination (blueprint §7.3, §8.3).
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
+crate::native_vocabulary! {
 /// The persisted job states (blueprint §8.3).
 ///
 /// The values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,
@@ -10,17 +11,17 @@ use serde::{Deserialize, Serialize};
 /// cancelling one caller's interest must not kill work another caller still needs.
 ///
 /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
 pub enum JobState {
-    Queued,
-    Running,
-    Succeeded,
-    Partial,
-    Failed,
-    CancelRequested,
-    Cancelled,
+    Queued = "queued",
+    Running = "running",
+    Succeeded = "succeeded",
+    Partial = "partial",
+    Failed = "failed",
+    CancelRequested = "cancel_requested",
+    Cancelled = "cancelled",
+}
 }
 
 impl JobState {
@@ -32,37 +33,38 @@ impl JobState {
     ];
 }
 
+crate::native_struct! {
 /// A receipt for submitted work. Never evidence that the work finished.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct JobHandle {
     /// Durable core job identity. Distinct from the request ID: jobs are shared and reusable.
-    pub job_id: String,
+    job_id: String => crate::native_union::Rule::Text,
     /// Where the job is now.
-    pub state: JobState,
+    state: JobState => crate::native_union::Rule::Text,
     /// Which stage is executing, for a caller to report progress.
-    pub stage: String,
+    stage: String => crate::native_union::Rule::Text,
     /// Advisory next-poll delay. Not a completion-time guarantee.
-    pub poll_after_ms: u64,
+    poll_after_ms: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Bounded-result accounting (blueprint §7.3).
 ///
 /// A first page is not the whole result set. A cursor binds the query digest, snapshot, filters
 /// and sort, so a mismatched cursor is rejected with `INVALID_CURSOR` rather than producing an
 /// inconsistent page.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(try_from = "RawPage")]
 #[schemars(deny_unknown_fields, transform = page_conditionals)]
 pub struct Page {
     /// How many entries this page carries.
-    pub returned: u64,
+    returned: u64 => crate::native_union::Rule::Text,
     /// Explicit exact, lower-bound or unknown count; never infer absence from a page.
-    pub count: super::research::MatchCount,
+    count: super::research::MatchCount => crate::native_union::Rule::Text,
     /// Whether another nonempty page can be requested with next_cursor.
-    pub has_more: bool,
+    has_more: bool => crate::native_union::Rule::Text,
     /// Opaque cursor for the next page, or `null` at the end.
-    pub next_cursor: Option<String>,
+    next_cursor: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 impl Page {

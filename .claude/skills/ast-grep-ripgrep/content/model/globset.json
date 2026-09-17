@@ -1,0 +1,203 @@
+{
+  "module": "globset",
+  "crate": "globset",
+  "api": "api/globset.md",
+  "items": [
+    {
+      "path": "globset::ErrorKind",
+      "name": "ErrorKind",
+      "kind": "enum",
+      "crate": "globset",
+      "signature": "enum ErrorKind",
+      "summary": "The kind of error that can occur when parsing a glob pattern.",
+      "doc": "api/globset.md#errorkind",
+      "variants": [
+        "InvalidRecursive",
+        "UnclosedClass",
+        "InvalidRange",
+        "UnopenedAlternates",
+        "UnclosedAlternates",
+        "NestedAlternates",
+        "DanglingEscape",
+        "Regex"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "globset::escape",
+      "name": "escape",
+      "kind": "function",
+      "crate": "globset",
+      "signature": "fn escape(s: &str) -> String",
+      "summary": "Escape meta-characters within the given glob pattern.",
+      "doc": "api/globset.md#escape"
+    },
+    {
+      "path": "globset::Candidate",
+      "name": "Candidate",
+      "kind": "struct",
+      "crate": "globset",
+      "signature": "struct Candidate<'a>",
+      "summary": "A candidate path for matching.",
+      "doc": "api/globset.md#candidate",
+      "methods": [
+        {
+          "name": "from_bytes",
+          "signature": "fn from_bytes<P: AsRef<[u8]> + ?Sized>(path: &'a P) -> Candidate<'a>",
+          "summary": "Create a new candidate for matching from the given path as a sequence of bytes."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path> + ?Sized>(path: &'a P) -> Candidate<'a>",
+          "summary": "Create a new candidate for matching from the given path."
+        }
+      ]
+    },
+    {
+      "path": "globset::Error",
+      "name": "Error",
+      "kind": "struct",
+      "crate": "globset",
+      "signature": "struct Error",
+      "summary": "Represents an error that can occur when parsing a glob pattern.",
+      "doc": "api/globset.md#error",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "description",
+          "signature": "fn description(&self) -> &str",
+          "via_trait": "core::error::Error"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "glob",
+          "signature": "fn glob(&self) -> Option<&str>",
+          "summary": "Return the glob that caused this error, if one exists."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &ErrorKind",
+          "summary": "Return the kind of this error."
+        }
+      ]
+    },
+    {
+      "path": "globset::GlobSet",
+      "name": "GlobSet",
+      "kind": "struct",
+      "crate": "globset",
+      "signature": "struct GlobSet",
+      "summary": "GlobSet represents a group of globs that can be matched together in a single pass.",
+      "doc": "api/globset.md#globset",
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> GlobSetBuilder",
+          "summary": "Create a new [`GlobSetBuilder`]. A `GlobSetBuilder` can be used to add new patterns. Once all patterns have been added, `build` should be called to produce a `GlobSet`, which can then be used for matching."
+        },
+        {
+          "name": "empty",
+          "signature": "const fn empty() -> GlobSet",
+          "summary": "Create an empty `GlobSet`. An empty set matches nothing."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if this set is empty, and therefore matches nothing."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<P: AsRef<Path>>(&self, path: P) -> bool",
+          "summary": "Returns true if any glob in this set matches the path given."
+        },
+        {
+          "name": "is_match_candidate",
+          "signature": "fn is_match_candidate(&self, path: &Candidate<'_>) -> bool",
+          "summary": "Returns true if any glob in this set matches the path given."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of globs in this set."
+        },
+        {
+          "name": "matches",
+          "signature": "fn matches<P: AsRef<Path>>(&self, path: P) -> Vec<usize>",
+          "summary": "Returns the sequence number of every glob pattern that matches the given path."
+        },
+        {
+          "name": "matches_all",
+          "signature": "fn matches_all<P: AsRef<Path>>(&self, path: P) -> bool",
+          "summary": "Returns true if all globs in this set match the path given."
+        },
+        {
+          "name": "matches_all_candidate",
+          "signature": "fn matches_all_candidate(&self, path: &Candidate<'_>) -> bool",
+          "summary": "Returns true if all globs in this set match the path given."
+        },
+        {
+          "name": "matches_candidate",
+          "signature": "fn matches_candidate(&self, path: &Candidate<'_>) -> Vec<usize>",
+          "summary": "Returns the sequence number of every glob pattern that matches the given path."
+        },
+        {
+          "name": "matches_candidate_into",
+          "signature": "fn matches_candidate_into(&self, path: &Candidate<'_>, into: &mut Vec<usize>)",
+          "summary": "Adds the sequence number of every glob pattern that matches the given path to the vec given."
+        },
+        {
+          "name": "matches_into",
+          "signature": "fn matches_into<P: AsRef<Path>>(&self, path: P, into: &mut Vec<usize>)",
+          "summary": "Adds the sequence number of every glob pattern that matches the given path to the vec given."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I, G>(globs: I) -> Result<GlobSet, Error> where I: IntoIterator<Item = G>, G: AsRef<Glob>",
+          "summary": "Builds a new matcher from a collection of Glob patterns."
+        }
+      ]
+    },
+    {
+      "path": "globset::GlobSetBuilder",
+      "name": "GlobSetBuilder",
+      "kind": "struct",
+      "crate": "globset",
+      "signature": "struct GlobSetBuilder",
+      "summary": "GlobSetBuilder builds a group of patterns that can be used to simultaneously match a file path.",
+      "doc": "api/globset.md#globsetbuilder",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, pat: Glob) -> &mut GlobSetBuilder",
+          "summary": "Add a new pattern to this set."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<GlobSet, Error>",
+          "summary": "Builds a new matcher from all of the glob patterns added so far."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> GlobSetBuilder",
+          "summary": "Create a new `GlobSetBuilder`. A `GlobSetBuilder` can be used to add new patterns. Once all patterns have been added, `build` should be called to produce a [`GlobSet`], which can then be used for matching."
+        }
+      ]
+    }
+  ]
+}

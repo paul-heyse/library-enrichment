@@ -1,0 +1,28 @@
+# ast-grep project for codesearch's own source.
+#
+# The fourth enforcement tier. PLAN-V2 §9.1 places invariants by asking what the cheapest
+# reproducible oracle is: a Delta CHECK constraint when it is one row of one table, a
+# `projection.violations_*` view when it is cross-row or cross-table, an **ast-grep rule when it is
+# a code shape**, and a probe when it is library behaviour. This directory is the third of those,
+# and it was an empty directory until the rules below were written.
+#
+# Unlike the sibling corpus in the skill itself, these are NOT hints. Each one encodes a measured
+# failure that is silent in production, so they carry `severity: error` and `just lint-rules` is a
+# gate rather than a report.
+#
+# **A structural rule cannot see inside a macro.** `vec![...]` is a `token_tree` to tree-sitter,
+# not a list of expressions, so a pattern like `Field::new($N, DataType::UInt32, $X)` matches the
+# three call sites written as plain expressions and none of the two hundred authored inside
+# `table(vec![...])` -- which is every schema in this codebase. A `no-uint32-byte-offset` rule was
+# written, tested green against its own fixtures, and then found to match nothing real. It is gone.
+#
+# That invariant is enforced where it can be: `schema::tests::no_authored_column_uses_a_type_delta
+# _would_narrow` and `every_byte_offset_is_int64` walk `all_tables()`, so they see the built
+# schema rather than the syntax that produced it. The lesson generalises -- if the shape is
+# authored inside a macro, this is the wrong tier.
+#
+#     ast-grep scan -c queries/sgconfig.yml crates python scripts
+ruleDirs: [rules]
+testConfigs:
+  - testDir: rule-tests
+    snapshotDir: __snapshots__

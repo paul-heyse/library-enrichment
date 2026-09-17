@@ -1,0 +1,84 @@
+{
+  "module": "ra_ap_syntax::ptr",
+  "crate": "ra_ap_syntax",
+  "api": "api/ra_ap_syntax.ptr.md",
+  "items": [
+    {
+      "path": "ra_ap_syntax::ptr::AstPtr",
+      "name": "AstPtr",
+      "kind": "struct",
+      "crate": "ra_ap_syntax",
+      "signature": "struct AstPtr<N: AstNode>",
+      "summary": "Like [`SyntaxNodePtr`], but remembers the type of node.",
+      "doc": "api/ra_ap_syntax.ptr.md#astptr",
+      "aliases": [
+        "ra_ap_syntax::AstPtr"
+      ],
+      "methods": [
+        {
+          "name": "cast",
+          "signature": "fn cast<U: AstNode>(self) -> Option<AstPtr<U>>"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> parser::SyntaxKind"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(node: &N) -> AstPtr<N>"
+        },
+        {
+          "name": "syntax_node_ptr",
+          "signature": "fn syntax_node_ptr(&self) -> SyntaxNodePtr"
+        },
+        {
+          "name": "text_range",
+          "signature": "fn text_range(self) -> TextRange"
+        },
+        {
+          "name": "to_node",
+          "signature": "fn to_node(&self, root: &SyntaxNode) -> N"
+        },
+        {
+          "name": "try_from_raw",
+          "signature": "fn try_from_raw(raw: SyntaxNodePtr) -> Option<AstPtr<N>>",
+          "summary": "Like [`SyntaxNodePtr::cast`] but the trait bounds work out."
+        },
+        {
+          "name": "upcast",
+          "signature": "fn upcast<M: AstNode>(self) -> AstPtr<M> where N: Into<M>"
+        },
+        {
+          "name": "wrap_left",
+          "signature": "fn wrap_left<R>(self) -> AstPtr<either::Either<N, R>> where either::Either<N, R>: AstNode"
+        },
+        {
+          "name": "wrap_right",
+          "signature": "fn wrap_right<L>(self) -> AstPtr<either::Either<L, N>> where either::Either<L, N>: AstNode"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_syntax::ptr::SyntaxNodePtr",
+      "name": "SyntaxNodePtr",
+      "kind": "type_alias",
+      "crate": "ra_ap_syntax",
+      "signature": "type SyntaxNodePtr = rowan::ast::SyntaxNodePtr<syntax_node::RustLanguage>",
+      "summary": "A \"pointer\" to a [`SyntaxNode`], via location in the source code.",
+      "doc": "api/ra_ap_syntax.ptr.md#syntaxnodeptr",
+      "aliases": [
+        "ra_ap_syntax::SyntaxNodePtr"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(ptr: AstPtr<N>) -> SyntaxNodePtr",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    }
+  ]
+}

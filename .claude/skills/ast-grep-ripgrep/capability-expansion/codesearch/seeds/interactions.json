@@ -1,0 +1,134 @@
+{
+  "_comment": [
+    "Interactions: how one option changes what another does.",
+    "",
+    "This file holds the ones that are a READING of a sentence. The ones that are a column are",
+    "derived instead, in build/src/interactions.rs: `regex.tsv.reachable` already says",
+    "`requires -P` on 25 rows and `default-only` on one, so those 26 engine preconditions are",
+    "machine-derived and cannot drift from the index that states them.",
+    "",
+    "What is left is prose. `unreachable.tsv` says of the two size-limit flags: 'Both flags bound",
+    "the default engine only. Under -P they do not constrain PCRE2 at all.' That is an interaction,",
+    "but turning it into atoms is a judgement, so it is written here where it can be reviewed as",
+    "one rather than buried in a parser.",
+    "",
+    "A predicate is disjunctive normal form: `terms` is a list of disjuncts, each a list of atoms",
+    "ANDed together. `[[a, b], [c]]` means `(a AND b) OR c`. There is no nesting, and if some",
+    "interaction genuinely needs it the answer is a new interaction referencing this one, not an",
+    "interpreter.",
+    "",
+    "An interaction naming a mechanism this catalog does not hold, an operator nobody defined, or",
+    "an assertion that does not exist is a BUILD ERROR. An unresolvable evidence handle reads",
+    "exactly like evidence, which is why it is checked rather than trusted."
+  ],
+  "interactions": [
+    {
+      "key": "ix:rg/regex-size-limit-bounds-only-the-default-engine",
+      "kind": "has_no_effect_unless",
+      "affected": "mech:rg/cli/--regex-size-limit",
+      "effect": "Bounds the default Rust regex engine only. Under -P it does not constrain PCRE2 at all, so a pattern that would have been rejected as too large is instead handed to an engine this flag cannot bound.",
+      "ordering_requirement": "none",
+      "terms": [
+        [
+          {
+            "facet": "engine",
+            "op": "eq",
+            "value": "default"
+          }
+        ]
+      ]
+    },
+    {
+      "key": "ix:rg/dfa-size-limit-bounds-only-the-default-engine",
+      "kind": "has_no_effect_unless",
+      "affected": "mech:rg/cli/--dfa-size-limit",
+      "effect": "Bounds the default Rust regex engine's DFA cache only. Under -P it does not constrain PCRE2, which has its own limits reachable through in-pattern verbs rather than through this flag.",
+      "ordering_requirement": "none",
+      "terms": [
+        [
+          {
+            "facet": "engine",
+            "op": "eq",
+            "value": "default"
+          }
+        ]
+      ]
+    },
+    {
+      "key": "ix:rg/pcre2-selects-the-other-engine",
+      "kind": "changes_meaning_of",
+      "affected": "mech:rg/cli/--pcre2",
+      "effect": "Selects PCRE2 in place of the default Rust regex engine. This changes which constructs are available in both directions: lookaround and backreferences become usable, and the linear-time guarantee is given up.",
+      "ordering_requirement": "none",
+      "terms": [
+        [
+          {
+            "facet": "pattern_needs",
+            "op": "in",
+            "value_list": [
+              "lookaround",
+              "backreference",
+              "recursion",
+              "callout"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "key": "ix:rg/no-unicode-changes-what-a-class-matches",
+      "kind": "changes_meaning_of",
+      "affected": "mech:rg/cli/--no-unicode",
+      "effect": "Disables Unicode mode, which changes what character classes and word boundaries match rather than merely how fast they run. A result set that differs under this flag is not a bug in either run.",
+      "ordering_requirement": "none",
+      "terms": [
+        [
+          {
+            "facet": "corpus",
+            "op": "ne",
+            "value": "ascii-only"
+          }
+        ]
+      ]
+    },
+    {
+      "key": "ix:rg/multiline-is-required-for-a-cross-line-pattern",
+      "kind": "requires",
+      "affected": "mech:rg/cli/--multiline",
+      "effect": "A pattern spanning a line boundary matches nothing without this flag, because ripgrep searches line by line unless told otherwise. The absence of matches is not the absence of occurrences.",
+      "ordering_requirement": "none",
+      "terms": [
+        [
+          {
+            "facet": "pattern_spans_lines",
+            "op": "eq",
+            "value": "true"
+          }
+        ]
+      ]
+    },
+    {
+      "key": "ix:sg/composing-narrows-before-parsing",
+      "kind": "consumes_binding_from",
+      "affected": "mech:sg/cli/run/--pattern",
+      "effect": "ast-grep consumes the file set a prior ripgrep pass produced. The composition is recall-preserving only when the literal ripgrep matched on is implied by the structural pattern; otherwise the narrowing can drop files the pattern would have matched.",
+      "ordering_requirement": "after",
+      "assertions": [
+        "assert:sg/A013"
+      ],
+      "terms": [
+        [
+          {
+            "facet": "prefilter",
+            "op": "present"
+          },
+          {
+            "facet": "prefilter_literal_implied_by_pattern",
+            "op": "eq",
+            "value": "true"
+          }
+        ]
+      ]
+    }
+  ]
+}

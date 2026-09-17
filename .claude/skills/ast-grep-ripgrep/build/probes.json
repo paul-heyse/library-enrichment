@@ -1,0 +1,1204 @@
+{
+  "_comment": [
+    "Executed behaviour probes. Each one runs a pinned binary against the materialised fixture",
+    "tree and records what actually happened into content/index/behaviors.tsv.",
+    "",
+    "The `control` field is what makes a probe evidence rather than a coincidence. A pattern that",
+    "matches proves only that *something* matched; it cannot distinguish 'the feature works' from",
+    "'the pattern happened to match for an unrelated reason'. So a feature probe carries a second",
+    "command, identical except for the feature under test, which MUST fail. Both halves must come",
+    "out right or the probe records `inconclusive` -- never a pass.",
+    "",
+    "PCRE2 10.48 is the asserted baseline, checked by build.py before anything here runs, so",
+    "`since_pcre2` on a row is history rather than a gate. It is not decoration either: ripgrep's",
+    "own `--pcre2-version` reads 10.45 on this machine while the linked library is 10.48, so a",
+    "reference that trusted the version string would be three releases wrong.",
+    "",
+    "`expect` is one of: match | no-match | error | a regex stdout must satisfy.",
+    "Exit codes: rg 0=match 1=no-match 2=error. ast-grep run 0=match 1=no-match.",
+    "ast-grep outline exits 0 even on an empty outline -- an empty result there is data, not failure."
+  ],
+  "probes": [
+    {
+      "id": "P001",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "lookahead",
+      "question": "Does the default engine reject lookahead, and does -P accept it?",
+      "command": [
+        "rg",
+        "-P",
+        "-c",
+        "foo(?= bar)",
+        "docs/quotes.txt"
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-c",
+        "foo(?= bar)",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "error",
+      "note": "The control is the point: the default engine errors on lookahead rather than silently not matching.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P002",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "lookahead",
+      "question": "Does positive lookahead match through -P?",
+      "command": [
+        "rg",
+        "-oP",
+        "he(?= said)",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "he(?= shouted)",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P003",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "lookbehind",
+      "question": "Does positive lookbehind match through -P?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?<=said )\"hello\"",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "(?<=shouted )\"hello\"",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P004",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "variable-lookbehind",
+      "question": "Is bounded variable-length lookbehind accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "(?<=.{0,20}said )\\S+",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-coP",
+        "(?<=.*said )\\S+",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "error",
+      "note": "Unbounded lookbehind is a compile error; the bound is what makes it legal.",
+      "since_pcre2": "10.43"
+    },
+    {
+      "id": "P005",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "backreference",
+      "question": "Do numeric backreferences work through -P?",
+      "command": [
+        "rg",
+        "-oP",
+        "(\\w+) \\1",
+        "docs/notes.md"
+      ],
+      "expect": "alpha alpha",
+      "control": [
+        "rg",
+        "-o",
+        "(\\w+) \\1",
+        "docs/notes.md"
+      ],
+      "control_expect": "error",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P006",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "named-backreference",
+      "question": "Do named backreferences work, so paired delimiters can be required?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?<q>[\"'])\\w+\\k<q>",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "(?<q>[\"'])zzzz\\k<q>",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P007",
+      "tool": "rg",
+      "topic": "output-shaping-and-extraction",
+      "construct": "match-reset",
+      "question": "Does \\K drop the prefix from the reported match?",
+      "command": [
+        "rg",
+        "-oP",
+        "said \\K\"hello\"",
+        "docs/quotes.txt"
+      ],
+      "expect": "\"hello\"",
+      "control": [
+        "rg",
+        "-oP",
+        "said \"hello\"",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "said \"hello\"",
+      "control_mode": "differs",
+      "note": "Here the control must SUCCEED but differ: it proves \\K changed the span, not the match set.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P008",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "possessive-quantifier",
+      "question": "Are possessive quantifiers accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "\\w++ ",
+        "docs/notes.md"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-coP",
+        "\\w++ ",
+        "does-not-exist.txt"
+      ],
+      "control_expect": "error",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P009",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "atomic-group",
+      "question": "Are atomic groups accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "(?>\\w+) ",
+        "docs/notes.md"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-co",
+        "(?>\\w+) ",
+        "docs/notes.md"
+      ],
+      "control_expect": "error",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P010",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "branch-reset",
+      "question": "Is branch reset accepted, reusing capture numbers across alternatives?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?|(?<d>Sat)urday|(?<d>Sun)day)",
+        "docs/weekend.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "(?|(?<d>Tue)sday|(?<d>Wed)nesday)",
+        "docs/weekend.txt"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P011",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "conditional",
+      "question": "Are conditional patterns accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "(\")?\\w+(?(1)\"|\\b)",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-co",
+        "(\")?\\w+(?(1)\"|\\b)",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "error",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P012",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "recursion",
+      "question": "Does whole-pattern recursion match balanced delimiters, and what does the default engine do with the same pattern?",
+      "command": [
+        "rg",
+        "-oP",
+        "\\((?:[^()]|(?R))*\\)",
+        "docs/nested.txt"
+      ],
+      "expect": "(a(b)c)",
+      "control": [
+        "rg",
+        "--engine=default",
+        "-o",
+        "\\((?:[^()]|(?R))*\\)",
+        "docs/nested.txt"
+      ],
+      "control_expect": "match",
+      "control_mode": "differs",
+      "note": "One of the sharpest traps in this repository. Lookaround fails loudly under the default engine, with an error naming -P. Recursion does NOT: the default engine parses (?R) as an inline group, silently degrades the pattern to \\([^()]*\\), and returns `(b)` where PCRE2 returns `(a(b)c)`. A wrong answer, not an error. Never assume the default engine will tell you that a PCRE2 construct was unsupported.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P013",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "recursion-returned-captures",
+      "question": "Do subroutine calls return selected capture groups to the caller?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?(DEFINE)(?<day>(?|(?<s>Sat)urday|(?<s>Sun)day)))(?&day(<s>)),\\k<s>",
+        "docs/weekend.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "(?(DEFINE)(?<day>(?|(?<s>Sat)urday|(?<s>Sun)day)))(?&day),\\k<s>",
+        "docs/weekend.txt"
+      ],
+      "control_expect": "no-match",
+      "note": "Returned-capture recursion, which upstream introduced in 10.47 (its own docs first said 10.46 and were corrected). Without the returned-capture list the backreference cannot see \\k<s>, so the control must fail -- that pairing is what makes the match evidence rather than a coincidence.",
+      "since_pcre2": "10.47"
+    },
+    {
+      "id": "P014",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "scan-substring",
+      "question": "Are scan-substring assertions accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "(\\w+)(*scs:(1)\\w+)",
+        "docs/notes.md"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-co",
+        "(\\w+)(*scs:(1)\\w+)",
+        "docs/notes.md"
+      ],
+      "control_expect": "error",
+      "since_pcre2": "10.45"
+    },
+    {
+      "id": "P015",
+      "tool": "rg",
+      "topic": "unicode-and-encodings",
+      "construct": "extended-class-perl",
+      "question": "Is the Perl-style extended character class (?[...]) accepted?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?[\\p{L} & \\p{ASCII}])+",
+        "docs/unicode.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-oP",
+        "(?[\\p{Greek} & \\p{ASCII}])+",
+        "docs/unicode.txt"
+      ],
+      "control_expect": "no-match",
+      "note": "Greek intersected with ASCII is empty, so the control must find nothing.",
+      "since_pcre2": "10.45"
+    },
+    {
+      "id": "P016",
+      "tool": "rg",
+      "topic": "unicode-and-encodings",
+      "construct": "extended-class-uts18",
+      "question": "Is the UTS#18 [A&&[B]] form usable through stock rg?",
+      "command": [
+        "rg",
+        "-oP",
+        "[\\p{L}&&[\\p{Greek}]]+",
+        "docs/unicode.txt"
+      ],
+      "expect": "any",
+      "control": null,
+      "note": "Expected NOT to behave as set intersection: it needs PCRE2_ALT_EXTENDED_CLASS, a compile option rg does not expose. Whatever happens is recorded verbatim, and unreachable.tsv carries the conclusion.",
+      "since_pcre2": "10.45"
+    },
+    {
+      "id": "P017",
+      "tool": "rg",
+      "topic": "unicode-and-encodings",
+      "construct": "script-run",
+      "question": "Are script runs accepted?",
+      "command": [
+        "rg",
+        "-coP",
+        "(*sr:\\w+)",
+        "docs/unicode.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-co",
+        "(*sr:\\w+)",
+        "docs/unicode.txt"
+      ],
+      "control_expect": "error",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P018",
+      "tool": "rg",
+      "topic": "pcre2-advanced-regex",
+      "construct": "control-verb-skip-fail",
+      "question": "Does the (*SKIP)(*F) exclusion idiom work?",
+      "command": [
+        "rg",
+        "-coP",
+        "\"[^\"]*\"(*SKIP)(*F)|said",
+        "docs/quotes.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-coP",
+        "said",
+        "docs/quotes.txt"
+      ],
+      "control_mode": "differs",
+      "control_expect": "match",
+      "note": "Both patterns look for `said`; the counts must differ, because the first discards the occurrence that sits inside a quoted string. This is how you exclude a region without a parser.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P019",
+      "tool": "rg",
+      "topic": "multiline-matching",
+      "construct": "multiline",
+      "question": "Does -U let a pattern cross a line boundary?",
+      "command": [
+        "rg",
+        "-U",
+        "-c",
+        "start block\\n  inner one",
+        "docs/multiline.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-c",
+        "start block\\n  inner one",
+        "docs/multiline.txt"
+      ],
+      "control_expect": "error",
+      "note": "Without -U this is an error, not a silent miss: ripgrep rejects a literal \\n outside multiline mode and names the flag to add. Compare P012, where an unsupported construct degrades silently instead.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P020",
+      "tool": "rg",
+      "topic": "multiline-matching",
+      "construct": "anchors-are-line-anchors",
+      "question": "Under -U, does ^ still anchor to a line rather than to the whole haystack?",
+      "command": [
+        "rg",
+        "-U",
+        "-c",
+        "^end block",
+        "docs/multiline.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-U",
+        "-c",
+        "\\Aend block",
+        "docs/multiline.txt"
+      ],
+      "control_expect": "no-match",
+      "note": "The single most misunderstood rg behaviour: -U is a permission for the haystack to span lines, not a switch that turns ^ into a haystack anchor. \\A is the haystack anchor and correctly fails here.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P021",
+      "tool": "rg",
+      "topic": "multiline-matching",
+      "construct": "multiline-dotall",
+      "question": "Does --multiline-dotall let . cross newlines?",
+      "command": [
+        "rg",
+        "-U",
+        "--multiline-dotall",
+        "-c",
+        "start block.*end block",
+        "docs/multiline.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-U",
+        "-c",
+        "start block.*end block",
+        "docs/multiline.txt"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P022",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "gitignore-respected",
+      "question": "Are .gitignore'd paths skipped by default?",
+      "command": [
+        "rg",
+        "-l",
+        "generated",
+        "."
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-l",
+        "--no-ignore-vcs",
+        "generated",
+        "."
+      ],
+      "control_expect": "match",
+      "note": "target/ is gitignored in the fixture. The control proves the file exists and is findable once the layer is turned off.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P023",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "dot-ignore-is-separate",
+      "question": "Is .ignore a separate layer from .gitignore?",
+      "command": [
+        "rg",
+        "-l",
+        "--no-ignore-vcs",
+        "8080",
+        "."
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-l",
+        "--no-ignore-dot",
+        "8080",
+        "."
+      ],
+      "control_expect": "match",
+      "note": "config/ is excluded by .ignore, not .gitignore, so --no-ignore-vcs alone does not reveal it. This is the layer confusion that makes searches silently incomplete.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P024",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "hidden-skipped",
+      "question": "Are hidden files skipped by default?",
+      "command": [
+        "rg",
+        "-l",
+        "in a hidden file",
+        "."
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-l",
+        "--hidden",
+        "in a hidden file",
+        "."
+      ],
+      "control_expect": "match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P025",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "explicit-path-overrides",
+      "question": "Does naming an ignored file explicitly override the ignore rules?",
+      "command": [
+        "rg",
+        "-c",
+        "generated",
+        "target/generated.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-l",
+        "generated",
+        "."
+      ],
+      "control_expect": "no-match",
+      "note": "A path given on the command line is an intentional override; ignore rules apply to traversal, not to explicit arguments.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P026",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "type-filter",
+      "question": "Does -t restrict the search to one language?",
+      "command": [
+        "rg",
+        "-l",
+        "-tpy",
+        "print",
+        "."
+      ],
+      "expect": ".py",
+      "control": [
+        "rg",
+        "-l",
+        "-trust",
+        "print",
+        "."
+      ],
+      "control_expect": ".rs",
+      "control_mode": "differs",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P027",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "glob-exclusion",
+      "question": "Does a negated glob remove a subtree?",
+      "command": [
+        "rg",
+        "-l",
+        "--no-ignore",
+        "-g",
+        "!node_modules/**",
+        "console.log",
+        "."
+      ],
+      "expect": "no-match-on:node_modules",
+      "control": [
+        "rg",
+        "-l",
+        "--no-ignore",
+        "console.log",
+        "."
+      ],
+      "control_expect": "node_modules",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P028",
+      "tool": "rg",
+      "topic": "search-space",
+      "construct": "max-depth",
+      "question": "Does --max-depth bound traversal?",
+      "command": [
+        "rg",
+        "-l",
+        "--max-depth",
+        "2",
+        "buried",
+        "."
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-l",
+        "buried",
+        "."
+      ],
+      "control_expect": "match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P029",
+      "tool": "rg",
+      "topic": "reading-odd-inputs",
+      "construct": "binary-explicit-vs-traversal",
+      "question": "Is a binary file searched when named explicitly but skipped when found by traversal?",
+      "command": [
+        "rg",
+        "-c",
+        "needle",
+        "data/blob.bin"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-l",
+        "needle",
+        "."
+      ],
+      "control_expect": "no-match",
+      "note": "Binary handling is not one rule but two. A path given on the command line is an intentional request and is searched; the same file reached by walking a directory is skipped. An agent that tests binary behaviour on an explicit path and then generalises to a recursive search will be wrong in the direction that loses results silently.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P030",
+      "tool": "rg",
+      "topic": "machine-output",
+      "construct": "json-lines",
+      "question": "What shape does --json emit?",
+      "command": [
+        "rg",
+        "--json",
+        "helper",
+        "src/main.rs"
+      ],
+      "expect": "\"type\":\"match\"",
+      "control": null,
+      "note": "Shape probe, not a feature gate: the recorded stdout is what json-contracts.md documents.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P031",
+      "tool": "rg",
+      "topic": "output-shaping-and-extraction",
+      "construct": "replacement-is-output-only",
+      "question": "Does -r rewrite the file or only the printed output?",
+      "command": [
+        "rg",
+        "-r",
+        "REPLACED",
+        "-N",
+        "hello",
+        "src/main.rs"
+      ],
+      "expect": "REPLACED",
+      "control": [
+        "rg",
+        "-c",
+        "hello",
+        "src/main.rs"
+      ],
+      "control_expect": "match",
+      "control_mode": "after",
+      "note": "The control runs AFTER and must still find the original text: ripgrep never writes to the file. Agents reach for `rg -r` expecting sed -i and get a printed diff instead.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P032",
+      "tool": "rg",
+      "topic": "literal-and-regex-search",
+      "construct": "fixed-strings",
+      "question": "Does -F disable metacharacters?",
+      "command": [
+        "rg",
+        "-F",
+        "-c",
+        "println!(",
+        "src/main.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-c",
+        "println!(",
+        "src/main.rs"
+      ],
+      "control_expect": "error",
+      "note": "An unclosed group is a parse error as a regex and an ordinary substring as a literal. Searching for code punctuation is the commonest reason to reach for -F.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P033",
+      "tool": "rg",
+      "topic": "literal-and-regex-search",
+      "construct": "fixed-strings-under-pcre2",
+      "question": "Does -F still mean literal when combined with -P?",
+      "command": [
+        "rg",
+        "-P",
+        "-F",
+        "-c",
+        "(?<=said )",
+        "docs/quotes.txt"
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-P",
+        "-c",
+        "(?<=she )\\w+",
+        "docs/quotes.txt"
+      ],
+      "control_expect": "match",
+      "note": "-F escapes the pattern before PCRE2 compiles it, so the lookbehind is searched for as text.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P034",
+      "tool": "rg",
+      "topic": "machine-output",
+      "construct": "exit-no-match",
+      "question": "What exit code distinguishes no-match from error?",
+      "command": [
+        "rg",
+        "-q",
+        "definitely-not-present-anywhere",
+        "."
+      ],
+      "expect": "no-match",
+      "control": [
+        "rg",
+        "-q",
+        "anything",
+        "no-such-path-exists"
+      ],
+      "control_expect": "error",
+      "note": "1 and 2 are different answers. Treating every nonzero exit as 'no matches' converts a broken invocation into a confident false negative.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A001",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "pattern-basic",
+      "question": "Does a code-shaped pattern match a call?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "println!($$$ARGS)",
+        "src/main.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "eprintln!($$$ARGS)",
+        "src/main.rs"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A002",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "metavariable-equality",
+      "question": "Does a repeated capturing metavariable enforce equality?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "python",
+        "-p",
+        "print($A)",
+        "src/app.py"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "python",
+        "-p",
+        "print($A, $A)",
+        "src/app.py"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A003",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "multi-metavariable-root",
+      "question": "Is a bare multi-metavariable accepted as the whole pattern?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "$$$A",
+        "src/main.rs"
+      ],
+      "expect": "any",
+      "control": null,
+      "note": "0.44 tightened this. Whatever the installed binary does is recorded verbatim rather than asserted from the changelog.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A004",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "kind-selector",
+      "question": "Does --kind accept an ESQuery-style selector?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-k",
+        "function_item",
+        "src/main.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-k",
+        "no_such_kind_at_all",
+        "src/main.rs"
+      ],
+      "control_expect": "exit:8",
+      "note": "ast-grep does not use ripgrep's exit vocabulary. An unparseable selector exits 8, not 2, so a script that branches on `== 2` for `error` will misclassify every ast-grep failure. exit-codes.tsv carries the full table.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A005",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "esquery-child",
+      "question": "Does the ESQuery direct-child combinator work in --kind?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-k",
+        "function_item > identifier",
+        "src/lib.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-k",
+        "function_item > integer_literal",
+        "src/lib.rs"
+      ],
+      "control_expect": "no-match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A006",
+      "tool": "ast-grep",
+      "topic": "structural-patterns",
+      "construct": "strictness-comments",
+      "question": "Does strictness change whether a comment defeats a match?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "x + 1",
+        "--strictness",
+        "relaxed",
+        "src/main.rs"
+      ],
+      "expect": "any",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "x + 1",
+        "--strictness",
+        "cst",
+        "src/main.rs"
+      ],
+      "control_mode": "record-both",
+      "note": "Both halves are recorded; the comparison is the finding.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A007",
+      "tool": "ast-grep",
+      "topic": "code-navigation",
+      "construct": "outline-exits-zero-when-empty",
+      "question": "Does outline exit nonzero when it finds nothing?",
+      "command": [
+        "ast-grep",
+        "outline",
+        "--match",
+        "ZZZ_no_such_symbol",
+        "src/lib.rs"
+      ],
+      "expect": "exit:0",
+      "control": [
+        "ast-grep",
+        "outline",
+        "no-such-file-at-all.rs"
+      ],
+      "control_expect": "exit:0",
+      "control_mode": "differs",
+      "note": "Both halves exit 0 -- and that is the finding. outline exits 0 for an empty outline, which is defensible because an empty result is data. But it ALSO exits 0 for a file that does not exist, writing the error only to stderr. So for outline the exit status carries no information at all: branch on stdout content and check stderr, never on the status.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A008",
+      "tool": "ast-grep",
+      "topic": "code-navigation",
+      "construct": "outline-members",
+      "question": "Does --view expanded list members of one item?",
+      "command": [
+        "ast-grep",
+        "outline",
+        "src/lib.rs",
+        "--match",
+        "Parser",
+        "--view",
+        "expanded"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "outline",
+        "src/lib.rs",
+        "--match",
+        "Parser",
+        "--view",
+        "names"
+      ],
+      "control_mode": "differs",
+      "control_expect": "match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A009",
+      "tool": "ast-grep",
+      "topic": "code-navigation",
+      "construct": "outline-match-targets-items",
+      "question": "Does --match filter members, or only top-level items?",
+      "command": [
+        "ast-grep",
+        "outline",
+        "src/lib.rs",
+        "--match",
+        "recover"
+      ],
+      "expect": "any",
+      "control": [
+        "ast-grep",
+        "outline",
+        "src/lib.rs",
+        "--match",
+        "Parser"
+      ],
+      "control_expect": "match",
+      "note": "`recover` is a member of Parser, not a top-level item. The asymmetry is the finding an agent needs.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A010",
+      "tool": "ast-grep",
+      "topic": "machine-output",
+      "construct": "json-requires-equals",
+      "question": "Must --json take its style with = rather than a space?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "helper($$$A)",
+        "--json=compact",
+        "src/main.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "helper($$$A)",
+        "--json",
+        "stream",
+        "src/main.rs"
+      ],
+      "control_mode": "record-both",
+      "note": "With a space, `stream` is consumed as a path. The control is recorded verbatim because the failure is silent rather than loud.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A011",
+      "tool": "ast-grep",
+      "topic": "debugging-a-query",
+      "construct": "debug-query",
+      "question": "Does --debug-query show how the pattern parsed?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "helper($X)",
+        "--debug-query=cst",
+        "src/main.rs"
+      ],
+      "expect": "any",
+      "control": null,
+      "note": "Output goes to stderr. Recorded so debugging-a-query.md can show the real shape.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A012",
+      "tool": "ast-grep",
+      "topic": "code-navigation",
+      "construct": "outline-imports",
+      "question": "Does --items imports isolate dependency direction?",
+      "command": [
+        "ast-grep",
+        "outline",
+        "src/app.py",
+        "--items",
+        "imports"
+      ],
+      "expect": "match",
+      "control": [
+        "ast-grep",
+        "outline",
+        "src/app.py",
+        "--items",
+        "structure"
+      ],
+      "control_mode": "differs",
+      "control_expect": "match",
+      "since_pcre2": ""
+    },
+    {
+      "id": "A013",
+      "tool": "ast-grep",
+      "topic": "composing-the-two",
+      "construct": "syntax-not-text",
+      "question": "Does ast-grep ignore an occurrence that lives inside a comment?",
+      "command": [
+        "ast-grep",
+        "run",
+        "-l",
+        "rust",
+        "-p",
+        "helper($X)",
+        "src/main.rs"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-c",
+        "helper",
+        "src/main.rs"
+      ],
+      "control_mode": "differs",
+      "control_expect": "match",
+      "note": "The counts must differ. rg finds the mention in the `// helper is called above` comment; ast-grep cannot match a comment as a call node. This is the whole argument for composing the two.",
+      "since_pcre2": ""
+    },
+    {
+      "id": "P035",
+      "tool": "rg",
+      "topic": "unicode-and-encodings",
+      "construct": "extended-class-with-lookaround",
+      "since_pcre2": "10.48",
+      "question": "Can an extended class appear in the same pattern as a lookaround?",
+      "command": [
+        "rg",
+        "-oP",
+        "(?[\\d-[1]]).(?<!x)",
+        "docs/eclass.txt"
+      ],
+      "expect": "0a",
+      "control": [
+        "rg",
+        "-oP",
+        "(?[\\d && ]).(?<!x)",
+        "docs/eclass.txt"
+      ],
+      "control_expect": "error",
+      "note": "The one construct whose behaviour actually moved between 10.47 and 10.48. On 10.47 this pattern did not merely fail to match -- it failed to COMPILE, with internal error 170 from check_lookbehinds(), because the extended-class meta codes were absent from that function's switch. Fixed by upstream PRs #961 and #962. The control is a malformed extended class that must still be rejected, which is what makes the first half's success mean 'this composes now' rather than 'the parser waves extended classes through'."
+    },
+    {
+      "id": "P036",
+      "tool": "rg",
+      "topic": "unicode-and-encodings",
+      "construct": "unicode-17-script",
+      "since_pcre2": "10.48",
+      "question": "Do the Unicode 17.0 scripts resolve, and does the engine still reject junk?",
+      "command": [
+        "rg",
+        "-oP",
+        "\\p{Sidetic}",
+        "docs/unicode17.txt"
+      ],
+      "expect": "match",
+      "control": [
+        "rg",
+        "-P",
+        "\\p{Not_A_Real_Script_Xyz}",
+        "docs/unicode17.txt"
+      ],
+      "control_expect": "error",
+      "note": "PCRE2 validates property names against its compiled Unicode tables, so a script added in Unicode 17.0 is an unknown-property compile error on 10.47 and a valid property at this baseline. The control is load-bearing: it proves the engine rejects invented property names, so acceptance of Sidetic means the tables really were rebuilt rather than that the parser is permissive. Unicode 17.0 added exactly four scripts -- Sidetic, Tai_Yo, Tolong_Siki, Beria_Erfe -- any of which works here."
+    }
+  ]
+}

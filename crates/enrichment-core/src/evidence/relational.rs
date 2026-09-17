@@ -3,39 +3,32 @@
 //! Producer transport records are normalized into these relations once. Storage projections
 //! preserve their structure; query views never become a second source of observed facts.
 
+use crate::native_union::{Domain, Rule, Unit};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{Deprecated, FragmentKind, RelationKind, Symbol, SymbolKind, path::PublicPath};
+use super::{Deprecated, FragmentKind, RelationKind, SymbolHeader, SymbolKind, path::PublicPath};
 use crate::{
     producer::python::Publicness,
     wire::{EvidenceClass, SourceVersionMatch},
 };
 
-/// A reference carries its indexing domain. External paths never masquerade as local keys.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum SubjectRef {
-    Symbol {
-        symbol_id: String,
-    },
-    Definition {
-        definition_id: String,
-    },
-    Library {
-        release_id: String,
-    },
-    Feature {
-        name: String,
-    },
-    Document {
-        artifact_id: String,
-        heading: String,
-    },
-    Example {
-        artifact_id: String,
-        path: String,
-    },
+crate::native_union! {
+    /// A reference carries its indexing domain. External paths never masquerade as local keys.
+    pub enum SubjectRef {
+        Symbol = "symbol" { symbol_id: String => Rule::Reference(Domain::Symbol) },
+        Definition = "definition" { definition_id: String => Rule::Reference(Domain::Definition) },
+        Library = "library" { release_id: String => Rule::Reference(Domain::Release) },
+        Feature = "feature" { name: String => Rule::NonEmpty },
+        Document = "document" {
+            artifact_id: String => Rule::Reference(Domain::Artifact),
+            heading: String => Rule::Text,
+        },
+        Example = "example" {
+            artifact_id: String => Rule::Reference(Domain::Artifact),
+            path: String => Rule::MemberPath,
+        },
+    }
 }
 
 impl SubjectRef {
@@ -64,91 +57,90 @@ impl SubjectRef {
     }
 }
 
-/// Relationship target domains, including legitimate unresolved targets.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum TargetRef {
-    Symbol {
-        symbol_id: String,
-    },
-    Definition {
-        definition_id: String,
-    },
-    External {
-        package: Option<String>,
-        path: String,
-    },
-    Unresolved {
-        path: String,
-    },
+crate::native_union! {
+    /// Relationship target domains, including legitimate unresolved targets.
+    pub enum TargetRef {
+        Symbol = "symbol" { symbol_id: String => Rule::Reference(Domain::Symbol) },
+        Definition = "definition" { definition_id: String => Rule::Reference(Domain::Definition) },
+        External = "external" {
+            package: Option<String> => Rule::Text,
+            path: String => Rule::NonEmpty,
+        },
+        Unresolved = "unresolved" { path: String => Rule::NonEmpty },
+    }
 }
 
-/// Typed artifact coordinates. Open producer payloads have an explicit versioned boundary.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum Locator {
-    Artifact,
-    Lines {
-        file: Option<String>,
-        start: u32,
-        end: u32,
-    },
-    Bytes {
-        start: u64,
-        end: u64,
-    },
-    ArchiveMember {
-        path: String,
-    },
-    Heading {
-        heading: String,
-        ordinal: u32,
-    },
-    ProducerItem {
-        producer: String,
-        item: String,
-    },
-    RustdocItem {
-        item: u32,
-        reported_file: Option<String>,
-        reported_line: Option<u32>,
-    },
-    PythonDeclaration {
-        file: String,
-        declaration: String,
-        line: Option<u32>,
-        origin: ApiOrigin,
-        overload: Option<u32>,
-    },
-    ManifestKey {
-        file: String,
-        table: String,
-        key: String,
-    },
-    MarkdownSection {
-        file: String,
-        heading: String,
-        line: u32,
-    },
-    SourceStart {
-        file: String,
-        line: u32,
-    },
-    SphinxInventory {
-        uri: String,
-        role: String,
-        project: String,
-        inventory_version: String,
-    },
-    WebDocument {
-        uri: String,
-        inventory_version: String,
-    },
-    Extension {
-        format: String,
-        version: String,
-        value: Value,
-    },
+crate::native_union! {
+    /// Typed artifact coordinates. Only an explicit producer extension permits open JSON.
+    pub enum Locator {
+        Artifact = "artifact",
+        Lines = "lines" {
+            file: Option<String> => Rule::MemberPath,
+            start: u32 => Rule::Coordinate(Unit::LineOneBased),
+            end: u32 => Rule::RangeEnd { unit: Unit::LineOneBased, start: "start".into() },
+        },
+        Bytes = "bytes" {
+            start: u64 => Rule::Coordinate(Unit::ByteOffset),
+            end: u64 => Rule::RangeEnd { unit: Unit::ByteOffset, start: "start".into() },
+        },
+        ArchiveMember = "archive_member" { path: String => Rule::MemberPath },
+        Heading = "heading" {
+            heading: String => Rule::Text,
+            ordinal: u32 => Rule::Coordinate(Unit::Ordinal),
+        },
+        ProducerItem = "producer_item" {
+            producer: String => Rule::NonEmpty,
+            item: String => Rule::NonEmpty,
+        },
+        RustdocItem = "rustdoc_item" {
+            item: u32 => Rule::Coordinate(Unit::RustdocItem),
+            reported_file: Option<String> => Rule::NonEmpty,
+            reported_line: Option<u32> => Rule::Coordinate(Unit::LineOneBased),
+        },
+        PythonDeclaration = "python_declaration" {
+            file: String => Rule::MemberPath,
+            declaration: String => Rule::NonEmpty,
+            line: Option<u32> => Rule::Coordinate(Unit::LineOneBased),
+            origin: ApiOrigin => Rule::PythonDeclarationOrigin,
+            overload: Option<u32> => Rule::Coordinate(Unit::Ordinal),
+        },
+        ManifestKey = "manifest_key" {
+            file: String => Rule::MemberPath,
+            table: String => Rule::NonEmpty,
+            key: String => Rule::NonEmpty,
+        },
+        ManifestTable = "manifest_table" {
+            file: String => Rule::MemberPath,
+            table: String => Rule::NonEmpty,
+        },
+        RegistryLine = "registry_line" {
+            line: u64 => Rule::Coordinate(Unit::LineOneBased),
+        },
+        MarkdownSection = "markdown_section" {
+            file: String => Rule::MemberPath,
+            heading: String => Rule::Text,
+            line: u32 => Rule::Coordinate(Unit::LineOneBased),
+        },
+        SourceStart = "source_start" {
+            file: String => Rule::MemberPath,
+            line: u32 => Rule::Coordinate(Unit::LineOneBased),
+        },
+        SphinxInventory = "sphinx_inventory" {
+            uri: String => Rule::DocumentUri,
+            role: String => Rule::NonEmpty,
+            project: String => Rule::NonEmpty,
+            inventory_version: String => Rule::Text,
+        },
+        WebDocument = "web_document" {
+            uri: String => Rule::DocumentUri,
+            inventory_version: String => Rule::Text,
+        },
+        Extension = "extension" {
+            format: String => Rule::NonEmpty,
+            version: String => Rule::NonEmpty,
+            value: Value => Rule::Json,
+        },
+    }
 }
 
 impl Locator {
@@ -200,6 +192,10 @@ impl Locator {
                     return Err("invalid manifest key locator".into());
                 }
             }
+            Self::ManifestTable { file, table } if !safe_member(file) || table.is_empty() => {
+                return Err("invalid manifest table locator".into());
+            }
+            Self::RegistryLine { line: 0 } => return Err("invalid registry line locator".into()),
             Self::MarkdownSection { file, line, .. } | Self::SourceStart { file, line }
                 if !safe_member(file) || *line == 0 =>
             {
@@ -251,19 +247,25 @@ fn safe_member(path: &str) -> bool {
         && !path.chars().any(char::is_control)
 }
 
-/// Content qualification is semantic; actual execution-attempt attribution is separate.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct FactSource {
-    pub producer_binding_id: String,
-    /// Component within the producing job (for example public-api inside normalization).
-    pub extractor: String,
-    pub extractor_version: String,
-    pub artifact_id: String,
-    pub source_uri: Option<String>,
-    pub source_version_match: SourceVersionMatch,
-    pub locator: Locator,
-    pub evidence_class: EvidenceClass,
+crate::native_struct! {
+    /// Content qualification is semantic; actual execution-attempt attribution is separate.
+    pub struct FactSource {
+        producer_binding_id: String => Rule::Reference(Domain::ProducerBinding),
+        /// Component within the producing job, such as public-api inside normalization.
+        extractor: String => Rule::NonEmpty,
+        extractor_version: String => Rule::NonEmpty,
+        artifact_id: String => Rule::ScopedReference {
+            domain: Domain::Artifact,
+            scope: vec![
+                crate::native_union::ScopeKey { source: vec!["producer_binding_id".into()], target: vec!["producer_binding_id".into()], null: crate::native_union::ScopeNull::Exact },
+                crate::native_union::ScopeKey { source: vec!["source_uri".into()], target: vec!["source_uri".into()], null: crate::native_union::ScopeNull::Unspecified },
+            ],
+        },
+        source_uri: Option<String> => Rule::Text,
+        source_version_match: SourceVersionMatch => Rule::Vocabulary(SourceVersionMatch::VALUES.iter().map(|value| (*value).into()).collect()),
+        locator: Locator => Rule::Text,
+        evidence_class: EvidenceClass => Rule::Vocabulary(EvidenceClass::VALUES.iter().map(|value| (*value).into()).collect()),
+    }
 }
 
 impl FactSource {
@@ -304,7 +306,7 @@ impl Definition {
         if self.defined_in_package.is_empty()
             || self.definition_path.is_empty()
             || self.definition_id
-                != Symbol::definition_id_for(
+                != SymbolHeader::definition_id_for(
                     &self.defined_in_package,
                     &self.definition_path,
                     self.kind,
@@ -378,48 +380,35 @@ impl PublicBinding {
     }
 }
 
-/// Origin is independent of epistemic class and does not supply a confidence ordering.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ApiOrigin {
-    Rustdoc,
-    Source,
-    Stub,
+crate::native_vocabulary! {
+    /// Origin is independent of epistemic class and does not supply a confidence ordering.
+    pub enum ApiOrigin { Rustdoc = "rustdoc", Source = "source", Stub = "stub" }
 }
 
-impl ApiOrigin {
-    /// Canonical token used by Arrow and wire projections.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Rustdoc => "rustdoc",
-            Self::Source => "source",
-            Self::Stub => "stub",
-        }
+crate::native_struct! {
+    /// Python facts retain every declared overload and ordered base expression.
+    pub struct PythonDetails {
+        callable: Option<super::declarations::PythonCallable> => Rule::Text,
+        overloads: Vec<super::declarations::PythonOverload> => Rule::Sequence,
+        alias_target: Option<String> => Rule::Text,
+        bases: Vec<super::declarations::PythonBase> => Rule::Sequence,
+        publicness: Publicness => Rule::Text,
     }
 }
 
-/// Python-specific structured declarations; common signature/docs fields are not duplicated.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct PythonDetails {
-    pub overloads: Vec<String>,
-    pub alias_target: Option<String>,
-    pub bases: Vec<String>,
-    pub publicness: Publicness,
-}
-
-/// The semantic payload of an independently qualified API observation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct ApiPayload {
-    pub declared_kind: SymbolKind,
-    pub signature: Option<String>,
-    pub doc_summary: Option<String>,
-    pub docs: Option<String>,
-    pub deprecated: Option<Deprecated>,
-    pub cfg_hints: Vec<String>,
-    pub python: Option<PythonDetails>,
+crate::native_split_record! {
+    /// An independent API observation; large documentation text lives in a sibling column.
+    pub struct ApiPayload {
+        declared_kind: SymbolKind => Rule::Vocabulary(SymbolKind::VALUES.iter().map(|v| (*v).into()).collect()),
+        signature: Option<String> => Rule::Text,
+        doc_summary: Option<String> => Rule::Documentation,
+        deprecated: Option<Deprecated> => Rule::Text,
+        cfg_hints: Vec<String> => Rule::Sequence,
+        python: Option<PythonDetails> => Rule::Text,
+        rust: Option<super::declarations::RustDetails> => Rule::Text,
+    } separated {
+        docs: Option<String> => Rule::Documentation,
+    }
 }
 
 /// An observation ID is minted before its snapshot and never includes an execution attempt.
@@ -507,16 +496,16 @@ pub struct AttemptAttribution {
     pub producer_binding_id: String,
 }
 
-/// Text evidence keeps its non-symbol subject domain and acquisition qualification.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct TextFragment {
-    pub fragment_id: String,
-    pub kind: FragmentKind,
-    pub subject: SubjectRef,
-    pub display_subject: String,
-    pub text: String,
-    pub source: FactSource,
+crate::native_struct! {
+    /// Text evidence keeps its typed subject and exact acquisition qualification at every boundary.
+    pub struct TextFragment {
+        fragment_id: String => Rule::NonEmpty,
+        kind: FragmentKind => Rule::Text,
+        subject: SubjectRef => Rule::Text,
+        display_subject: String => Rule::Text,
+        text: String => Rule::Text,
+        source: FactSource => Rule::Text,
+    }
 }
 
 impl TextFragment {
@@ -569,16 +558,16 @@ impl TextFragment {
     }
 }
 
+crate::native_struct! {
 /// Observed semantic relationships are separate from derived lexical ancestry.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct RelationshipObservation {
-    pub relationship_id: String,
-    pub subject: SubjectRef,
-    pub target: TargetRef,
-    pub relation: RelationKind,
-    pub qualifier: Option<String>,
-    pub source: FactSource,
+    relationship_id: String => crate::native_union::Rule::Text,
+    subject: SubjectRef => crate::native_union::Rule::Text,
+    target: TargetRef => crate::native_union::Rule::Text,
+    relation: RelationKind => crate::native_union::Rule::Text,
+    qualifier: Option<String> => crate::native_union::Rule::Text,
+    source: FactSource => crate::native_union::Rule::Text,
+}
 }
 
 /// Exact content and acquisition binding for a producer input. Blob bytes remain deduplicated.
@@ -812,6 +801,7 @@ mod tests {
                 deprecated: None,
                 cfg_hints: Vec::new(),
                 python: None,
+                rust: None,
             },
             FactSource {
                 producer_binding_id: "producer_test".into(),
@@ -909,7 +899,7 @@ mod tests {
         let id = PublicBinding::id_for("python:pkg", &literal, SymbolKind::Function, None);
         assert_eq!(
             id,
-            "symbol_4723ef4a6777515941b5eb6feb783c23163644681dcc1628a1fba092df664ec8"
+            "symbol_b363b8137d984fa9d56780a52f23e6d330b9ce0535b20e91a86630b8f79a62a7"
         );
         assert_ne!(
             id,

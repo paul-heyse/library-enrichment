@@ -1,0 +1,197 @@
+{
+  "module": "ast_grep_core::matcher::pattern",
+  "crate": "ast-grep-core",
+  "api": "api/ast_grep_core.matcher.pattern.md",
+  "items": [
+    {
+      "path": "ast_grep_core::matcher::pattern::PatternError",
+      "name": "PatternError",
+      "kind": "enum",
+      "crate": "ast-grep-core",
+      "signature": "enum PatternError",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::PatternError",
+        "ast_grep_core::matcher::PatternError"
+      ],
+      "variants": [
+        "Parse",
+        "NoContent",
+        "MultipleNode",
+        "RootMultiMetaVar",
+        "InvalidKind",
+        "NoSelectorInContext"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: KindMatcherError) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::pattern::PatternNode",
+      "name": "PatternNode",
+      "kind": "enum",
+      "crate": "ast-grep-core",
+      "signature": "enum PatternNode",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::matcher::PatternNode"
+      ],
+      "variants": [
+        "MetaVar",
+        "Terminal",
+        "Internal"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "fixed_string",
+          "signature": "fn fixed_string(&self) -> Cow<'_, str>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(node: Node<'r, D>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_trivial",
+          "signature": "fn is_trivial(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::pattern::DumpPattern",
+      "name": "DumpPattern",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct DumpPattern<'p>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::matcher::DumpPattern"
+      ],
+      "fields": [
+        "is_meta_var",
+        "kind",
+        "text",
+        "children"
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::pattern::Pattern",
+      "name": "Pattern",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct Pattern",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::Pattern",
+        "ast_grep_core::matcher::Pattern"
+      ],
+      "fields": [
+        "node",
+        "strictness"
+      ],
+      "implements": [
+        "ast_grep_core::matcher::Matcher",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "contextual",
+          "signature": "fn contextual<L: Language>(context: &str, selector: &str, lang: L) -> Result<Self, PatternError>"
+        },
+        {
+          "name": "defined_vars",
+          "signature": "fn defined_vars(&self) -> HashSet<&str>",
+          "summary": "Get all defined variables in the pattern. Used for validating rules and report undefined variables."
+        },
+        {
+          "name": "dump",
+          "signature": "fn dump(&self, kind_id_to_name: &impl Fn(u16) -> Option<Cow<'static, str>>) -> Option<DumpPattern<'_>>"
+        },
+        {
+          "name": "fixed_string",
+          "signature": "fn fixed_string(&self) -> Cow<'_, str>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(node: Node<'r, D>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_match_len",
+          "signature": "fn get_match_len<D: Doc>(&self, node: Node<'_, D>) -> Option<usize>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        },
+        {
+          "name": "has_error",
+          "signature": "fn has_error(&self) -> bool"
+        },
+        {
+          "name": "match_node_with_env",
+          "signature": "fn match_node_with_env<'tree, D: Doc>(&self, node: Node<'tree, D>, env: &mut Cow<'_, MetaVarEnv<'tree, D>>) -> Option<Node<'tree, D>>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<L: Language>(src: &str, lang: L) -> Self"
+        },
+        {
+          "name": "potential_kinds",
+          "signature": "fn potential_kinds(&self) -> Option<bit_set::BitSet>",
+          "via_trait": "ast_grep_core::matcher::Matcher"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new<L: Language>(src: &str, lang: L) -> Result<Self, PatternError>"
+        },
+        {
+          "name": "with_strictness",
+          "signature": "fn with_strictness(self, strictness: MatchStrictness) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::matcher::pattern::PatternBuilder",
+      "name": "PatternBuilder",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct PatternBuilder<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::matcher::PatternBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<D, F>(&self, parse: F) -> Result<Pattern, PatternError> where F: FnOnce(&str) -> Result<D, String>, D: Doc"
+        }
+      ]
+    }
+  ]
+}

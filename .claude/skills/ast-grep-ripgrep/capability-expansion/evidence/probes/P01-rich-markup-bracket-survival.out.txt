@@ -1,0 +1,37 @@
+rich version under test: /home/paul/library-enrichment/.venv/lib/python3.14/site-packages/rich/__init__.py
+
+subject          markup=True result           verdict
+------------------------------------------------------------------
+[x]              'v  w'                       ALTERED
+[a-z]            'v  w'                       ALTERED
+[A-Z]            'v [A-Z] w'                  survives
+[0-9]            'v [0-9] w'                  survives
+[^a-z]           'v [^a-z] w'                 survives
+[a-zA-Z_]        'v  w'                       ALTERED
+[[:alpha:]]      'v [[:alpha:]] w'            survives
+[[:^digit:]]     'v [[:^digit:]] w'           survives
+[\d-[1]]         'v [\\d-[1]] w'              survives
+[pattern]        'v  w'                       ALTERED
+[kind]           'v  w'                       ALTERED
+[inside]         'v  w'                       ALTERED
+[has]            'v  w'                       ALTERED
+[stopBy]         'v  w'                       ALTERED
+[regex]          'v  w'                       ALTERED
+[path]           'v  w'                       ALTERED
+[PATH]           'v [PATH] w'                 survives
+[--flag]         'v [--flag] w'               survives
+[-n]             'v [-n] w'                   survives
+[glob]           'v  w'                       ALTERED
+[FILE]           'v [FILE] w'                 survives
+[]]              'v []] w'                    survives
+[^]]             'v [^]] w'                   survives
+x[0]y            'v x[0]y w'                  survives
+
+--- control: does escape() rescue every altered form? ---
+escape() rescued : ['[x]', '[a-z]', '[a-zA-Z_]', '[pattern]', '[kind]', '[inside]', '[has]', '[stopBy]', '[regex]', '[path]', '[glob]']
+escape() FAILED  : []
+
+--- control: does markup=False preserve every form? ---
+markup=False failures: []
+
+summary: 13 survive, 11 altered, 0 raised

@@ -159,7 +159,13 @@ async fn a_dropped_execution_task_still_removes_its_container_and_descendants() 
     let permits = Arc::new(tokio::sync::Semaphore::new(1));
     let supervisor = Supervisor::new(Arc::clone(&permits), 60, 1);
     let cache = tempfile::tempdir().unwrap();
-    let runner = Runner::new(&config, cache.path(), Arc::clone(&supervisor)).unwrap();
+    let runner = Runner::new(
+        &config,
+        cache.path(),
+        Arc::clone(&supervisor),
+        ownership(cache.path()),
+    )
+    .unwrap();
 
     let image = config.python_image.clone().unwrap();
     let mount = capsule.path().to_path_buf();
@@ -267,7 +273,13 @@ async fn a_failed_removal_is_reported_truthfully_and_quarantines_admission() {
     let permits = Arc::new(tokio::sync::Semaphore::new(1));
     let supervisor = Supervisor::new(Arc::clone(&permits), 120, 1);
     let cache = tempfile::tempdir().unwrap();
-    let runner = Runner::new(&config, cache.path(), Arc::clone(&supervisor)).unwrap();
+    let runner = Runner::new(
+        &config,
+        cache.path(),
+        Arc::clone(&supervisor),
+        ownership(cache.path()),
+    )
+    .unwrap();
 
     let observation = runner
         .run(
@@ -337,7 +349,13 @@ async fn cancellation_before_start_runs_no_target_code_and_restart_reconciles_an
     let capsule = tempfile::tempdir().unwrap();
     let supervisor = Supervisor::new(Arc::new(tokio::sync::Semaphore::new(2)), 60, 2);
     let cache = tempfile::tempdir().unwrap();
-    let runner = Runner::new(&config, cache.path(), Arc::clone(&supervisor)).unwrap();
+    let runner = Runner::new(
+        &config,
+        cache.path(),
+        Arc::clone(&supervisor),
+        ownership(cache.path()),
+    )
+    .unwrap();
 
     // Creation completes, then cancellation is observed: the target is never started.
     let observation = runner
@@ -407,7 +425,10 @@ async fn cancellation_before_start_runs_no_target_code_and_restart_reconciles_an
     .unwrap();
     assert!(container_present(&root, &name));
 
-    runner.recover_owned().expect("reconciliation succeeds");
+    runner
+        .recover_owned()
+        .await
+        .expect("reconciliation succeeds");
     assert!(
         !container_present(&root, &name),
         "startup reconciliation must confirm the orphan is gone"
@@ -436,7 +457,13 @@ async fn a_dropped_or_timed_out_creator_cannot_outlive_its_cleanup_ownership() {
         let before = owned_names(&root);
         let permits = Arc::new(tokio::sync::Semaphore::new(1));
         let supervisor = Supervisor::new(permits.clone(), 60, 1);
-        let runner = Runner::new(&config, fixture.path(), supervisor.clone()).unwrap();
+        let runner = Runner::new(
+            &config,
+            fixture.path(),
+            supervisor.clone(),
+            ownership(fixture.path()),
+        )
+        .unwrap();
         let inputs = tempfile::tempdir().unwrap();
         let task = tokio::spawn({
             let runner = runner.clone();
@@ -461,7 +488,7 @@ async fn a_dropped_or_timed_out_creator_cannot_outlive_its_cleanup_ownership() {
         let names = owned_since(&root, &before);
         let held = permits.available_permits() == 0 && names.len() == 1;
         let absent_before_creation = names.len() == 1 && !container_present(&root, &names[0]);
-        let refuses_unsafe_recovery = runner.recover_owned().is_err();
+        let refuses_unsafe_recovery = runner.recover_owned().await.is_err();
         // Always release before checking the findings, so assertion failure cannot strand the
         // test's intentionally paused creator.
         std::fs::write(&release, b"resume creator").unwrap();
@@ -516,7 +543,13 @@ async fn creation_past_the_operation_deadline_never_starts_the_target() {
     let root = config.storage_root.clone().unwrap();
     let before = owned_names(&root);
     let supervisor = Supervisor::new(Arc::new(tokio::sync::Semaphore::new(1)), 30, 1);
-    let runner = Runner::new(&config, fixture.path(), supervisor.clone()).unwrap();
+    let runner = Runner::new(
+        &config,
+        fixture.path(),
+        supervisor.clone(),
+        ownership(fixture.path()),
+    )
+    .unwrap();
     let result = runner
         .run(
             config.python_image.as_ref().unwrap(),
@@ -537,4 +570,14 @@ async fn creation_past_the_operation_deadline_never_starts_the_target() {
         "host deadline must prevent the actual broker start call"
     );
     assert!(owned_since(&root, &before).is_empty());
+}
+
+fn ownership(cache: &std::path::Path) -> enrichment_store::physical_ownership::OwnershipStore {
+    let runtime =
+        enrichment_store::runtime::QueryRuntime::new(&cache.join("test-spill"), Default::default())
+            .unwrap();
+    let control =
+        enrichment_store::control::ControlStore::open(&cache.join("test-control"), runtime.clone())
+            .unwrap();
+    enrichment_store::physical_ownership::OwnershipStore::new(control, runtime, cache).unwrap()
 }

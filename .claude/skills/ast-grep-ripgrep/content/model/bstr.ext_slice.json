@@ -1,0 +1,849 @@
+{
+  "module": "bstr::ext_slice",
+  "crate": "bstr",
+  "api": "api/bstr.ext_slice.md",
+  "items": [
+    {
+      "path": "bstr::ext_slice::B",
+      "name": "B",
+      "kind": "function",
+      "crate": "bstr",
+      "signature": "fn B<B: ?Sized + AsRef<[u8]>>(bytes: &B) -> &[u8]",
+      "summary": "A short-hand constructor for building a `&[u8]`.",
+      "doc": "api/bstr.ext_slice.md#b",
+      "aliases": [
+        "bstr::B"
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Bytes",
+      "name": "Bytes",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Bytes<'a>",
+      "summary": "An iterator over the bytes in a byte string.",
+      "doc": "api/bstr.ext_slice.md#bytes",
+      "aliases": [
+        "bstr::Bytes"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &'a [u8]",
+          "summary": "Views the remaining underlying data as a subslice of the original data. This has the same lifetime as the original slice, and so the iterator can continue to be used while this exists."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<u8>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<u8>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Fields",
+      "name": "Fields",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Fields<'a>",
+      "summary": "An iterator over the fields in a byte string, separated by whitespace.",
+      "doc": "api/bstr.ext_slice.md#fields",
+      "aliases": [
+        "bstr::Fields"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::FieldsWith",
+      "name": "FieldsWith",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct FieldsWith<'a, F>",
+      "summary": "An iterator over fields in the byte string, separated by a predicate over codepoints.",
+      "doc": "api/bstr.ext_slice.md#fieldswith",
+      "aliases": [
+        "bstr::FieldsWith"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Find",
+      "name": "Find",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Find<'h, 'n>",
+      "summary": "An iterator over non-overlapping substring matches.",
+      "doc": "api/bstr.ext_slice.md#find",
+      "aliases": [
+        "bstr::Find"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<usize>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::FindReverse",
+      "name": "FindReverse",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct FindReverse<'h, 'n>",
+      "summary": "An iterator over non-overlapping substring matches in reverse.",
+      "doc": "api/bstr.ext_slice.md#findreverse",
+      "aliases": [
+        "bstr::FindReverse"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<usize>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Finder",
+      "name": "Finder",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Finder<'a>",
+      "summary": "A single substring searcher fixed to a particular needle.",
+      "doc": "api/bstr.ext_slice.md#finder",
+      "aliases": [
+        "bstr::Finder"
+      ],
+      "methods": [
+        {
+          "name": "find",
+          "signature": "fn find<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of this needle in the given haystack."
+        },
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> Finder<'static>",
+          "summary": "Convert this finder into its owned variant, such that it no longer borrows the needle."
+        },
+        {
+          "name": "needle",
+          "signature": "fn needle(&self) -> &[u8]",
+          "summary": "Returns the needle that this finder searches for."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> Finder<'a>",
+          "summary": "Create a new finder for the given needle."
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::FinderReverse",
+      "name": "FinderReverse",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct FinderReverse<'a>",
+      "summary": "A single substring reverse searcher fixed to a particular needle.",
+      "doc": "api/bstr.ext_slice.md#finderreverse",
+      "aliases": [
+        "bstr::FinderReverse"
+      ],
+      "methods": [
+        {
+          "name": "into_owned",
+          "signature": "fn into_owned(self) -> FinderReverse<'static>",
+          "summary": "Convert this finder into its owned variant, such that it no longer borrows the needle."
+        },
+        {
+          "name": "needle",
+          "signature": "fn needle(&self) -> &[u8]",
+          "summary": "Returns the needle that this finder searches for."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<B: ?Sized + AsRef<[u8]>>(needle: &'a B) -> FinderReverse<'a>",
+          "summary": "Create a new reverse finder for the given needle."
+        },
+        {
+          "name": "rfind",
+          "signature": "fn rfind<B: AsRef<[u8]>>(&self, haystack: B) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of this needle in the given haystack."
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Lines",
+      "name": "Lines",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Lines<'a>",
+      "summary": "An iterator over all lines in a byte string, without their terminators.",
+      "doc": "api/bstr.ext_slice.md#lines",
+      "aliases": [
+        "bstr::Lines"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &'a [u8]",
+          "summary": "Return a copy of the rest of the underlying bytes without affecting the iterator itself."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::LinesWithTerminator",
+      "name": "LinesWithTerminator",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct LinesWithTerminator<'a>",
+      "summary": "An iterator over all lines in a byte string, including their terminators.",
+      "doc": "api/bstr.ext_slice.md#lineswithterminator",
+      "aliases": [
+        "bstr::LinesWithTerminator"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &'a [u8]",
+          "summary": "Return a copy of the rest of the underlying bytes without affecting the iterator itself."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'a [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::Split",
+      "name": "Split",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct Split<'h, 's>",
+      "summary": "An iterator over substrings in a byte string, split by a separator.",
+      "doc": "api/bstr.ext_slice.md#split",
+      "aliases": [
+        "bstr::Split"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::SplitN",
+      "name": "SplitN",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct SplitN<'h, 's>",
+      "summary": "An iterator over at most `n` substrings in a byte string, split by a separator.",
+      "doc": "api/bstr.ext_slice.md#splitn",
+      "aliases": [
+        "bstr::SplitN"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::SplitNReverse",
+      "name": "SplitNReverse",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct SplitNReverse<'h, 's>",
+      "summary": "An iterator over at most `n` substrings in a byte string, split by a separator, in reverse.",
+      "doc": "api/bstr.ext_slice.md#splitnreverse",
+      "aliases": [
+        "bstr::SplitNReverse"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::SplitReverse",
+      "name": "SplitReverse",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct SplitReverse<'h, 's>",
+      "summary": "An iterator over substrings in a byte string, split by a separator, in reverse.",
+      "doc": "api/bstr.ext_slice.md#splitreverse",
+      "aliases": [
+        "bstr::SplitReverse"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h [u8]>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_slice::ByteSlice",
+      "name": "ByteSlice",
+      "kind": "trait",
+      "crate": "bstr",
+      "signature": "trait ByteSlice: private::Sealed",
+      "summary": "A trait that extends `&[u8]` with string oriented methods.",
+      "doc": "api/bstr.ext_slice.md#byteslice",
+      "aliases": [
+        "bstr::ByteSlice"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "as_bstr",
+        "as_bstr_mut",
+        "bytes",
+        "char_indices",
+        "chars",
+        "contains_str",
+        "ends_with_str",
+        "escape_bytes",
+        "fields",
+        "fields_with",
+        "find",
+        "find_byte",
+        "find_byteset",
+        "find_char",
+        "find_iter",
+        "find_non_ascii_byte",
+        "find_not_byteset",
+        "from_os_str",
+        "from_path",
+        "grapheme_indices",
+        "graphemes",
+        "is_ascii",
+        "is_utf8",
+        "last_byte",
+        "lines",
+        "lines_with_terminator",
+        "make_ascii_lowercase",
+        "make_ascii_uppercase",
+        "repeatn",
+        "replace",
+        "replace_into",
+        "replacen",
+        "replacen_into",
+        "reverse_bytes",
+        "reverse_chars",
+        "reverse_graphemes",
+        "rfind",
+        "rfind_byte",
+        "rfind_byteset",
+        "rfind_char",
+        "rfind_iter",
+        "rfind_not_byteset",
+        "rsplit_once_str",
+        "rsplit_str",
+        "rsplitn_str",
+        "sentence_indices",
+        "sentences",
+        "split_once_str",
+        "split_str",
+        "splitn_str",
+        "starts_with_str",
+        "to_ascii_lowercase",
+        "to_ascii_uppercase",
+        "to_lowercase",
+        "to_lowercase_into",
+        "to_os_str",
+        "to_os_str_lossy",
+        "to_path",
+        "to_path_lossy",
+        "to_str",
+        "to_str_lossy",
+        "to_str_lossy_into",
+        "to_str_unchecked",
+        "to_uppercase",
+        "to_uppercase_into",
+        "trim",
+        "trim_end",
+        "trim_end_with",
+        "trim_start",
+        "trim_start_with",
+        "trim_with",
+        "utf8_chunks",
+        "word_indices",
+        "words",
+        "words_with_break_indices",
+        "words_with_breaks"
+      ],
+      "methods": [
+        {
+          "name": "as_bstr",
+          "signature": "fn as_bstr(&self) -> &BStr",
+          "summary": "Return this byte slice as a `&BStr`."
+        },
+        {
+          "name": "as_bstr_mut",
+          "signature": "fn as_bstr_mut(&mut self) -> &mut BStr",
+          "summary": "Return this byte slice as a `&mut BStr`."
+        },
+        {
+          "name": "bytes",
+          "signature": "fn bytes(&self) -> Bytes<'_>",
+          "summary": "Returns an iterator over the bytes in this byte string."
+        },
+        {
+          "name": "char_indices",
+          "signature": "fn char_indices(&self) -> CharIndices<'_>",
+          "summary": "Returns an iterator over the Unicode scalar values in this byte string along with their starting and ending byte index positions. If invalid UTF-8 is encountered, then the Unicode replacement codepoint is yielded instead."
+        },
+        {
+          "name": "chars",
+          "signature": "fn chars(&self) -> Chars<'_>",
+          "summary": "Returns an iterator over the Unicode scalar values in this byte string. If invalid UTF-8 is encountered, then the Unicode replacement codepoint is yielded instead."
+        },
+        {
+          "name": "contains_str",
+          "signature": "fn contains_str<B: AsRef<[u8]>>(&self, needle: B) -> bool",
+          "summary": "Returns true if and only if this byte string contains the given needle."
+        },
+        {
+          "name": "ends_with_str",
+          "signature": "fn ends_with_str<B: AsRef<[u8]>>(&self, suffix: B) -> bool",
+          "summary": "Returns true if and only if this byte string has the given suffix."
+        },
+        {
+          "name": "escape_bytes",
+          "signature": "fn escape_bytes(&self) -> EscapeBytes<'_>",
+          "summary": "Escapes this byte string into a sequence of `char` values."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> Fields<'_>",
+          "summary": "Returns an iterator over the fields in a byte string, separated by contiguous whitespace (according to the Unicode property `White_Space`)."
+        },
+        {
+          "name": "fields_with",
+          "signature": "fn fields_with<F: FnMut(char) -> bool>(&self, f: F) -> FieldsWith<'_, F>",
+          "summary": "Returns an iterator over the fields in a byte string, separated by contiguous codepoints satisfying the given predicate."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<B: AsRef<[u8]>>(&self, needle: B) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of the given needle."
+        },
+        {
+          "name": "find_byte",
+          "signature": "fn find_byte(&self, byte: u8) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of the given byte. If the byte does not occur in this byte string, then `None` is returned."
+        },
+        {
+          "name": "find_byteset",
+          "signature": "fn find_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of any of the bytes in the provided set."
+        },
+        {
+          "name": "find_char",
+          "signature": "fn find_char(&self, ch: char) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of the given codepoint. If the codepoint does not occur in this byte string, then `None` is returned."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'h, 'n, B: ?Sized + AsRef<[u8]>>(&'h self, needle: &'n B) -> Find<'h, 'n>",
+          "summary": "Returns an iterator of the non-overlapping occurrences of the given needle. The iterator yields byte offset positions indicating the start of each match."
+        },
+        {
+          "name": "find_non_ascii_byte",
+          "signature": "fn find_non_ascii_byte(&self) -> Option<usize>",
+          "summary": "Returns the index of the first non-ASCII byte in this byte string (if any such indices exist). Specifically, it returns the index of the first byte with a value greater than or equal to `0x80`."
+        },
+        {
+          "name": "find_not_byteset",
+          "signature": "fn find_not_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize>",
+          "summary": "Returns the index of the first occurrence of a byte that is not a member of the provided set."
+        },
+        {
+          "name": "from_os_str",
+          "signature": "fn from_os_str(os_str: &OsStr) -> Option<&[u8]>",
+          "summary": "Create an immutable byte string from an OS string slice."
+        },
+        {
+          "name": "from_path",
+          "signature": "fn from_path(path: &Path) -> Option<&[u8]>",
+          "summary": "Create an immutable byte string from a file path."
+        },
+        {
+          "name": "grapheme_indices",
+          "signature": "fn grapheme_indices(&self) -> GraphemeIndices<'_>",
+          "summary": "Returns an iterator over the grapheme clusters in this byte string along with their starting and ending byte index positions. If invalid UTF-8 is encountered, then the Unicode replacement codepoint is yielded instead."
+        },
+        {
+          "name": "graphemes",
+          "signature": "fn graphemes(&self) -> Graphemes<'_>",
+          "summary": "Returns an iterator over the grapheme clusters in this byte string. If invalid UTF-8 is encountered, then the Unicode replacement codepoint is yielded instead."
+        },
+        {
+          "name": "is_ascii",
+          "signature": "fn is_ascii(&self) -> bool",
+          "summary": "Returns true if and only if every byte in this byte string is ASCII."
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "summary": "Returns true if and only if the entire byte string is valid UTF-8."
+        },
+        {
+          "name": "last_byte",
+          "signature": "fn last_byte(&self) -> Option<u8>",
+          "summary": "Returns the last byte in this byte string, if it's non-empty. If this byte string is empty, this returns `None`."
+        },
+        {
+          "name": "lines",
+          "signature": "fn lines(&self) -> Lines<'_>",
+          "summary": "An iterator over all lines in a byte string, without their terminators."
+        },
+        {
+          "name": "lines_with_terminator",
+          "signature": "fn lines_with_terminator(&self) -> LinesWithTerminator<'_>",
+          "summary": "An iterator over all lines in a byte string, including their terminators."
+        },
+        {
+          "name": "make_ascii_lowercase",
+          "signature": "fn make_ascii_lowercase(&mut self)",
+          "summary": "Convert this byte string to its lowercase ASCII equivalent in place."
+        },
+        {
+          "name": "make_ascii_uppercase",
+          "signature": "fn make_ascii_uppercase(&mut self)",
+          "summary": "Convert this byte string to its uppercase ASCII equivalent in place."
+        },
+        {
+          "name": "repeatn",
+          "signature": "fn repeatn(&self, n: usize) -> Vec<u8>",
+          "summary": "Create a new byte string by repeating this byte string `n` times."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace<N: AsRef<[u8]>, R: AsRef<[u8]>>(&self, needle: N, replacement: R) -> Vec<u8>",
+          "summary": "Replace all matches of the given needle with the given replacement, and the result as a new `Vec<u8>`."
+        },
+        {
+          "name": "replace_into",
+          "signature": "fn replace_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(&self, needle: N, replacement: R, dest: &mut Vec<u8>)",
+          "summary": "Replace all matches of the given needle with the given replacement, and write the result into the provided `Vec<u8>`."
+        },
+        {
+          "name": "replacen",
+          "signature": "fn replacen<N: AsRef<[u8]>, R: AsRef<[u8]>>(&self, needle: N, replacement: R, limit: usize) -> Vec<u8>",
+          "summary": "Replace up to `limit` matches of the given needle with the given replacement, and the result as a new `Vec<u8>`."
+        },
+        {
+          "name": "replacen_into",
+          "signature": "fn replacen_into<N: AsRef<[u8]>, R: AsRef<[u8]>>(&self, needle: N, replacement: R, limit: usize, dest: &mut Vec<u8>)",
+          "summary": "Replace up to `limit` matches of the given needle with the given replacement, and write the result into the provided `Vec<u8>`."
+        },
+        {
+          "name": "reverse_bytes",
+          "signature": "fn reverse_bytes(&mut self)",
+          "summary": "Reverse the bytes in this string, in place."
+        },
+        {
+          "name": "reverse_chars",
+          "signature": "fn reverse_chars(&mut self)",
+          "summary": "Reverse the codepoints in this string, in place."
+        },
+        {
+          "name": "reverse_graphemes",
+          "signature": "fn reverse_graphemes(&mut self)",
+          "summary": "Reverse the graphemes in this string, in place."
+        },
+        {
+          "name": "rfind",
+          "signature": "fn rfind<B: AsRef<[u8]>>(&self, needle: B) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of the given needle."
+        },
+        {
+          "name": "rfind_byte",
+          "signature": "fn rfind_byte(&self, byte: u8) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of the given byte. If the byte does not occur in this byte string, then `None` is returned."
+        },
+        {
+          "name": "rfind_byteset",
+          "signature": "fn rfind_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of any of the bytes in the provided set."
+        },
+        {
+          "name": "rfind_char",
+          "signature": "fn rfind_char(&self, ch: char) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of the given codepoint. If the codepoint does not occur in this byte string, then `None` is returned."
+        },
+        {
+          "name": "rfind_iter",
+          "signature": "fn rfind_iter<'h, 'n, B: ?Sized + AsRef<[u8]>>(&'h self, needle: &'n B) -> FindReverse<'h, 'n>",
+          "summary": "Returns an iterator of the non-overlapping occurrences of the given needle in reverse. The iterator yields byte offset positions indicating the start of each match."
+        },
+        {
+          "name": "rfind_not_byteset",
+          "signature": "fn rfind_not_byteset<B: AsRef<[u8]>>(&self, byteset: B) -> Option<usize>",
+          "summary": "Returns the index of the last occurrence of a byte that is not a member of the provided set."
+        },
+        {
+          "name": "rsplit_once_str",
+          "signature": "fn rsplit_once_str<'a, B: ?Sized + AsRef<[u8]>>(&'a self, splitter: &B) -> Option<(&'a [u8], &'a [u8])>",
+          "summary": "Split this byte string at the last occurrence of `splitter`."
+        },
+        {
+          "name": "rsplit_str",
+          "signature": "fn rsplit_str<'h, 's, B: ?Sized + AsRef<[u8]>>(&'h self, splitter: &'s B) -> SplitReverse<'h, 's>",
+          "summary": "Returns an iterator over substrings of this byte string, separated by the given byte string, in reverse. Each element yielded is guaranteed not to include the splitter substring."
+        },
+        {
+          "name": "rsplitn_str",
+          "signature": "fn rsplitn_str<'h, 's, B: ?Sized + AsRef<[u8]>>(&'h self, limit: usize, splitter: &'s B) -> SplitNReverse<'h, 's>",
+          "summary": "Returns an iterator of at most `limit` substrings of this byte string, separated by the given byte string, in reverse. If `limit` substrings are yielded, then the last substring will contain the remainder of this byte string."
+        },
+        {
+          "name": "sentence_indices",
+          "signature": "fn sentence_indices(&self) -> SentenceIndices<'_>",
+          "summary": "Returns an iterator over the sentences in this byte string along with their starting and ending byte index positions."
+        },
+        {
+          "name": "sentences",
+          "signature": "fn sentences(&self) -> Sentences<'_>",
+          "summary": "Returns an iterator over the sentences in this byte string."
+        },
+        {
+          "name": "split_once_str",
+          "signature": "fn split_once_str<'a, B: ?Sized + AsRef<[u8]>>(&'a self, splitter: &B) -> Option<(&'a [u8], &'a [u8])>",
+          "summary": "Split this byte string at the first occurrence of `splitter`."
+        },
+        {
+          "name": "split_str",
+          "signature": "fn split_str<'h, 's, B: ?Sized + AsRef<[u8]>>(&'h self, splitter: &'s B) -> Split<'h, 's>",
+          "summary": "Returns an iterator over substrings of this byte string, separated by the given byte string. Each element yielded is guaranteed not to include the splitter substring."
+        },
+        {
+          "name": "splitn_str",
+          "signature": "fn splitn_str<'h, 's, B: ?Sized + AsRef<[u8]>>(&'h self, limit: usize, splitter: &'s B) -> SplitN<'h, 's>",
+          "summary": "Returns an iterator of at most `limit` substrings of this byte string, separated by the given byte string. If `limit` substrings are yielded, then the last substring will contain the remainder of this byte string."
+        },
+        {
+          "name": "starts_with_str",
+          "signature": "fn starts_with_str<B: AsRef<[u8]>>(&self, prefix: B) -> bool",
+          "summary": "Returns true if and only if this byte string has the given prefix."
+        },
+        {
+          "name": "to_ascii_lowercase",
+          "signature": "fn to_ascii_lowercase(&self) -> Vec<u8>",
+          "summary": "Returns a new `Vec<u8>` containing the ASCII lowercase equivalent of this byte string."
+        },
+        {
+          "name": "to_ascii_uppercase",
+          "signature": "fn to_ascii_uppercase(&self) -> Vec<u8>",
+          "summary": "Returns a new `Vec<u8>` containing the ASCII uppercase equivalent of this byte string."
+        },
+        {
+          "name": "to_lowercase",
+          "signature": "fn to_lowercase(&self) -> Vec<u8>",
+          "summary": "Returns a new `Vec<u8>` containing the lowercase equivalent of this byte string."
+        },
+        {
+          "name": "to_lowercase_into",
+          "signature": "fn to_lowercase_into(&self, buf: &mut Vec<u8>)",
+          "summary": "Writes the lowercase equivalent of this byte string into the given buffer. The buffer is not cleared before written to."
+        },
+        {
+          "name": "to_os_str",
+          "signature": "fn to_os_str(&self) -> Result<&OsStr, Utf8Error>",
+          "summary": "Create an OS string slice from this byte string."
+        },
+        {
+          "name": "to_os_str_lossy",
+          "signature": "fn to_os_str_lossy(&self) -> Cow<'_, OsStr>",
+          "summary": "Lossily create an OS string slice from this byte string."
+        },
+        {
+          "name": "to_path",
+          "signature": "fn to_path(&self) -> Result<&Path, Utf8Error>",
+          "summary": "Create a path slice from this byte string."
+        },
+        {
+          "name": "to_path_lossy",
+          "signature": "fn to_path_lossy(&self) -> Cow<'_, Path>",
+          "summary": "Lossily create a path slice from this byte string."
+        },
+        {
+          "name": "to_str",
+          "signature": "fn to_str(&self) -> Result<&str, Utf8Error>",
+          "summary": "Safely convert this byte string into a `&str` if it's valid UTF-8."
+        },
+        {
+          "name": "to_str_lossy",
+          "signature": "fn to_str_lossy(&self) -> Cow<'_, str>",
+          "summary": "Convert this byte string to a valid UTF-8 string by replacing invalid UTF-8 bytes with the Unicode replacement codepoint (`U+FFFD`)."
+        },
+        {
+          "name": "to_str_lossy_into",
+          "signature": "fn to_str_lossy_into(&self, dest: &mut String)",
+          "summary": "Copy the contents of this byte string into the given owned string buffer, while replacing invalid UTF-8 code unit sequences with the Unicode replacement codepoint (`U+FFFD`)."
+        },
+        {
+          "name": "to_str_unchecked",
+          "signature": "unsafe fn to_str_unchecked(&self) -> &str",
+          "summary": "Unsafely convert this byte string into a `&str`, without checking for valid UTF-8."
+        },
+        {
+          "name": "to_uppercase",
+          "signature": "fn to_uppercase(&self) -> Vec<u8>",
+          "summary": "Returns a new `Vec<u8>` containing the uppercase equivalent of this byte string."
+        },
+        {
+          "name": "to_uppercase_into",
+          "signature": "fn to_uppercase_into(&self, buf: &mut Vec<u8>)",
+          "summary": "Writes the uppercase equivalent of this byte string into the given buffer. The buffer is not cleared before written to."
+        },
+        {
+          "name": "trim",
+          "signature": "fn trim(&self) -> &[u8]",
+          "summary": "Return a byte string slice with leading and trailing whitespace removed."
+        },
+        {
+          "name": "trim_end",
+          "signature": "fn trim_end(&self) -> &[u8]",
+          "summary": "Return a byte string slice with trailing whitespace removed."
+        },
+        {
+          "name": "trim_end_with",
+          "signature": "fn trim_end_with<F: FnMut(char) -> bool>(&self, trim: F) -> &[u8]",
+          "summary": "Return a byte string slice with trailing characters satisfying the given predicate removed."
+        },
+        {
+          "name": "trim_start",
+          "signature": "fn trim_start(&self) -> &[u8]",
+          "summary": "Return a byte string slice with leading whitespace removed."
+        },
+        {
+          "name": "trim_start_with",
+          "signature": "fn trim_start_with<F: FnMut(char) -> bool>(&self, trim: F) -> &[u8]",
+          "summary": "Return a byte string slice with leading characters satisfying the given predicate removed."
+        },
+        {
+          "name": "trim_with",
+          "signature": "fn trim_with<F: FnMut(char) -> bool>(&self, trim: F) -> &[u8]",
+          "summary": "Return a byte string slice with leading and trailing characters satisfying the given predicate removed."
+        },
+        {
+          "name": "utf8_chunks",
+          "signature": "fn utf8_chunks(&self) -> Utf8Chunks<'_>",
+          "summary": "Iterate over chunks of valid UTF-8."
+        },
+        {
+          "name": "word_indices",
+          "signature": "fn word_indices(&self) -> WordIndices<'_>",
+          "summary": "Returns an iterator over the words in this byte string along with their starting and ending byte index positions."
+        },
+        {
+          "name": "words",
+          "signature": "fn words(&self) -> Words<'_>",
+          "summary": "Returns an iterator over the words in this byte string. If invalid UTF-8 is encountered, then the Unicode replacement codepoint is yielded instead."
+        },
+        {
+          "name": "words_with_break_indices",
+          "signature": "fn words_with_break_indices(&self) -> WordsWithBreakIndices<'_>",
+          "summary": "Returns an iterator over the words and their byte offsets in this byte string, along with all breaks between the words. Concatenating all elements yielded by the iterator results in the original string (modulo Unicode replacement codepoint…"
+        },
+        {
+          "name": "words_with_breaks",
+          "signature": "fn words_with_breaks(&self) -> WordsWithBreaks<'_>",
+          "summary": "Returns an iterator over the words in this byte string, along with all breaks between the words. Concatenating all elements yielded by the iterator results in the original string (modulo Unicode replacement codepoint substitutions if inval…"
+        }
+      ]
+    }
+  ]
+}

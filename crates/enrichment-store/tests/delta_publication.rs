@@ -63,7 +63,10 @@ fn repository(root: &std::path::Path, store_blob: bool) -> EvidenceRepository {
                     ArtifactKind::RustdocJson,
                     "application/json",
                     "https://docs.rs/enr-fixture/0.1.0.json",
-                    "2026-09-14T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-14T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .expect("artifact");
@@ -192,7 +195,10 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(checkpoint.mode, "incremental");
+    assert_eq!(
+        checkpoint.mode,
+        enrichment_store::search_projection::ProjectionMode::Incremental
+    );
     assert_eq!(checkpoint.inputs, successor.tables);
     assert_eq!(checkpoint.outputs.len(), 2);
     let opened = repo
@@ -278,7 +284,10 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
         .prepare(&successor, &recomputed, Some(&prior_definition), false)
         .await
         .unwrap();
-    assert_eq!(revision_rebuild.mode, "revision_rebuild");
+    assert_eq!(
+        revision_rebuild.mode,
+        enrichment_store::search_projection::ProjectionMode::RevisionRebuild
+    );
     assert_eq!(
         revision_rebuild.revision,
         enrichment_store::search_projection::revision()
@@ -287,7 +296,10 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
         .prepare(&successor, &recomputed, Some(&initial), false)
         .await
         .unwrap();
-    assert_eq!(rebuilt.mode, "history_rebuild");
+    assert_eq!(
+        rebuilt.mode,
+        enrichment_store::search_projection::ProjectionMode::HistoryRebuild
+    );
     // Output commits alone cannot select the candidate or advance its source offsets.
     let still_selected = repo
         .catalog
@@ -312,7 +324,10 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(selected.mode, "history_rebuild");
+    assert_eq!(
+        selected.mode,
+        enrichment_store::search_projection::ProjectionMode::HistoryRebuild
+    );
     assert_eq!(selected.inputs, successor.tables);
     assert!(selected.sequence > checkpoint.sequence);
     let rebuilt_open = repo

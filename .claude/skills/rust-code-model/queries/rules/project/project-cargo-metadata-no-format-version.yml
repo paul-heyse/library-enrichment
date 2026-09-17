@@ -1,0 +1,23 @@
+id: project-cargo-metadata-no-format-version
+language: bash
+severity: hint
+message: "`cargo metadata` without `--format-version` takes whatever schema this cargo emits."
+note: |
+  Cargo's own documentation asks for the flag: "It is recommended to include the
+  `--format-version` flag to future-proof your code and ensure the output is in the format you
+  are expecting."
+
+  The guarantee is weaker than it looks even so. `version` has read 1 since roughly 2017 while
+  the envelope beneath it kept gaining keys -- `build_directory` is a recent one -- so a
+  deserializer also has to tolerate fields it has never seen. Probe PL002 records the version
+  this cargo reports and the key set it actually emitted.
+metadata:
+  record: capability-gap
+  capability: project-context
+rule:
+  kind: command
+  all:
+    - regex: '(^|\s)cargo\b'
+    - regex: '(^|\s)metadata(\s|$)'
+  not:
+    regex: '--format-version'

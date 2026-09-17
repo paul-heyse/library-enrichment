@@ -1,0 +1,83 @@
+{
+  "module": "ra_ap_hir::symbols",
+  "crate": "ra_ap_hir",
+  "api": "api/ra_ap_hir.symbols.md",
+  "items": [
+    {
+      "path": "ra_ap_hir::symbols::DeclarationLocation",
+      "name": "DeclarationLocation",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct DeclarationLocation",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "hir_file_id",
+        "ptr",
+        "name_ptr"
+      ],
+      "methods": [
+        {
+          "name": "syntax",
+          "signature": "fn syntax<DB: HirDatabase>(&self, sema: &Semantics<'_, DB>) -> SyntaxNode"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::symbols::FileSymbol",
+      "name": "FileSymbol",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct FileSymbol<'db>",
+      "summary": "The actual data that is stored in the index. It should be as compact as possible.",
+      "doc": "api/ra_ap_hir.symbols.md#filesymbol",
+      "fields": [
+        "name",
+        "def",
+        "loc",
+        "container_name",
+        "is_alias",
+        "is_assoc",
+        "is_import",
+        "do_not_complete"
+      ],
+      "implements": [
+        "ra_ap_ide::navigation_target::TryToNav",
+        "salsa::salsa_value::SalsaValue"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::symbols::SymbolCollector",
+      "name": "SymbolCollector",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct SymbolCollector<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "collect",
+          "signature": "fn collect(&mut self, module: Module)"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> Box<[FileSymbol<'a>]>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(db: &'a dyn HirDatabase, collect_pub_only: bool) -> Self"
+        },
+        {
+          "name": "new_module",
+          "signature": "fn new_module(db: &'a dyn HirDatabase, module: Module, collect_pub_only: bool) -> Box<[FileSymbol<'a>]>"
+        },
+        {
+          "name": "push_crate_root",
+          "signature": "fn push_crate_root(&mut self, krate: Crate)",
+          "summary": "Push a symbol for a crate's root module. This allows crate roots to appear in the symbol index for queries like `::` or `::foo`."
+        }
+      ]
+    }
+  ]
+}

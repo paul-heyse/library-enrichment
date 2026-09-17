@@ -1,0 +1,17 @@
+PB18 — a STRING prefix preimage: constructible, and does it prune?
+
+  table   4 files, 50 rows each, one namespace per file
+  target  entity_key LIKE 'mech:%'  -> 50 rows of 200
+
+  Q1  Interval::try_new(Utf8, Utf8)   OK    Interval { lower: Utf8("mech:"), upper: Utf8("mech;") }
+
+  A  preimage UDF         rows= 50  rewritten_to_range=true
+      Filter: keys.entity_key >= Utf8View("mech:") AND keys.entity_key < Utf8View("mech;") /   TableScan: keys projection=[entity_key], partial_filters=[key
+  B  CONTROL no preimage  rows= 50  rewritten_to_range=false
+      Filter: entity_namespace_np(CAST(keys.entity_key AS Utf8)) = Utf8("mech") /   TableScan: keys projection=[entity_key], partial_filters=[entity_namespa
+  C  GOLD hand-written    rows= 50  rewritten_to_range=true
+      Filter: keys.entity_key >= Utf8View("mech:") AND keys.entity_key < Utf8View("mech;") /   TableScan: keys projection=[entity_key], partial_filters=[key
+
+  ---
+  CONFIRMED  a string prefix preimage is constructible AND fires; the control,
+             which differs only in returning PreimageResult::None, does not.

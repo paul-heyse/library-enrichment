@@ -8,11 +8,12 @@ phase: 6
 
 # Complete hard pivot to a unified DataFusion and Delta runtime
 
-**Remaining execution scope, reviewed 2026-09-16:**
-[Plan 16 — Complete the remaining unified runtime pivot](16-unified-datafusion-delta-runtime-completion.md)
-reconciles the implementation below with current source and receipts. Use it for the remaining
-dependency order, concrete replacements, deletion and qualification work. This document retains
-the original destination and obligations; no work package or terminal oracle is closed by the review.
+**Combined remaining execution scope, reviewed 2026-09-16:**
+[Plan 17 — Schema-governed unified runtime hard pivot](17-schema-governed-unified-runtime-hard-pivot.md)
+integrates [Plan 16's implementation checkpoint](16-unified-datafusion-delta-runtime-completion.md)
+with all schema-review findings and additional pinned-source/probe evidence. Use Plan 17 for the
+remaining dependency order, replacements, deletion and qualification. This document retains the
+original destination and obligations; consolidation closes no work package or terminal oracle.
 
 ## 1. Mandate, scope, and completion boundary
 

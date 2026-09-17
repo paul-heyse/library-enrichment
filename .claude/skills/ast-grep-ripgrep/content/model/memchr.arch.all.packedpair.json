@@ -1,0 +1,94 @@
+{
+  "module": "memchr::arch::all::packedpair",
+  "crate": "memchr",
+  "api": "api/memchr.arch.all.packedpair.md",
+  "items": [
+    {
+      "path": "memchr::arch::all::packedpair::Finder",
+      "name": "Finder",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct Finder",
+      "summary": "An architecture independent \"packed pair\" finder.",
+      "doc": "api/memchr.arch.all.packedpair.md#finder",
+      "methods": [
+        {
+          "name": "find_prefilter",
+          "signature": "fn find_prefilter(&self, haystack: &[u8]) -> Option<usize>",
+          "summary": "Run this finder on the given haystack as a prefilter."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(needle: &[u8]) -> Option<Finder>",
+          "summary": "Create a new prefilter that reports possible locations where the given needle matches."
+        },
+        {
+          "name": "pair",
+          "signature": "fn pair(&self) -> &Pair",
+          "summary": "Returns the pair of offsets (into the needle) used to check as a predicate before confirming whether a needle exists at a particular position."
+        },
+        {
+          "name": "with_pair",
+          "signature": "fn with_pair(needle: &[u8], pair: Pair) -> Option<Finder>",
+          "summary": "Create a new prefilter using the pair given."
+        }
+      ]
+    },
+    {
+      "path": "memchr::arch::all::packedpair::Pair",
+      "name": "Pair",
+      "kind": "struct",
+      "crate": "memchr",
+      "signature": "struct Pair",
+      "summary": "A pair of byte offsets into a needle to use as a predicate.",
+      "doc": "api/memchr.arch.all.packedpair.md#pair",
+      "methods": [
+        {
+          "name": "index1",
+          "signature": "fn index1(&self) -> u8",
+          "summary": "Returns the first offset of the pair."
+        },
+        {
+          "name": "index2",
+          "signature": "fn index2(&self) -> u8",
+          "summary": "Returns the second offset of the pair."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(needle: &[u8]) -> Option<Pair>",
+          "summary": "Create a new pair of offsets from the given needle."
+        },
+        {
+          "name": "with_indices",
+          "signature": "fn with_indices(needle: &[u8], index1: u8, index2: u8) -> Option<Pair>",
+          "summary": "Create a new pair using the offsets given for the needle given."
+        },
+        {
+          "name": "with_ranker",
+          "signature": "fn with_ranker<R: HeuristicFrequencyRank>(needle: &[u8], ranker: R) -> Option<Pair>",
+          "summary": "Create a new pair of offsets from the given needle and ranker."
+        }
+      ]
+    },
+    {
+      "path": "memchr::arch::all::packedpair::HeuristicFrequencyRank",
+      "name": "HeuristicFrequencyRank",
+      "kind": "trait",
+      "crate": "memchr",
+      "signature": "trait HeuristicFrequencyRank",
+      "summary": "This trait allows the user to customize the heuristic used to determine the relative frequency of a given byte in the dataset being searched.",
+      "doc": "api/memchr.arch.all.packedpair.md#heuristicfrequencyrank",
+      "required_methods": [
+        "rank"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "rank",
+          "signature": "fn rank(&self, byte: u8) -> u8",
+          "summary": "Return the heuristic frequency rank of the given byte. A lower rank means the byte is believed to occur less frequently in the haystack."
+        }
+      ]
+    }
+  ]
+}

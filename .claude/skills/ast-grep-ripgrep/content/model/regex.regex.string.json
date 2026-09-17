@@ -1,0 +1,516 @@
+{
+  "module": "regex::regex::string",
+  "crate": "regex",
+  "api": "api/regex.regex.string.md",
+  "items": [
+    {
+      "path": "regex::regex::string::CaptureLocations",
+      "name": "CaptureLocations",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct CaptureLocations",
+      "summary": "A low level representation of the byte offsets of each capture group.",
+      "doc": "api/regex.regex.string.md#capturelocations",
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<(usize, usize)>",
+          "summary": "Returns the start and end byte offsets of the capture group at index `i`. This returns `None` if `i` is not a valid capture group or if the capture group did not match."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the total number of capture groups (even if they didn't match). That is, the length returned is unaffected by the result of a search."
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::CaptureMatches",
+      "name": "CaptureMatches",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct CaptureMatches<'r, 'h>",
+      "summary": "An iterator over all non-overlapping capture matches in a haystack.",
+      "doc": "api/regex.regex.string.md#capturematches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Captures<'h>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::CaptureNames",
+      "name": "CaptureNames",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct CaptureNames<'r>",
+      "summary": "An iterator over the names of all capture groups in a regex.",
+      "doc": "api/regex.regex.string.md#capturenames",
+      "implements": [
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Option<&'r str>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Captures",
+      "name": "Captures",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct Captures<'h>",
+      "summary": "Represents the capture groups for a single match.",
+      "doc": "api/regex.regex.string.md#captures",
+      "implements": [
+        "core::ops::index::Index"
+      ],
+      "methods": [
+        {
+          "name": "expand",
+          "signature": "fn expand(&self, replacement: &str, dst: &mut String)",
+          "summary": "Expands all instances of `$ref` in `replacement` to the corresponding capture group, and writes them to the `dst` buffer given. A `ref` can be a capture group index or a name. If `ref` doesn't refer to a capture group that participated in…"
+        },
+        {
+          "name": "extract",
+          "signature": "fn extract<const N: usize>(&self) -> (&'h str, [&'h str; N])",
+          "summary": "This is a convenience routine for extracting the substrings corresponding to matching capture groups."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<Match<'h>>",
+          "summary": "Returns the `Match` associated with the capture group at index `i`. If `i` does not correspond to a capture group, or if the capture group did not participate in the match, then `None` is returned."
+        },
+        {
+          "name": "get_match",
+          "signature": "fn get_match(&self) -> Match<'h>",
+          "summary": "Return the overall match for the capture."
+        },
+        {
+          "name": "index",
+          "signature": "fn index<'a>(&'a self, name: &'n str) -> &'a str",
+          "via_trait": "core::ops::index::Index"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter<'c>(&'c self) -> SubCaptureMatches<'c, 'h>",
+          "summary": "Returns an iterator over all capture groups. This includes both matching and non-matching groups."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the total number of capture groups. This includes both matching and non-matching groups."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, name: &str) -> Option<Match<'h>>",
+          "summary": "Returns the `Match` associated with the capture group named `name`. If `name` isn't a valid capture group or it refers to a group that didn't match, then `None` is returned."
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Match",
+      "name": "Match",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct Match<'h>",
+      "summary": "Represents a single match of a regex in a haystack.",
+      "doc": "api/regex.regex.string.md#match",
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'h str",
+          "summary": "Returns the substring of the haystack that matched."
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> usize",
+          "summary": "Returns the byte offset of the end of the match in the haystack. The end of the match corresponds to the byte immediately following the last byte in the match. This means that `&slice[start..end]` works as one would expect."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this match has a length of zero."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the length, in bytes, of this match."
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> core::ops::Range<usize>",
+          "summary": "Returns the range over the starting and ending byte offsets of the match in the haystack."
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> usize",
+          "summary": "Returns the byte offset of the start of the match in the haystack. The start of the match corresponds to the position where the match begins and includes the first byte in the match."
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Matches",
+      "name": "Matches",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct Matches<'r, 'h>",
+      "summary": "An iterator over all non-overlapping matches in a haystack.",
+      "doc": "api/regex.regex.string.md#matches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match<'h>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::NoExpand",
+      "name": "NoExpand",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct NoExpand<'s>",
+      "summary": "A helper type for forcing literal string replacement.",
+      "doc": "api/regex.regex.string.md#noexpand",
+      "implements": [
+        "regex::regex::string::Replacer"
+      ],
+      "methods": [
+        {
+          "name": "no_expansion",
+          "signature": "fn no_expansion(&mut self) -> Option<Cow<'_, str>>",
+          "via_trait": "regex::regex::string::Replacer"
+        },
+        {
+          "name": "replace_append",
+          "signature": "fn replace_append(&mut self, _: &Captures<'_>, dst: &mut String)",
+          "via_trait": "regex::regex::string::Replacer"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Regex",
+      "name": "Regex",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct Regex",
+      "summary": "A compiled regular expression for searching Unicode haystacks.",
+      "doc": "api/regex.regex.string.md#regex",
+      "implements": [
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns the original string of this regex."
+        },
+        {
+          "name": "capture_locations",
+          "signature": "fn capture_locations(&self) -> CaptureLocations",
+          "summary": "Returns a fresh allocated set of capture locations that can be reused in multiple calls to [`Regex::captures_read`] or [`Regex::captures_read_at`]."
+        },
+        {
+          "name": "capture_names",
+          "signature": "fn capture_names(&self) -> CaptureNames<'_>",
+          "summary": "Returns an iterator over the capture names in this regex."
+        },
+        {
+          "name": "captures",
+          "signature": "fn captures<'h>(&self, haystack: &'h str) -> Option<Captures<'h>>",
+          "summary": "This routine searches for the first match of this regex in the haystack given, and if found, returns not only the overall match but also the matches of each capture group in the regex. If no match is found, then `None` is returned."
+        },
+        {
+          "name": "captures_at",
+          "signature": "fn captures_at<'h>(&self, haystack: &'h str, start: usize) -> Option<Captures<'h>>",
+          "summary": "Returns the same as [`Regex::captures`], but starts the search at the given offset."
+        },
+        {
+          "name": "captures_iter",
+          "signature": "fn captures_iter<'r, 'h>(&'r self, haystack: &'h str) -> CaptureMatches<'r, 'h>",
+          "summary": "Returns an iterator that yields successive non-overlapping matches in the given haystack. The iterator yields values of type [`Captures`]."
+        },
+        {
+          "name": "captures_len",
+          "signature": "fn captures_len(&self) -> usize",
+          "summary": "Returns the number of captures groups in this regex."
+        },
+        {
+          "name": "captures_read",
+          "signature": "fn captures_read<'h>(&self, locs: &mut CaptureLocations, haystack: &'h str) -> Option<Match<'h>>",
+          "summary": "This is like [`Regex::captures`], but writes the byte offsets of each capture group match into the locations given."
+        },
+        {
+          "name": "captures_read_at",
+          "signature": "fn captures_read_at<'h>(&self, locs: &mut CaptureLocations, haystack: &'h str, start: usize) -> Option<Match<'h>>",
+          "summary": "Returns the same as [`Regex::captures_read`], but starts the search at the given offset."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h>(&self, haystack: &'h str) -> Option<Match<'h>>",
+          "summary": "This routine searches for the first match of this regex in the haystack given, and if found, returns a [`Match`]. The `Match` provides access to both the byte offsets of the match and the actual substring that matched."
+        },
+        {
+          "name": "find_at",
+          "signature": "fn find_at<'h>(&self, haystack: &'h str, start: usize) -> Option<Match<'h>>",
+          "summary": "Returns the same as [`Regex::find`], but starts the search at the given offset."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'r, 'h>(&'r self, haystack: &'h str) -> Matches<'r, 'h>",
+          "summary": "Returns an iterator that yields successive non-overlapping matches in the given haystack. The iterator yields values of type [`Match`]."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display",
+          "summary": "Shows the original regular expression."
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Regex, Error>",
+          "via_trait": "core::str::traits::FromStr",
+          "summary": "Attempts to parse a string into a regular expression"
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match(&self, haystack: &str) -> bool",
+          "summary": "Returns true if and only if there is a match for the regex anywhere in the haystack given."
+        },
+        {
+          "name": "is_match_at",
+          "signature": "fn is_match_at(&self, haystack: &str, start: usize) -> bool",
+          "summary": "Returns the same as [`Regex::is_match`], but starts the search at the given offset."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(re: &str) -> Result<Regex, Error>",
+          "summary": "Compiles a regular expression. Once compiled, it can be used repeatedly to search, split or replace substrings in a haystack."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace<'h, R: Replacer>(&self, haystack: &'h str, rep: R) -> Cow<'h, str>",
+          "summary": "Replaces the leftmost-first match in the given haystack with the replacement provided. The replacement can be a regular string (where `$N` and `$name` are expanded to match capture groups) or a function that takes a [`Captures`] and return…"
+        },
+        {
+          "name": "replace_all",
+          "signature": "fn replace_all<'h, R: Replacer>(&self, haystack: &'h str, rep: R) -> Cow<'h, str>",
+          "summary": "Replaces all non-overlapping matches in the haystack with the replacement provided. This is the same as calling `replacen` with `limit` set to `0`."
+        },
+        {
+          "name": "replacen",
+          "signature": "fn replacen<'h, R: Replacer>(&self, haystack: &'h str, limit: usize, rep: R) -> Cow<'h, str>",
+          "summary": "Replaces at most `limit` non-overlapping matches in the haystack with the replacement provided. If `limit` is `0`, then all non-overlapping matches are replaced. That is, `Regex::replace_all(hay, rep)` is equivalent to `Regex::replacen(hay…"
+        },
+        {
+          "name": "shortest_match",
+          "signature": "fn shortest_match(&self, haystack: &str) -> Option<usize>",
+          "summary": "Returns the end byte offset of the first match in the haystack given."
+        },
+        {
+          "name": "shortest_match_at",
+          "signature": "fn shortest_match_at(&self, haystack: &str, start: usize) -> Option<usize>",
+          "summary": "Returns the same as [`Regex::shortest_match`], but starts the search at the given offset."
+        },
+        {
+          "name": "split",
+          "signature": "fn split<'r, 'h>(&'r self, haystack: &'h str) -> Split<'r, 'h>",
+          "summary": "Returns an iterator of substrings of the haystack given, delimited by a match of the regex. Namely, each element of the iterator corresponds to a part of the haystack that *isn't* matched by the regular expression."
+        },
+        {
+          "name": "splitn",
+          "signature": "fn splitn<'r, 'h>(&'r self, haystack: &'h str, limit: usize) -> SplitN<'r, 'h>",
+          "summary": "Returns an iterator of at most `limit` substrings of the haystack given, delimited by a match of the regex. (A `limit` of `0` will return no substrings.) Namely, each element of the iterator corresponds to a part of the haystack that *isn'…"
+        },
+        {
+          "name": "static_captures_len",
+          "signature": "fn static_captures_len(&self) -> Option<usize>",
+          "summary": "Returns the total number of capturing groups that appear in every possible match."
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(s: &str) -> Result<Regex, Error>",
+          "via_trait": "core::convert::TryFrom",
+          "summary": "Attempts to parse a string into a regular expression"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::ReplacerRef",
+      "name": "ReplacerRef",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct ReplacerRef<'a, R: ?Sized>",
+      "summary": "A by-reference adaptor for a [`Replacer`].",
+      "doc": "api/regex.regex.string.md#replacerref",
+      "implements": [
+        "regex::regex::string::Replacer"
+      ],
+      "methods": [
+        {
+          "name": "no_expansion",
+          "signature": "fn no_expansion(&mut self) -> Option<Cow<'_, str>>",
+          "via_trait": "regex::regex::string::Replacer"
+        },
+        {
+          "name": "replace_append",
+          "signature": "fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut String)",
+          "via_trait": "regex::regex::string::Replacer"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Split",
+      "name": "Split",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct Split<'r, 'h>",
+      "summary": "An iterator over all substrings delimited by a regex match.",
+      "doc": "api/regex.regex.string.md#split",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h str>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::SplitN",
+      "name": "SplitN",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct SplitN<'r, 'h>",
+      "summary": "An iterator over at most `N` substrings delimited by a regex match.",
+      "doc": "api/regex.regex.string.md#splitn",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<&'h str>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::SubCaptureMatches",
+      "name": "SubCaptureMatches",
+      "kind": "struct",
+      "crate": "regex",
+      "signature": "struct SubCaptureMatches<'c, 'h>",
+      "summary": "An iterator over all group matches in a [`Captures`] value.",
+      "doc": "api/regex.regex.string.md#subcapturematches",
+      "implements": [
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Option<Match<'h>>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex::regex::string::Replacer",
+      "name": "Replacer",
+      "kind": "trait",
+      "crate": "regex",
+      "signature": "trait Replacer",
+      "summary": "A trait for types that can be used to replace matches in a haystack.",
+      "doc": "api/regex.regex.string.md#replacer",
+      "implementors": [
+        "alloc::borrow::Cow",
+        "alloc::string::String",
+        "regex::regex::string::NoExpand",
+        "regex::regex::string::ReplacerRef"
+      ],
+      "required_methods": [
+        "replace_append"
+      ],
+      "provided_methods": [
+        "by_ref",
+        "no_expansion"
+      ],
+      "methods": [
+        {
+          "name": "by_ref",
+          "signature": "fn by_ref<'r>(&'r mut self) -> ReplacerRef<'r, Self>",
+          "summary": "Returns a type that implements `Replacer`, but that borrows and wraps this `Replacer`."
+        },
+        {
+          "name": "no_expansion",
+          "signature": "fn no_expansion<'r>(&'r mut self) -> Option<Cow<'r, str>>",
+          "summary": "Return a fixed unchanging replacement string."
+        },
+        {
+          "name": "replace_append",
+          "signature": "fn replace_append(&mut self, caps: &Captures<'_>, dst: &mut String)",
+          "summary": "Appends possibly empty data to `dst` to replace the current match."
+        }
+      ]
+    }
+  ]
+}

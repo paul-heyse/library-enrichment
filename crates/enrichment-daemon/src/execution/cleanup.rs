@@ -1,6 +1,6 @@
 //! In-process ownership of container cleanup.
 //!
-//! The durable owner record under `<root>/owned` recovers a leaked container on the *next*
+//! The native physical-owner control record recovers a leaked container on the *next*
 //! daemon start. That is the cross-restart boundary, and it is not immediate cleanup: between
 //! the failure and the restart the container keeps running, and the job that owned it has
 //! already returned its worker permit.
@@ -501,6 +501,7 @@ mod tests {
             &enrichment_core::config::Execution::default(),
             dir.path(),
             supervisor.clone(),
+            crate::execution::test_ownership(dir.path()),
         )
         .expect("runner")
         .using_lease(lease.clone());

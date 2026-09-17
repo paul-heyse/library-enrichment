@@ -51,7 +51,7 @@ def revision_upstream(root: Path, repository: str, *, wrong_sha=False, bad_pax=F
 
 def configuration(path, base):
     path.write_text(
-        'config_version="1.0"\n[policy]\nenabled_profiles=["static"]\n'
+        '[policy]\nenabled_profiles=["static"]\n'
         f'[producers]\ngithub_api_url="{base}"\n'
         f'[producers.python]\nworker_python="{sys.executable}"\n'
     )

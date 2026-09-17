@@ -1,74 +1,50 @@
 //! Shared research selection, delivery and diagnostic contracts (ADR-0036–0038).
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use super::ErrorCode;
 
-use super::{ErrorCode, JsonObject};
-
+crate::native_vocabulary! {
 /// Closed independently selectable inspection aspects.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(PartialOrd,Ord)]
 pub enum InspectionAspect {
-    Signature,
-    Availability,
-    Relationships,
-    Documentation,
-    Examples,
-    Source,
-    Semantics,
-    Runtime,
-    Children,
-    Members,
+    Signature = "signature",
+    Availability = "availability",
+    Relationships = "relationships",
+    Documentation = "documentation",
+    Examples = "examples",
+    Source = "source",
+    Semantics = "semantics",
+    Runtime = "runtime",
+    Children = "children",
+    Members = "members",
+}
 }
 
-impl InspectionAspect {
-    /// Stable wire spelling, also used by the selected native relation.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Signature => "signature",
-            Self::Availability => "availability",
-            Self::Relationships => "relationships",
-            Self::Documentation => "documentation",
-            Self::Examples => "examples",
-            Self::Source => "source",
-            Self::Semantics => "semantics",
-            Self::Runtime => "runtime",
-            Self::Children => "children",
-            Self::Members => "members",
-        }
-    }
-}
-
+crate::native_struct! {
 /// One aspect's page request. Cursors are bound to this selection and snapshot.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct AspectSelection {
-    pub aspect: InspectionAspect,
+    aspect: InspectionAspect => crate::native_union::Rule::Text,
     #[serde(default)]
-    pub cursor: Option<String>,
+    cursor: Option<String> => crate::native_union::Rule::Text,
     #[serde(default = "default_page_size")]
-    pub max_items: usize,
+    max_items: usize => crate::native_union::Rule::Text,
     /// Requested text projection for documentation/examples. None requests complete text.
     #[serde(default)]
-    pub max_characters: Option<usize>,
+    max_characters: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
 const fn default_page_size() -> usize {
     32
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
+#[derive(PartialOrd, Ord)]
 pub enum DiscoveryKind {
-    Features,
-    Documentation,
-    ReleaseNotes,
-    Examples,
+    Features = "features",
+    Documentation = "documentation",
+    ReleaseNotes = "release_notes",
+    Examples = "examples",
+}
 }
 
 impl DiscoveryKind {
@@ -83,17 +59,17 @@ impl DiscoveryKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct DiscoverySelection {
-    pub kind: DiscoveryKind,
+    kind: DiscoveryKind => crate::native_union::Rule::Text,
     #[serde(default)]
-    pub cursor: Option<String>,
+    cursor: Option<String> => crate::native_union::Rule::Text,
     #[serde(default = "default_page_size")]
-    pub max_items: usize,
+    max_items: usize => crate::native_union::Rule::Text,
     /// None requests the complete retained text; callers may request a bounded preview.
     #[serde(default)]
-    pub max_characters: Option<usize>,
+    max_characters: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
 impl DiscoverySelection {
@@ -134,15 +110,14 @@ impl DiscoverySelection {
     }
 }
 
+crate::native_union! { @tag "mode";
 /// One authoritative inspection scope; old depth/aspects arguments are not accepted.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
-pub enum ResearchSelection {
-    #[default]
-    Default,
-    Explicit {
-        aspects: Vec<AspectSelection>,
-    },
+    #[derive(Default)]
+    pub enum ResearchSelection {
+        #[default]
+        Default = "default",
+        Explicit = "explicit" { aspects: Vec<AspectSelection> => crate::native_union::Rule::Sequence },
+    }
 }
 
 impl ResearchSelection {
@@ -211,105 +186,82 @@ impl ResearchSelection {
     }
 }
 
+crate::native_union! {
 /// Count meaning is explicit; absence is never silently represented as zero.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum MatchCount {
-    Exact { value: u64 },
-    LowerBound { value: u64 },
-    Unknown,
+    Exact = "exact" { value: u64 => crate::native_union::Rule::Text },
+    LowerBound = "lower_bound" { value: u64 => crate::native_union::Rule::Text },
+    Unknown = "unknown",
+}
 }
 
-/// An actionable follow-up, never an instruction to execute automatically.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+crate::native_union! {
+/// An actionable typed request; native recovery never carries an independently interpreted object.
 pub enum RecoveryAction {
-    CallTool {
-        tool: String,
-        arguments: JsonObject,
+    CallTool = "call_tool" { request: Box<crate::request::ResearchRequest> => crate::native_union::Rule::Text },
+    ReadArtifact = "read_artifact" {
+        artifact_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::Artifact),
+        section: Option<ArtifactSection> => crate::native_union::Rule::Text,
+        cursor: Option<String> => crate::native_union::Rule::Text,
     },
-    ReadArtifact {
-        artifact_id: String,
-        section: Option<ArtifactSection>,
-        cursor: Option<String>,
-    },
-    RetryAfter {
-        milliseconds: u64,
-    },
-    ChangeRequest {
-        reason: String,
-    },
-    OperatorSetup {
-        reason: String,
-    },
-    ReportDefect {
-        reason: String,
-    },
+    RetryAfter = "retry_after" { milliseconds: u64 => crate::native_union::Rule::Text },
+    ChangeRequest = "change_request" { reason: String => crate::native_union::Rule::Text },
+    OperatorSetup = "operator_setup" { reason: String => crate::native_union::Rule::Text },
+    ReportDefect = "report_defect" { reason: String => crate::native_union::Rule::Text },
+}
 }
 
+crate::native_union! {
 /// A result projection is distinct from a Markdown heading selection.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ArtifactSection {
-    Markdown { heading: String },
-    Result { name: ResultSectionName },
+    Markdown = "markdown" { heading: String => crate::native_union::Rule::Text },
+    Result = "result" { name: ResultSectionName => crate::native_union::Rule::Text },
+}
 }
 
+crate::native_vocabulary! {
 /// Stable directly readable projections in an indexed research result.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum ResultSectionName {
-    Coverage,
-    Signature,
-    Changes,
-    Aspects,
-    Data,
+    Envelope = "envelope",
+    Coverage = "coverage",
+    Signature = "signature",
+    Changes = "changes",
+    Aspects = "aspects",
+    Data = "data",
+}
 }
 
-impl ResultSectionName {
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Coverage => "coverage",
-            Self::Signature => "signature",
-            Self::Changes => "changes",
-            Self::Aspects => "aspects",
-            Self::Data => "data",
-        }
+crate::native_vocabulary! {
+/// Origin classification, separate from stable public error categories.
+    pub enum DiagnosticCause {
+    InvalidInput = "invalid_input",
+    NotFound = "not_found",
+    PermissionDenied = "permission_denied",
+    CorruptState = "corrupt_state",
+    Io = "io",
+    Capacity = "capacity",
+    Deadline = "deadline",
+    InvalidPlan = "invalid_plan",
+    PolicyDenied = "policy_denied",
+    Unsupported = "unsupported",
+    Upstream = "upstream",
+    Transport = "transport",
+    Internal = "internal",
     }
 }
 
-/// Origin classification, separate from stable public error categories.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum DiagnosticCause {
-    InvalidInput,
-    NotFound,
-    PermissionDenied,
-    CorruptState,
-    Io,
-    Capacity,
-    Deadline,
-    InvalidPlan,
-    PolicyDenied,
-    Unsupported,
-    Upstream,
-    Transport,
-    Internal,
-}
-
+crate::native_struct! {
 /// Structured failure evidence, authored where the cause is known.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct Diagnostic {
-    pub cause: DiagnosticCause,
-    pub stage: String,
-    pub affected_ids: Vec<String>,
-    pub rule: Option<String>,
-    pub observed: Option<u64>,
-    pub allowed: Option<u64>,
-    pub correlation_id: Option<String>,
-    pub actions: Vec<RecoveryAction>,
+    cause: DiagnosticCause => crate::native_union::Rule::Text,
+    stage: String => crate::native_union::Rule::Text,
+    affected_ids: Vec<String> => crate::native_union::Rule::Sequence,
+    rule: Option<String> => crate::native_union::Rule::Text,
+    observed: Option<u64> => crate::native_union::Rule::Text,
+    allowed: Option<u64> => crate::native_union::Rule::Text,
+    correlation_id: Option<String> => crate::native_union::Rule::Text,
+    actions: Vec<RecoveryAction> => crate::native_union::Rule::Sequence,
+}
 }
 
 impl Diagnostic {
@@ -358,35 +310,33 @@ impl Diagnostic {
     }
 }
 
+crate::native_struct! {
 /// Actual envelope budget, distinct from MCP framing overhead.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+#[derive(Default)]
 pub struct DeliveryLimits {
-    pub requested_max_bytes: Option<usize>,
-    pub effective_max_bytes: Option<usize>,
+    requested_max_bytes: Option<usize> => crate::native_union::Rule::Text,
+    effective_max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Named typed section of an immutable research result.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ResultSection {
-    pub name: ResultSectionName,
-    pub artifact_id: String,
+    name: ResultSectionName => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_union! { @tag "mode";
 /// Delivery changes representation, never the original research status or coverage.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DeliveryDescriptor {
-    Inline {
-        limits: DeliveryLimits,
+    Inline = "inline" { limits: DeliveryLimits => crate::native_union::Rule::Text },
+    Artifact = "artifact" {
+        artifact_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::Artifact),
+        sections: Vec<ResultSection> => crate::native_union::Rule::Sequence,
+        limits: DeliveryLimits => crate::native_union::Rule::Text,
+        read: RecoveryAction => crate::native_union::Rule::Text,
     },
-    Artifact {
-        artifact_id: String,
-        sections: Vec<ResultSection>,
-        read: RecoveryAction,
-        limits: DeliveryLimits,
-    },
+}
 }
 
 impl Default for DeliveryDescriptor {
@@ -408,14 +358,13 @@ impl DeliveryDescriptor {
         Self::Artifact {
             sections: names
                 .into_iter()
-                .map(|name| ResultSection {
-                    name,
-                    artifact_id: artifact_id.clone(),
-                })
+                .map(|name| ResultSection { name })
                 .collect(),
             read: RecoveryAction::ReadArtifact {
                 artifact_id: artifact_id.clone(),
-                section: None,
+                section: Some(ArtifactSection::Result {
+                    name: ResultSectionName::Envelope,
+                }),
                 cursor: None,
             },
             artifact_id,
@@ -435,24 +384,24 @@ impl DeliveryDescriptor {
     }
 }
 
+crate::native_vocabulary! {
 /// Explicit distinction between absent evidence and excluded presentation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum AspectState {
-    Available,
-    Absent,
-    Unavailable,
-    Omitted,
-    Failed,
+    Available = "available",
+    Absent = "absent",
+    Unavailable = "unavailable",
+    Omitted = "omitted",
+    Failed = "failed",
+}
 }
 
+crate::native_struct! {
 /// Outcome and continuation for one independent aspect; payload remains typed in tool data.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct AspectOutcome {
-    pub aspect: InspectionAspect,
-    pub state: AspectState,
-    pub reason: Option<String>,
-    pub page: Option<super::job::Page>,
-    pub diagnostic: Option<Diagnostic>,
+    aspect: InspectionAspect => crate::native_union::Rule::Text,
+    state: AspectState => crate::native_union::Rule::Text,
+    reason: Option<String> => crate::native_union::Rule::Text,
+    page: Option<super::job::Page> => crate::native_union::Rule::Text,
+    diagnostic: Option<Diagnostic> => crate::native_union::Rule::Text,
+}
 }

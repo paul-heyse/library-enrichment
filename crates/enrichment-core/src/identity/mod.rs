@@ -79,6 +79,16 @@ macro_rules! content_identity {
             }
         }
 
+        impl crate::native_union::Cell for $name {
+            fn data_type() -> arrow::datatypes::DataType { arrow::datatypes::DataType::Utf8 }
+            fn encode(values: &[Option<&Self>]) -> Result<arrow::array::ArrayRef, arrow::error::ArrowError> {
+                Ok(crate::evidence::arrow_model::cells::optional(values.iter().map(|value| value.map(Self::as_str))))
+            }
+            fn decode(row: crate::evidence::arrow_model::cells::Row<'_>, name: &str) -> Result<Self, arrow::error::ArrowError> {
+                Self::try_from(row.text(name)?.to_owned()).map_err(|error| crate::evidence::arrow_model::cells::invalid(error.to_string()))
+            }
+        }
+
         impl TryFrom<String> for $name {
             type Error = IdentityError;
 
@@ -141,61 +151,62 @@ content_identity!(
     "^snap_[0-9a-f]{64}$"
 );
 
+crate::native_vocabulary! {
 /// Which package ecosystem a release belongs to.
 ///
 /// The values are, in order: `rust`, `python`. No variant carries a doc comment -- see the
 /// module docs in [`crate::wire`].
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash,PartialOrd,Ord)]
 #[schemars(inline)]
 pub enum Ecosystem {
-    Rust,
-    Python,
+    Rust = "rust",
+    Python = "python",
+}
 }
 
+crate::native_vocabulary! {
 /// The research mode a context was established under (§3.2).
 ///
 /// The values are, in order: `project`, `upstream`, `compare`, `revision`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
 pub enum ResearchMode {
-    Project,
-    Upstream,
-    Compare,
-    Revision,
+    Project = "project",
+    Upstream = "upstream",
+    Compare = "compare",
+    Revision = "revision",
+}
 }
 
+crate::native_vocabulary! {
 /// How much of the environment is actually known (§3.1).
 ///
 /// The values are, in order: `unspecified`, `declared`, `resolved`, `verified`. `declared` is
 /// what the caller said; `resolved` is what a resolver established; `verified` is what a real
 /// build or check observed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 #[schemars(inline)]
 pub enum EnvironmentResolution {
-    Unspecified,
-    Declared,
-    Resolved,
-    Verified,
+    Unspecified = "unspecified",
+    Declared = "declared",
+    Resolved = "resolved",
+    Verified = "verified",
+}
 }
 
+crate::native_struct! {
 /// The fields that define a release identity. Everything else on a [`Release`] is metadata.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ReleaseKey {
     /// Which ecosystem.
-    pub ecosystem: Ecosystem,
+    ecosystem: Ecosystem => crate::native_union::Rule::Text,
     /// The registry the package was resolved against, e.g. `crates.io`.
-    pub registry: String,
+    registry: String => crate::native_union::Rule::Text,
     /// The normalized package name as the registry knows it.
-    pub package: String,
+    package: String => crate::native_union::Rule::Text,
     /// The exact version, or an immutable revision for `revision` mode.
-    pub version: String,
+    version: String => crate::native_union::Rule::Text,
     /// The registry checksum of the selected artifact, when the registry publishes one.
-    pub artifact_digest: Option<String>,
+    artifact_digest: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 impl ReleaseKey {
@@ -206,42 +217,45 @@ impl ReleaseKey {
     }
 }
 
+crate::native_struct! {
 /// Links a registry publishes for a release.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Default)]
 pub struct ReleaseLinks {
     /// Source repository.
-    pub repository: Option<String>,
+    repository: Option<String> => crate::native_union::Rule::Text,
     /// Documentation site.
-    pub documentation: Option<String>,
+    documentation: Option<String> => crate::native_union::Rule::Text,
     /// Project homepage.
-    pub homepage: Option<String>,
+    homepage: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// A release record (§6.1).
 ///
 /// Package name, library target name and root module name are three different things for a
 /// Rust crate (`serde-json` / `serde_json` / `serde_json`) and are stored separately.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Release {
     /// Derived from `key`; never set independently.
-    pub release_id: ReleaseId,
+    release_id: ReleaseId => crate::native_union::Rule::Text,
     /// The identity-defining fields.
     #[serde(flatten)]
-    pub key: ReleaseKey,
+    key: ReleaseKey => crate::native_union::Rule::Flatten,
     /// The library target name declared in the manifest, when known.
-    pub lib_name: Option<String>,
+    lib_name: Option<String> => crate::native_union::Rule::Text,
     /// The root module name as it appears in `use` paths, when known.
-    pub root_module: Option<String>,
+    root_module: Option<String> => crate::native_union::Rule::Text,
     /// Registry-published links.
-    pub links: ReleaseLinks,
+    links: ReleaseLinks => crate::native_union::Rule::Text,
     /// SPDX licence expression as published.
-    pub license: Option<String>,
+    license: Option<String> => crate::native_union::Rule::Text,
     /// Minimum supported Rust version as published.
-    pub rust_version: Option<String>,
+    rust_version: Option<String> => crate::native_union::Rule::Text,
     /// Publication time as the registry records it.
-    pub published_at: Option<String>,
+    published_at: Option<String> => crate::native_union::Rule::Text,
     /// Whether the registry has yanked this version.
-    pub yanked: bool,
+    yanked: bool => crate::native_union::Rule::Text,
+}
 }
 
 impl Release {
@@ -262,25 +276,26 @@ impl Release {
     }
 }
 
+crate::native_struct! {
 /// An environment record (§6.1).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Environment {
     /// Derived from every other field.
-    pub environment_id: EnvironmentId,
+    environment_id: EnvironmentId => crate::native_union::Rule::Text,
     /// How much of this environment is known.
-    pub resolution: EnvironmentResolution,
+    resolution: EnvironmentResolution => crate::native_union::Rule::Text,
     /// Compiler or interpreter identity, when known.
-    pub toolchain: Option<String>,
+    toolchain: Option<String> => crate::native_union::Rule::Text,
     /// Target triple or platform tag, when known.
-    pub target: Option<String>,
+    target: Option<String> => crate::native_union::Rule::Text,
     /// Enabled features or extras, sorted and deduplicated.
-    pub features: Vec<String>,
+    features: Vec<String> => crate::native_union::Rule::Set,
     /// Whether an empty feature selection was explicitly supplied.
-    pub features_known: bool,
+    features_known: bool => crate::native_union::Rule::Text,
     /// Whether default features are enabled. `None` when unspecified.
-    pub default_features: Option<bool>,
+    default_features: Option<bool> => crate::native_union::Rule::Text,
     /// Digest of the dependency lock, when one was supplied.
-    pub lock_digest: Option<String>,
+    lock_digest: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 impl Environment {
@@ -407,19 +422,20 @@ impl Environment {
     }
 }
 
+crate::native_struct! {
 /// A context record (§6.1): a release, an environment and a research mode.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Context {
     /// Derived from release, environment and mode.
-    pub context_id: ContextId,
+    context_id: ContextId => crate::native_union::Rule::Text,
     /// The release under study.
-    pub release_id: ReleaseId,
+    release_id: ReleaseId => crate::native_union::Rule::Text,
     /// The environment it is studied in.
-    pub environment_id: EnvironmentId,
+    environment_id: EnvironmentId => crate::native_union::Rule::Text,
     /// The research mode.
-    pub mode: ResearchMode,
+    mode: ResearchMode => crate::native_union::Rule::Text,
     /// The context this one was derived from, if any.
-    pub parent_context_id: Option<ContextId>,
+    parent_context_id: Option<ContextId> => crate::native_union::Rule::Text,
+}
 }
 
 impl Context {
@@ -505,7 +521,7 @@ mod tests {
     #[test]
     fn target_identity_vectors_preserve_environment_knowledge_and_separate_scopes() {
         // Independently calculated from typed Arrow byte framing with Python hashlib.
-        // Receipt: .dev-state/plan15/native_identity_vectors.py; no JSON identity preimage.
+        // Receipt: .dev-state/plan17/execution/identity-vectors.json; no JSON identity preimage.
         let release = Release::new(ReleaseKey {
             ecosystem: Ecosystem::Rust,
             registry: "crates.io".into(),
@@ -515,17 +531,17 @@ mod tests {
         });
         assert_eq!(
             release.release_id.as_str(),
-            "rel_459585f761b0df808ff6bba8f879d8a29f8450c013788f11c1af2ba60cfed459"
+            "rel_2e25bfd237b4e258ceca5cc71c6e9766a0009724925c6258ed88dfecb0058fac"
         );
         let unknown = Environment::unspecified();
         let empty = Environment::declared(None, Some(vec![]), None);
         assert_eq!(
             unknown.environment_id.as_str(),
-            "env_6cae57e8c2dd40293c58bf11c15b3f59ec5e5bb6d8aaf0909041e9b76f13f13e"
+            "env_fa0596c75bb9c3f42555709d63d6ba29ec382f613aaef655ea61b2a7758f9f0a"
         );
         assert_eq!(
             empty.environment_id.as_str(),
-            "env_6d97a21ae1aed40189e19283975b5d2012d27253adffb7f887d37b337e4695da"
+            "env_ebad71df91a31b263312eb556cd49ca8573ecf036752826cd393d030c4d5e8aa"
         );
         let context = Context::new(
             release.release_id,
@@ -534,18 +550,18 @@ mod tests {
         );
         assert_eq!(
             context.context_id.as_str(),
-            "ctx_426c24ae895b1c6b75e3dede45f40098ee6ba9094f5777efc4d05434ea21ced3"
+            "ctx_01209aee3b5c62314cceaef3c010081c48a28e8d73c972ce2a31d81f4ca2503b"
         );
         let snapshot = SnapshotId::derive(&SnapshotInputs {
-            schema_version: "7.0".into(),
-            normalizer_version: "native/7".into(),
+            schema_version: "8.0".into(),
+            normalizer_version: "native/8".into(),
             context_id: context.context_id,
             input_digests: [("coverage".into(), "a".repeat(64))].into_iter().collect(),
             producers: [("fixture".into(), "1".into())].into_iter().collect(),
         });
         assert_eq!(
             snapshot.as_str(),
-            "snap_beba8fc4918e23aaff924b899bd346b36978da20fe39b7c843271a18c62812df"
+            "snap_95d2b2bbec951e7f5db4483521395ed479f2a4d5b3cc484a8d7c204bcac26f20"
         );
     }
 

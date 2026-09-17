@@ -19,7 +19,7 @@ use datafusion::{
 };
 use deltalake::{
     DeltaTable, DeltaTableBuilder,
-    delta_datafusion::{DeltaScanConfig, DeltaScanNext, SessionFallbackPolicy},
+    delta_datafusion::SessionFallbackPolicy,
     kernel::{
         StructType, Transaction,
         engine::arrow_conversion::{TryFromArrow, TryIntoArrow},
@@ -29,8 +29,8 @@ use deltalake::{
     protocol::SaveMode,
 };
 
-const CONTRACT_TABLE: &str = "semantic_contracts";
-const CONTRACT_PROPERTY: &str = "enrichment.arrowContract";
+pub(crate) const CONTRACT_TABLE: &str = "semantic_contracts";
+pub(crate) const CONTRACT_PROPERTY: &str = "enrichment.arrowContract";
 
 /// The semantic Arrow schema and its explicit, lossless Delta storage representation.
 #[derive(Debug, Clone)]
@@ -38,6 +38,7 @@ pub struct StorageContract {
     semantic: SchemaRef,
     storage: SchemaRef,
     identity: String,
+    required: HashMap<String, String>,
 }
 
 impl StorageContract {
@@ -45,19 +46,29 @@ impl StorageContract {
     /// # Errors
     /// Unsupported Arrow types or contract encoding fail explicitly.
     pub fn new(semantic: SchemaRef) -> Result<Self> {
+        enrichment_core::native_schema::validate(&semantic)?;
+        let required = enrichment_core::native_schema::scalar_requirements(&semantic)?
+            .iter()
+            .enumerate()
+            .map(|(index, expr)| {
+                Ok((
+                    format!("native_required_{index}"),
+                    deltalake::delta_datafusion::expr::fmt_expr_to_sql(expr).map_err(external)?,
+                ))
+            })
+            .collect::<Result<HashMap<_, _>>>()?;
         let fields = semantic
             .fields()
             .iter()
             .map(|field| storage_field(field))
             .collect::<Result<Vec<_>>>()?;
         let storage = Arc::new(Schema::new(fields));
-        // This encodes the schema contract, not evidence rows or reconstructed domain objects.
-        let contract = serde_json::to_value(semantic.as_ref()).map_err(external)?;
-        let identity = enrichment_core::canonical::digest_hex(&contract);
+        let identity = enrichment_core::native_identity::schema_identity(&semantic, &storage)?;
         Ok(Self {
             semantic,
             storage,
             identity,
+            required,
         })
     }
 
@@ -80,63 +91,48 @@ impl StorageContract {
         // Native expressions can conservatively report nullable outputs. Delta's full
         // writer enforces the table's required-column invariants on actual rows; input
         // planning metadata is not proof of either presence or a violation.
-        let input_layout = Schema::new_with_metadata(
-            self.semantic
-                .fields()
-                .iter()
-                .map(|field| field.as_ref().clone().with_nullable(true))
-                .collect::<Vec<_>>(),
-            self.semantic.metadata().clone(),
-        );
-        if !input_layout.contains(frame.schema().as_arrow()) {
-            return Err(invalid(
-                "input Arrow schema does not match its declared contract",
-            ));
-        }
+        enrichment_core::native_schema::check_input(frame.schema().as_arrow(), &self.semantic)?;
         project(frame, &self.storage)
     }
 }
 
 pub(crate) fn project(frame: DataFrame, schema: &Schema) -> Result<DataFrame> {
-    // Value conversions remain logical expressions, including nested Delta integer mappings.
-    // Metadata-only nested casts can be removed/coerced by logical optimization, leaving a
-    // projection layout different from its array. ArrowContract applies those after physical
-    // planning, using native casts; the inner projection keeps its inferred field layout.
+    // The explicit ArrowContract boundary owns native representation casts. An ordinary
+    // logical CAST must never erase a domain merely because the writer uses a physical layout.
     let expressions = schema
         .fields()
         .iter()
         .map(|field| {
             let input = col(field.name());
-            let actual = input.get_type(frame.schema())?;
-            if !arrow::compute::can_cast_types(&actual, field.data_type()) {
+            let (_, actual_field) = input.to_field(frame.schema())?;
+            enrichment_core::native_schema::check_projection(&actual_field, field)?;
+            let actual = actual_field.data_type();
+            if !arrow::compute::can_cast_types(actual, field.data_type()) {
                 return Err(invalid("native schema projection cannot cast its input"));
             }
-            if actual.equals_datatype(field.data_type()) {
-                // Preserve passthrough columns. A redundant alias hides the original column
-                // from DF55's extraction projection deduplication and can duplicate that field.
-                Ok(input)
-            } else {
-                Ok(input
-                    .cast_to(field.data_type(), frame.schema())?
-                    .alias(field.name()))
-            }
+            Ok(input)
         })
         .collect::<Result<Vec<_>>>()?;
     let projected = frame.select(expressions)?;
     let fields = projected
         .schema()
-        .fields()
         .iter()
         .zip(schema.fields())
-        .map(|(actual, declared)| {
-            declared
-                .as_ref()
-                .clone()
-                .with_nullable(actual.is_nullable())
+        .map(|((qualifier, actual), declared)| {
+            (
+                qualifier.cloned(),
+                Arc::new(
+                    declared
+                        .as_ref()
+                        .clone()
+                        .with_nullable(actual.is_nullable()),
+                ),
+            )
         })
         .collect::<Vec<_>>();
-    let contract = Arc::new(datafusion::common::DFSchema::try_from(
-        Schema::new_with_metadata(fields, schema.metadata().clone()),
+    let contract = Arc::new(datafusion::common::DFSchema::new_with_metadata(
+        fields,
+        schema.metadata().clone(),
     )?);
     let (state, plan) = projected.into_parts();
     Ok(DataFrame::new(
@@ -146,14 +142,19 @@ pub(crate) fn project(frame: DataFrame, schema: &Schema) -> Result<DataFrame> {
 }
 
 fn storage_field(field: &Field) -> Result<Field> {
+    storage_field_at(field, false)
+}
+
+fn storage_field_at(field: &Field, optional_parent: bool) -> Result<Field> {
+    let nullable = optional_parent || !enrichment_core::native_schema::required(field);
     Ok(Field::new(
         field.name(),
-        storage_type(field.data_type())?,
-        field.is_nullable(),
+        storage_type(field.data_type(), nullable)?,
+        nullable,
     ))
 }
 
-fn storage_type(data_type: &DataType) -> Result<DataType> {
+fn storage_type(data_type: &DataType, optional_parent: bool) -> Result<DataType> {
     Ok(match data_type {
         DataType::Boolean
         | DataType::Int8
@@ -174,7 +175,7 @@ fn storage_type(data_type: &DataType) -> Result<DataType> {
         DataType::LargeBinary | DataType::BinaryView | DataType::FixedSizeBinary(_) => {
             DataType::Binary
         }
-        DataType::Dictionary(_, value) => storage_type(value)?,
+        DataType::Dictionary(_, value) => storage_type(value, optional_parent)?,
         DataType::Decimal128(precision, scale) if *precision <= 38 && *scale >= 0 => {
             data_type.clone()
         }
@@ -186,15 +187,13 @@ fn storage_type(data_type: &DataType) -> Result<DataType> {
         DataType::Struct(fields) => DataType::Struct(
             fields
                 .iter()
-                .map(|field| storage_field(field))
+                .map(|field| storage_field_at(field, optional_parent))
                 .collect::<Result<Vec<_>>>()?
                 .into(),
         ),
-        DataType::List(field) | DataType::LargeList(field) => DataType::List(Arc::new(Field::new(
-            "element",
-            storage_type(field.data_type())?,
-            field.is_nullable(),
-        ))),
+        DataType::List(field) | DataType::LargeList(field) => DataType::List(Arc::new(
+            storage_field_at(field, false)?.with_name("element"),
+        )),
         DataType::Map(entries, _) => {
             let DataType::Struct(fields) = entries.data_type() else {
                 return Err(invalid("Arrow Map entries must be a key/value struct"));
@@ -207,12 +206,10 @@ fn storage_type(data_type: &DataType) -> Result<DataType> {
                     "entries",
                     DataType::Struct(
                         vec![
-                            Field::new("key", storage_type(fields[0].data_type())?, false),
-                            Field::new(
-                                "value",
-                                storage_type(fields[1].data_type())?,
-                                fields[1].is_nullable(),
-                            ),
+                            storage_field_at(&fields[0], false)?
+                                .with_name("key")
+                                .with_nullable(false),
+                            storage_field_at(&fields[1], false)?.with_name("value"),
                         ]
                         .into(),
                     ),
@@ -234,8 +231,8 @@ fn storage_type(data_type: &DataType) -> Result<DataType> {
 /// Service-owned Delta table namespace sharing the operation runtime.
 #[derive(Clone)]
 pub struct DeltaStore {
-    root: PathBuf,
-    runtime: crate::runtime::QueryRuntime,
+    pub(crate) root: PathBuf,
+    pub(crate) runtime: crate::runtime::QueryRuntime,
 }
 
 impl DeltaStore {
@@ -252,7 +249,7 @@ impl DeltaStore {
         })
     }
 
-    fn location(&self, name: &str) -> Result<url::Url> {
+    pub(crate) fn location(&self, name: &str) -> Result<url::Url> {
         if name.is_empty()
             || !name
                 .bytes()
@@ -313,7 +310,7 @@ impl DeltaStore {
         self.location(name)?;
         std::fs::create_dir_all(self.root.join(name))?;
         let schema = StructType::try_from_arrow(contract.storage.as_ref()).map_err(external)?;
-        let mut configuration = HashMap::from([
+        let configuration = HashMap::from([
             (
                 CONTRACT_PROPERTY.to_owned(),
                 Some(contract.identity.clone()),
@@ -323,11 +320,14 @@ impl DeltaStore {
                 Some(cdf.to_string()),
             ),
         ]);
+        let mut constraints = contract.required.clone();
         for (rule, expression) in rules {
-            configuration.insert(
-                format!("delta.constraints.{rule}"),
-                Some(expression.clone()),
-            );
+            if constraints
+                .insert((*rule).into(), expression.clone())
+                .is_some()
+            {
+                return Err(invalid("duplicate native constraint name"));
+            }
         }
         let create = CreateBuilder::new()
             .with_log_store(self.builder(name)?.build_storage().map_err(external)?)
@@ -335,8 +335,21 @@ impl DeltaStore {
             .with_columns(schema.fields().cloned())
             .with_raise_if_key_not_exists(false)
             .with_configuration(configuration);
+        let state = Arc::new(self.runtime.session().state());
         self.runtime
-            .native_write(async move { create.await.map_err(external) })
+            .native_write(async move {
+                let table = create.await.map_err(external)?;
+                if constraints.is_empty() {
+                    return Ok(table);
+                }
+                table
+                    .add_constraint()
+                    .with_constraints(constraints)
+                    .with_session_state(state)
+                    .with_commit_properties(CommitProperties::default().with_max_retries(0))
+                    .await
+                    .map_err(external)
+            })
             .await
     }
 
@@ -378,12 +391,52 @@ impl DeltaStore {
         frame: DataFrame,
         transactions: Vec<Transaction>,
     ) -> Result<DeltaTable> {
-        verify_contract(&table, contract)?;
-        let (state, plan) = contract.store(frame)?.into_parts();
+        // Full-field predicates compile native physical expressions. Own this preparation on
+        // the admitted native executor, just like query optimization and Delta commit work.
+        // Compiling here on the transport caller would put a schema-dependent recursive stack
+        // outside that executor. Release preparation admission before executing its child query.
+        let prepared_contract = contract.clone();
+        let (table, state, plan, violations) = self
+            .runtime
+            .native_read(async move {
+                verify_contract(&table, &prepared_contract)?;
+                let (state, plan) = prepared_contract.store(frame.clone())?.into_parts();
+                let violations = enrichment_core::native_schema::intrinsic_violations(
+                    project(frame, &prepared_contract.semantic)?,
+                    &prepared_contract.semantic,
+                )?;
+                Ok((table, state, plan, violations))
+            })
+            .await?;
         if !Arc::ptr_eq(state.runtime_env(), &self.runtime.session().runtime_env()) {
             return Err(invalid(
                 "Delta mutation input belongs to a different native runtime",
             ));
+        }
+        if let Some(violations) = violations {
+            let output = self
+                .runtime
+                .execute(violations)
+                .await
+                .map_err(|error| error.context("Delta intrinsic pre-admission"))?;
+            if output.rows != 0 {
+                let mut fields = Vec::new();
+                for batch in &output.batches {
+                    for (field, values) in batch.schema().fields().iter().zip(batch.columns()) {
+                        if datafusion::common::cast::as_boolean_array(values)?
+                            .iter()
+                            .any(|v| v == Some(true))
+                        {
+                            fields.push(field.name().clone());
+                        }
+                    }
+                }
+                return Err(crate::preparation::InvariantFailure::error(
+                    "native_field_values",
+                    "Delta intrinsic pre-admission",
+                    fields,
+                ));
+            }
         }
         let properties = crate::native_policy::delta_writer_properties(
             &state,
@@ -412,6 +465,7 @@ impl DeltaStore {
         self.runtime
             .native_write(async move { write.await.map_err(external) })
             .await
+            .map_err(|error| error.context("complete Delta append"))
     }
 
     async fn contract_table(&self) -> Result<DeltaTable> {
@@ -546,18 +600,9 @@ impl DeltaStore {
         verify_contract(table, contract)?;
         self.require_contract(contract).await?;
         let context = self.runtime.session();
-        let state = Arc::new(context.state());
-        table
-            .update_datafusion_session(state.as_ref())
-            .map_err(external)?;
-        let provider = Arc::new(DeltaScanNext::new(
-            table.snapshot().map_err(external)?.snapshot().clone(),
-            DeltaScanConfig::new_from_session(state.as_ref())
-                .with_schema(contract.semantic_schema()),
-        )?);
-        // The native scan casts only projected output, including nested metadata. Its exact
-        // snapshot and our registered root store survive logical planning. ViewTable exposes
-        // this read plan without any provider mutation route.
+        let provider =
+            crate::native_discovery::captured_provider(&context, table.clone(), contract.clone())
+                .await?;
         Ok(context.read_table(provider)?.into_view())
     }
 
@@ -625,8 +670,41 @@ impl DeltaStore {
     }
 }
 
-fn verify_contract(table: &DeltaTable, contract: &StorageContract) -> Result<()> {
+pub(crate) fn requires_plain_binary(kind: &DataType) -> bool {
+    match kind {
+        DataType::FixedSizeBinary(_) => true,
+        DataType::Struct(fields) => fields
+            .iter()
+            .any(|field| requires_plain_binary(field.data_type())),
+        DataType::List(field)
+        | DataType::LargeList(field)
+        | DataType::FixedSizeList(field, _)
+        | DataType::Map(field, _) => requires_plain_binary(field.data_type()),
+        DataType::Dictionary(_, value) => requires_plain_binary(value),
+        _ => false,
+    }
+}
+
+pub(crate) fn verify_contract(table: &DeltaTable, contract: &StorageContract) -> Result<()> {
     let snapshot = table.snapshot().map_err(external)?;
+    if !contract.required.is_empty() {
+        if !snapshot
+            .snapshot()
+            .table_configuration()
+            .is_feature_enabled(&"checkConstraints".parse().map_err(external)?)
+        {
+            return Err(invalid("Delta contract requires active CHECK enforcement"));
+        }
+        let configured = snapshot.metadata().configuration();
+        for (name, expression) in &contract.required {
+            if configured.get(&format!("delta.constraints.{name}")) != Some(expression) {
+                return Err(invalid(&format!(
+                    "Delta contract requiredness predicate mismatch for {name}: expected {expression:?}, found {:?}",
+                    configured.get(&format!("delta.constraints.{name}"))
+                )));
+            }
+        }
+    }
     if snapshot
         .metadata()
         .configuration()
@@ -666,18 +744,18 @@ fn invalid(message: &str) -> DataFusionError {
 }
 
 pub(crate) fn missing_table(error: &DataFusionError) -> bool {
-    matches!(error, DataFusionError::External(inner) if matches!(inner.downcast_ref::<deltalake::DeltaTableError>(),Some(deltalake::DeltaTableError::NotATable(_))))
+    matches!(error.find_root(), DataFusionError::External(inner) if matches!(inner.downcast_ref::<deltalake::DeltaTableError>(),Some(deltalake::DeltaTableError::NotATable(_))))
 }
 pub(crate) fn transaction_conflict(error: &DataFusionError) -> bool {
     use deltalake::{DeltaTableError, kernel::transaction::TransactionError};
-    matches!(error,DataFusionError::External(inner) if matches!(inner.downcast_ref::<DeltaTableError>(),
+    matches!(error.find_root(),DataFusionError::External(inner) if matches!(inner.downcast_ref::<DeltaTableError>(),
         Some(DeltaTableError::VersionAlreadyExists(_)) | Some(DeltaTableError::Transaction { source:
             TransactionError::VersionAlreadyExists(_) | TransactionError::CommitConflict(_) | TransactionError::MaxCommitAttempts(_)
         })
     ))
 }
 
-fn contract_catalog() -> Result<StorageContract> {
+pub(crate) fn contract_catalog() -> Result<StorageContract> {
     StorageContract::new(Arc::new(Schema::new(vec![
         Field::new("contract_id", DataType::Utf8, false),
         Field::new("arrow_schema", DataType::Binary, false),
@@ -815,13 +893,13 @@ mod tests {
         let contract = StorageContract::new(Arc::clone(&schema))?;
         let context = store.session();
         let table = store
-            .create("checked", &contract, false)
-            .await?
-            .add_constraint()
-            .with_constraint("positive", "id >= 0")
-            .with_session_state(Arc::new(context.state()))
-            .await
-            .map_err(external)?;
+            .create_with_rules(
+                "checked",
+                &contract,
+                false,
+                &[("positive", "id >= 0".into())],
+            )
+            .await?;
         let version = table.version();
         let batch = RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from(vec![-1]))])?;
         assert!(
@@ -831,6 +909,437 @@ mod tests {
                 .is_err()
         );
         assert_eq!(store.load("checked", None).await?.version(), version);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn optional_parent_and_required_child_share_generated_native_checks() -> Result<()> {
+        use arrow::{array::StructArray, buffer::NullBuffer};
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime)?;
+        let declared = Arc::new(Schema::new(vec![Field::new(
+            "payload",
+            DataType::Struct(vec![Field::new("required", DataType::Int64, false)].into()),
+            true,
+        )]));
+        let contract = StorageContract::new(declared)?;
+        let mut table = store.create("optional_parent", &contract, false).await?;
+        let input = |present: bool, child: Option<i64>| -> Result<DataFrame> {
+            let fields = vec![Arc::new(Field::new("required", DataType::Int64, true))];
+            let array = StructArray::try_new(
+                fields.clone().into(),
+                vec![Arc::new(Int64Array::from(vec![child]))],
+                Some(NullBuffer::from(vec![present])),
+            )?;
+            let schema = Arc::new(Schema::new(vec![Field::new(
+                "payload",
+                DataType::Struct(fields.into()),
+                true,
+            )]));
+            store
+                .session()
+                .read_batch(RecordBatch::try_new(schema, vec![Arc::new(array)])?)
+        };
+        for (present, value) in [(true, Some(9)), (false, None)] {
+            table = store
+                .append(table, &contract, input(present, value)?, vec![])
+                .await?;
+        }
+        let version = table.version();
+        assert!(
+            store
+                .append(table, &contract, input(true, None)?, vec![])
+                .await
+                .is_err()
+        );
+        let table = store.load("optional_parent", None).await?;
+        assert_eq!(table.version(), version);
+        assert_eq!(
+            store
+                .session()
+                .read_table(store.provider(&table, &contract).await?)?
+                .count()
+                .await?,
+            2
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn declared_struct_projection_reorders_but_never_fills_missing_children() -> Result<()> {
+        use datafusion::prelude::SessionContext;
+        let context = SessionContext::new();
+        let target = Schema::new(vec![Field::new(
+            "value",
+            DataType::Struct(
+                vec![
+                    Field::new("a", DataType::Int64, true),
+                    Field::new("b", DataType::Int64, true),
+                ]
+                .into(),
+            ),
+            false,
+        )]);
+        let frame = context
+            .sql("SELECT named_struct('b', CAST(20 AS BIGINT), 'a', CAST(10 AS BIGINT)) AS value")
+            .await?;
+        let frame = project(frame, &target)?;
+        // Use the production planner which owns the explicit physical schema boundary.
+        let state = datafusion::execution::SessionStateBuilder::from(context.state())
+            .with_query_planner(Arc::new(crate::arrow_contract::NativePlanner))
+            .build();
+        let (_, plan) = frame.into_parts();
+        let batches = DataFrame::new(state, plan).collect().await?;
+        let record = batches[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::StructArray>()
+            .expect("struct");
+        assert_eq!(
+            record
+                .column_by_name("a")
+                .expect("a")
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("int")
+                .value(0),
+            10
+        );
+        assert_eq!(
+            record
+                .column_by_name("b")
+                .expect("b")
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .expect("int")
+                .value(0),
+            20
+        );
+        let renamed = context
+            .sql("SELECT named_struct('a', CAST(10 AS BIGINT), 'c', CAST(30 AS BIGINT)) AS value")
+            .await?;
+        assert!(project(renamed, &target).is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn repeated_required_children_and_duplicate_map_keys_refuse_before_write() -> Result<()> {
+        use arrow::{
+            array::{Int64Builder, ListArray, MapBuilder, StringBuilder, StructArray},
+            buffer::OffsetBuffer,
+        };
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime)?;
+        let child = Arc::new(Field::new("required", DataType::Int64, true).with_metadata(
+            HashMap::from([("enrichment.null".into(), "forbidden".into())]),
+        ));
+        let item = Arc::new(Field::new(
+            "item",
+            DataType::Struct(vec![child.clone()].into()),
+            false,
+        ));
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "items",
+            DataType::List(item.clone()),
+            true,
+        )]));
+        let contract = StorageContract::new(schema.clone())?;
+        let table = store.create("repeated", &contract, false).await?;
+        let version = table.version();
+        let values = StructArray::try_new(
+            vec![child.clone()].into(),
+            vec![Arc::new(Int64Array::from(vec![None]))],
+            None,
+        )?;
+        let array = ListArray::try_new(
+            item.clone(),
+            OffsetBuffer::new(vec![0, 1].into()),
+            Arc::new(values),
+            None,
+        )?;
+        let input = store
+            .session()
+            .read_batch(RecordBatch::try_new(schema.clone(), vec![Arc::new(array)])?)?;
+        let error = store
+            .append(table, &contract, input, vec![])
+            .await
+            .expect_err("required list child");
+        let diagnostic = crate::query_failure::diagnostic_from_error(&error)
+            .expect("structured field admission failure");
+        assert_eq!(diagnostic.rule.as_deref(), Some("native_field_values"));
+        assert_eq!(diagnostic.affected_ids, ["items"]);
+        assert_eq!(store.load("repeated", None).await?.version(), version);
+        let values = StructArray::try_new(
+            vec![child].into(),
+            vec![Arc::new(Int64Array::from(vec![Some(7)]))],
+            None,
+        )?;
+        let array = ListArray::try_new(
+            item,
+            OffsetBuffer::new(vec![0, 1].into()),
+            Arc::new(values),
+            None,
+        )?;
+        let input = store
+            .session()
+            .read_batch(RecordBatch::try_new(schema, vec![Arc::new(array)])?)?;
+        let table = store
+            .append(
+                store.load("repeated", None).await?,
+                &contract,
+                input,
+                vec![],
+            )
+            .await?;
+        assert!(table.version() > version);
+
+        let mut builder = MapBuilder::new(None, StringBuilder::new(), Int64Builder::new());
+        builder.keys().append_value("duplicate");
+        builder.values().append_value(1);
+        builder.keys().append_value("duplicate");
+        builder.values().append_value(2);
+        builder.append(true)?;
+        let values = builder.finish();
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "mapping",
+            values.data_type().clone(),
+            false,
+        )]));
+        let contract = StorageContract::new(schema.clone())?;
+        let table = store.create("map_keys", &contract, false).await?;
+        let version = table.version();
+        let input = store.session().read_batch(RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(values)],
+        )?)?;
+        let error = store
+            .append(table, &contract, input, vec![])
+            .await
+            .expect_err("duplicate map key");
+        assert!(error.to_string().contains("map key uniqueness"), "{error}");
+        assert_eq!(store.load("map_keys", None).await?.version(), version);
+        builder.keys().append_value("one");
+        builder.values().append_value(1);
+        builder.keys().append_value("two");
+        builder.values().append_value(2);
+        builder.append(true)?;
+        let input = store.session().read_batch(RecordBatch::try_new(
+            schema,
+            vec![Arc::new(builder.finish())],
+        )?)?;
+        let table = store
+            .append(
+                store.load("map_keys", None).await?,
+                &contract,
+                input,
+                vec![],
+            )
+            .await?;
+        assert!(table.version() > version);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn generated_event_union_is_enforced_on_native_delta_append() -> Result<()> {
+        use arrow::array::{StringArray, StructArray};
+        use enrichment_core::{
+            native_union::NativeStruct,
+            telemetry::{Event, EventPayload},
+        };
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime)?;
+        let batch = Event::batch(&[Event {
+            runtime_id: "runtime".into(),
+            sequence: 1,
+            recorded_at: enrichment_core::native_time::EventTime::from_micros(-1)?,
+            operation_id: None,
+            payload: EventPayload::IndexRead,
+        }])?;
+        let contract = StorageContract::new(batch.schema())?;
+        let table = store.create("events", &contract, false).await?;
+        let original_version = table.version();
+        let payload_index = batch.schema().index_of("payload")?;
+        let payload = batch
+            .column(payload_index)
+            .as_any()
+            .downcast_ref::<StructArray>()
+            .expect("generated payload");
+        let mut fields = payload.columns().to_vec();
+        fields[0] = Arc::new(StringArray::from(vec!["query"]));
+        let mut columns = batch.columns().to_vec();
+        columns[payload_index] = Arc::new(StructArray::try_new(
+            payload.fields().clone(),
+            fields,
+            None,
+        )?);
+        let invalid = RecordBatch::try_new(batch.schema(), columns)?;
+        assert!(
+            store
+                .append(
+                    table,
+                    &contract,
+                    store.session().read_batch(invalid)?,
+                    vec![]
+                )
+                .await
+                .is_err()
+        );
+        assert_eq!(
+            store.load("events", None).await?.version(),
+            original_version
+        );
+        let table = store
+            .append(
+                store.load("events", None).await?,
+                &contract,
+                store.session().read_batch(batch)?,
+                vec![],
+            )
+            .await?;
+        let output = store
+            .session()
+            .read_table(store.provider(&table, &contract).await?)?
+            .collect()
+            .await?;
+        let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(&output[0])?;
+        assert_eq!(Event::decode(rows.row(0))?.recorded_at.micros(), -1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn fixed_digest_and_pre_epoch_utc_clock_survive_the_actual_delta_provider() -> Result<()>
+    {
+        use arrow::array::{FixedSizeBinaryArray, TimestampMicrosecondArray};
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime.clone())?;
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("digest", DataType::FixedSizeBinary(32), false),
+            Field::new(
+                "observed_at",
+                DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
+                false,
+            ),
+        ]));
+        let contract = StorageContract::new(schema.clone())?;
+        let table = store.create("typed_values", &contract, true).await?;
+        let input = store.session().read_batch(RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(FixedSizeBinaryArray::try_from_iter(
+                    [[0u8; 32], [255u8; 32]].iter(),
+                )?),
+                Arc::new(TimestampMicrosecondArray::from(vec![-1, 0]).with_timezone("UTC")),
+            ],
+        )?)?;
+        let table = store.append(table, &contract, input, vec![]).await?;
+        let provider = store
+            .provider(
+                &store.load("typed_values", table.version()).await?,
+                &contract,
+            )
+            .await?;
+        let output = runtime
+            .execute(
+                store
+                    .session()
+                    .read_table(provider)?
+                    .sort(vec![col("observed_at").sort(true, false)])?,
+            )
+            .await?;
+        assert_eq!(output.rows, 2);
+        let values = &output.batches[0];
+        assert_eq!(
+            values
+                .column(0)
+                .as_any()
+                .downcast_ref::<FixedSizeBinaryArray>()
+                .expect("fixed digest")
+                .value(1),
+            &[255u8; 32]
+        );
+        assert_eq!(
+            values
+                .column(1)
+                .as_any()
+                .downcast_ref::<TimestampMicrosecondArray>()
+                .expect("UTC micros")
+                .value(0),
+            -1
+        );
+        Ok(())
+    }
+    #[tokio::test]
+    async fn generated_artifact_identity_admission_and_provider_metadata() -> Result<()> {
+        use enrichment_core::{
+            evidence::{Artifact, ArtifactKind},
+            native_union::Cell,
+        };
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime.clone())?;
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "artifact",
+            <Artifact as Cell>::data_type(),
+            true,
+        )]));
+        let contract = StorageContract::new(schema.clone())?;
+        let table = store.create("receipts", &contract, false).await?;
+        let initial = table.version();
+        let valid = Artifact::describe(
+            b"native receipt",
+            ArtifactKind::Other,
+            "text/plain",
+            "service:receipt",
+            enrichment_core::native_time::AcquisitionTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+        );
+        let input = |value: &Artifact| -> Result<DataFrame> {
+            store.session().read_batch(RecordBatch::try_new(
+                schema.clone(),
+                vec![<Artifact as Cell>::encode(&[Some(value)])?],
+            )?)
+        };
+        let mut wrong = valid.clone();
+        wrong.artifact_id = format!("art_{}", "0".repeat(64));
+        assert!(
+            store
+                .append(table, &contract, input(&wrong)?, vec![])
+                .await
+                .is_err()
+        );
+        assert_eq!(store.load("receipts", None).await?.version(), initial);
+        let table = store
+            .append(
+                store.load("receipts", None).await?,
+                &contract,
+                input(&valid)?,
+                vec![],
+            )
+            .await?;
+        let selected = store
+            .session()
+            .read_table(store.provider(&table, &contract).await?)?;
+        let output = runtime
+            .execute_family(
+                selected,
+                Some(crate::preparation::QueryFamily::CatalogArtifact),
+            )
+            .await?;
+        assert_eq!(output.rows, 1);
+        let rows =
+            enrichment_core::evidence::arrow_model::cells::RowSet::batch(&output.batches[0])?;
+        assert_eq!(<Artifact as Cell>::decode(rows.row(0), "artifact")?, valid);
         Ok(())
     }
 }

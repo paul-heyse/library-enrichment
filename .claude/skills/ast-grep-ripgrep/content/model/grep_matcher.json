@@ -1,0 +1,437 @@
+{
+  "module": "grep_matcher",
+  "crate": "grep-matcher",
+  "api": "api/grep_matcher.md",
+  "items": [
+    {
+      "path": "grep_matcher::LineMatchKind",
+      "name": "LineMatchKind",
+      "kind": "enum",
+      "crate": "grep-matcher",
+      "signature": "enum LineMatchKind",
+      "summary": "The type of match for a line oriented matcher.",
+      "doc": "api/grep_matcher.md#linematchkind",
+      "variants": [
+        "Confirmed",
+        "Candidate"
+      ],
+      "methods": []
+    },
+    {
+      "path": "grep_matcher::ByteSet",
+      "name": "ByteSet",
+      "kind": "struct",
+      "crate": "grep-matcher",
+      "signature": "struct ByteSet",
+      "summary": "A set of bytes.",
+      "doc": "api/grep_matcher.md#byteset",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, byte: u8)",
+          "summary": "Add a byte to this set."
+        },
+        {
+          "name": "add_all",
+          "signature": "fn add_all(&mut self, start: u8, end: u8)",
+          "summary": "Add an inclusive range of bytes."
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, byte: u8) -> bool",
+          "summary": "Return true if and only if the given byte is in this set."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> ByteSet",
+          "summary": "Create an empty set of bytes."
+        },
+        {
+          "name": "full",
+          "signature": "fn full() -> ByteSet",
+          "summary": "Create a full set of bytes such that every possible byte is in the set returned."
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove(&mut self, byte: u8)",
+          "summary": "Remove a byte from this set."
+        },
+        {
+          "name": "remove_all",
+          "signature": "fn remove_all(&mut self, start: u8, end: u8)",
+          "summary": "Remove an inclusive range of bytes."
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::LineTerminator",
+      "name": "LineTerminator",
+      "kind": "struct",
+      "crate": "grep-matcher",
+      "signature": "struct LineTerminator",
+      "summary": "A line terminator.",
+      "doc": "api/grep_matcher.md#lineterminator",
+      "methods": [
+        {
+          "name": "as_byte",
+          "signature": "fn as_byte(&self) -> u8",
+          "summary": "Returns this line terminator as a single byte."
+        },
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "summary": "Returns this line terminator as a sequence of bytes."
+        },
+        {
+          "name": "byte",
+          "signature": "fn byte(byte: u8) -> LineTerminator",
+          "summary": "Return a new single-byte line terminator. Any byte is valid."
+        },
+        {
+          "name": "crlf",
+          "signature": "fn crlf() -> LineTerminator",
+          "summary": "Return a new line terminator represented by `\\r\\n`."
+        },
+        {
+          "name": "is_crlf",
+          "signature": "fn is_crlf(&self) -> bool",
+          "summary": "Returns true if and only if this line terminator is CRLF."
+        },
+        {
+          "name": "is_suffix",
+          "signature": "fn is_suffix(&self, slice: &[u8]) -> bool",
+          "summary": "Returns true if and only if the given slice ends with this line terminator."
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::Match",
+      "name": "Match",
+      "kind": "struct",
+      "crate": "grep-matcher",
+      "signature": "struct Match",
+      "summary": "The type of a match.",
+      "doc": "api/grep_matcher.md#match",
+      "methods": [
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> usize",
+          "summary": "Return the end offset of this match."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this match is empty."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of bytes in this match."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(start: usize, end: usize) -> Match",
+          "summary": "Create a new match."
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self, amount: usize) -> Match",
+          "summary": "Offset this match by the given amount and return a new match."
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> usize",
+          "summary": "Return the start offset of this match."
+        },
+        {
+          "name": "with_end",
+          "signature": "fn with_end(&self, end: usize) -> Match",
+          "summary": "Return a new match with the end offset replaced with the given value."
+        },
+        {
+          "name": "with_start",
+          "signature": "fn with_start(&self, start: usize) -> Match",
+          "summary": "Return a new match with the start offset replaced with the given value."
+        },
+        {
+          "name": "zero",
+          "signature": "fn zero(offset: usize) -> Match",
+          "summary": "Creates a zero width match at the given offset."
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::NoCaptures",
+      "name": "NoCaptures",
+      "kind": "struct",
+      "crate": "grep-matcher",
+      "signature": "struct NoCaptures",
+      "summary": "NoCaptures provides an always-empty implementation of the `Captures` trait.",
+      "doc": "api/grep_matcher.md#nocaptures",
+      "implements": [
+        "grep_matcher::Captures"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, _: usize) -> Option<Match>",
+          "via_trait": "grep_matcher::Captures"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "grep_matcher::Captures"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> NoCaptures",
+          "summary": "Create an empty set of capturing groups."
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::NoError",
+      "name": "NoError",
+      "kind": "struct",
+      "crate": "grep-matcher",
+      "signature": "struct NoError",
+      "summary": "NoError provides an error type for matchers that never produce errors.",
+      "doc": "api/grep_matcher.md#noerror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "description",
+          "signature": "fn description(&self) -> &str",
+          "via_trait": "core::error::Error"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::Captures",
+      "name": "Captures",
+      "kind": "trait",
+      "crate": "grep-matcher",
+      "signature": "trait Captures",
+      "summary": "A trait that describes implementations of capturing groups.",
+      "doc": "api/grep_matcher.md#captures",
+      "implementors": [
+        "grep_matcher::NoCaptures",
+        "grep_pcre2::matcher::RegexCaptures",
+        "grep_regex::matcher::RegexCaptures"
+      ],
+      "required_methods": [
+        "get",
+        "len"
+      ],
+      "provided_methods": [
+        "as_match",
+        "interpolate",
+        "is_empty"
+      ],
+      "methods": [
+        {
+          "name": "as_match",
+          "signature": "fn as_match(&self) -> Match",
+          "summary": "Return the overall match for the capture."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<Match>",
+          "summary": "Return the capturing group match at the given index. If no match of that capturing group exists, then this returns `None`."
+        },
+        {
+          "name": "interpolate",
+          "signature": "fn interpolate<F>(&self, name_to_index: F, haystack: &[u8], replacement: &[u8], dst: &mut Vec<u8>) where F: FnMut(&str) -> Option<usize>",
+          "summary": "Expands all instances of `$name` in `replacement` to the corresponding capture group `name`, and writes them to the `dst` buffer given."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if these captures are empty. This occurs when `len` is `0`."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Return the total number of capturing groups. This includes capturing groups that have not matched anything."
+        }
+      ]
+    },
+    {
+      "path": "grep_matcher::Matcher",
+      "name": "Matcher",
+      "kind": "trait",
+      "crate": "grep-matcher",
+      "signature": "trait Matcher",
+      "summary": "A matcher defines an interface for regular expression implementations.",
+      "doc": "api/grep_matcher.md#matcher",
+      "implementors": [
+        "grep_pcre2::matcher::RegexMatcher",
+        "grep_regex::matcher::RegexMatcher"
+      ],
+      "required_methods": [
+        "find_at",
+        "new_captures"
+      ],
+      "provided_methods": [
+        "capture_count",
+        "capture_index",
+        "captures",
+        "captures_at",
+        "captures_iter",
+        "captures_iter_at",
+        "find",
+        "find_candidate_line",
+        "find_iter",
+        "find_iter_at",
+        "is_match",
+        "is_match_at",
+        "line_terminator",
+        "non_matching_bytes",
+        "replace",
+        "replace_with_captures",
+        "replace_with_captures_at",
+        "shortest_match",
+        "shortest_match_at",
+        "try_captures_iter",
+        "try_captures_iter_at",
+        "try_find_iter",
+        "try_find_iter_at"
+      ],
+      "methods": [
+        {
+          "name": "capture_count",
+          "signature": "fn capture_count(&self) -> usize",
+          "summary": "Returns the total number of capturing groups in this matcher."
+        },
+        {
+          "name": "capture_index",
+          "signature": "fn capture_index(&self, _name: &str) -> Option<usize>",
+          "summary": "Maps the given capture group name to its corresponding capture group index, if one exists. If one does not exist, then `None` is returned."
+        },
+        {
+          "name": "captures",
+          "signature": "fn captures(&self, haystack: &[u8], caps: &mut Self::Captures) -> Result<bool, Self::Error>",
+          "summary": "Populates the first set of capture group matches from `haystack` into `caps`. If no match exists, then `false` is returned."
+        },
+        {
+          "name": "captures_at",
+          "signature": "fn captures_at(&self, _haystack: &[u8], _at: usize, _caps: &mut Self::Captures) -> Result<bool, Self::Error>",
+          "summary": "Populates the first set of capture group matches from `haystack` into `matches` after `at`, where the byte offsets in each capturing group are relative to the start of `haystack` (and not `at`). If no match exists, then `false` is returned…"
+        },
+        {
+          "name": "captures_iter",
+          "signature": "fn captures_iter<F>(&self, haystack: &[u8], caps: &mut Self::Captures, matched: F) -> Result<(), Self::Error> where F: FnMut(&Self::Captures) -> bool",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack` with capture groups extracted from each match. If no match exists, then the given function is never called. If the function returns `false`, then iteration s…"
+        },
+        {
+          "name": "captures_iter_at",
+          "signature": "fn captures_iter_at<F>(&self, haystack: &[u8], at: usize, caps: &mut Self::Captures, matched: F) -> Result<(), Self::Error> where F: FnMut(&Self::Captures) -> bool",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack` with capture groups extracted from each match. If no match exists, then the given function is never called. If the function returns `false`, then iteration s…"
+        },
+        {
+          "name": "find",
+          "signature": "fn find(&self, haystack: &[u8]) -> Result<Option<Match>, Self::Error>",
+          "summary": "Returns the start and end byte range of the first match in `haystack`. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "find_at",
+          "signature": "fn find_at(&self, haystack: &[u8], at: usize) -> Result<Option<Match>, Self::Error>",
+          "summary": "Returns the start and end byte range of the first match in `haystack` after `at`, where the byte offsets are relative to that start of `haystack` (and not `at`). If no match exists, then `None` is returned."
+        },
+        {
+          "name": "find_candidate_line",
+          "signature": "fn find_candidate_line(&self, haystack: &[u8]) -> Result<Option<LineMatchKind>, Self::Error>",
+          "summary": "Return one of the following: a confirmed line match, a candidate line match (which may be a false positive) or no match at all (which **must not** be a false negative). When reporting a confirmed or candidate match, the position returned c…"
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<F>(&self, haystack: &[u8], matched: F) -> Result<(), Self::Error> where F: FnMut(Match) -> bool",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack`. If no match exists, then the given function is never called. If the function returns `false`, then iteration stops."
+        },
+        {
+          "name": "find_iter_at",
+          "signature": "fn find_iter_at<F>(&self, haystack: &[u8], at: usize, matched: F) -> Result<(), Self::Error> where F: FnMut(Match) -> bool",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack`. If no match exists, then the given function is never called. If the function returns `false`, then iteration stops."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match(&self, haystack: &[u8]) -> Result<bool, Self::Error>",
+          "summary": "Returns true if and only if the matcher matches the given haystack."
+        },
+        {
+          "name": "is_match_at",
+          "signature": "fn is_match_at(&self, haystack: &[u8], at: usize) -> Result<bool, Self::Error>",
+          "summary": "Returns true if and only if the matcher matches the given haystack starting at the given position."
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(&self) -> Option<LineTerminator>",
+          "summary": "If this matcher was compiled as a line oriented matcher, then this method returns the line terminator if and only if the line terminator never appears in any match produced by this matcher. If this wasn't compiled as a line oriented matche…"
+        },
+        {
+          "name": "new_captures",
+          "signature": "fn new_captures(&self) -> Result<Self::Captures, Self::Error>",
+          "summary": "Creates an empty group of captures suitable for use with the capturing APIs of this trait."
+        },
+        {
+          "name": "non_matching_bytes",
+          "signature": "fn non_matching_bytes(&self) -> Option<&ByteSet>",
+          "summary": "If available, return a set of bytes that will never appear in a match produced by an implementation."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace<F>(&self, haystack: &[u8], dst: &mut Vec<u8>, append: F) -> Result<(), Self::Error> where F: FnMut(Match, &mut Vec<u8>) -> bool",
+          "summary": "Replaces every match in the given haystack with the result of calling `append`. `append` is given the start and end of a match, along with a handle to the `dst` buffer provided."
+        },
+        {
+          "name": "replace_with_captures",
+          "signature": "fn replace_with_captures<F>(&self, haystack: &[u8], caps: &mut Self::Captures, dst: &mut Vec<u8>, append: F) -> Result<(), Self::Error> where F: FnMut(&Self::Captures, &mut Vec<u8>) -> bool",
+          "summary": "Replaces every match in the given haystack with the result of calling `append` with the matching capture groups."
+        },
+        {
+          "name": "replace_with_captures_at",
+          "signature": "fn replace_with_captures_at<F>(&self, haystack: &[u8], at: usize, caps: &mut Self::Captures, dst: &mut Vec<u8>, append: F) -> Result<(), Self::Error> where F: FnMut(&Self::Captures, &mut Vec<u8>) -> bool",
+          "summary": "Replaces every match in the given haystack with the result of calling `append` with the matching capture groups."
+        },
+        {
+          "name": "shortest_match",
+          "signature": "fn shortest_match(&self, haystack: &[u8]) -> Result<Option<usize>, Self::Error>",
+          "summary": "Returns an end location of the first match in `haystack`. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "shortest_match_at",
+          "signature": "fn shortest_match_at(&self, haystack: &[u8], at: usize) -> Result<Option<usize>, Self::Error>",
+          "summary": "Returns an end location of the first match in `haystack` starting at the given position. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_captures_iter",
+          "signature": "fn try_captures_iter<F, E>(&self, haystack: &[u8], caps: &mut Self::Captures, matched: F) -> Result<Result<(), E>, Self::Error> where F: FnMut(&Self::Captures) -> Result<bool, E>",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack` with capture groups extracted from each match. If no match exists, then the given function is never called. If the function returns `false`, then iteration s…"
+        },
+        {
+          "name": "try_captures_iter_at",
+          "signature": "fn try_captures_iter_at<F, E>(&self, haystack: &[u8], at: usize, caps: &mut Self::Captures, matched: F) -> Result<Result<(), E>, Self::Error> where F: FnMut(&Self::Captures) -> Result<bool, E>",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack` with capture groups extracted from each match. If no match exists, then the given function is never called. If the function returns `false`, then iteration s…"
+        },
+        {
+          "name": "try_find_iter",
+          "signature": "fn try_find_iter<F, E>(&self, haystack: &[u8], matched: F) -> Result<Result<(), E>, Self::Error> where F: FnMut(Match) -> Result<bool, E>",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack`. If no match exists, then the given function is never called. If the function returns `false`, then iteration stops. Similarly, if the function returns an er…"
+        },
+        {
+          "name": "try_find_iter_at",
+          "signature": "fn try_find_iter_at<F, E>(&self, haystack: &[u8], at: usize, matched: F) -> Result<Result<(), E>, Self::Error> where F: FnMut(Match) -> Result<bool, E>",
+          "summary": "Executes the given function over successive non-overlapping matches in `haystack`. If no match exists, then the given function is never called. If the function returns `false`, then iteration stops. Similarly, if the function returns an er…"
+        }
+      ]
+    }
+  ]
+}

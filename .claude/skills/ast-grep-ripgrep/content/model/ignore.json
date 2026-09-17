@@ -1,0 +1,125 @@
+{
+  "module": "ignore",
+  "crate": "ignore",
+  "api": "api/ignore.md",
+  "items": [
+    {
+      "path": "ignore::Error",
+      "name": "Error",
+      "kind": "enum",
+      "crate": "ignore",
+      "signature": "enum Error",
+      "summary": "Represents an error that can occur when parsing a gitignore file.",
+      "doc": "api/ignore.md#error",
+      "variants": [
+        "Partial",
+        "WithLineNumber",
+        "WithPath",
+        "WithDepth",
+        "Loop",
+        "Io",
+        "Glob",
+        "UnrecognizedFileType",
+        "InvalidDefinition"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "depth",
+          "signature": "fn depth(&self) -> Option<usize>",
+          "summary": "Returns a depth associated with recursively walking a directory (if this error was generated from a recursive directory iterator)."
+        },
+        {
+          "name": "description",
+          "signature": "fn description(&self) -> &str",
+          "via_trait": "core::error::Error"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(err: std::io::Error) -> Error",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_io_error",
+          "signature": "fn into_io_error(self) -> Option<std::io::Error>",
+          "summary": "Similar to [`io_error`] except consumes self to convert to the original [`std::io::Error`] if one exists."
+        },
+        {
+          "name": "io_error",
+          "signature": "fn io_error(&self) -> Option<&std::io::Error>",
+          "summary": "Inspect the original [`std::io::Error`] if there is one."
+        },
+        {
+          "name": "is_io",
+          "signature": "fn is_io(&self) -> bool",
+          "summary": "Returns true if this error is exclusively an I/O error."
+        },
+        {
+          "name": "is_partial",
+          "signature": "fn is_partial(&self) -> bool",
+          "summary": "Returns true if this is a partial error."
+        }
+      ]
+    },
+    {
+      "path": "ignore::Match",
+      "name": "Match",
+      "kind": "enum",
+      "crate": "ignore",
+      "signature": "enum Match<T>",
+      "summary": "The result of a glob match.",
+      "doc": "api/ignore.md#match",
+      "variants": [
+        "None",
+        "Ignore",
+        "Whitelist"
+      ],
+      "methods": [
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> Option<&T>",
+          "summary": "Return the value inside this match if it exists."
+        },
+        {
+          "name": "invert",
+          "signature": "fn invert(self) -> Match<T>",
+          "summary": "Inverts the match so that `Ignore` becomes `Whitelist` and `Whitelist` becomes `Ignore`. A non-match remains the same."
+        },
+        {
+          "name": "is_ignore",
+          "signature": "fn is_ignore(&self) -> bool",
+          "summary": "Returns true if the match result implies the path should be ignored."
+        },
+        {
+          "name": "is_none",
+          "signature": "fn is_none(&self) -> bool",
+          "summary": "Returns true if the match result didn't match any globs."
+        },
+        {
+          "name": "is_whitelist",
+          "signature": "fn is_whitelist(&self) -> bool",
+          "summary": "Returns true if the match result implies the path should be whitelisted."
+        },
+        {
+          "name": "map",
+          "signature": "fn map<U, F: FnOnce(T) -> U>(self, f: F) -> Match<U>",
+          "summary": "Apply the given function to the value inside this match."
+        },
+        {
+          "name": "or",
+          "signature": "fn or(self, other: Self) -> Self",
+          "summary": "Return the match if it is not none. Otherwise, return other."
+        }
+      ]
+    }
+  ]
+}

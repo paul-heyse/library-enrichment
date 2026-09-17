@@ -1,0 +1,153 @@
+{
+  "module": "regex_automata::dfa::regex",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.dfa.regex.md",
+  "items": [
+    {
+      "path": "regex_automata::dfa::regex::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for a regex based on deterministic finite automatons.",
+      "doc": "api/regex_automata.dfa.regex.md#builder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Build a regex from the given pattern."
+        },
+        {
+          "name": "build_from_dfas",
+          "signature": "fn build_from_dfas<A: Automaton>(&self, forward: A, reverse: A) -> Regex<A>",
+          "summary": "Build a regex from its component forward and reverse DFAs."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Build a regex from the given patterns."
+        },
+        {
+          "name": "build_many_sparse",
+          "signature": "fn build_many_sparse<P: AsRef<str>>(&self, patterns: &[P]) -> Result<Regex<sparse::DFA<Vec<u8>>>, BuildError>",
+          "summary": "Build a sparse regex from the given patterns."
+        },
+        {
+          "name": "build_sparse",
+          "signature": "fn build_sparse(&self, pattern: &str) -> Result<Regex<sparse::DFA<Vec<u8>>>, BuildError>",
+          "summary": "Build a regex from the given pattern using sparse DFAs."
+        },
+        {
+          "name": "dense",
+          "signature": "fn dense(&mut self, config: dense::Config) -> &mut Builder",
+          "summary": "Set the dense DFA compilation configuration for this builder using [`dense::Config`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new regex builder with the default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        },
+        {
+          "name": "thompson",
+          "signature": "fn thompson(&mut self, config: nfa::thompson::Config) -> &mut Builder",
+          "summary": "Set the Thompson NFA configuration for this builder using [`nfa::thompson::Config`](crate::nfa::thompson::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::regex::FindMatches",
+      "name": "FindMatches",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct FindMatches<'r, 'h, A>",
+      "summary": "An iterator over all non-overlapping matches for an infallible search.",
+      "doc": "api/regex_automata.dfa.regex.md#findmatches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::regex::Regex",
+      "name": "Regex",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Regex<A = DFA<alloc::vec::Vec<u32>>>",
+      "summary": "A regular expression that uses deterministic finite automata for fast searching.",
+      "doc": "api/regex_automata.dfa.regex.md#regex",
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Return a builder for configuring the construction of a `Regex`."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h, I: Into<Input<'h>>>(&self, input: I) -> Option<Match>",
+          "summary": "Returns the start and end offset of the leftmost match. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'r, 'h, I: Into<Input<'h>>>(&'r self, input: I) -> FindMatches<'r, 'h, A>",
+          "summary": "Returns an iterator over all non-overlapping leftmost matches in the given bytes. If no match exists, then the iterator yields no elements."
+        },
+        {
+          "name": "forward",
+          "signature": "fn forward(&self) -> &A",
+          "summary": "Return the underlying DFA responsible for forward matching."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<'h, I: Into<Input<'h>>>(&self, input: I) -> bool",
+          "summary": "Returns true if and only if this regex matches the given haystack."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Parse the given regular expression using the default configuration and return the corresponding regex."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Like `new`, but parses multiple patterns into a single \"regex set.\" This similarly uses the default regex configuration."
+        },
+        {
+          "name": "new_many_sparse",
+          "signature": "fn new_many_sparse<P: AsRef<str>>(patterns: &[P]) -> Result<Regex<sparse::DFA<Vec<u8>>>, BuildError>",
+          "summary": "Like `new`, but parses multiple patterns into a single \"regex set\" using sparse DFAs. This otherwise similarly uses the default regex configuration."
+        },
+        {
+          "name": "new_sparse",
+          "signature": "fn new_sparse(pattern: &str) -> Result<Regex<sparse::DFA<Vec<u8>>>, BuildError>",
+          "summary": "Parse the given regular expression using the default configuration, except using sparse DFAs, and return the corresponding regex."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns matched by this regex."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&self) -> &A",
+          "summary": "Return the underlying DFA responsible for reverse matching."
+        },
+        {
+          "name": "try_search",
+          "signature": "fn try_search(&self, input: &Input<'_>) -> Result<Option<Match>, MatchError>",
+          "summary": "Returns the start and end offset of the leftmost match. If no match exists, then `None` is returned."
+        }
+      ]
+    }
+  ]
+}

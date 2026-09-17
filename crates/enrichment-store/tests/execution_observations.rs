@@ -73,7 +73,10 @@ fn evidence_with_position(
                     ArtifactKind::Other,
                     "application/json",
                     uri,
-                    "2026-09-14T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-14T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .unwrap()
@@ -163,7 +166,7 @@ fn evidence_with_position(
             attempt_id: format!("attempt-{index}"),
             producer: "execution-fixture".into(),
             producer_version: "1".into(),
-            config_digest: "fixture".into(),
+            config_digest: enrichment_core::canonical::sha256_hex(b"fixture"),
             inputs: [
                 ("document".into(), input.sha256.clone()),
                 ("lock".into(), lock.sha256.clone()),
@@ -175,8 +178,14 @@ fn evidence_with_position(
             } else {
                 ExecutionProfile::Build
             },
-            started_at: "2026-09-14T00:00:00Z".into(),
-            finished_at: "2026-09-14T00:00:01Z".into(),
+            started_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+            finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:01.000000Z".to_owned(),
+            )
+            .unwrap(),
             outcome: RunOutcome::Succeeded,
             gaps: vec![],
             log: Some(receipt.artifact_id.clone()),
@@ -252,12 +261,12 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
     )
     .unwrap();
     use enrichment_core::evidence::{
-        Symbol, SymbolKind,
+        SymbolHeader, SymbolKind,
         path::PublicPath,
         relational::{Definition, PublicBinding},
     };
     let definition = Definition {
-        definition_id: Symbol::definition_id_for(
+        definition_id: SymbolHeader::definition_id_for(
             "python:fixture",
             "fixture.f",
             SymbolKind::Function,
@@ -456,48 +465,41 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
                 ArtifactKind::Other,
                 "application/json",
                 "service:comparison-value/2",
-                "2026-09-15T00:00:00Z",
+                enrichment_core::native_time::AcquisitionTime::try_from(
+                    "2026-09-15T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
             )
         })
         .unwrap()
         .acquired;
     let delivery_dependency = dependency.clone();
-    let delivery_blobs = blobs.clone();
-    let prepare_delivery: enrichment_store::repository::JobDeliveryFactory =
-        std::sync::Arc::new(move |manifest, _coverage| {
-            let mut result: enrichment_core::wire::Envelope = serde_json::from_str(include_str!(
-                "../../../tests/fixtures/wire/error.fixture.json"
-            ))?;
-            result.context_id = Some(manifest.context_id.to_string());
-            result.snapshot_id = Some(manifest.snapshot_id.to_string());
-            result.summary = "probe failed".into();
-            let error = result.error_mut().expect("error fixture");
-            error.code = enrichment_core::wire::ErrorCode::VerificationFailed;
-            error.message = "probe failed".into();
-            result
-                .artifacts
-                .push(enrichment_core::wire::ArtifactHandle {
-                    receipt: delivery_dependency.clone(),
-                    uri: format!(
-                        "library-evidence://artifacts/{}",
-                        delivery_dependency.artifact_id
-                    )
-                    .try_into()
-                    .unwrap(),
-                    description: "Complete observed value".into(),
-                });
-            Ok(enrichment_store::result::store(
-                &delivery_blobs,
-                &result,
-                enrichment_store::result::JOB_URI,
-            )?
-            .0)
+    let mut result: enrichment_core::wire::Envelope = serde_json::from_str(include_str!(
+        "../../../tests/fixtures/wire/error.fixture.json"
+    ))
+    .unwrap();
+    result.summary = "probe failed".into();
+    let error = result.error_mut().expect("error fixture");
+    error.code = enrichment_core::wire::ErrorCode::VerificationFailed;
+    error.message = "probe failed".into();
+    result
+        .artifacts
+        .push(enrichment_core::wire::ArtifactHandle {
+            receipt: delivery_dependency.clone(),
+            uri: format!(
+                "library-evidence://artifacts/{}",
+                delivery_dependency.artifact_id
+            )
+            .try_into()
+            .unwrap(),
+            description: "Complete observed value".into(),
         });
+    let result = enrichment_core::operation::results::ResultRecord::from_envelope(&result).unwrap();
     let publication_fence = claims::publication_fence(
         &repository,
         &job_id,
-        enrichment_store::control_jobs::Arguments {
-            verify: Some(enrichment_core::execution::VerifyRequest {
+        enrichment_store::control_jobs::Arguments::Verify {
+            request: enrichment_core::execution::VerifyRequest {
                 context_id: metadata.context.context_id.to_string(),
                 snapshot_id: None,
                 snippet: "print(1)".into(),
@@ -505,17 +507,16 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
                 profile: ExecutionProfile::Runtime,
                 test_intent: None,
                 max_bytes: None,
-            }),
-            ..Default::default()
+            },
         },
     )
     .await;
     let completion = JobCompletion {
         publication_fence,
         job_id: job_id.clone(),
-        prepare_delivery,
+        result,
         kind: PublishedJobKind::Verify,
-        state: enrichment_core::wire::JobState::Failed,
+
         attempt_id: evidence.producer_runs[3].attempt_id.clone(),
         result_artifact_ids: vec![
             evidence.execution_observations[3]

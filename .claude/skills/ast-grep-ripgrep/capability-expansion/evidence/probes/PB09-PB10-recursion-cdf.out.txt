@@ -1,0 +1,80 @@
+PB09 — is an outer predicate pushed into the recursive term?
+
+  graph: a->b, b->c, c->a (CYCLE), c->d
+
+  A bound OUTSIDE the CTE
+      depth bound inside recursive term (plan): false
+      executed: TIMED OUT after 20s — UNBOUNDED
+      plan | Projection: count(Int64(1)) AS count(*)
+      plan |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      plan |     SubqueryAlias: closure
+      plan |       Projection:
+      plan |         Filter: depth <= Int64(3)
+      plan |           Projection: depth
+      plan |             RecursiveQuery: is_distinct=false
+      plan |               Projection: edge.child AS node, Int64(1) AS depth
+      plan |                 Filter: edge.parent = Utf8View("a")
+      plan |                   TableScan: edge projection=[parent, child], partial_filters=[edge.parent = Utf8View("a")]
+      plan |               Projection: e.child, c.depth + Int64(1)
+      plan |                 Inner Join: c.node = e.parent
+      plan |                   SubqueryAlias: c
+      plan |                     TableScan: closure projection=[node, depth]
+      plan |                   SubqueryAlias: e
+      plan |                     TableScan: edge projection=[parent, child]
+
+  B bound INSIDE  (CONTROL)
+      depth bound inside recursive term (plan): true
+      executed: count=4 in 23.937318ms
+      plan | Projection: count(Int64(1)) AS count(*)
+      plan |   Aggregate: groupBy=[[]], aggr=[[count(Int64(1))]]
+      plan |     SubqueryAlias: closure
+      plan |       Projection:
+      plan |         RecursiveQuery: is_distinct=false
+      plan |           Projection: edge.child AS node, Int64(1) AS depth
+      plan |             Filter: edge.parent = Utf8View("a")
+      plan |               TableScan: edge projection=[parent, child], partial_filters=[edge.parent = Utf8View("a")]
+      plan |           Projection: e.child, c.depth + Int64(1)
+      plan |             Inner Join: c.node = e.parent
+      plan |               SubqueryAlias: c
+      plan |                 Filter: closure.depth < Int64(3)
+      plan |                   TableScan: closure projection=[node, depth]
+      plan |               SubqueryAlias: e
+      plan |                 TableScan: edge projection=[parent, child]
+
+PB10 — does a filter on the CDF provider narrow what is read?
+
+  table partitioned by `family`, CDF enabled
+
+  wrote 3 commits: hir, mir, hir
+
+  CDF schema: ["entity_id", "n", "family", "_change_type", "_commit_version", "_commit_timestamp"]
+
+  no filter           count=6  FilterExec present=false
+      plan | DataSourceExec: file_groups={0 groups: []}, file_type=parquet, statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={3 groups: [[family=hir/part-00000-0c9e0fc2-978a-4426-ae3b-91d0abc95a49-c000.snappy.parquet], [family=mir/part-00000-0d1e72b5-58ed-4ec8-bed5-353ad118b8db-c000.snappy.parquet], [family=hir/part-00000-17cacf7a-9f27-45ac-8926-5e9c1e017e52-c000.snappy.parquet]]}, file_type=parquet, statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, file_type=parquet, statistics=[Rows=Absent, Bytes=Absent, []]
+
+  PARTITION col       count=4  FilterExec present=true
+      plan | FilterExec: family@5 = hir, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=family@2 = hir AND family@5 = hir, pruning_predicate=family_null_count@2 != row_count@3 AND family_min@0 <= hir AND hir <= family_max@1 AND family_null_count@6 != row_count@3 AND family_min@4 <= hir AND hir <= family_max@5, required_guarantees=[family in (hir), family in (hir)], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: family@5 = hir, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={2 groups: [[family=hir/part-00000-0c9e0fc2-978a-4426-ae3b-91d0abc95a49-c000.snappy.parquet], [family=hir/part-00000-17cacf7a-9f27-45ac-8926-5e9c1e017e52-c000.snappy.parquet]]}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=family@2 = hir AND family@5 = hir, pruning_predicate=family_null_count@2 != row_count@3 AND family_min@0 <= hir AND hir <= family_max@1 AND family_null_count@6 != row_count@3 AND family_min@4 <= hir AND hir <= family_max@5, required_guarantees=[family in (hir), family in (hir)], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: family@5 = hir, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=family@2 = hir AND family@5 = hir, pruning_predicate=family_null_count@2 != row_count@3 AND family_min@0 <= hir AND hir <= family_max@1 AND family_null_count@6 != row_count@3 AND family_min@4 <= hir AND hir <= family_max@5, required_guarantees=[family in (hir), family in (hir)], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+
+  DATA col            count=2  FilterExec present=true
+      plan | FilterExec: n@1 >= 20, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=n@1 >= 20 AND n@1 >= 20, pruning_predicate=n_null_count@1 != row_count@2 AND n_max@0 >= 20 AND n_null_count@1 != row_count@2 AND n_max@0 >= 20, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: n@1 >= 20, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={3 groups: [[family=mir/part-00000-0d1e72b5-58ed-4ec8-bed5-353ad118b8db-c000.snappy.parquet], [family=hir/part-00000-17cacf7a-9f27-45ac-8926-5e9c1e017e52-c000.snappy.parquet], [family=hir/part-00000-0c9e0fc2-978a-4426-ae3b-91d0abc95a49-c000.snappy.parquet]]}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=n@1 >= 20 AND n@1 >= 20, pruning_predicate=n_null_count@1 != row_count@2 AND n_max@0 >= 20 AND n_null_count@1 != row_count@2 AND n_max@0 >= 20, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: n@1 >= 20, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=n@1 >= 20 AND n@1 >= 20, pruning_predicate=n_null_count@1 != row_count@2 AND n_max@0 >= 20 AND n_null_count@1 != row_count@2 AND n_max@0 >= 20, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+
+  CDF metadata col    count=4  FilterExec present=true
+      plan | FilterExec: _commit_version@3 >= 2, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=_commit_version@4 >= 2 AND _commit_version@3 >= 2, pruning_predicate=_commit_version_null_count@1 != row_count@2 AND _commit_version_max@0 >= 2 AND _commit_version_null_count@4 != row_count@2 AND _commit_version_max@3 >= 2, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: _commit_version@3 >= 2, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={3 groups: [[family=hir/part-00000-17cacf7a-9f27-45ac-8926-5e9c1e017e52-c000.snappy.parquet], [family=hir/part-00000-0c9e0fc2-978a-4426-ae3b-91d0abc95a49-c000.snappy.parquet], [family=mir/part-00000-0d1e72b5-58ed-4ec8-bed5-353ad118b8db-c000.snappy.parquet]]}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=_commit_version@4 >= 2 AND _commit_version@3 >= 2, pruning_predicate=_commit_version_null_count@1 != row_count@2 AND _commit_version_max@0 >= 2 AND _commit_version_null_count@4 != row_count@2 AND _commit_version_max@3 >= 2, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+      plan | FilterExec: _commit_version@3 >= 2, projection=[], statistics=[Rows=Absent, Bytes=Absent, []]
+      plan | DataSourceExec: file_groups={0 groups: []}, projection=[entity_id, n, _change_type, _commit_version, _commit_timestamp, family], file_type=parquet, predicate=_commit_version@4 >= 2 AND _commit_version@3 >= 2, pruning_predicate=_commit_version_null_count@1 != row_count@2 AND _commit_version_max@0 >= 2 AND _commit_version_null_count@4 != row_count@2 AND _commit_version_max@3 >= 2, required_guarantees=[], statistics=[Rows=Absent, Bytes=Absent, [(Col[0]:),(Col[1]:),(Col[2]:),(Col[3]:),(Col[4]:),(Col[5]:)]]
+

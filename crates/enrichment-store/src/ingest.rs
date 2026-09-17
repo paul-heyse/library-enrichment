@@ -21,7 +21,10 @@ use datafusion::{
 use enrichment_core::{
     evidence::{
         Artifact,
-        arrow_model::{cells, expressions::record},
+        arrow_model::{
+            cells,
+            expressions::{record, variant},
+        },
         document,
         ingest::{DocumentSource, IngestBudget, IngestContext},
         metadata::ReleaseMetadata,
@@ -143,14 +146,14 @@ pub async fn prepare(
     view(
         &session,
         "declarations",
-        "SELECT attempt_id, producer_binding_id, unnest(inputs) AS input FROM producers",
+        "SELECT attempt_id, producer_binding_id, unnest(native_map_entries(inputs)) AS input FROM producers",
     )
     .await?;
-    runtime.require_empty(session.sql("SELECT d.attempt_id AS witness_id FROM declarations d LEFT ANTI JOIN acquisitions a ON d.input.digest=a.artifact.sha256").await?, "declared_input_acquisition", "document_ingress").await?;
-    view(&session, "bound_inputs", "SELECT DISTINCT d.attempt_id,d.producer_binding_id,d.input.role AS role,a.artifact FROM declarations d JOIN acquisitions a ON d.input.digest=a.artifact.sha256").await?;
+    runtime.require_empty(session.sql("SELECT d.attempt_id AS witness_id FROM declarations d LEFT ANTI JOIN acquisitions a ON d.input.value=a.artifact.sha256").await?, "declared_input_acquisition", "document_ingress").await?;
+    view(&session, "bound_inputs", "SELECT DISTINCT d.attempt_id,d.producer_binding_id,d.input.key AS role,a.artifact FROM declarations d JOIN acquisitions a ON d.input.value=a.artifact.sha256").await?;
     let inputs = keyed(session.sql("SELECT producer_binding_id,role,artifact.artifact_id AS artifact_id,artifact.sha256 AS sha256,artifact.media_type AS media_type,artifact.kind AS kind,artifact.size_bytes AS size_bytes,artifact.source_uri AS source_uri FROM bound_inputs").await?, Key::InputArtifact, "input_id", Relation::InputArtifacts)?;
     view(&session, "document_candidates", r#"SELECT d.*, i.producer_binding_id, i.artifact.sha256 AS digest, i.artifact.source_uri AS qualified_uri,
-        CASE WHEN d.source_uri IS NULL AND d.locator.file IS NOT NULL AND ends_with(i.artifact.source_uri, concat('#', d.locator.file)) THEN 1 ELSE 0 END AS member_match
+        CASE WHEN d.source_uri IS NULL AND coalesce(d.locator.lines.file, d.locator.archive_member.path, d.locator.python_declaration.file, d.locator.manifest_key.file, d.locator.markdown_section.file, d.locator.source_start.file) IS NOT NULL AND ends_with(i.artifact.source_uri, concat('#', coalesce(d.locator.lines.file, d.locator.archive_member.path, d.locator.python_declaration.file, d.locator.manifest_key.file, d.locator.markdown_section.file, d.locator.source_start.file))) THEN 1 ELSE 0 END AS member_match
         FROM documents d JOIN bound_inputs i ON d.artifact_id=i.artifact.artifact_id
         JOIN producing p ON i.attempt_id=p.attempt_id
         WHERE d.source_uri IS NULL OR d.source_uri=i.artifact.source_uri"#).await?;
@@ -183,26 +186,26 @@ pub async fn prepare(
     let subject_type = field(Relation::Fragments, "subject")?;
     let subject = when(
         col("kind").eq(lit("feature_definition")),
-        record(
-            &subject_type,
-            &[("kind", lit("feature")), ("feature", col("label"))],
-        )?,
+        variant(&subject_type, "feature", &[("name", col("label"))])?,
     )
     .when(
         col("kind").eq(lit("example")),
-        record(
+        variant(
             &subject_type,
+            "example",
             &[
-                ("kind", lit("example")),
                 ("artifact_id", col("artifact_id")),
-                ("path", get_field(col("locator"), "file")),
+                (
+                    "path",
+                    get_field(get_field(col("locator"), "archive_member"), "path"),
+                ),
             ],
         )?,
     )
-    .otherwise(record(
+    .otherwise(variant(
         &subject_type,
+        "document",
         &[
-            ("kind", lit("document")),
             ("artifact_id", col("artifact_id")),
             ("heading", col("label")),
         ],
@@ -546,12 +549,10 @@ async fn coverage(
             default_gap,
         ]))?,
     ]);
-    let subject = record(
+    let subject = variant(
         &field(Relation::Coverage, "subject")?,
-        &[
-            ("kind", lit("library")),
-            ("release_id", lit(&context.release_id)),
-        ],
+        "library",
+        &[("release_id", lit(&context.release_id))],
     )?;
     keyed(
         frame.select(vec![
@@ -597,8 +598,14 @@ mod tests {
                 config_digest: "a".repeat(64),
                 inputs: [("readme".into(), artifact.sha256.clone())].into(),
                 profile: ExecutionProfile::Static,
-                started_at: "2026-09-16T00:00:00Z".into(),
-                finished_at: "2026-09-16T00:00:01Z".into(),
+                started_at: enrichment_core::native_time::ObservationTime::try_from(
+                    "2026-09-16T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
+                finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                    "2026-09-16T00:00:01.000000Z".to_owned(),
+                )
+                .unwrap(),
                 outcome: RunOutcome::Succeeded,
                 gaps: vec![],
                 log: None,
@@ -635,7 +642,10 @@ mod tests {
             ArtifactKind::Readme,
             "text/markdown",
             "https://example.org/pkg#README.md",
-            "2026-09-16T00:00:00Z",
+            enrichment_core::native_time::AcquisitionTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
         );
         let input = DocumentBatch {
             fragments: vec![document(&artifact), document(&artifact)],

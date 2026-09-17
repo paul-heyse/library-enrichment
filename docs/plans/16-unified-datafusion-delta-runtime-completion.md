@@ -8,6 +8,12 @@ phase: 6
 
 # Complete the remaining unified DataFusion and Delta runtime pivot
 
+**Combined execution plan, 2026-09-16:**
+[Plan 17 — Schema-governed unified runtime hard pivot](17-schema-governed-unified-runtime-hard-pivot.md)
+integrates every remaining obligation below with the schema-engineering review and new pinned-source
+findings. Use Plan 17 for subsequent execution. This document retains the reviewed implementation
+checkpoint and original RP mapping; no implementation or acceptance obligation is closed by consolidation.
+
 ## 1. Purpose and authority
 
 This is the remaining-scope execution plan requested on **2026-09-16**, after reviewing

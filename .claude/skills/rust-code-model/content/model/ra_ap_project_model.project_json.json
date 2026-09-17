@@ -1,0 +1,208 @@
+{
+  "module": "ra_ap_project_model::project_json",
+  "crate": "ra_ap_project_model",
+  "api": "api/ra_ap_project_model.project_json.md",
+  "items": [
+    {
+      "path": "ra_ap_project_model::project_json::RunnableKind",
+      "name": "RunnableKind",
+      "kind": "enum",
+      "crate": "ra_ap_project_model",
+      "signature": "enum RunnableKind",
+      "summary": "The kind of runnable.",
+      "doc": "api/ra_ap_project_model.project_json.md#runnablekind",
+      "variants": [
+        "Check",
+        "Run",
+        "TestOne",
+        "TestMod",
+        "DocTestOne",
+        "BenchOne",
+        "Flycheck",
+        "Unknown"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_project_model::project_json::Build",
+      "name": "Build",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct Build",
+      "summary": "Additional, build-specific data about a crate.",
+      "doc": "api/ra_ap_project_model.project_json.md#build",
+      "fields": [
+        "label",
+        "build_file",
+        "target_kind"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_project_model::project_json::Crate",
+      "name": "Crate",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct Crate",
+      "summary": "A crate points to the root module of a crate and lists the dependencies of the crate. This is useful in creating the crate graph.",
+      "doc": "api/ra_ap_project_model.project_json.md#crate",
+      "fields": [
+        "root_module",
+        "is_workspace_member",
+        "build"
+      ],
+      "methods": [
+        {
+          "name": "iter_deps",
+          "signature": "fn iter_deps(&self) -> impl ExactSizeIterator<Item = CrateArrayIdx>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_project_model::project_json::CrateArrayIdx",
+      "name": "CrateArrayIdx",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct CrateArrayIdx",
+      "summary": "Identifies a crate by position in the crates array.",
+      "doc": "api/ra_ap_project_model.project_json.md#cratearrayidx",
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_project_model::project_json::ProjectJson",
+      "name": "ProjectJson",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct ProjectJson",
+      "summary": "Roots and crates that compose this Rust project.",
+      "doc": "api/ra_ap_project_model.project_json.md#projectjson",
+      "aliases": [
+        "ra_ap_project_model::ProjectJson"
+      ],
+      "implements": [
+        "core::ops::index::Index"
+      ],
+      "methods": [
+        {
+          "name": "crate_by_buildfile",
+          "signature": "fn crate_by_buildfile(&self, path: &AbsPath) -> Option<Build>"
+        },
+        {
+          "name": "crate_by_label",
+          "signature": "fn crate_by_label(&self, label: &str) -> Option<&Crate>"
+        },
+        {
+          "name": "crate_by_root",
+          "signature": "fn crate_by_root(&self, root: &AbsPath) -> Option<&Crate>"
+        },
+        {
+          "name": "crates",
+          "signature": "fn crates(&self) -> impl Iterator<Item = (CrateArrayIdx, &Crate)>",
+          "summary": "Returns an iterator over the crates in the project."
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self, index: CrateArrayIdx) -> &Self::Output",
+          "via_trait": "core::ops::index::Index"
+        },
+        {
+          "name": "manifest",
+          "signature": "fn manifest(&self) -> Option<&ManifestPath>",
+          "summary": "Returns the path to the project's manifest, if it exists."
+        },
+        {
+          "name": "manifest_or_root",
+          "signature": "fn manifest_or_root(&self) -> &AbsPath",
+          "summary": "Returns the path to the project's manifest or root folder, if no manifest exists."
+        },
+        {
+          "name": "n_crates",
+          "signature": "fn n_crates(&self) -> usize",
+          "summary": "Returns the number of crates in the project."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(manifest: Option<ManifestPath>, base: &AbsPath, data: ProjectJsonData) -> ProjectJson",
+          "summary": "Create a new ProjectJson instance."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &AbsPath",
+          "summary": "Returns the path to the project's root folder."
+        },
+        {
+          "name": "project_root",
+          "signature": "fn project_root(&self) -> &AbsPath",
+          "summary": "Returns the path to the project's root folder."
+        },
+        {
+          "name": "runnable_template",
+          "signature": "fn runnable_template(&self, kind: RunnableKind) -> Option<&Runnable>"
+        },
+        {
+          "name": "runnables",
+          "signature": "fn runnables(&self) -> &[Runnable]"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_project_model::project_json::ProjectJsonData",
+      "name": "ProjectJsonData",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct ProjectJsonData",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_project_model::ProjectJsonData"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_project_model::project_json::Runnable",
+      "name": "Runnable",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct Runnable",
+      "summary": "A template-like structure for describing runnables.",
+      "doc": "api/ra_ap_project_model.project_json.md#runnable",
+      "fields": [
+        "program",
+        "args",
+        "cwd",
+        "kind"
+      ],
+      "methods": []
+    }
+  ]
+}

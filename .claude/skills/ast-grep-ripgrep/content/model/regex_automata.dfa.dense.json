@@ -1,0 +1,458 @@
+{
+  "module": "regex_automata::dfa::dense",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.dfa.dense.md",
+  "items": [
+    {
+      "path": "regex_automata::dfa::dense::BuildError",
+      "name": "BuildError",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct BuildError",
+      "summary": "An error that occurred during the construction of a DFA.",
+      "doc": "api/regex_automata.dfa.dense.md#builderror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_size_limit_exceeded",
+          "signature": "fn is_size_limit_exceeded(&self) -> bool",
+          "summary": "Returns true if and only if this error corresponds to an error with DFA construction that occurred because of exceeding a size limit."
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> Option<&dyn std::error::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::dense::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for constructing a deterministic finite automaton from regular expressions.",
+      "doc": "api/regex_automata.dfa.dense.md#builder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Build a DFA from the given pattern."
+        },
+        {
+          "name": "build_from_nfa",
+          "signature": "fn build_from_nfa(&self, nfa: &thompson::NFA) -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Build a DFA from the given NFA."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Build a DFA from the given patterns."
+        },
+        {
+          "name": "configure",
+          "signature": "fn configure(&mut self, config: Config) -> &mut Builder",
+          "summary": "Apply the given dense DFA configuration options to this builder."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new dense DFA builder with the default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        },
+        {
+          "name": "thompson",
+          "signature": "fn thompson(&mut self, config: thompson::Config) -> &mut Builder",
+          "summary": "Set the Thompson NFA configuration for this builder using [`nfa::thompson::Config`](crate::nfa::thompson::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::dense::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Config",
+      "summary": "The configuration used for compiling a dense DFA.",
+      "doc": "api/regex_automata.dfa.dense.md#config",
+      "methods": [
+        {
+          "name": "accelerate",
+          "signature": "fn accelerate(self, yes: bool) -> Config",
+          "summary": "Enable state acceleration."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(self, yes: bool) -> Config",
+          "summary": "Whether to attempt to shrink the size of the DFA's alphabet or not."
+        },
+        {
+          "name": "determinize_size_limit",
+          "signature": "fn determinize_size_limit(self, bytes: Option<usize>) -> Config",
+          "summary": "Set a size limit on the total heap used by determinization."
+        },
+        {
+          "name": "dfa_size_limit",
+          "signature": "fn dfa_size_limit(self, bytes: Option<usize>) -> Config",
+          "summary": "Set a size limit on the total heap used by a DFA."
+        },
+        {
+          "name": "get_accelerate",
+          "signature": "fn get_accelerate(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled simple state acceleration."
+        },
+        {
+          "name": "get_byte_classes",
+          "signature": "fn get_byte_classes(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled byte classes or not. This is typically a debugging oriented option, as disabling it confers no speed benefit."
+        },
+        {
+          "name": "get_determinize_size_limit",
+          "signature": "fn get_determinize_size_limit(&self) -> Option<usize>",
+          "summary": "Returns the determinization size limit of this configuration if one was set. The size limit is total number of bytes on the heap that determinization is permitted to use. If determinization exceeds this limit during construction, then cons…"
+        },
+        {
+          "name": "get_dfa_size_limit",
+          "signature": "fn get_dfa_size_limit(&self) -> Option<usize>",
+          "summary": "Returns the DFA size limit of this configuration if one was set. The size limit is total number of bytes on the heap that a DFA is permitted to use. If the DFA exceeds this limit during construction, then construction is stopped and an err…"
+        },
+        {
+          "name": "get_match_kind",
+          "signature": "fn get_match_kind(&self) -> MatchKind",
+          "summary": "Returns the match semantics set in this configuration."
+        },
+        {
+          "name": "get_minimize",
+          "signature": "fn get_minimize(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled the expensive process of minimizing a DFA."
+        },
+        {
+          "name": "get_prefilter",
+          "signature": "fn get_prefilter(&self) -> Option<&Prefilter>",
+          "summary": "Returns the prefilter attached to this configuration, if any."
+        },
+        {
+          "name": "get_quit",
+          "signature": "fn get_quit(&self, byte: u8) -> bool",
+          "summary": "Returns whether this configuration will instruct the DFA to enter a quit state whenever the given byte is seen during a search. When at least one byte has this enabled, it is possible for a search to return an error."
+        },
+        {
+          "name": "get_specialize_start_states",
+          "signature": "fn get_specialize_start_states(&self) -> bool",
+          "summary": "Returns whether this configuration will instruct the DFA to \"specialize\" start states. When enabled, the DFA will mark start states as \"special\" so that search routines using the DFA can detect when it's in a start state and do some kind o…"
+        },
+        {
+          "name": "get_starts",
+          "signature": "fn get_starts(&self) -> StartKind",
+          "summary": "Returns the starting state configuration for a DFA."
+        },
+        {
+          "name": "get_starts_for_each_pattern",
+          "signature": "fn get_starts_for_each_pattern(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled anchored starting states for every pattern in the DFA."
+        },
+        {
+          "name": "get_unicode_word_boundary",
+          "signature": "fn get_unicode_word_boundary(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled heuristic Unicode word boundary support. When enabled, it is possible for a search to return an error."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(self, kind: MatchKind) -> Config",
+          "summary": "Set the desired match semantics."
+        },
+        {
+          "name": "minimize",
+          "signature": "fn minimize(self, yes: bool) -> Config",
+          "summary": "Minimize the DFA."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Return a new default dense DFA compiler configuration."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(self, pre: Option<Prefilter>) -> Config",
+          "summary": "Set a prefilter to be used whenever a start state is entered."
+        },
+        {
+          "name": "quit",
+          "signature": "fn quit(self, byte: u8, yes: bool) -> Config",
+          "summary": "Add a \"quit\" byte to the DFA."
+        },
+        {
+          "name": "specialize_start_states",
+          "signature": "fn specialize_start_states(self, yes: bool) -> Config",
+          "summary": "Enable specializing start states in the DFA."
+        },
+        {
+          "name": "start_kind",
+          "signature": "fn start_kind(self, kind: StartKind) -> Config",
+          "summary": "The type of starting state configuration to use for a DFA."
+        },
+        {
+          "name": "starts_for_each_pattern",
+          "signature": "fn starts_for_each_pattern(self, yes: bool) -> Config",
+          "summary": "Whether to compile a separate start state for each pattern in the automaton."
+        },
+        {
+          "name": "unicode_word_boundary",
+          "signature": "fn unicode_word_boundary(self, yes: bool) -> Config",
+          "summary": "Heuristically enable Unicode word boundaries."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::dense::DFA",
+      "name": "DFA",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct DFA<T>",
+      "summary": "A dense table-based deterministic finite automaton (DFA).",
+      "doc": "api/regex_automata.dfa.dense.md#dfa",
+      "implements": [
+        "regex_automata::dfa::automaton::Automaton"
+      ],
+      "methods": [
+        {
+          "name": "accelerator",
+          "signature": "fn accelerator(&self, id: StateID) -> &[u8]",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "alphabet_len",
+          "signature": "fn alphabet_len(&self) -> usize",
+          "summary": "Returns the total number of elements in the alphabet for this DFA."
+        },
+        {
+          "name": "always_match",
+          "signature": "fn always_match() -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Create a new DFA that matches every input."
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> DFA<&[u32]>",
+          "summary": "Cheaply return a borrowed version of this dense DFA. Specifically, the DFA returned always uses `&[u32]` for its transition table."
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Create a new dense DFA builder with the default configuration."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(&self) -> &ByteClasses",
+          "summary": "Returns the equivalence classes that make up the alphabet for this DFA."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "Return a new default dense DFA compiler configuration."
+        },
+        {
+          "name": "from_bytes",
+          "signature": "fn from_bytes(slice: &'a [u8]) -> Result<(DFA<&'a [u32]>, usize), DeserializeError>",
+          "summary": "Safely deserialize a DFA with a specific state identifier representation. Upon success, this returns both the deserialized DFA and the number of bytes read from the given slice. Namely, the contents of the slice beyond the DFA are not read."
+        },
+        {
+          "name": "from_bytes_unchecked",
+          "signature": "unsafe fn from_bytes_unchecked(slice: &'a [u8]) -> Result<(DFA<&'a [u32]>, usize), DeserializeError>",
+          "summary": "Deserialize a DFA with a specific state identifier representation in constant time by omitting the verification of the validity of the transition table and other data inside the DFA."
+        },
+        {
+          "name": "get_prefilter",
+          "signature": "fn get_prefilter(&self) -> Option<&Prefilter>",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "has_empty",
+          "signature": "fn has_empty(&self) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_accel_state",
+          "signature": "fn is_accel_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_always_start_anchored",
+          "signature": "fn is_always_start_anchored(&self) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_dead_state",
+          "signature": "fn is_dead_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_match_state",
+          "signature": "fn is_match_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_quit_state",
+          "signature": "fn is_quit_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_special_state",
+          "signature": "fn is_special_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_start_state",
+          "signature": "fn is_start_state(&self, id: StateID) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "match_len",
+          "signature": "fn match_len(&self, id: StateID) -> usize",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "match_pattern",
+          "signature": "fn match_pattern(&self, id: StateID, match_index: usize) -> PatternID",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the memory usage, in bytes, of this DFA."
+        },
+        {
+          "name": "never_match",
+          "signature": "fn never_match() -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Create a new DFA that never matches any input."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Parse the given regular expression using a default configuration and return the corresponding DFA."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<DFA<alloc::vec::Vec<u32>>, BuildError>",
+          "summary": "Parse the given regular expressions using a default configuration and return the corresponding multi-DFA."
+        },
+        {
+          "name": "next_eoi_state",
+          "signature": "fn next_eoi_state(&self, current: StateID) -> StateID",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "next_state",
+          "signature": "fn next_state(&self, current: StateID, input: u8) -> StateID",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "next_state_unchecked",
+          "signature": "unsafe fn next_state_unchecked(&self, current: StateID, byte: u8) -> StateID",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "set_prefilter",
+          "signature": "fn set_prefilter(&mut self, prefilter: Option<Prefilter>)",
+          "summary": "Set or unset the prefilter attached to this DFA."
+        },
+        {
+          "name": "start_kind",
+          "signature": "fn start_kind(&self) -> StartKind",
+          "summary": "Returns the starting state configuration for this DFA."
+        },
+        {
+          "name": "start_state",
+          "signature": "fn start_state(&self, config: &start::Config) -> Result<StateID, StartError>",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "starts_for_each_pattern",
+          "signature": "fn starts_for_each_pattern(&self) -> bool",
+          "summary": "Returns true only if this DFA has starting states for each pattern."
+        },
+        {
+          "name": "stride",
+          "signature": "fn stride(&self) -> usize",
+          "summary": "Returns the total stride for every state in this DFA. This corresponds to the total number of transitions used by each state in this DFA's transition table."
+        },
+        {
+          "name": "stride2",
+          "signature": "fn stride2(&self) -> usize",
+          "summary": "Returns the total stride for every state in this DFA, expressed as the exponent of a power of 2. The stride is the amount of space each state takes up in the transition table, expressed as a number of transitions. (Unused transitions map t…"
+        },
+        {
+          "name": "to_bytes_big_endian",
+          "signature": "fn to_bytes_big_endian(&self) -> (Vec<u8>, usize)",
+          "summary": "Serialize this DFA as raw bytes to a `Vec<u8>` in big endian format. Upon success, the `Vec<u8>` and the initial padding length are returned."
+        },
+        {
+          "name": "to_bytes_little_endian",
+          "signature": "fn to_bytes_little_endian(&self) -> (Vec<u8>, usize)",
+          "summary": "Serialize this DFA as raw bytes to a `Vec<u8>` in little endian format. Upon success, the `Vec<u8>` and the initial padding length are returned."
+        },
+        {
+          "name": "to_bytes_native_endian",
+          "signature": "fn to_bytes_native_endian(&self) -> (Vec<u8>, usize)",
+          "summary": "Serialize this DFA as raw bytes to a `Vec<u8>` in native endian format. Upon success, the `Vec<u8>` and the initial padding length are returned."
+        },
+        {
+          "name": "to_owned",
+          "signature": "fn to_owned(&self) -> DFA<alloc::vec::Vec<u32>>",
+          "summary": "Return an owned version of this sparse DFA. Specifically, the DFA returned always uses `Vec<u32>` for its transition table."
+        },
+        {
+          "name": "to_sparse",
+          "signature": "fn to_sparse(&self) -> Result<sparse::DFA<Vec<u8>>, BuildError>",
+          "summary": "Convert this dense DFA to a sparse DFA."
+        },
+        {
+          "name": "universal_start_state",
+          "signature": "fn universal_start_state(&self, mode: Anchored) -> Option<StateID>",
+          "via_trait": "regex_automata::dfa::automaton::Automaton"
+        },
+        {
+          "name": "write_to_big_endian",
+          "signature": "fn write_to_big_endian(&self, dst: &mut [u8]) -> Result<usize, SerializeError>",
+          "summary": "Serialize this DFA as raw bytes to the given slice, in big endian format. Upon success, the total number of bytes written to `dst` is returned."
+        },
+        {
+          "name": "write_to_len",
+          "signature": "fn write_to_len(&self) -> usize",
+          "summary": "Return the total number of bytes required to serialize this DFA."
+        },
+        {
+          "name": "write_to_little_endian",
+          "signature": "fn write_to_little_endian(&self, dst: &mut [u8]) -> Result<usize, SerializeError>",
+          "summary": "Serialize this DFA as raw bytes to the given slice, in little endian format. Upon success, the total number of bytes written to `dst` is returned."
+        },
+        {
+          "name": "write_to_native_endian",
+          "signature": "fn write_to_native_endian(&self, dst: &mut [u8]) -> Result<usize, SerializeError>",
+          "summary": "Serialize this DFA as raw bytes to the given slice, in native endian format. Upon success, the total number of bytes written to `dst` is returned."
+        }
+      ]
+    }
+  ]
+}

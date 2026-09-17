@@ -1,0 +1,314 @@
+{
+  "module": "aho_corasick::ahocorasick",
+  "crate": "aho-corasick",
+  "api": "api/aho_corasick.ahocorasick.md",
+  "items": [
+    {
+      "path": "aho_corasick::ahocorasick::AhoCorasickKind",
+      "name": "AhoCorasickKind",
+      "kind": "enum",
+      "crate": "aho-corasick",
+      "signature": "enum AhoCorasickKind",
+      "summary": "The type of Aho-Corasick implementation to use in an [`AhoCorasick`] searcher.",
+      "doc": "api/aho_corasick.ahocorasick.md#ahocorasickkind",
+      "aliases": [
+        "aho_corasick::AhoCorasickKind"
+      ],
+      "variants": [
+        "NoncontiguousNFA",
+        "ContiguousNFA",
+        "DFA"
+      ],
+      "methods": []
+    },
+    {
+      "path": "aho_corasick::ahocorasick::AhoCorasick",
+      "name": "AhoCorasick",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct AhoCorasick",
+      "summary": "An automaton for searching multiple strings in linear time.",
+      "doc": "api/aho_corasick.ahocorasick.md#ahocorasick",
+      "aliases": [
+        "aho_corasick::AhoCorasick"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> AhoCorasickBuilder",
+          "summary": "A convenience method for returning a new Aho-Corasick builder."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h, I: Into<Input<'h>>>(&self, input: I) -> Option<Match>",
+          "summary": "Returns the location of the first match according to the match semantics that this automaton was constructed with."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'a, 'h, I: Into<Input<'h>>>(&'a self, input: I) -> FindIter<'a, 'h>",
+          "summary": "Returns an iterator of non-overlapping matches, using the match semantics that this automaton was constructed with."
+        },
+        {
+          "name": "find_overlapping",
+          "signature": "fn find_overlapping<'h, I: Into<Input<'h>>>(&self, input: I, state: &mut OverlappingState)",
+          "summary": "Returns the location of the first overlapping match in the given input with respect to the current state of the underlying searcher."
+        },
+        {
+          "name": "find_overlapping_iter",
+          "signature": "fn find_overlapping_iter<'a, 'h, I: Into<Input<'h>>>(&'a self, input: I) -> FindOverlappingIter<'a, 'h>",
+          "summary": "Returns an iterator of overlapping matches. Stated differently, this returns an iterator of all possible matches at every position."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<'h, I: Into<Input<'h>>>(&self, input: I) -> bool",
+          "summary": "Returns true if and only if this automaton matches the haystack at any position."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> AhoCorasickKind",
+          "summary": "Returns the kind of the Aho-Corasick automaton used by this searcher."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(&self) -> MatchKind",
+          "summary": "Returns the match kind used by this automaton."
+        },
+        {
+          "name": "max_pattern_len",
+          "signature": "fn max_pattern_len(&self) -> usize",
+          "summary": "Returns the length of the longest pattern matched by this automaton."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the approximate total amount of heap used by this automaton, in units of bytes."
+        },
+        {
+          "name": "min_pattern_len",
+          "signature": "fn min_pattern_len(&self) -> usize",
+          "summary": "Returns the length of the shortest pattern matched by this automaton."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I, P>(patterns: I) -> Result<AhoCorasick, BuildError> where I: IntoIterator<Item = P>, P: AsRef<[u8]>",
+          "summary": "Create a new Aho-Corasick automaton using the default configuration."
+        },
+        {
+          "name": "patterns_len",
+          "signature": "fn patterns_len(&self) -> usize",
+          "summary": "Return the total number of patterns matched by this automaton."
+        },
+        {
+          "name": "replace_all",
+          "signature": "fn replace_all<B>(&self, haystack: &str, replace_with: &[B]) -> String where B: AsRef<str>",
+          "summary": "Replace all matches with a corresponding value in the `replace_with` slice given. Matches correspond to the same matches as reported by [`AhoCorasick::find_iter`]."
+        },
+        {
+          "name": "replace_all_bytes",
+          "signature": "fn replace_all_bytes<B>(&self, haystack: &[u8], replace_with: &[B]) -> Vec<u8> where B: AsRef<[u8]>",
+          "summary": "Replace all matches using raw bytes with a corresponding value in the `replace_with` slice given. Matches correspond to the same matches as reported by [`AhoCorasick::find_iter`]."
+        },
+        {
+          "name": "replace_all_with",
+          "signature": "fn replace_all_with<F>(&self, haystack: &str, dst: &mut String, replace_with: F) where F: FnMut(&Match, &str, &mut String) -> bool",
+          "summary": "Replace all matches using a closure called on each match. Matches correspond to the same matches as reported by [`AhoCorasick::find_iter`]."
+        },
+        {
+          "name": "replace_all_with_bytes",
+          "signature": "fn replace_all_with_bytes<F>(&self, haystack: &[u8], dst: &mut Vec<u8>, replace_with: F) where F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool",
+          "summary": "Replace all matches using raw bytes with a closure called on each match. Matches correspond to the same matches as reported by [`AhoCorasick::find_iter`]."
+        },
+        {
+          "name": "start_kind",
+          "signature": "fn start_kind(&self) -> StartKind",
+          "summary": "Returns the type of starting search configuration supported by this Aho-Corasick automaton."
+        },
+        {
+          "name": "stream_find_iter",
+          "signature": "fn stream_find_iter<'a, R: std::io::Read>(&'a self, rdr: R) -> StreamFindIter<'a, R>",
+          "summary": "Returns an iterator of non-overlapping matches in the given stream. Matches correspond to the same matches as reported by [`AhoCorasick::find_iter`]."
+        },
+        {
+          "name": "try_find",
+          "signature": "fn try_find<'h, I: Into<Input<'h>>>(&self, input: I) -> Result<Option<Match>, MatchError>",
+          "summary": "Returns the location of the first match according to the match semantics that this automaton was constructed with, and according to the given `Input` configuration."
+        },
+        {
+          "name": "try_find_iter",
+          "signature": "fn try_find_iter<'a, 'h, I: Into<Input<'h>>>(&'a self, input: I) -> Result<FindIter<'a, 'h>, MatchError>",
+          "summary": "Returns an iterator of non-overlapping matches, using the match semantics that this automaton was constructed with."
+        },
+        {
+          "name": "try_find_overlapping",
+          "signature": "fn try_find_overlapping<'h, I: Into<Input<'h>>>(&self, input: I, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Returns the location of the first overlapping match in the given input with respect to the current state of the underlying searcher."
+        },
+        {
+          "name": "try_find_overlapping_iter",
+          "signature": "fn try_find_overlapping_iter<'a, 'h, I: Into<Input<'h>>>(&'a self, input: I) -> Result<FindOverlappingIter<'a, 'h>, MatchError>",
+          "summary": "Returns an iterator of overlapping matches."
+        },
+        {
+          "name": "try_replace_all",
+          "signature": "fn try_replace_all<B>(&self, haystack: &str, replace_with: &[B]) -> Result<String, MatchError> where B: AsRef<str>",
+          "summary": "Replace all matches with a corresponding value in the `replace_with` slice given. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_replace_all_bytes",
+          "signature": "fn try_replace_all_bytes<B>(&self, haystack: &[u8], replace_with: &[B]) -> Result<Vec<u8>, MatchError> where B: AsRef<[u8]>",
+          "summary": "Replace all matches using raw bytes with a corresponding value in the `replace_with` slice given. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_replace_all_with",
+          "signature": "fn try_replace_all_with<F>(&self, haystack: &str, dst: &mut String, replace_with: F) -> Result<(), MatchError> where F: FnMut(&Match, &str, &mut String) -> bool",
+          "summary": "Replace all matches using a closure called on each match. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_replace_all_with_bytes",
+          "signature": "fn try_replace_all_with_bytes<F>(&self, haystack: &[u8], dst: &mut Vec<u8>, replace_with: F) -> Result<(), MatchError> where F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool",
+          "summary": "Replace all matches using raw bytes with a closure called on each match. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_stream_find_iter",
+          "signature": "fn try_stream_find_iter<'a, R: std::io::Read>(&'a self, rdr: R) -> Result<StreamFindIter<'a, R>, MatchError>",
+          "summary": "Returns an iterator of non-overlapping matches in the given stream. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_stream_replace_all",
+          "signature": "fn try_stream_replace_all<R, W, B>(&self, rdr: R, wtr: W, replace_with: &[B]) -> Result<(), std::io::Error> where R: std::io::Read, W: std::io::Write, B: AsRef<[u8]>",
+          "summary": "Search for and replace all matches of this automaton in the given reader, and write the replacements to the given writer. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        },
+        {
+          "name": "try_stream_replace_all_with",
+          "signature": "fn try_stream_replace_all_with<R, W, F>(&self, rdr: R, wtr: W, replace_with: F) -> Result<(), std::io::Error> where R: std::io::Read, W: std::io::Write, F: FnMut(&Match, &[u8], &mut W) -> Result<(), std::io::Error>",
+          "summary": "Search the given reader and replace all matches of this automaton using the given closure. The result is written to the given writer. Matches correspond to the same matches as reported by [`AhoCorasick::try_find_iter`]."
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::ahocorasick::AhoCorasickBuilder",
+      "name": "AhoCorasickBuilder",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct AhoCorasickBuilder",
+      "summary": "A builder for configuring an Aho-Corasick automaton.",
+      "doc": "api/aho_corasick.ahocorasick.md#ahocorasickbuilder",
+      "aliases": [
+        "aho_corasick::AhoCorasickBuilder"
+      ],
+      "methods": [
+        {
+          "name": "ascii_case_insensitive",
+          "signature": "fn ascii_case_insensitive(&mut self, yes: bool) -> &mut AhoCorasickBuilder",
+          "summary": "Enable ASCII-aware case insensitive matching."
+        },
+        {
+          "name": "build",
+          "signature": "fn build<I, P>(&self, patterns: I) -> Result<AhoCorasick, BuildError> where I: IntoIterator<Item = P>, P: AsRef<[u8]>",
+          "summary": "Build an Aho-Corasick automaton using the configuration set on this builder."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(&mut self, yes: bool) -> &mut AhoCorasickBuilder",
+          "summary": "A debug settting for whether to attempt to shrink the size of the automaton's alphabet or not."
+        },
+        {
+          "name": "dense_depth",
+          "signature": "fn dense_depth(&mut self, depth: usize) -> &mut AhoCorasickBuilder",
+          "summary": "Set the limit on how many states use a dense representation for their transitions. Other states will generally use a sparse representation."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&mut self, kind: Option<AhoCorasickKind>) -> &mut AhoCorasickBuilder",
+          "summary": "Choose the type of underlying automaton to use."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(&mut self, kind: MatchKind) -> &mut AhoCorasickBuilder",
+          "summary": "Set the desired match semantics."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> AhoCorasickBuilder",
+          "summary": "Create a new builder for configuring an Aho-Corasick automaton."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(&mut self, yes: bool) -> &mut AhoCorasickBuilder",
+          "summary": "Enable heuristic prefilter optimizations."
+        },
+        {
+          "name": "start_kind",
+          "signature": "fn start_kind(&mut self, kind: StartKind) -> &mut AhoCorasickBuilder",
+          "summary": "Sets the starting state configuration for the automaton."
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::ahocorasick::FindIter",
+      "name": "FindIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct FindIter<'a, 'h>",
+      "summary": "An iterator of non-overlapping matches in a particular haystack.",
+      "doc": "api/aho_corasick.ahocorasick.md#finditer",
+      "aliases": [
+        "aho_corasick::FindIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::ahocorasick::FindOverlappingIter",
+      "name": "FindOverlappingIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct FindOverlappingIter<'a, 'h>",
+      "summary": "An iterator of overlapping matches in a particular haystack.",
+      "doc": "api/aho_corasick.ahocorasick.md#findoverlappingiter",
+      "aliases": [
+        "aho_corasick::FindOverlappingIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::ahocorasick::StreamFindIter",
+      "name": "StreamFindIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct StreamFindIter<'a, R>",
+      "summary": "An iterator that reports Aho-Corasick matches in a stream.",
+      "doc": "api/aho_corasick.ahocorasick.md#streamfinditer",
+      "aliases": [
+        "aho_corasick::StreamFindIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Match, std::io::Error>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,234 @@
+{
+  "_comment": [
+    "The places your code meets theirs.",
+    "",
+    "fastmcp calls this dimension `extension-points`, and for fastmcp that is accurate: all nine",
+    "of its pages are nominal base classes with an abstractmethod count. It would be wrong here.",
+    "Four of these eleven are not classes at all -- `__rich_console__` is a dunder you bolt onto",
+    "any object with no base in sight, `rich_utils.STYLE_OPTION` is a module global you rebind,",
+    "`TERMINAL_WIDTH` is an environment variable read once at import, and a `Theme` is a mapping",
+    "you pass in. Calling a monkeypatch target an `extension point` would tell an agent it is",
+    "supported, which is precisely the error this repository exists to prevent.",
+    "",
+    "So each page carries `supported`, and that field is the one that earns the name:",
+    "  documented     -- upstream says to do this",
+    "  observed-only  -- it works, it is indexed, no probe demonstrates it here",
+    "  private        -- it works and upstream has not promised it will keep working"
+  ],
+  "seams": [
+    {
+      "name": "renderable-protocol",
+      "title": "Making your own object printable",
+      "kind": "runtime-protocol",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.console.ConsoleRenderable", "rich.console.RichCast"],
+      "dunders": ["__rich_console__", "__rich__"],
+      "probe": "",
+      "mental_model": "One decision, not three, which is why this is one page. `__rich_console__` yields segments or renderables and receives the `ConsoleOptions` -- use it when the output depends on the available width. `__rich__` returns something else already renderable and is the one-liner. `rich.abc.RichRenderable` is neither: its own docstring says there is no need to extend it, it exists for `isinstance`, and it has zero subclasses in the whole library.",
+      "decision_rules": [
+        "Returning a Text, a Table or a str: write `__rich__`.",
+        "Output depends on width, height or justification: write `__rich_console__` and read the ConsoleOptions.",
+        "Neither, and you only want a nicer repr: write `__rich_repr__` instead; it feeds `Pretty`, not the console.",
+        "Never subclass `rich.abc.RichRenderable` to gain behaviour. It grants none."
+      ],
+      "anti_patterns": [
+        "Relying on `__str__`: it is reached only after markup parsing, so any bracket in it is re-interpreted and may be deleted (see probe M001).",
+        "Returning a plain str from `__rich_console__` when the caller expects an iterable -- it is a generator protocol, so yield."
+      ]
+    },
+    {
+      "name": "measurement",
+      "title": "Telling rich how wide your renderable wants to be",
+      "kind": "duck-protocol",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.measure.Measurement"],
+      "dunders": ["__rich_measure__"],
+      "probe": "",
+      "mental_model": "Separate from the renderable protocol on purpose: omitting it is what produces a table column of the wrong width, and the symptom points nowhere near this page. Rich asks every renderable for a minimum and a maximum before it allocates; without `__rich_measure__` it falls back to measuring your rendered output, which is usually right and occasionally very wrong.",
+      "decision_rules": [
+        "Your renderable has a natural minimum width: implement it and return `Measurement(minimum, maximum)`.",
+        "Your output is fixed-width: return the same number twice.",
+        "You are inside a Table cell and the column is wrong: this is the page, not the Table constructor."
+      ],
+      "anti_patterns": [
+        "Returning a Measurement wider than the console: it is a request, and the console still crops."
+      ]
+    },
+    {
+      "name": "highlighter",
+      "title": "Automatic styling of text by pattern",
+      "kind": "abstract-base",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.highlighter.Highlighter", "rich.highlighter.RegexHighlighter"],
+      "dunders": [],
+      "probe": "",
+      "mental_model": "`Highlighter.highlight` is the single obligation. `RegexHighlighter` implements it for you and asks only for a `highlights` list of regular expressions with named groups -- the group name is the style name. This is what turns numbers, paths and URLs a different colour without anyone writing markup.",
+      "decision_rules": [
+        "Pattern-based: subclass `RegexHighlighter` and set `highlights`.",
+        "Anything else: subclass `Highlighter` and implement `highlight(text)`, mutating the Text in place.",
+        "Want it off for one call: `Console.print(..., highlight=False)`, not a custom Highlighter."
+      ],
+      "anti_patterns": [
+        "Returning a new Text from `highlight`: it mutates in place and the return value is ignored."
+      ]
+    },
+    {
+      "name": "theme-and-style",
+      "title": "Naming your own styles",
+      "kind": "parameter",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.theme.Theme", "rich.style.Style"],
+      "dunders": [],
+      "probe": "O002",
+      "mental_model": "A Style is a value; a Theme is a mapping from names to Styles that makes those names legal inside markup. The three vocabularies in play -- rich's 235 ANSI colour names, its default style names, and `typer.colors` -- overlap only in their strings, and that overlap is a coincidence of spelling rather than a shared type.",
+      "decision_rules": [
+        "Reusing a look in several places: build a `Style` and pass it, or name it in a `Theme`.",
+        "Want `[mystyle]` to work in markup: it must be in the Console's Theme.",
+        "Passing colour to Typer: `typer.secho(fg=...)` takes a string, not a rich `Style` object."
+      ],
+      "anti_patterns": [
+        "Passing a `rich.style.Style` to `typer.style` or `typer.secho`: they take strings and colour constants.",
+        "Assuming `typer.colors.RED` is a rich type: it is the plain string \"red\", which is legal in rich markup only because the spellings happen to match."
+      ]
+    },
+    {
+      "name": "box",
+      "title": "Choosing the characters a border is drawn with",
+      "kind": "parameter",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.box.Box"],
+      "dunders": [],
+      "probe": "R001",
+      "mental_model": "A Box is a block of border glyphs, passed as `box=` to a Table or Panel. The choice is a rendering decision with a captured answer rather than an API question -- see probe R001 and `catalogs/boxes.md`.",
+      "decision_rules": [
+        "Output may reach a terminal without box-drawing characters: use an ASCII box.",
+        "Output is going into a file someone will diff: use an ASCII box, and pin the width.",
+        "Legacy Windows console: rich substitutes automatically, and this index never executes that path."
+      ],
+      "anti_patterns": [
+        "Assuming the default box renders the same everywhere: probe R001 pins one width and one box, and its control shows the bytes move when the box changes."
+      ]
+    },
+    {
+      "name": "render-hooks",
+      "title": "Intercepting everything a Console renders",
+      "kind": "abstract-base",
+      "supported": "documented",
+      "subject": "rich",
+      "seeds": ["rich.console.RenderHook"],
+      "dunders": [],
+      "probe": "",
+      "mental_model": "`process_renderables` sees every batch on its way out and may rewrite it. This is the mechanism `Live` is built on, which is also the warning: two things pushing hooks onto one Console will fight.",
+      "decision_rules": [
+        "You want to wrap or annotate all output: push a render hook.",
+        "You want to capture output instead: `Console(record=True)` and `export_text`, or a StringIO file."
+      ],
+      "anti_patterns": [
+        "Pushing a hook while a `Live` or `Progress` owns the same Console."
+      ]
+    },
+    {
+      "name": "jupyter",
+      "title": "Rendering inside a notebook",
+      "kind": "subclass",
+      "supported": "observed-only",
+      "subject": "rich",
+      "seeds": ["rich.jupyter.JupyterMixin"],
+      "dunders": [],
+      "probe": "",
+      "mental_model": "`JupyterMixin` gives a renderable a `_repr_mimebundle_`, so a notebook displays it without a Console. Indexed from source and never executed: no probe here imports IPython, and `is_jupyter()` is False in all of them.",
+      "decision_rules": [
+        "Your renderable should display in a notebook cell: mix in `JupyterMixin`.",
+        "Rich is not detecting the notebook: `Console(force_jupyter=True)`."
+      ],
+      "anti_patterns": [
+        "Trusting this page as verified behaviour. It is marked observed-only for a reason -- see known limit 6 in reference.md."
+      ]
+    },
+    {
+      "name": "param-type",
+      "title": "Turning a command-line string into your own type",
+      "kind": "abstract-base",
+      "supported": "documented",
+      "subject": "click",
+      "seeds": ["typer._click.types.ParamType"],
+      "dunders": [],
+      "probe": "V003",
+      "mental_model": "`ParamType` lives in `typer._click.types` -- Typer's vendored copy of Click -- and is not exported from `typer` at all. Every annotation you write becomes one of its subclasses: `int` becomes an `IntParamType`, `Annotated[int, typer.Option(min=1)]` becomes an `IntRange`. Customizing the field types with Click-specific types is not supported, and this is the list of types that statement is about.",
+      "decision_rules": [
+        "A standard conversion exists: use the annotation. That is Typer's whole proposition.",
+        "You need a custom conversion: prefer a `typer.Option(parser=...)` or a callback over subclassing a private class.",
+        "You are reading a `ParamType` row to understand what your annotation DOES: that is what these rows are for."
+      ],
+      "anti_patterns": [
+        "`from typer._click.types import ParamType`: it is private, upstream says so, and the path is not part of any promise.",
+        "Passing a `click.ParamType` from the installed `click` package: different class, different library, and it still type-checks."
+      ]
+    },
+    {
+      "name": "callbacks-and-context",
+      "title": "Running code around a command, and sharing state",
+      "kind": "parameter",
+      "supported": "documented",
+      "subject": "typer",
+      "seeds": ["typer.models.Context", "typer.models.CallbackParam"],
+      "dunders": [],
+      "probe": "",
+      "mental_model": "`typer.Context` is Typer's subclass of the vendored `typer._click.core.Context`, so most of what you can call on it is declared in a module you cannot import -- which is why the index records reachability beside nameability. `ctx.obj` is the shared-state slot; a `@app.callback` runs before any subcommand.",
+      "decision_rules": [
+        "State shared by every subcommand: set `ctx.obj` in the group callback.",
+        "A flag that should short-circuit, like `--version`: `is_eager=True` and raise `typer.Exit`.",
+        "A parameter that should not reach your function: `expose_value=False`."
+      ],
+      "anti_patterns": [
+        "Annotating a parameter as the vendored `Context` rather than `typer.Context`.",
+        "Doing work in a callback that the `--help` path also triggers: it runs first."
+      ]
+    },
+    {
+      "name": "command-classes",
+      "title": "Changing how a command or group behaves",
+      "kind": "subclass",
+      "supported": "documented",
+      "subject": "typer",
+      "seeds": ["typer.core.TyperCommand", "typer.core.TyperGroup"],
+      "dunders": [],
+      "probe": "",
+      "mental_model": "`Typer(cls=...)` takes a Group subclass, and `@app.command(cls=...)` a Command subclass. This is the supported way to change help ordering, add a shared option, or intercept resolution -- and it is the alternative the `rich-utils-overrides` page points at.",
+      "decision_rules": [
+        "Reordering or filtering commands in `--help`: override `list_commands` on a `TyperGroup`.",
+        "Every command needs the same option: add it in a group callback, not by patching.",
+        "You were about to rebind a module global in `rich_utils`: do this instead."
+      ],
+      "anti_patterns": [
+        "Subclassing the vendored `typer._click.core.Group` directly rather than `typer.core.TyperGroup`."
+      ]
+    },
+    {
+      "name": "rich-utils-overrides",
+      "title": "Restyling Typer's help output",
+      "kind": "module-constant",
+      "supported": "private",
+      "subject": "typer",
+      "seeds": ["typer.rich_utils"],
+      "dunders": [],
+      "probe": "T002",
+      "mental_model": "`typer.rich_utils` holds module-level constants -- the `STYLE_*` names, `MAX_WIDTH`, `COLOR_SYSTEM`, `FORCE_TERMINAL` -- that the help renderer reads. Rebinding them works. Nothing promises it will keep working, and several are captured at first import rather than read per call, so the order of your imports becomes load-bearing. This page exists so that an agent who finds the mechanism does not ship it while describing it as an API.",
+      "decision_rules": [
+        "Grouping options under headings: `rich_help_panel=`, which is supported.",
+        "Markdown instead of rich markup in docstrings: `rich_markup_mode=`, which is supported.",
+        "Restructuring the help layout: a custom `TyperGroup`, which is supported.",
+        "Changing a colour with nothing else available: rebind the constant, and write down that you did."
+      ],
+      "anti_patterns": [
+        "Passing a `Theme` to your own Console and expecting help to pick it up: `rich_utils` builds its own Console and never consults yours.",
+        "Setting `TERMINAL_WIDTH` after `typer.rich_utils` has been imported: `MAX_WIDTH` was already frozen."
+      ]
+    }
+  ]
+}

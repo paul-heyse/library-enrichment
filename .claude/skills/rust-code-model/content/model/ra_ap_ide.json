@@ -1,0 +1,466 @@
+{
+  "module": "ra_ap_ide",
+  "crate": "ra_ap_ide",
+  "api": "api/ra_ap_ide.md",
+  "items": [
+    {
+      "path": "ra_ap_ide::Analysis",
+      "name": "Analysis",
+      "kind": "struct",
+      "crate": "ra_ap_ide",
+      "signature": "struct Analysis",
+      "summary": "Analysis is a snapshot of a world state at a moment in time. It is the main entry point for asking semantic information about the world. When the world state is advanced using `AnalysisHost::apply_change` method, all existing `Analysis` ar…",
+      "doc": "api/ra_ap_ide.md#analysis",
+      "methods": [
+        {
+          "name": "annotations",
+          "signature": "fn annotations(&self, config: &AnnotationConfig<'_>, file_id: FileId) -> Cancellable<Vec<Annotation>>"
+        },
+        {
+          "name": "assists_with_fixes",
+          "signature": "fn assists_with_fixes(&self, assist_config: &AssistConfig, diagnostics_config: &DiagnosticsConfig, resolve: AssistResolveStrategy, frange: FileRange) -> Cancellable<Vec<Assist>>",
+          "summary": "Convenience function to return assists + quick fixes for diagnostics"
+        },
+        {
+          "name": "call_hierarchy",
+          "signature": "fn call_hierarchy(&self, position: FilePosition, config: &CallHierarchyConfig<'_>) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>>",
+          "summary": "Computes call hierarchy candidates for the given file position."
+        },
+        {
+          "name": "child_modules",
+          "signature": "fn child_modules(&self, position: FilePosition) -> Cancellable<Vec<NavigationTarget>>",
+          "summary": "Returns vec of `mod name;` declaration which are created by the current module."
+        },
+        {
+          "name": "completions",
+          "signature": "fn completions(&self, config: &CompletionConfig<'_>, position: FilePosition, trigger_character: Option<char>) -> Cancellable<Option<Vec<CompletionItem>>>",
+          "summary": "Computes completions at the given position."
+        },
+        {
+          "name": "crate_edition",
+          "signature": "fn crate_edition(&self, crate_id: Crate) -> Cancellable<Edition>",
+          "summary": "Returns the edition of the given crate."
+        },
+        {
+          "name": "crate_root",
+          "signature": "fn crate_root(&self, crate_id: Crate) -> Cancellable<FileId>",
+          "summary": "Returns the root file of the given crate."
+        },
+        {
+          "name": "crates_for",
+          "signature": "fn crates_for(&self, file_id: FileId) -> Cancellable<Vec<Crate>>",
+          "summary": "Returns crates that this file belongs to."
+        },
+        {
+          "name": "discover_test_roots",
+          "signature": "fn discover_test_roots(&self) -> Cancellable<Vec<TestItem>>"
+        },
+        {
+          "name": "discover_tests_in_crate",
+          "signature": "fn discover_tests_in_crate(&self, crate_id: Crate) -> Cancellable<Vec<TestItem>>"
+        },
+        {
+          "name": "discover_tests_in_crate_by_test_id",
+          "signature": "fn discover_tests_in_crate_by_test_id(&self, crate_id: &str) -> Cancellable<Vec<TestItem>>"
+        },
+        {
+          "name": "discover_tests_in_file",
+          "signature": "fn discover_tests_in_file(&self, file_id: FileId) -> Cancellable<Vec<TestItem>>"
+        },
+        {
+          "name": "editioned_file_id_to_vfs",
+          "signature": "fn editioned_file_id_to_vfs(&self, file_id: hir::EditionedFileId) -> FileId"
+        },
+        {
+          "name": "evaluate_predicate",
+          "signature": "fn evaluate_predicate(&self, text: String, position: FilePosition) -> Cancellable<PredicateEvaluationResult>"
+        },
+        {
+          "name": "expand_macro",
+          "signature": "fn expand_macro(&self, position: FilePosition) -> Cancellable<Option<ExpandedMacro>>"
+        },
+        {
+          "name": "extend_selection",
+          "signature": "fn extend_selection(&self, frange: FileRange) -> Cancellable<TextRange>",
+          "summary": "Selects the next syntactic nodes encompassing the range."
+        },
+        {
+          "name": "external_docs",
+          "signature": "fn external_docs(&self, position: FilePosition, target_dir: Option<&str>, sysroot: Option<&str>) -> Cancellable<doc_links::DocumentationLinks>",
+          "summary": "Returns URL(s) for the documentation of the symbol under the cursor. # Arguments * `position` - Position in the file. * `target_dir` - Directory where the build output is stored."
+        },
+        {
+          "name": "fetch_crates",
+          "signature": "fn fetch_crates(&self) -> Cancellable<FxIndexSet<CrateInfo>>"
+        },
+        {
+          "name": "file_line_index",
+          "signature": "fn file_line_index(&self, file_id: FileId) -> Cancellable<Arc<LineIndex>>",
+          "summary": "Gets the file's `LineIndex`: data structure to convert between absolute offsets and line/column representation."
+        },
+        {
+          "name": "file_structure",
+          "signature": "fn file_structure(&self, config: &FileStructureConfig, file_id: FileId) -> Cancellable<Vec<StructureNode>>",
+          "summary": "Returns a tree representation of symbols in the file. Useful to draw a file outline."
+        },
+        {
+          "name": "file_text",
+          "signature": "fn file_text(&self, file_id: FileId) -> Cancellable<Arc<str>>",
+          "summary": "Gets the text of the source file."
+        },
+        {
+          "name": "find_all_refs",
+          "signature": "fn find_all_refs(&self, position: FilePosition, config: &FindAllRefsConfig<'_>) -> Cancellable<Option<Vec<ReferenceSearchResult>>>"
+        },
+        {
+          "name": "folding_ranges",
+          "signature": "fn folding_ranges(&self, file_id: FileId, collapsed_text: bool) -> Cancellable<Vec<Fold>>",
+          "summary": "Returns the set of folding ranges."
+        },
+        {
+          "name": "from_single_file",
+          "signature": "fn from_single_file(text: String, proc_macro_cwd: Arc<AbsPathBuf>) -> (Analysis, FileId)"
+        },
+        {
+          "name": "full_diagnostics",
+          "signature": "fn full_diagnostics(&self, config: &DiagnosticsConfig, resolve: AssistResolveStrategy, file_id: FileId) -> Cancellable<Vec<Diagnostic>>",
+          "summary": "Computes the set of both syntax and semantic diagnostics for the given file."
+        },
+        {
+          "name": "get_failed_obligations",
+          "signature": "fn get_failed_obligations(&self, offset: TextSize, file_id: FileId) -> Cancellable<String>"
+        },
+        {
+          "name": "get_recursive_memory_layout",
+          "signature": "fn get_recursive_memory_layout(&self, position: FilePosition) -> Cancellable<Option<RecursiveMemoryLayout>>"
+        },
+        {
+          "name": "goto_declaration",
+          "signature": "fn goto_declaration(&self, position: FilePosition, config: &GotoDefinitionConfig<'_>) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>>",
+          "summary": "Returns the declaration from the symbol at `position`."
+        },
+        {
+          "name": "goto_definition",
+          "signature": "fn goto_definition(&self, position: FilePosition, config: &GotoDefinitionConfig<'_>) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>>",
+          "summary": "Returns the definitions from the symbol at `position`."
+        },
+        {
+          "name": "goto_implementation",
+          "signature": "fn goto_implementation(&self, config: &GotoImplementationConfig, position: FilePosition) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>>",
+          "summary": "Returns the impls from the symbol at `position`."
+        },
+        {
+          "name": "goto_type_definition",
+          "signature": "fn goto_type_definition(&self, position: FilePosition) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>>",
+          "summary": "Returns the type definitions for the symbol at `position`."
+        },
+        {
+          "name": "highlight",
+          "signature": "fn highlight(&self, highlight_config: HighlightConfig<'_>, file_id: FileId) -> Cancellable<Vec<HlRange>>",
+          "summary": "Computes syntax highlighting for the given file"
+        },
+        {
+          "name": "highlight_as_html",
+          "signature": "fn highlight_as_html(&self, file_id: FileId, rainbow: bool) -> Cancellable<String>",
+          "summary": "Computes syntax highlighting for the given file."
+        },
+        {
+          "name": "highlight_as_html_with_config",
+          "signature": "fn highlight_as_html_with_config(&self, config: HighlightConfig<'_>, file_id: FileId, rainbow: bool) -> Cancellable<String>",
+          "summary": "Computes syntax highlighting for the given file."
+        },
+        {
+          "name": "highlight_range",
+          "signature": "fn highlight_range(&self, highlight_config: HighlightConfig<'_>, frange: FileRange) -> Cancellable<Vec<HlRange>>",
+          "summary": "Computes syntax highlighting for the given file range."
+        },
+        {
+          "name": "highlight_related",
+          "signature": "fn highlight_related(&self, config: HighlightRelatedConfig, position: FilePosition) -> Cancellable<Option<Vec<HighlightedRange>>>",
+          "summary": "Computes all ranges to highlight for a given item in a file."
+        },
+        {
+          "name": "hover",
+          "signature": "fn hover(&self, config: &HoverConfig<'_>, range: FileRange) -> Cancellable<Option<RangeInfo<HoverResult>>>",
+          "summary": "Returns a short text describing element at position."
+        },
+        {
+          "name": "incoming_calls",
+          "signature": "fn incoming_calls(&self, config: &CallHierarchyConfig<'_>, position: FilePosition) -> Cancellable<Option<Vec<CallItem>>>",
+          "summary": "Computes incoming calls for the given file position."
+        },
+        {
+          "name": "inlay_hints",
+          "signature": "fn inlay_hints(&self, config: &InlayHintsConfig<'_>, file_id: FileId, range: Option<TextRange>) -> Cancellable<Vec<InlayHint>>",
+          "summary": "Returns a list of the places in the file where type hints can be displayed."
+        },
+        {
+          "name": "inlay_hints_resolve",
+          "signature": "fn inlay_hints_resolve(&self, config: &InlayHintsConfig<'_>, file_id: FileId, resolve_range: TextRange, hash: u64, hasher: impl Fn(&InlayHint) -> u64 + Send + UnwindSafe) -> Cancellable<Option<InlayHint>>"
+        },
+        {
+          "name": "interpret_function",
+          "signature": "fn interpret_function(&self, position: FilePosition) -> Cancellable<String>"
+        },
+        {
+          "name": "is_crate_no_std",
+          "signature": "fn is_crate_no_std(&self, crate_id: Crate) -> Cancellable<bool>",
+          "summary": "Returns true if this crate has `no_std` or `no_core` specified."
+        },
+        {
+          "name": "is_library_file",
+          "signature": "fn is_library_file(&self, file_id: FileId) -> Cancellable<bool>",
+          "summary": "Returns true if this file belongs to an immutable library."
+        },
+        {
+          "name": "is_local_source_root",
+          "signature": "fn is_local_source_root(&self, source_root_id: SourceRootId) -> Cancellable<bool>"
+        },
+        {
+          "name": "is_proc_macro_crate",
+          "signature": "fn is_proc_macro_crate(&self, crate_id: Crate) -> Cancellable<bool>",
+          "summary": "Returns whether the given crate is a proc macro."
+        },
+        {
+          "name": "join_lines",
+          "signature": "fn join_lines(&self, config: &JoinLinesConfig, frange: FileRange) -> Cancellable<TextEdit>",
+          "summary": "Returns an edit to remove all newlines in the range, cleaning up minor stuff like trailing commas."
+        },
+        {
+          "name": "matching_brace",
+          "signature": "fn matching_brace(&self, position: FilePosition) -> Cancellable<Option<TextSize>>",
+          "summary": "Returns position of the matching brace (all types of braces are supported)."
+        },
+        {
+          "name": "moniker",
+          "signature": "fn moniker(&self, position: FilePosition) -> Cancellable<Option<RangeInfo<Vec<moniker::MonikerResult>>>>",
+          "summary": "Returns moniker of symbol at position."
+        },
+        {
+          "name": "move_item",
+          "signature": "fn move_item(&self, range: FileRange, direction: Direction) -> Cancellable<Option<TextEdit>>"
+        },
+        {
+          "name": "on_char_typed",
+          "signature": "fn on_char_typed(&self, position: FilePosition, char_typed: char) -> Cancellable<Option<SourceChange>>",
+          "summary": "Returns an edit which should be applied after a character was typed."
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, position: FilePosition) -> Cancellable<Option<TextEdit>>",
+          "summary": "Returns an edit which should be applied when opening a new line, fixing up minor stuff like continuing the comment. The edit will be a snippet (with `$0`)."
+        },
+        {
+          "name": "outgoing_calls",
+          "signature": "fn outgoing_calls(&self, config: &CallHierarchyConfig<'_>, position: FilePosition) -> Cancellable<Option<Vec<CallItem>>>",
+          "summary": "Computes outgoing calls for the given file position."
+        },
+        {
+          "name": "parallel_prime_caches",
+          "signature": "fn parallel_prime_caches<F>(&self, scope: &[Crate], num_worker_threads: usize, cb: F) -> Cancellable<()> where F: Fn(ParallelPrimeCachesProgress) + Sync + std::panic::UnwindSafe",
+          "summary": "Warm caches for the given `scope`. `scope` must be closed under transitive dependencies; callers that want to prime everything pass `&base_db::all_crates(db)`."
+        },
+        {
+          "name": "parent_module",
+          "signature": "fn parent_module(&self, position: FilePosition) -> Cancellable<Vec<NavigationTarget>>",
+          "summary": "Returns a `mod name;` declaration which created the current module."
+        },
+        {
+          "name": "parse",
+          "signature": "fn parse(&self, file_id: FileId) -> Cancellable<SourceFile>",
+          "summary": "Gets the syntax tree of the file."
+        },
+        {
+          "name": "prepare_rename",
+          "signature": "fn prepare_rename(&self, position: FilePosition) -> Cancellable<Result<RangeInfo<()>, RenameError>>"
+        },
+        {
+          "name": "related_tests",
+          "signature": "fn related_tests(&self, position: FilePosition, search_scope: Option<SearchScope>) -> Cancellable<Vec<Runnable>>",
+          "summary": "Returns the set of tests for the given file position."
+        },
+        {
+          "name": "relevant_crates_for",
+          "signature": "fn relevant_crates_for(&self, file_id: FileId) -> Cancellable<Vec<Crate>>",
+          "summary": "Returns crates that this file *might* belong to."
+        },
+        {
+          "name": "rename",
+          "signature": "fn rename(&self, position: FilePosition, new_name: &str, config: &RenameConfig) -> Cancellable<Result<SourceChange, RenameError>>",
+          "summary": "Returns the edit required to rename reference at the position to the new name."
+        },
+        {
+          "name": "resolve_annotation",
+          "signature": "fn resolve_annotation(&self, config: &AnnotationConfig<'_>, annotation: Annotation) -> Cancellable<Annotation>"
+        },
+        {
+          "name": "resolve_completion_edits",
+          "signature": "fn resolve_completion_edits(&self, config: &CompletionConfig<'_>, position: FilePosition, imports: impl IntoIterator<Item = CompletionItemImport> + std::panic::UnwindSafe) -> Cancellable<Vec<TextEdit>>",
+          "summary": "Resolves additional completion data at the position given."
+        },
+        {
+          "name": "runnables",
+          "signature": "fn runnables(&self, file_id: FileId) -> Cancellable<Vec<Runnable>>",
+          "summary": "Returns the set of possible targets to run for the current file."
+        },
+        {
+          "name": "semantic_diagnostics",
+          "signature": "fn semantic_diagnostics(&self, config: &DiagnosticsConfig, resolve: AssistResolveStrategy, file_id: FileId) -> Cancellable<Vec<Diagnostic>>",
+          "summary": "Computes the set of semantic diagnostics for the given file."
+        },
+        {
+          "name": "signature_help",
+          "signature": "fn signature_help(&self, position: FilePosition) -> Cancellable<Option<SignatureHelp>>",
+          "summary": "Computes parameter information at the given position."
+        },
+        {
+          "name": "source_root_id",
+          "signature": "fn source_root_id(&self, file_id: FileId) -> Cancellable<SourceRootId>"
+        },
+        {
+          "name": "status",
+          "signature": "fn status(&self, file_id: Option<FileId>) -> Cancellable<String>",
+          "summary": "Debug info about the current state of the analysis."
+        },
+        {
+          "name": "structural_search_replace",
+          "signature": "fn structural_search_replace(&self, query: &str, parse_only: bool, resolve_context: FilePosition, selections: Vec<FileRange>) -> Cancellable<Result<SourceChange, SsrError>>"
+        },
+        {
+          "name": "symbol_search",
+          "signature": "fn symbol_search(&self, query: Query, limit: usize) -> Cancellable<Vec<NavigationTarget>>",
+          "summary": "Fuzzy searches for a symbol."
+        },
+        {
+          "name": "syntax_diagnostics",
+          "signature": "fn syntax_diagnostics(&self, config: &DiagnosticsConfig, file_id: FileId) -> Cancellable<Vec<Diagnostic>>",
+          "summary": "Computes the set of parser level diagnostics for the given file."
+        },
+        {
+          "name": "transitive_rev_deps",
+          "signature": "fn transitive_rev_deps(&self, crate_id: Crate) -> Cancellable<Vec<Crate>>",
+          "summary": "Returns crates that this file belongs to."
+        },
+        {
+          "name": "view_crate_graph",
+          "signature": "fn view_crate_graph(&self, full: bool) -> Cancellable<String>",
+          "summary": "Renders the crate graph to GraphViz \"dot\" syntax."
+        },
+        {
+          "name": "view_hir",
+          "signature": "fn view_hir(&self, position: FilePosition) -> Cancellable<String>"
+        },
+        {
+          "name": "view_item_tree",
+          "signature": "fn view_item_tree(&self, file_id: FileId) -> Cancellable<String>"
+        },
+        {
+          "name": "view_mir",
+          "signature": "fn view_mir(&self, position: FilePosition) -> Cancellable<String>"
+        },
+        {
+          "name": "view_syntax_tree",
+          "signature": "fn view_syntax_tree(&self, file_id: FileId) -> Cancellable<String>"
+        },
+        {
+          "name": "will_rename_file",
+          "signature": "fn will_rename_file(&self, file_id: FileId, new_name_stem: &str, config: &RenameConfig) -> Cancellable<Option<SourceChange>>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_ide::AnalysisHost",
+      "name": "AnalysisHost",
+      "kind": "struct",
+      "crate": "ra_ap_ide",
+      "signature": "struct AnalysisHost",
+      "summary": "`AnalysisHost` stores the current state of the world.",
+      "doc": "api/ra_ap_ide.md#analysishost",
+      "methods": [
+        {
+          "name": "analysis",
+          "signature": "fn analysis(&self) -> Analysis",
+          "summary": "Returns a snapshot of the current state, which you can query for semantic information."
+        },
+        {
+          "name": "apply_change",
+          "signature": "fn apply_change(&mut self, change: ChangeWithProcMacros) -> Duration",
+          "summary": "Applies changes to the current state of the world. If there are outstanding snapshots, they will be canceled."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(lru_capacity: Option<u16>) -> AnalysisHost"
+        },
+        {
+          "name": "per_query_memory_usage",
+          "signature": "fn per_query_memory_usage(&mut self) -> Vec<(String, profile::Bytes, usize)>",
+          "summary": "NB: this clears the database"
+        },
+        {
+          "name": "raw_database",
+          "signature": "fn raw_database(&self) -> &RootDatabase"
+        },
+        {
+          "name": "raw_database_mut",
+          "signature": "fn raw_database_mut(&mut self) -> &mut RootDatabase"
+        },
+        {
+          "name": "trigger_cancellation",
+          "signature": "fn trigger_cancellation(&mut self)"
+        },
+        {
+          "name": "trigger_garbage_collection",
+          "signature": "fn trigger_garbage_collection(&mut self)"
+        },
+        {
+          "name": "update_lru_capacities",
+          "signature": "fn update_lru_capacities(&mut self, lru_capacities: &FxHashMap<Box<str>, u16>)"
+        },
+        {
+          "name": "update_lru_capacity",
+          "signature": "fn update_lru_capacity(&mut self, lru_capacity: Option<u16>)"
+        },
+        {
+          "name": "with_database",
+          "signature": "fn with_database(db: RootDatabase) -> AnalysisHost"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_ide::RangeInfo",
+      "name": "RangeInfo",
+      "kind": "struct",
+      "crate": "ra_ap_ide",
+      "signature": "struct RangeInfo<T>",
+      "summary": "Info associated with a text range.",
+      "doc": "api/ra_ap_ide.md#rangeinfo",
+      "fields": [
+        "range",
+        "info"
+      ],
+      "implements": [
+        "ra_ap_ide_db::ra_fixture::UpmapFromRaFixture"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(range: TextRange, info: T) -> RangeInfo<T>"
+        },
+        {
+          "name": "upmap_from_ra_fixture",
+          "signature": "fn upmap_from_ra_fixture(self, __analysis: &::ide_db::ra_fixture::RaFixtureAnalysis, __virtual_file_id: ::ide_db::ra_fixture::FileId, __real_file_id: ::ide_db::ra_fixture::FileId) -> Result<Self, ()>",
+          "via_trait": "ra_ap_ide_db::ra_fixture::UpmapFromRaFixture"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_ide::Cancellable",
+      "name": "Cancellable",
+      "kind": "type_alias",
+      "crate": "ra_ap_ide",
+      "signature": "type Cancellable<T> = Result<T, ide_db::base_db::salsa::Cancelled>",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

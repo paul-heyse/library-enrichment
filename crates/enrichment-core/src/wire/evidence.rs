@@ -2,55 +2,51 @@
 
 use std::collections::BTreeSet;
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use super::JsonObject;
 use super::ids::ArtifactUri;
 
+crate::native_struct! {
 /// What was actually looked at, and what was not.
 ///
 /// `ok` means successful within this scope, never complete knowledge of a library. An empty
 /// `search_evidence` result with `indexed: ["public_api"]` is a valid negative answer; the same
 /// result with `missing: ["public_api"]` is an evidence gap. The two must never collapse.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct Coverage {
     /// When present, additional limitation text is retained in the exact coverage section.
     /// Scope, assessments, indexed and missing remain the authoritative inline assessment.
     #[serde(default)]
-    pub details: Option<super::research::RecoveryAction>,
+    details: Option<super::research::RecoveryAction> => crate::native_union::Rule::Text,
     /// Requested evidence scopes assessed against qualified native facts.
-    pub assessments: Vec<ScopeAssessment>,
+    assessments: Vec<ScopeAssessment> => crate::native_union::Rule::Sequence,
     /// What the result claims to cover, in prose.
-    pub scope: String,
+    scope: String => crate::native_union::Rule::Text,
     /// Evidence kinds that were successfully indexed.
-    pub indexed: BTreeSet<String>,
+    indexed: BTreeSet<String> => crate::native_union::Rule::Set,
     /// Evidence kinds that were expected but are absent.
-    pub missing: BTreeSet<String>,
+    missing: BTreeSet<String> => crate::native_union::Rule::Set,
     /// Known reasons this result may not generalize.
-    pub limitations: Vec<String>,
+    limitations: Vec<String> => crate::native_union::Rule::Sequence,
+}
 }
 
+crate::native_vocabulary! {
 /// Unknown means no qualified coverage fact exists; it is distinct from a declared gap.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum ScopeState {
-    Indexed,
-    Partial,
-    Missing,
-    Unknown,
+    Indexed = "indexed",
+    Partial = "partial",
+    Missing = "missing",
+    Unknown = "unknown",
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct ScopeAssessment {
-    pub snapshot_id: String,
-    pub subject: crate::evidence::relational::SubjectRef,
-    pub kind: crate::evidence::EvidenceKind,
-    pub state: ScopeState,
+    snapshot_id: String => crate::native_union::Rule::Text,
+    subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
+    kind: crate::evidence::EvidenceKind => crate::native_union::Rule::Text,
+    state: ScopeState => crate::native_union::Rule::Text,
     /// A qualified fact establishing the selected state. Historical attempts remain retained.
-    pub witness_id: Option<String>,
+    witness_id: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
 impl Coverage {
@@ -91,96 +87,159 @@ impl Coverage {
     }
 }
 
-/// How well the evidence's source version matches the version that was asked about.
-///
-/// The values are, in order: `exact`, `compatible_claimed`, `mismatched`, `unknown`.
-/// `compatible_claimed` is a claim by the source, not a verified fact.
-///
-/// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum SourceVersionMatch {
-    Exact,
-    CompatibleClaimed,
-    Mismatched,
-    Unknown,
+crate::native_vocabulary! {
+    /// How well the evidence's source version matches the version that was asked about.
+    ///
+    /// The values are, in order: `exact`, `compatible_claimed`, `mismatched`, `unknown`.
+    /// `compatible_claimed` is a claim by the source, not a verified fact.
+    ///
+    /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
+    #[derive(Hash)]
+    #[schemars(inline)]
+    pub enum SourceVersionMatch { Exact = "exact", CompatibleClaimed = "compatible_claimed", Mismatched = "mismatched", Unknown = "unknown" }
 }
 
+crate::native_struct! {
 /// Registry freshness. Blueprint §3.3: freshness is not one timestamp.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct Freshness {
     /// When the registry was last consulted, or `null` if it was not consulted at all.
-    #[schemars(extend("format" = "date-time"))]
-    pub registry_checked_at: Option<String>,
+    registry_checked_at: Option<crate::native_time::AcquisitionTime> => crate::native_union::Rule::Text,
     /// How the evidence's source version relates to the requested one.
-    pub source_version_match: SourceVersionMatch,
+    source_version_match: SourceVersionMatch => crate::native_union::Rule::Text,
     /// Whether "this is the latest release" was actually revalidated. A cache hit alone is not
     /// evidence that a release is still latest.
-    pub latest_verified: bool,
+    latest_verified: bool => crate::native_union::Rule::Text,
+}
 }
 
-/// The six epistemic classes (blueprint §6.2).
-///
-/// These are categories, not a confidence scale. An API signature can be `compiler_derived`
-/// while "this replaces our orchestration layer" is `agent_inferred`, and the two never merge.
-///
-/// The values are, in order: `declared`, `statically_extracted`, `compiler_derived`,
-/// `typechecker_observed`, `runtime_observed`, `agent_inferred`.
-///
-/// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum EvidenceClass {
-    Declared,
-    StaticallyExtracted,
-    CompilerDerived,
-    TypecheckerObserved,
-    RuntimeObserved,
-    AgentInferred,
+crate::native_vocabulary! {
+    /// The six epistemic classes (blueprint §6.2).
+    ///
+    /// These are categories, not a confidence scale. An API signature can be `compiler_derived`
+    /// while "this replaces our orchestration layer" is `agent_inferred`, and the two never merge.
+    ///
+    /// The values are, in order: `declared`, `statically_extracted`, `compiler_derived`,
+    /// `typechecker_observed`, `runtime_observed`, `agent_inferred`.
+    ///
+    /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
+    #[derive(Hash)]
+    #[schemars(inline)]
+    pub enum EvidenceClass { Declared = "declared", StaticallyExtracted = "statically_extracted", CompilerDerived = "compiler_derived", TypecheckerObserved = "typechecker_observed", RuntimeObserved = "runtime_observed", AgentInferred = "agent_inferred" }
 }
 
-/// One supporting fact, with the provenance needed to check it.
-///
-/// Blueprint §7.2: every entry carries an ID, class, subject, exact locator, source-version
-/// match and producer, plus a compact excerpt -- not an unexplained numeric confidence.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct Evidence {
-    /// Stable handle for citation.
-    pub evidence_id: String,
-    /// Which epistemic class this fact belongs to.
-    pub evidence_class: EvidenceClass,
-    /// What the fact is about -- a symbol path, a setting, a release.
-    pub subject: String,
-    /// The artifact this was read out of.
-    pub artifact_id: String,
-    /// Where the artifact came from.
-    #[schemars(extend("format" = "uri"))]
-    pub source_uri: String,
-    /// Position within the artifact. Specialized as a discriminated union per producer.
-    pub locator: JsonObject,
-    /// How the source's version relates to the requested one.
-    pub source_version_match: SourceVersionMatch,
-    /// Which producer emitted this.
-    pub producer: String,
-    /// The exact producer version, for reproducibility.
-    pub producer_version: String,
-    /// A compact supporting quote.
-    pub excerpt: String,
+crate::native_struct! {
+    /// Citation identity excludes the bounded presentation excerpt.
+    pub struct CitationIdentity {
+        fact_id: String => crate::native_union::Rule::NonEmpty,
+        subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
+        source: crate::evidence::relational::FactSource => crate::native_union::Rule::Text,
+    }
 }
 
+crate::native_struct! {
+    /// One supporting fact with its exact subject, typed coordinates and producer binding.
+    pub struct Evidence {
+        evidence_id: String => crate::native_union::Rule::NonEmpty,
+        subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
+        display_subject: String => crate::native_union::Rule::Text,
+        source: crate::evidence::relational::FactSource => crate::native_union::Rule::Text,
+        excerpt: String => crate::native_union::Rule::Text,
+    }
+}
+
+impl Evidence {
+    pub fn new(
+        fact_id: String,
+        subject: crate::evidence::relational::SubjectRef,
+        display_subject: String,
+        source: crate::evidence::relational::FactSource,
+        excerpt: String,
+    ) -> datafusion::common::Result<Self> {
+        let evidence_id = crate::native_key::Key::Citation.record(&CitationIdentity {
+            fact_id,
+            subject: subject.clone(),
+            source: source.clone(),
+        })?;
+        Ok(Self {
+            evidence_id,
+            subject,
+            display_subject,
+            source,
+            excerpt,
+        })
+    }
+}
+
+crate::native_struct! {
 /// A pointer to a bounded, readable artifact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ArtifactHandle {
     /// Exact content identity and this acquisition's provenance. Pass receipt.artifact_id
     /// to read_artifact; repeated bytes may have different acquisition receipts.
-    pub receipt: crate::evidence::Artifact,
+    receipt: crate::evidence::Artifact => crate::native_union::Rule::Text,
     /// Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.
-    pub uri: ArtifactUri,
+    uri: ArtifactUri => crate::native_union::Rule::Text,
     /// What the artifact contains, so a caller can decide whether to read it.
-    pub description: String,
+    description: String => crate::native_union::Rule::Text,
+}
+}
+
+#[cfg(test)]
+mod citation_tests {
+    use super::*;
+    use crate::{
+        evidence::relational::{FactSource, Locator, SubjectRef},
+        native_union::NativeStruct,
+    };
+
+    #[test]
+    fn typed_citation_identity_preserves_provenance_and_ignores_excerpt() {
+        let source = FactSource {
+            producer_binding_id: format!("producer_{}", "1".repeat(64)),
+            extractor: "rustdoc".into(),
+            extractor_version: "61".into(),
+            artifact_id: format!("art_{}", "2".repeat(64)),
+            source_uri: None,
+            source_version_match: SourceVersionMatch::Exact,
+            locator: Locator::RustdocItem {
+                item: 8,
+                reported_file: None,
+                reported_line: None,
+            },
+            evidence_class: EvidenceClass::CompilerDerived,
+        };
+        let subject = SubjectRef::Definition {
+            definition_id: format!("def_{}", "3".repeat(64)),
+        };
+        let make = |source, excerpt: &str| {
+            Evidence::new(
+                "observation".into(),
+                subject.clone(),
+                "λ::Type".into(),
+                source,
+                excerpt.into(),
+            )
+            .unwrap()
+        };
+        let first = make(source.clone(), "short");
+        assert_eq!(
+            first.evidence_id,
+            make(source.clone(), "longer quoted \\\"λ\\\"").evidence_id
+        );
+        let mut other = source.clone();
+        other.locator = Locator::RustdocItem {
+            item: 9,
+            reported_file: None,
+            reported_line: None,
+        };
+        assert_ne!(first.evidence_id, make(other, "short").evidence_id);
+        let batch = Evidence::batch(std::slice::from_ref(&first)).unwrap();
+        let rows = crate::evidence::arrow_model::cells::RowSet::batch(&batch).unwrap();
+        assert_eq!(Evidence::decode(rows.row(0)).unwrap(), first);
+        let wire = serde_json::to_value(&first).unwrap();
+        assert_eq!(wire["subject"]["kind"], "definition");
+        assert_eq!(wire["source"]["locator"]["kind"], "rustdoc_item");
+        assert_eq!(wire["source"]["source_version_match"], "exact");
+        assert!(wire["source"]["source_uri"].is_null());
+        assert_eq!(serde_json::from_value::<Evidence>(wire).unwrap(), first);
+    }
 }

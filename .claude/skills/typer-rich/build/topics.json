@@ -1,0 +1,339 @@
+{
+  "_comment": [
+    "Capability axes. The expensive mistake with these libraries is reaching for the wrong",
+    "construct, not misspelling the right one, so this is rung 0 of the ladder.",
+    "",
+    "`width-and-wrapping` and `colour-and-terminal-detection` are separate pages deliberately.",
+    "They fail differently -- one gives you a wrapped table, the other gives you no colour -- and",
+    "an agent arrives at them from different symptoms, so merging them would mean the reader has",
+    "to already know which half they are in."
+  ],
+  "topics": [
+    {
+      "slug": "building-a-command",
+      "title": "Building a command-line interface",
+      "covers": "Typer apps, commands, arguments, options, subcommands",
+      "mental_model": "Typer turns a function signature into a command line. The annotation is the parser, the default decides Argument or Option, and the docstring is the help. Everything else is a refinement of those three facts -- which is why reaching past the annotation for a custom type is usually the wrong move.",
+      "entry_points": [
+        "typer.Typer",
+        "typer.Argument",
+        "typer.Option",
+        "typer.Context"
+      ],
+      "guides": [
+        "typer/docs/tutorial/first-steps.md",
+        "typer/docs/tutorial/commands/index.md"
+      ],
+      "decision_rules": [
+        "Always create an explicit `typer.Typer()` and register commands on it; `typer.run` does not extend to a second command.",
+        "Always prefer the `Annotated` form: `name: Annotated[str, typer.Argument()]`. The default-value form still works and carries less.",
+        "Subcommands: `app.add_typer(sub, name=...)`. The name is not inferred from the callback -- pass it.",
+        "A parameter with a default is an Option; one without is an Argument."
+      ],
+      "anti_patterns": [
+        "Installing `typer-slim` to avoid Rich. It is a wrapper around `typer` and pulls Rich anyway.",
+        "Reaching for `click` to do something Typer cannot. Typer carries its own copy; the `click` you import is a different library."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "printing-and-styling",
+      "title": "Getting text onto the terminal",
+      "covers": "echo, print, Console, styles, colour constants",
+      "mental_model": "Two output systems live side by side. `typer.echo` writes the string you gave it. Anything on the Rich side goes through a Console, which parses markup and wraps to a width. Choosing between them is choosing whether your text is data or presentation.",
+      "entry_points": [
+        "typer.echo",
+        "typer.secho",
+        "rich.console.Console",
+        "rich.style.Style"
+      ],
+      "guides": [
+        "typer/docs/tutorial/printing.md",
+        "rich/docs/console.rst"
+      ],
+      "decision_rules": [
+        "Plain text you did not author: `typer.echo`, or `Console.print(..., markup=False)`.",
+        "Anything laid out -- a table, a panel, a tree: a Console.",
+        "One coloured line: `typer.secho`. A colour reused in several places: a `rich.style.Style`.",
+        "Untrusted text through a Console: `rich.markup.escape` first."
+      ],
+      "anti_patterns": [
+        "Assuming `rich.print` and `typer.echo` differ only in colour. One parses markup and wraps; the other does neither.",
+        "Passing a `rich.style.Style` object to `typer.secho`, which takes colour strings."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "markup-and-escaping",
+      "title": "Square brackets, and where text goes missing",
+      "covers": "rich markup, escape, rich_markup_mode, help strings",
+      "mental_model": "Square brackets are syntax on the Rich side. A bracketed word that parses as a style name is consumed and dropped with no error; an unbalanced close raises instead. Typer turns this on by default for every help string, which is where it bites hardest.",
+      "entry_points": [
+        "rich.markup.escape",
+        "rich.errors.MarkupError"
+      ],
+      "guides": [
+        "rich/docs/markup.rst",
+        "rich/questions/square_brackets.question.md"
+      ],
+      "decision_rules": [
+        "A bracketed word that parses as a style name is consumed and dropped, with no error.",
+        "An unbalanced closing tag raises `MarkupError` instead, so neither 'always raises' nor 'never raises' is safe.",
+        "`rich.markup.escape` for text you did not author; `markup=False` for a whole call.",
+        "In Typer help strings this is on by default: `Typer()` sets `rich_markup_mode='rich'`."
+      ],
+      "anti_patterns": [
+        "Writing `help='pass a [path]'` and expecting the word to appear. Probe M001.",
+        "Concluding from one working example that brackets are safe. `[FILE]` survives and `[path]` does not."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "layout-and-tables",
+      "title": "Tables, panels, columns and trees",
+      "covers": "Table, Panel, Columns, Tree, Rule, Align, box styles",
+      "mental_model": "A renderable describes structure; the Console decides size. Width flows downward from the Console, never upward from the Table -- so a table that wraps is almost always a Console question, not a Table one.",
+      "entry_points": [
+        "rich.table.Table",
+        "rich.panel.Panel",
+        "rich.tree.Tree",
+        "rich.box.Box"
+      ],
+      "guides": [
+        "rich/docs/tables.rst",
+        "rich/docs/panel.rst"
+      ],
+      "decision_rules": [
+        "Width belongs to the Console, not the renderable. A `Table.width` is a request and the Console still crops.",
+        "Output going into a file someone will diff: pin the width and use an ASCII box.",
+        "A custom renderable with a natural width: implement `__rich_measure__` as well."
+      ],
+      "anti_patterns": [
+        "Assuming the default box renders identically everywhere; it is substituted on legacy Windows consoles, which this index never executes."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "width-and-wrapping",
+      "title": "Why the output is the width it is",
+      "covers": "Console width, COLUMNS, TERM, cell width, soft_wrap",
+      "mental_model": "Width resolves in an order, and the order has a surprise in it: an explicit `width=` loses to `TERM=dumb`. Separately, how wide a *character* is depends on a Unicode table that an environment variable can switch. Both produce the same symptom and have different causes.",
+      "entry_points": [
+        "rich.console.Console",
+        "rich.cells.cell_len",
+        "rich.measure.Measurement"
+      ],
+      "guides": [
+        "rich/docs/console.rst"
+      ],
+      "decision_rules": [
+        "Resolution order: an explicit `width=`, then `COLUMNS`, then the terminal, then 80 -- with `TERM=dumb` able to beat the explicit width.",
+        "Cell width is not string length: `cell_len` counts columns, and CJK and emoji are two.",
+        "Deterministic output for a test: pass `width=` and write to a StringIO."
+      ],
+      "anti_patterns": [
+        "Using `len()` or `str.ljust` to align text containing emoji or CJK.",
+        "Trusting `CliRunner` to pin the width of Typer's Rich help. It pins the plain formatter only."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "colour-and-terminal-detection",
+      "title": "Why there is no colour",
+      "covers": "NO_COLOR, FORCE_COLOR, TTY_COMPATIBLE, color_system, force_terminal",
+      "mental_model": "Rich decides three things independently: is this a terminal, how many colours does it have, and has the user asked for none. Environment variables win over constructor arguments more often than you would expect, and an empty value means disabled rather than set.",
+      "entry_points": [
+        "rich.console.Console"
+      ],
+      "guides": [
+        "rich/docs/console.rst",
+        "rich/questions/ansi_escapes.question.md"
+      ],
+      "decision_rules": [
+        "`NO_COLOR=1` beats `force_terminal=True` and an explicit `color_system`; the bold survives, the colour does not.",
+        "An empty `NO_COLOR` or `FORCE_COLOR` means disabled, since 14.0.",
+        "`FORCE_COLOR` alone gives the `standard` system; `COLORTERM` is what raises it to truecolor.",
+        "`Console(_environ=...)` isolates most of this. Not `UNICODE_VERSION`."
+      ],
+      "anti_patterns": [
+        "Debugging missing colour by adding `force_terminal=True` without checking the environment first."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "input-and-prompts",
+      "title": "Asking the user something",
+      "covers": "prompt, confirm, Prompt, Confirm, password input",
+      "mental_model": "Both libraries can ask a question. The difference only matters when something else owns the screen: the Typer prompts write past the Console, so a live display overwrites them.",
+      "entry_points": [
+        "typer.prompt",
+        "typer.confirm",
+        "rich.prompt.Prompt"
+      ],
+      "guides": [
+        "typer/docs/tutorial/prompt.md",
+        "rich/docs/prompt.rst"
+      ],
+      "decision_rules": [
+        "Standalone prompt: either works.",
+        "Inside a `Live` or `Progress`: use the Rich prompt, because the Typer ones bypass the Console and get overwritten.",
+        "A prompt driven by a CLI parameter: `typer.Option(prompt=True)`, which handles the plumbing."
+      ],
+      "anti_patterns": [
+        "Mixing `typer.prompt` with an active `Progress` on the same stream."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "progress-and-liveness",
+      "title": "Progress bars and live displays",
+      "covers": "Progress, Live, Status, Spinner, track",
+      "mental_model": "A live display owns the terminal until it exits. Everything that writes to the same stream must go through its Console, which is why mixing the two libraries' progress surfaces goes wrong. In CI, disable it rather than working around it.",
+      "entry_points": [
+        "rich.progress.Progress",
+        "rich.live.Live",
+        "rich.status.Status"
+      ],
+      "guides": [
+        "rich/docs/progress.rst",
+        "rich/docs/live.rst"
+      ],
+      "decision_rules": [
+        "Prefer `rich.progress` over `typer.progressbar`: the latter is the vendored Click one and fights a live Console.",
+        "In CI or a non-terminal: `Progress(disable=True)`, which is a clean no-op (probe R003).",
+        "Nested displays are supported since 14.1; two Consoles are not."
+      ],
+      "anti_patterns": [
+        "Asserting on animated output in a test. This index refuses to capture it, and so should you -- see `catalogs/refused.md`."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "errors-and-tracebacks",
+      "title": "Failing usefully",
+      "covers": "Exit, Abort, TyperException, MarkupError, rich tracebacks",
+      "mental_model": "Typer exits by raising. `Exit` carries a code, `Abort` is always 1, and `TyperException` is the ancestor that catches the vendored Click exceptions -- only one of which is re-exported at top level. Typer also installs its own traceback handler, which is why `rich.traceback.install()` appears to do nothing.",
+      "entry_points": [
+        "typer.Exit",
+        "typer.Abort",
+        "typer.TyperException",
+        "rich.traceback.Traceback"
+      ],
+      "guides": [
+        "typer/docs/tutorial/terminating.md",
+        "rich/docs/traceback.rst"
+      ],
+      "decision_rules": [
+        "Choose the exit code: raise `typer.Exit(code)`. `Abort` is always 1.",
+        "Catch anything Typer raises: `except typer.TyperException`. Only `BadParameter` is re-exported at top level.",
+        "Locals in the traceback: `Typer(pretty_exceptions_show_locals=True)`. The default is False.",
+        "`rich.traceback.install()` does not apply to a Typer app -- Typer installs its own handler."
+      ],
+      "anti_patterns": [
+        "Raising `SystemExit` instead of `typer.Exit`: `CliRunner` handles the two differently."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "help-and-docs",
+      "title": "Shaping the help output",
+      "covers": "docstrings, rich_markup_mode, rich_help_panel, epilog, rich_utils",
+      "mental_model": "Help is rendered by `typer.rich_utils` through a Console it builds itself and never shares. That single fact explains why your Theme is ignored, why `TERMINAL_WIDTH` must be set before import, and why the supported levers are constructor arguments rather than configuration.",
+      "entry_points": [
+        "typer.Typer",
+        "typer.Option",
+        "typer.Argument"
+      ],
+      "guides": [
+        "typer/docs/tutorial/commands/help.md",
+        "typer/docs/tutorial/options/help.md"
+      ],
+      "decision_rules": [
+        "Grouping options under headings: `rich_help_panel=`.",
+        "Markdown in docstrings: `rich_markup_mode='markdown'`.",
+        "Restructuring the layout: a custom `TyperGroup` via `Typer(cls=...)`.",
+        "Turning markup off entirely so brackets survive: `rich_markup_mode=None`."
+      ],
+      "anti_patterns": [
+        "Rebinding `typer.rich_utils` constants and calling it configuration. It works and it is private -- see `seams/rich-utils-overrides.md`.",
+        "Passing a Theme to your own Console and expecting help to use it. `rich_utils` builds its own."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "custom-types-and-parsing",
+      "title": "Turning command-line strings into your types",
+      "covers": "annotations, ParamType, parser, callbacks, enums, paths",
+      "mental_model": "Your annotation becomes a `ParamType` -- in Typer's vendored copy of Click, which you cannot import. That path is closed deliberately, so the supported answers are a parser function or a callback, not a subclass.",
+      "entry_points": [
+        "typer.Option",
+        "typer.Argument",
+        "typer._click.types.ParamType"
+      ],
+      "guides": [
+        "typer/docs/tutorial/parameter-types/index.md",
+        "typer/docs/tutorial/click.md"
+      ],
+      "decision_rules": [
+        "A standard type: just annotate it. That is Typer's whole proposition.",
+        "Something custom: `typer.Option(parser=...)` or a callback, not a `ParamType` subclass.",
+        "Constraints: `typer.Option(min=, max=)` produces an `IntRange` or `FloatRange` for you.",
+        "To see what an annotation becomes, read the `declared` rows in `catalogs/vendored-click.md`."
+      ],
+      "anti_patterns": [
+        "`from typer._click.types import ParamType`. Private, and upstream closes this off explicitly.",
+        "Passing a `click.ParamType` from the installed click package."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "testing-and-capture",
+      "title": "Asserting on what your CLI printed",
+      "covers": "CliRunner, Console(record=True), export_text, StringIO",
+      "mental_model": "Capturing output is easy; capturing it *deterministically* is the actual problem. Width, colour and terminal detection all vary by machine, and `CliRunner` pins only one of the two help formatters.",
+      "entry_points": [
+        "typer.testing.CliRunner",
+        "rich.console.Console"
+      ],
+      "guides": [
+        "typer/docs/tutorial/testing.md"
+      ],
+      "decision_rules": [
+        "Testing a CLI: `CliRunner().invoke(app, args)`, and read `.output`, `.stdout` or `.stderr`.",
+        "Testing a library that owns its Console: `Console(record=True)` then `export_text()`.",
+        "Either way, pin the width. `CliRunner` pins the plain formatter's width only, not the Rich one.",
+        "Exports are deterministic: the same construction produces the same bytes across processes."
+      ],
+      "anti_patterns": [
+        "Using `capsys` alone: it catches the bytes but not the width, so the assertion becomes machine-dependent.",
+        "Expecting a recording Console to see what the vendored Click wrote."
+      ],
+      "checklist": []
+    },
+    {
+      "slug": "shipping-a-cli",
+      "title": "Packaging and completion",
+      "covers": "entry points, shell completion, app directories, launching",
+      "mental_model": "A Typer app is an ordinary console-script entry point. The parts that touch the user's machine -- completion, app directories -- are the parts this index cannot execute, so they are indexed from source and upstream's own docs.",
+      "entry_points": [
+        "typer.get_app_dir",
+        "typer.launch",
+        "typer.Typer"
+      ],
+      "guides": [
+        "typer/docs/tutorial/package.md",
+        "typer/docs/tutorial/options-autocompletion.md"
+      ],
+      "decision_rules": [
+        "Ship a console script entry point pointing at the `Typer` instance.",
+        "Config or state: `typer.get_app_dir(name)`, which is platform-correct.",
+        "Completion is installed by the user, not by your package."
+      ],
+      "anti_patterns": [
+        "Depending on `typer-cli`; it is deprecated and now installs `typer`.",
+        "Trusting this page's completion claims as executed behaviour -- shellingham inspects the parent process and is never run here."
+      ],
+      "checklist": []
+    }
+  ]
+}

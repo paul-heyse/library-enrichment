@@ -35,7 +35,7 @@ mod tests {
             runtime.clone(),
         );
         let first = Config::default();
-        let first_id = Key::OperationPolicy.value(&first).unwrap();
+        let first_id = Key::OperationPolicy.record(&first).unwrap();
         let before = policies.retain(&first).await.unwrap();
         assert_eq!(before, policies.retain(&first).await.unwrap());
         let mut changed = first;

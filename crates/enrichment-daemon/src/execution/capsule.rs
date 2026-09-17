@@ -196,7 +196,7 @@ pub async fn prepare_retained(
     })
     .map_err(|e| e.to_string())?;
     let manifest_reservation = super::budget::Reservation::acquire(
-        &service.paths.cache_root,
+        &runner.ownership,
         written.len() as u64,
         service
             .config
@@ -204,6 +204,7 @@ pub async fn prepare_retained(
             .capsule_budget_mib
             .saturating_mul(1024 * 1024),
     )
+    .await
     .map_err(|e| PreparationError::Policy(e.to_string()))?;
     // Persist the entire generation before the manifest can point at it. Once publication
     // starts, keep this generation even on a failed fsync; the pointer may already name it.
@@ -224,7 +225,10 @@ pub async fn prepare_retained(
     capsule.retain = true;
     enrichment_store::atomic::write_atomic(&record, &written).map_err(|e| e.to_string())?;
     capsule.storage.take();
-    drop(manifest_reservation);
+    manifest_reservation
+        .close()
+        .await
+        .map_err(|error| PreparationError::Policy(error.to_string()))?;
     Ok(capsule)
 }
 struct Staging {
@@ -250,7 +254,7 @@ pub async fn prepare(
     let capsules = service.paths.cache_root.join("capsules");
     let root = capsules.join(job);
     let storage = super::budget::Preparation::acquire(
-        &service.paths.cache_root,
+        &runner.ownership,
         &root,
         service.config.execution.scratch_bytes(),
         service
@@ -259,6 +263,7 @@ pub async fn prepare(
             .capsule_budget_mib
             .saturating_mul(1024 * 1024),
     )
+    .await
     .map_err(|error| PreparationError::Policy(error.to_string()))?;
     if root.exists() {
         return Err("capsule already exists; refusing to merge mutable state".into());

@@ -1,0 +1,151 @@
+{
+  "module": "ra_ap_project_model::workspace",
+  "crate": "ra_ap_project_model",
+  "api": "api/ra_ap_project_model.workspace.md",
+  "items": [
+    {
+      "path": "ra_ap_project_model::workspace::ProjectWorkspaceKind",
+      "name": "ProjectWorkspaceKind",
+      "kind": "enum",
+      "crate": "ra_ap_project_model",
+      "signature": "enum ProjectWorkspaceKind",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_project_model::ProjectWorkspaceKind"
+      ],
+      "variants": [
+        "Cargo",
+        "Json",
+        "DetachedFile"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_project_model::workspace::PackageRoot",
+      "name": "PackageRoot",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct PackageRoot",
+      "summary": "`PackageRoot` describes a package root folder. Which may be an external dependency, or a member of the current workspace.",
+      "doc": "api/ra_ap_project_model.workspace.md#packageroot",
+      "aliases": [
+        "ra_ap_project_model::PackageRoot"
+      ],
+      "fields": [
+        "is_local",
+        "include",
+        "exclude"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_project_model::workspace::ProjectWorkspace",
+      "name": "ProjectWorkspace",
+      "kind": "struct",
+      "crate": "ra_ap_project_model",
+      "signature": "struct ProjectWorkspace",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_project_model::ProjectWorkspace"
+      ],
+      "fields": [
+        "kind",
+        "sysroot",
+        "rustc_cfg",
+        "toolchain",
+        "target",
+        "cfg_overrides",
+        "extra_includes",
+        "set_test"
+      ],
+      "methods": [
+        {
+          "name": "buildfiles",
+          "signature": "fn buildfiles(&self) -> Vec<AbsPathBuf>"
+        },
+        {
+          "name": "eq_ignore_build_data",
+          "signature": "fn eq_ignore_build_data(&self, other: &Self) -> bool"
+        },
+        {
+          "name": "find_sysroot_proc_macro_srv",
+          "signature": "fn find_sysroot_proc_macro_srv(&self) -> Option<anyhow::Result<AbsPathBuf>>"
+        },
+        {
+          "name": "is_json",
+          "signature": "fn is_json(&self) -> bool",
+          "summary": "Returns `true` if the project workspace is [`Json`]."
+        },
+        {
+          "name": "load",
+          "signature": "fn load(manifest: ProjectManifest, config: &CargoConfig, progress: &dyn Fn(String) + Sync) -> anyhow::Result<ProjectWorkspace>"
+        },
+        {
+          "name": "load_detached_file",
+          "signature": "fn load_detached_file(detached_file: &ManifestPath, config: &CargoConfig) -> anyhow::Result<ProjectWorkspace>"
+        },
+        {
+          "name": "load_detached_files",
+          "signature": "fn load_detached_files(detached_files: Vec<ManifestPath>, config: &CargoConfig) -> Vec<anyhow::Result<ProjectWorkspace>>"
+        },
+        {
+          "name": "load_inline",
+          "signature": "fn load_inline(project_json: ProjectJson, config: &CargoConfig, progress: &dyn Fn(String) + Sync) -> ProjectWorkspace"
+        },
+        {
+          "name": "manifest",
+          "signature": "fn manifest(&self) -> Option<&ManifestPath>"
+        },
+        {
+          "name": "manifest_or_root",
+          "signature": "fn manifest_or_root(&self) -> &AbsPath"
+        },
+        {
+          "name": "n_packages",
+          "signature": "fn n_packages(&self) -> usize"
+        },
+        {
+          "name": "run_all_build_scripts",
+          "signature": "fn run_all_build_scripts(workspaces: &[ProjectWorkspace], config: &CargoConfig, progress: &dyn Fn(String), working_directory: &AbsPathBuf) -> Vec<anyhow::Result<WorkspaceBuildScripts>>",
+          "summary": "Runs the build scripts for the given [`ProjectWorkspace`]s. Depending on the invocation strategy this may run a single build process for all project workspaces."
+        },
+        {
+          "name": "run_build_scripts",
+          "signature": "fn run_build_scripts(&self, config: &CargoConfig, progress: &dyn Fn(String)) -> anyhow::Result<WorkspaceBuildScripts>",
+          "summary": "Runs the build scripts for this [`ProjectWorkspace`]."
+        },
+        {
+          "name": "set_build_scripts",
+          "signature": "fn set_build_scripts(&mut self, bs: WorkspaceBuildScripts)"
+        },
+        {
+          "name": "to_crate_graph",
+          "signature": "fn to_crate_graph(&self, load: FileLoader<'_>, extra_env: &FxHashMap<String, Option<String>>) -> (CrateGraphBuilder, ProcMacroPaths)"
+        },
+        {
+          "name": "to_roots",
+          "signature": "fn to_roots(&self) -> Vec<PackageRoot>",
+          "summary": "Returns the roots for the current `ProjectWorkspace` The return type contains the path and whether or not the root is a member of the current workspace"
+        },
+        {
+          "name": "workspace_root",
+          "signature": "fn workspace_root(&self) -> &AbsPath"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_project_model::workspace::FileLoader",
+      "name": "FileLoader",
+      "kind": "type_alias",
+      "crate": "ra_ap_project_model",
+      "signature": "type FileLoader<'a> = &'a mut dyn FnMut(&'b paths::AbsPath) -> Option<span::FileId>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_project_model::FileLoader"
+      ]
+    }
+  ]
+}

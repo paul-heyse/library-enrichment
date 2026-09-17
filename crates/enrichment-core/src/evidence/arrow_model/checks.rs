@@ -93,13 +93,6 @@ fn vocabularies() -> &'static BTreeMap<&'static str, Vec<String>> {
             ("relation-kind/1", enum_values::<RelationKind>()),
             ("relationship-target/1", enum_values::<TargetRef>()),
             ("python-origin/1", enum_values::<ObservationOrigin>()),
-            (
-                "release-metadata/1",
-                metadata::ReleaseDetails::KINDS
-                    .into_iter()
-                    .map(str::to_owned)
-                    .collect(),
-            ),
             ("artifact-kind/1", enum_values::<ArtifactKind>()),
             ("coverage-outcome/1", enum_values::<CoverageOutcome>()),
             ("evidence-kind/1", enum_values::<EvidenceKind>()),
@@ -111,13 +104,7 @@ fn vocabularies() -> &'static BTreeMap<&'static str, Vec<String>> {
 }
 
 /// The semantic rule is independent of nullable storage/read layouts.
-pub fn required(field: &Field) -> bool {
-    !field.is_nullable()
-        || field
-            .metadata()
-            .get("enrichment.null")
-            .is_some_and(|rule| rule == "forbidden")
-}
+pub use crate::native_schema::required;
 
 /// Bounded violation relations for root fields and each nested list. Arrow nullability,
 /// declared vocabularies, reference shape and digests have one native enforcement path.
@@ -129,7 +116,7 @@ pub fn violations(
 ) -> Result<Vec<(String, DataFrame)>> {
     let mut output = Vec::new();
     let mut predicates = Vec::new();
-    tagged_checks(schema.fields(), None, lit(true), &mut predicates);
+    tagged_checks(schema.fields(), None, lit(true), &mut predicates)?;
     relation_checks(&frame, schema, key, &mut predicates, &mut output)?;
     for field in schema.fields() {
         field_checks(
@@ -280,10 +267,27 @@ fn field_checks(
                 .and(regexp_like(value.clone(), lit("^[0-9a-f]{64}$"), None).not()),
         );
     }
+    if let Some(invalid) = declared_invalid(field, value.clone())? {
+        predicates.push(active.clone().and(invalid));
+    }
     match field.data_type() {
         DataType::Struct(fields) => {
-            tagged_checks(fields, Some(&value), active.clone(), predicates);
+            tagged_checks(fields, Some(&value), active.clone(), predicates)?;
             for child in fields {
+                if let Some(encoded) = child.metadata().get("enrichment.rule") {
+                    let rule: crate::native_union::Rule = serde_json::from_str(encoded)
+                        .map_err(|error| DataFusionError::Plan(error.to_string()))?;
+                    if let crate::native_union::Rule::RangeEnd { start, .. } = rule {
+                        predicates.push(
+                            active.clone().and(
+                                value
+                                    .clone()
+                                    .field(child.name())
+                                    .lt(value.clone().field(start)),
+                            ),
+                        );
+                    }
+                }
                 field_checks(
                     frame,
                     child,
@@ -323,107 +327,131 @@ fn field_checks(
     Ok(())
 }
 
+/// A declaration's intrinsic value predicate, shared by evidence and every native mutation.
+/// Requiredness/presence and container traversal are applied by the caller.
+pub(crate) fn declared_invalid(field: &Field, value: Expr) -> Result<Option<Expr>> {
+    if let Some(encoded) = field.metadata().get("enrichment.rule") {
+        use crate::native_union::{Rule, Unit};
+        let rule: Rule = serde_json::from_str(encoded)
+            .map_err(|error| DataFusionError::Plan(error.to_string()))?;
+        return Ok(match rule {
+            Rule::Text
+            | Rule::Flatten
+            | Rule::Section(_)
+            | Rule::ArtifactIdentity { .. }
+            | Rule::Documentation
+            | Rule::Sequence
+            | Rule::Set
+            | Rule::Map
+            | Rule::Json
+            | Rule::Coordinate(
+                Unit::ByteOffset
+                | Unit::Ordinal
+                | Unit::RustdocItem
+                | Unit::LineZeroBased
+                | Unit::Utf8Byte
+                | Unit::Utf16CodeUnit,
+            )
+            | Rule::RangeEnd {
+                unit:
+                    Unit::ByteOffset
+                    | Unit::Ordinal
+                    | Unit::RustdocItem
+                    | Unit::LineZeroBased
+                    | Unit::Utf8Byte
+                    | Unit::Utf16CodeUnit,
+                ..
+            } => None,
+            Rule::UnsignedRange { min, max } => {
+                let bound =
+                    |number| datafusion::logical_expr::cast(lit(number), field.data_type().clone());
+                Some(
+                    value
+                        .clone()
+                        .lt(bound(min))
+                        .or(value.clone().gt(bound(max))),
+                )
+            }
+            Rule::SequenceBounds { min, max } => {
+                let length = datafusion::functions_nested::expr_fn::array_length(value.clone());
+                Some(length.clone().lt(lit(min)).or(length.gt(lit(max))))
+            }
+            Rule::Sha256 => Some(regexp_like(value.clone(), lit("^[0-9a-f]{64}$"), None).not()),
+            Rule::Vocabulary(values) => Some(
+                value
+                    .clone()
+                    .in_list(values.iter().map(lit).collect(), true),
+            ),
+            Rule::NonEmpty | Rule::Reference(_) | Rule::ScopedReference { .. } => {
+                Some(empty(value.clone()).or(regexp_like(value.clone(), lit(r"[\p{Cc}]"), None)))
+            }
+            Rule::Coordinate(Unit::LineOneBased)
+            | Rule::RangeEnd {
+                unit: Unit::LineOneBased,
+                ..
+            } => Some(value.clone().eq(lit(0u32))),
+            Rule::MemberPath => Some(unsafe_member(value.clone())),
+            Rule::PythonDeclarationOrigin => Some(
+                value
+                    .clone()
+                    .in_list(vec![lit("source"), lit("stub")], true),
+            ),
+            Rule::DocumentUri => {
+                let parsed = crate::native_url::parts().call(vec![value.clone()]);
+                Some(
+                    parsed
+                        .clone()
+                        .is_null()
+                        .or(parsed
+                            .clone()
+                            .field("scheme")
+                            .in_list(vec![lit("http"), lit("https")], true))
+                        .or(parsed.clone().field("host").is_null())
+                        .or(parsed.field("has_credentials")),
+                )
+            }
+        });
+    }
+    Ok(None)
+}
+
 /// Variant ownership is expressed as native predicates over the actual struct fields.
 /// Physical optionality never makes a required variant member optional semantically.
-fn tagged_checks(
+pub(crate) fn tagged_checks(
     fields: &arrow::datatypes::Fields,
     value: Option<&Expr>,
     active: Expr,
     predicates: &mut Vec<Expr>,
-) {
+) -> Result<()> {
     let member = |name: &str| value.map_or_else(|| col(name), |value| value.clone().field(name));
-    let Some(kind) = fields.iter().find(|field| field.name() == "kind") else {
-        return;
+    let Some(kind) = fields
+        .iter()
+        .find(|field| field.metadata().contains_key("enrichment.union.tags"))
+    else {
+        return Ok(());
     };
-    let role = kind
-        .metadata()
-        .get("enrichment.role")
-        .map(String::as_str)
-        .unwrap_or("");
-    let variants: &[(&str, &[&str], &[&str])] = match role {
-        "vocabulary:subject/1" => &[
-            ("symbol", &["symbol_id"], &[]),
-            ("definition", &["definition_id"], &[]),
-            ("library", &["release_id"], &[]),
-            ("feature", &["feature"], &[]),
-            ("document", &["artifact_id", "heading"], &[]),
-            ("example", &["artifact_id", "path"], &[]),
-        ],
-        "vocabulary:relationship-target/1" => &[
-            ("symbol", &["symbol_id"], &[]),
-            ("definition", &["definition_id"], &[]),
-            ("external", &["path"], &["package"]),
-            ("unresolved", &["path"], &[]),
-        ],
-        "vocabulary:locator/1" => &[
-            ("artifact", &[], &[]),
-            ("lines", &["start", "end"], &["file"]),
-            ("bytes", &["start", "end"], &[]),
-            ("archive_member", &["file"], &[]),
-            ("heading", &["heading", "ordinal"], &[]),
-            ("producer_item", &["producer", "item"], &[]),
-            (
-                "rustdoc_item",
-                &["rustdoc_id"],
-                &["reported_file", "reported_line"],
-            ),
-            (
-                "python_declaration",
-                &["file", "declaration", "origin"],
-                &["start", "overload"],
-            ),
-            ("manifest_key", &["file", "table", "key"], &[]),
-            ("markdown_section", &["file", "heading", "start"], &[]),
-            ("source_start", &["file", "start"], &[]),
-            ("extension", &["format", "version", "extension"], &[]),
-            (
-                "sphinx_inventory",
-                &["uri", "role", "project", "inventory_version"],
-                &[],
-            ),
-            ("web_document", &["uri", "inventory_version"], &[]),
-        ],
-        "vocabulary:execution-payload/1" => &[
-            ("semantic_query", &["semantic_query"], &[]),
-            ("runtime_object", &["runtime_object"], &[]),
-            ("usage_probe", &["usage_probe"], &[]),
-        ],
-        "vocabulary:execution-target/1" => &[
-            ("artifact", &["artifact_id", "range"], &[]),
-            ("external", &["scope", "path", "limitation"], &[]),
-            ("unresolved", &["limitation"], &[]),
-        ],
-        "vocabulary:release-metadata/1" => &[
-            ("rust_docs", &["rust_docs"], &[]),
-            ("python_distribution", &["python_distribution"], &[]),
-        ],
-        _ => return,
-    };
-    coordinate_checks(role, &member, &active, predicates);
-    for (tag, required, optional) in variants {
-        for field in fields.iter().filter(|field| field.name() != "kind") {
-            if !variants.iter().any(|(_, required, optional)| {
-                required.contains(&field.name().as_str())
-                    || optional.contains(&field.name().as_str())
-            }) {
-                continue;
-            }
-            let field_value = member(field.name());
-            let invalid = if required.contains(&field.name().as_str()) {
-                field_value.is_null()
-            } else if optional.contains(&field.name().as_str()) {
-                continue;
-            } else {
-                field_value.is_not_null()
-            };
+    if let Some(tags) = kind.metadata().get("enrichment.union.tags") {
+        let tags: Vec<String> =
+            serde_json::from_str(tags).map_err(|error| DataFusionError::Plan(error.to_string()))?;
+        predicates.push(
+            active
+                .clone()
+                .and(member(kind.name()).in_list(tags.iter().map(lit).collect(), true)),
+        );
+        for payload in fields.iter().filter(|field| field.name() != kind.name()) {
+            let selected = member(kind.name()).eq(lit(payload.name()));
             predicates.push(
-                active
-                    .clone()
-                    .and(member("kind").eq(lit(*tag)))
-                    .and(invalid),
+                active.clone().and(
+                    selected
+                        .clone()
+                        .and(member(payload.name()).is_null())
+                        .or(selected.not().and(member(payload.name()).is_not_null())),
+                ),
             );
         }
+        return Ok(());
     }
+    Ok(())
 }
 
 fn safe_member(value: Expr) -> Expr {
@@ -436,103 +464,4 @@ fn unsafe_member(value: Expr) -> Expr {
 }
 fn empty(value: Expr) -> Expr {
     value.eq(lit(""))
-}
-fn coordinate_checks(
-    role: &str,
-    member: &impl Fn(&str) -> Expr,
-    active: &Expr,
-    predicates: &mut Vec<Expr>,
-) {
-    let mut check = |tags: &[&str], invalid: Expr| {
-        predicates.push(
-            active
-                .clone()
-                .and(member("kind").in_list(tags.iter().map(|s| lit(*s)).collect(), false))
-                .and(invalid),
-        );
-    };
-    match role {
-        "vocabulary:subject/1" => {
-            check(
-                &["feature"],
-                empty(member("feature")).or(regexp_like(member("feature"), lit(r"[\p{Cc}]"), None)),
-            );
-            check(&["example"], unsafe_member(member("path")));
-        }
-        "vocabulary:relationship-target/1" => {
-            check(&["external", "unresolved"], empty(member("path")))
-        }
-        "vocabulary:locator/1" => {
-            check(
-                &["lines"],
-                member("start")
-                    .eq(lit(0u64))
-                    .or(member("end").lt(member("start"))),
-            );
-            check(&["bytes"], member("end").lt(member("start")));
-            check(
-                &[
-                    "lines",
-                    "archive_member",
-                    "python_declaration",
-                    "manifest_key",
-                    "markdown_section",
-                    "source_start",
-                ],
-                unsafe_member(member("file")),
-            );
-            check(
-                &["rustdoc_item"],
-                member("reported_line")
-                    .eq(lit(0u64))
-                    .or(empty(member("reported_file")))
-                    .or(regexp_like(member("reported_file"), lit(r"[\p{Cc}]"), None)),
-            );
-            check(
-                &["python_declaration"],
-                empty(member("declaration"))
-                    .or(member("start").eq(lit(0u64)))
-                    .or(member("origin").in_list(vec![lit("source"), lit("stub")], true)),
-            );
-            check(
-                &["manifest_key"],
-                empty(member("table")).or(empty(member("key"))),
-            );
-            check(
-                &["markdown_section", "source_start"],
-                member("start").eq(lit(0u64)),
-            );
-            check(
-                &["producer_item"],
-                empty(member("producer")).or(empty(member("item"))),
-            );
-            check(
-                &["extension"],
-                empty(member("format")).or(empty(member("version"))),
-            );
-            check(
-                &["sphinx_inventory"],
-                empty(member("role")).or(empty(member("project"))),
-            );
-            for (tags, field) in [
-                (
-                    &[
-                        "lines",
-                        "python_declaration",
-                        "markdown_section",
-                        "source_start",
-                    ][..],
-                    "start",
-                ),
-                (&["lines"][..], "end"),
-                (&["heading"][..], "ordinal"),
-                (&["rustdoc_item"][..], "rustdoc_id"),
-                (&["rustdoc_item"][..], "reported_line"),
-                (&["python_declaration"][..], "overload"),
-            ] {
-                check(tags, member(field).gt(lit(u64::from(u32::MAX))));
-            }
-        }
-        _ => {}
-    }
 }

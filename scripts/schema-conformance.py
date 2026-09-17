@@ -114,7 +114,7 @@ def main() -> int:
         check(
             "evidence_class enum",
             enums["evidence_class"],
-            gd.get("Evidence", {}).get("properties", {}).get("evidence_class", {}).get("enum"),
+            gd.get("FactSource", {}).get("properties", {}).get("evidence_class", {}).get("enum"),
         )
         check(
             "source_version_match enum",

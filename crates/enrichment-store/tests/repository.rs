@@ -65,7 +65,10 @@ fn repository(root: &std::path::Path, store_blob: bool) -> EvidenceRepository {
                     ArtifactKind::RustdocJson,
                     "application/json",
                     "https://docs.rs/enr-fixture/0.1.0.json",
-                    "2026-09-14T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-14T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .expect("artifact");
@@ -131,7 +134,10 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
                 ArtifactKind::Other,
                 "application/json",
                 "service:comparison-value/2",
-                "2026-09-15T00:00:00Z",
+                enrichment_core::native_time::AcquisitionTime::try_from(
+                    "2026-09-15T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
             )
         })
         .unwrap()
@@ -170,13 +176,12 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
     let fence = claims::publication_fence(
         &repository,
         &publication.job_id,
-        enrichment_store::control_jobs::Arguments {
-            compare: Some(enrichment_core::request::CompareRequest {
+        enrichment_store::control_jobs::Arguments::Compare {
+            request: enrichment_core::request::CompareRequest {
                 before_snapshot_id: Some(before.snapshot_id.to_string()),
                 after_snapshot_id: Some(after.snapshot_id.to_string()),
                 ..Default::default()
-            }),
-            ..Default::default()
+            },
         },
     )
     .await;
@@ -257,7 +262,10 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
     let (_, fields) = offline
         .read_result_sections(&delivery, &["data.changes"], 1024 * 1024)
         .unwrap();
-    assert_eq!(fields["data.changes"], result.data["changes"]);
+    assert_eq!(
+        fields["data.changes"],
+        serde_json::to_value(&result.data).unwrap()["changes"]
+    );
     std::fs::remove_file(offline.path_for(&dependency.sha256)).unwrap();
     assert!(
         native
@@ -299,6 +307,20 @@ async fn native_navigation_and_text_projection_preserve_retained_identities() {
         .await
         .unwrap()
         .remove(0);
+    assert_eq!(owner.parent_path.as_deref(), Some("enr_fixture::inner"));
+    let ancillary = reader.ancillary_facts(&owner.symbol_id).await.unwrap();
+    assert_eq!(ancillary.cfg_alternatives, 1);
+    assert_eq!(ancillary.cfg_hints, Some(Vec::new()));
+    assert_eq!(ancillary.locator_alternatives, 1);
+    assert!(ancillary.locator.is_some());
+    let header = serde_json::to_value(&owner).unwrap();
+    assert!(
+        !header
+            .as_object()
+            .unwrap()
+            .contains_key("producer_local_id")
+    );
+    assert!(!header.as_object().unwrap().contains_key("signature"));
     let expected: BTreeSet<_> = facts
         .symbols
         .iter()
@@ -372,8 +394,8 @@ async fn native_navigation_and_text_projection_preserve_retained_identities() {
         assert_eq!(full.fragment_id, preview.fragment_id);
         assert_eq!(preview.text, full.text.chars().take(4).collect::<String>());
         assert_eq!(*preview_complete, full.text.chars().count() <= 4);
-        assert_eq!(preview.locator, full.locator);
-        assert_eq!(preview.artifact_id, full.artifact_id);
+        assert_eq!(preview.source.locator, full.source.locator);
+        assert_eq!(preview.source.artifact_id, full.source.artifact_id);
     }
 }
 
@@ -1041,7 +1063,7 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
     use enrichment_core::{
         compare::Scope,
         evidence::{
-            RelationKind, Symbol,
+            RelationKind, SymbolHeader,
             relational::{PublicBinding, RelationshipObservation, SubjectRef, TargetRef},
         },
     };
@@ -1058,7 +1080,7 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
         .expect("definition")
         .clone();
     definition.qualifier = Some("qualified-alternative".into());
-    definition.definition_id = Symbol::definition_id_for(
+    definition.definition_id = SymbolHeader::definition_id_for(
         &definition.defined_in_package,
         &definition.definition_path,
         definition.kind,
@@ -1306,7 +1328,10 @@ async fn operational_logs_survive_export_without_changing_snapshot_identity() {
                 ArtifactKind::Other,
                 "application/json",
                 "producer-attempt://second/log",
-                "2026-09-14T01:00:00Z",
+                enrichment_core::native_time::AcquisitionTime::try_from(
+                    "2026-09-14T01:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
             )
         })
         .unwrap()
@@ -1390,8 +1415,14 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
     again
         .attempt_artifacts
         .insert(again.producer_runs[0].attempt_id.clone(), acquisitions);
-    again.producer_runs[0].started_at = "2026-09-15T00:00:00Z".into();
-    again.producer_runs[0].finished_at = "2026-09-15T00:00:01Z".into();
+    again.producer_runs[0].started_at = enrichment_core::native_time::ObservationTime::try_from(
+        "2026-09-15T00:00:00.000000Z".to_owned(),
+    )
+    .unwrap();
+    again.producer_runs[0].finished_at = enrichment_core::native_time::ObservationTime::try_from(
+        "2026-09-15T00:00:01.000000Z".to_owned(),
+    )
+    .unwrap();
     let second = native_ingest::publish_rows(
         &repository,
         metadata,
@@ -1573,5 +1604,8 @@ async fn overview_pages_conflicting_feature_definitions_without_overwriting_sour
             .collect::<std::collections::BTreeSet<_>>(),
         ["a", "b"].into()
     );
-    assert!(rows.iter().all(|row| row.artifact_id == source.artifact_id));
+    assert!(
+        rows.iter()
+            .all(|row| row.source.artifact_id == source.artifact_id)
+    );
 }

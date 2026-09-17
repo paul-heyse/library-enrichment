@@ -1,0 +1,152 @@
+{
+  "module": "grep_printer::json",
+  "crate": "grep-printer",
+  "api": "api/grep_printer.json.md",
+  "items": [
+    {
+      "path": "grep_printer::json::JSON",
+      "name": "JSON",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct JSON<W>",
+      "summary": "The JSON printer, which emits results in a JSON lines format.",
+      "doc": "api/grep_printer.json.md#json",
+      "aliases": [
+        "grep_printer::JSON"
+      ],
+      "methods": [
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Return a mutable reference to the underlying writer."
+        },
+        {
+          "name": "has_written",
+          "signature": "fn has_written(&self) -> bool",
+          "summary": "Returns true if and only if this printer has written at least one byte to the underlying writer during any of the previous searches."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Consume this printer and return back ownership of the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(wtr: W) -> JSON<W>",
+          "summary": "Return a JSON lines printer with a default configuration that writes matches to the given writer."
+        },
+        {
+          "name": "sink",
+          "signature": "fn sink<'s, M: Matcher>(&'s mut self, matcher: M) -> JSONSink<'static, 's, M, W>",
+          "summary": "Return an implementation of `Sink` for the JSON printer."
+        },
+        {
+          "name": "sink_with_path",
+          "signature": "fn sink_with_path<'p, 's, M, P>(&'s mut self, matcher: M, path: &'p P) -> JSONSink<'p, 's, M, W> where M: Matcher, P: ?Sized + AsRef<Path>",
+          "summary": "Return an implementation of `Sink` associated with a file path."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::json::JSONBuilder",
+      "name": "JSONBuilder",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct JSONBuilder",
+      "summary": "A builder for a JSON lines printer.",
+      "doc": "api/grep_printer.json.md#jsonbuilder",
+      "aliases": [
+        "grep_printer::JSONBuilder"
+      ],
+      "methods": [
+        {
+          "name": "always_begin_end",
+          "signature": "fn always_begin_end(&mut self, yes: bool) -> &mut JSONBuilder",
+          "summary": "When enabled, the `begin` and `end` messages are always emitted, even when no match is found."
+        },
+        {
+          "name": "build",
+          "signature": "fn build<W: io::Write>(&self, wtr: W) -> JSON<W>",
+          "summary": "Create a JSON printer that writes results to the given writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> JSONBuilder",
+          "summary": "Return a new builder for configuring the JSON printer."
+        },
+        {
+          "name": "pretty",
+          "signature": "fn pretty(&mut self, yes: bool) -> &mut JSONBuilder",
+          "summary": "Print JSON in a pretty printed format."
+        },
+        {
+          "name": "replacement",
+          "signature": "fn replacement(&mut self, replacement: Option<Vec<u8>>) -> &mut JSONBuilder",
+          "summary": "Set the bytes that will be used to replace each occurrence of a match found."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::json::JSONSink",
+      "name": "JSONSink",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct JSONSink<'p, 's, M: Matcher, W>",
+      "summary": "An implementation of `Sink` associated with a matcher and an optional file path for the JSON printer.",
+      "doc": "api/grep_printer.json.md#jsonsink",
+      "aliases": [
+        "grep_printer::JSONSink"
+      ],
+      "implements": [
+        "grep_searcher::sink::Sink"
+      ],
+      "methods": [
+        {
+          "name": "begin",
+          "signature": "fn begin(&mut self, _searcher: &Searcher) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "binary_byte_offset",
+          "signature": "fn binary_byte_offset(&self) -> Option<u64>",
+          "summary": "If binary data was found in the previous search, this returns the offset at which the binary data was first detected."
+        },
+        {
+          "name": "binary_data",
+          "signature": "fn binary_data(&mut self, searcher: &Searcher, binary_byte_offset: u64) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "context",
+          "signature": "fn context(&mut self, searcher: &Searcher, ctx: &SinkContext<'_>) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self, _searcher: &Searcher, finish: &SinkFinish) -> Result<(), io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "has_match",
+          "signature": "fn has_match(&self) -> bool",
+          "summary": "Returns true if and only if this printer received a match in the previous search."
+        },
+        {
+          "name": "match_count",
+          "signature": "fn match_count(&self) -> u64",
+          "summary": "Return the total number of matches reported to this sink."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched(&mut self, searcher: &Searcher, mat: &SinkMatch<'_>) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "stats",
+          "signature": "fn stats(&self) -> &Stats",
+          "summary": "Return a reference to the stats produced by the printer for all searches executed on this sink."
+        }
+      ]
+    }
+  ]
+}

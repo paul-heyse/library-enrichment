@@ -1,0 +1,157 @@
+{
+  "module": "ast_grep_dynamic",
+  "crate": "ast-grep-dynamic",
+  "api": "api/ast_grep_dynamic.md",
+  "items": [
+    {
+      "path": "ast_grep_dynamic::DynamicLangError",
+      "name": "DynamicLangError",
+      "kind": "enum",
+      "crate": "ast-grep-dynamic",
+      "signature": "enum DynamicLangError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "NotConfigured",
+        "OpenLib",
+        "ReadSymbol",
+        "IncompatibleVersion",
+        "GetLibPath"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: std::io::Error) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_dynamic::DynamicLang",
+      "name": "DynamicLang",
+      "kind": "struct",
+      "crate": "ast-grep-dynamic",
+      "signature": "struct DynamicLang",
+      "summary": "Represents a tree-sitter language loaded as dynamic lib.",
+      "doc": "api/ast_grep_dynamic.md#dynamiclang",
+      "implements": [
+        "ast_grep_core::language::Language",
+        "ast_grep_core::tree_sitter::LanguageExt",
+        "core::str::traits::FromStr",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "all_langs",
+          "signature": "fn all_langs() -> Vec<Self>"
+        },
+        {
+          "name": "build_pattern",
+          "signature": "fn build_pattern(&self, builder: &PatternBuilder<'_>) -> Result<Pattern, PatternError>",
+          "via_trait": "ast_grep_core::language::Language"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "expando_char",
+          "signature": "fn expando_char(&self) -> char",
+          "via_trait": "ast_grep_core::language::Language",
+          "summary": "Some language does not accept $ as the leading char for identifiers. We need to change $ to other char at run-time to make parser happy, thus the name expando. By default this is the same as meta_var char so replacement is done at runtime."
+        },
+        {
+          "name": "field_to_id",
+          "signature": "fn field_to_id(&self, field: &str) -> Option<u16>",
+          "via_trait": "ast_grep_core::language::Language"
+        },
+        {
+          "name": "file_types",
+          "signature": "fn file_types(&self) -> Types"
+        },
+        {
+          "name": "from_path",
+          "signature": "fn from_path<P: AsRef<Path>>(path: P) -> Option<Self>",
+          "via_trait": "ast_grep_core::language::Language"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(name: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "get_ts_language",
+          "signature": "fn get_ts_language(&self) -> TSLanguage",
+          "via_trait": "ast_grep_core::tree_sitter::LanguageExt",
+          "summary": "tree sitter language to parse the source"
+        },
+        {
+          "name": "kind_to_id",
+          "signature": "fn kind_to_id(&self, kind: &str) -> u16",
+          "via_trait": "ast_grep_core::language::Language"
+        },
+        {
+          "name": "meta_var_char",
+          "signature": "fn meta_var_char(&self) -> char",
+          "via_trait": "ast_grep_core::language::Language",
+          "summary": "Configure meta variable special character By default $ is the metavar char, but in PHP it can be #"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str"
+        },
+        {
+          "name": "pre_process_pattern",
+          "signature": "fn pre_process_pattern<'q>(&self, query: &'q str) -> Cow<'q, str>",
+          "via_trait": "ast_grep_core::language::Language",
+          "summary": "normalize pattern code before matching e.g. remove expression_statement, or prefer parsing {} to object over block"
+        },
+        {
+          "name": "register",
+          "signature": "fn register(regs: Vec<Registration>) -> Result<(), DynamicLangError>",
+          "summary": "The register function should be called exactly once before use."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_dynamic::Registration",
+      "name": "Registration",
+      "kind": "struct",
+      "crate": "ast-grep-dynamic",
+      "signature": "struct Registration",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "lang_name",
+        "lib_path",
+        "symbol",
+        "meta_var_char",
+        "expando_char",
+        "extensions"
+      ],
+      "methods": []
+    }
+  ]
+}

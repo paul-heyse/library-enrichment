@@ -1504,3 +1504,46 @@ layout; typed executor input and admission require actual `Entry`/`OutputKind` v
 or semantic-presence rule was relaxed. Native map ordering/identity and Delta-retained process
 admission subsequently passed (`native-process-identity-tests.log`, `native-process-route-tests.log`).
 Primary source: [DataFusion 55.1 map_entries implementation](https://docs.rs/datafusion-functions-nested/55.1.0/src/datafusion_functions_nested/map_entries.rs.html).
+
+## Plan 17 FP07 rustdoc format 61 — verified 2026-09-16
+
+Read-only upstream verification using the `verify-upstream` and `rust-code-model` skills, live
+registry/GitHub metadata, and exact cached source. No dependency, product code or fixture was changed;
+no build or new parser/renderer probe ran. These rows are **Interface-checked**. The existing
+0.59 parser's advertised multi-format fidelity is **contradicted**; a renderer patch and full
+field-preservation qualification remain required before claiming support.
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict and consequence |
+|---|---|---|---|---|
+| The latest published renderer still requires the format-59 model | [public-api registry metadata](https://crates.io/api/v1/crates/public-api), [0.52.2 dependency metadata](https://crates.io/api/v1/crates/public-api/0.52.2/dependencies) | 2026-09-16 | `"max_version":"0.52.2"`; `"req":"^0.59.0"` | Verified: 0.52.2 is non-yanked, published 2026-09-12. Its dependency cannot select 0.61.0. There is no matching upgrade in the latest published pair. |
+| Upstream main has no newer renderer fix to select | [exact main commit](https://api.github.com/repos/cargo-public-api/cargo-public-api/commits/56b483933ceb741978a9f59228e48cae2013e74d), [pinned manifest](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/Cargo.toml) | 2026-09-16 | `version = "0.52.2"`; `version = "0.59.0"` | Verified: live main resolved to `56b483933ceb741978a9f59228e48cae2013e74d`, also the packaged 0.52.2 source commit. A branch switch alone does not fix the mismatch. |
+| An exact published format-61 fact model exists | [rustdoc-types registry metadata](https://crates.io/api/v1/crates/rustdoc-types), [0.61.0 source commit](https://github.com/rust-lang/rustdoc-types/blob/2e63bdc44b94e86fe12d6e0034d1ed9c2ac6e9dc/src/lib.rs#L117) | 2026-09-16 | `"max_version":"0.61.0"`; `pub const FORMAT_VERSION: u32 = 61;` | Verified: 0.61.0 is non-yanked, published 2026-07-29. It is the exact target model; this verification does not change Cargo. |
+| Format 61 changes stable-level encoding and format 60 adds default-body metadata | [0.59 source](https://github.com/rust-lang/rustdoc-types/blob/5680fd81c93996938ce2e8e7034b09fee491f4a4/src/lib.rs#L348), [0.61 source](https://github.com/rust-lang/rustdoc-types/blob/2e63bdc44b94e86fe12d6e0034d1ed9c2ac6e9dc/src/lib.rs#L347) | 2026-09-16 | `#[serde(flatten)]`; `#[serde(tag = "level", rename_all = "snake_case")]`; `pub level: StabilityLevel` | Verified source diff: stable records change from a flattened level/since pair to an externally tagged stable value inside level. The unstable unit variant retains its string form. Successful unstable-only fixtures do not qualify stable metadata. |
+| Default-body instability is separate data on three item kinds | [format-61 function/default metadata](https://github.com/rust-lang/rustdoc-types/blob/2e63bdc44b94e86fe12d6e0034d1ed9c2ac6e9dc/src/lib.rs#L372), [associated item fields](https://github.com/rust-lang/rustdoc-types/blob/2e63bdc44b94e86fe12d6e0034d1ed9c2ac6e9dc/src/lib.rs#L895) | 2026-09-16 | `default_unstable: Option<Box<ProvidedDefaultUnstable>>` | Verified: Function, AssocConst and AssocType carry the new metadata; Item carries separate ordinary and const stability. Preserve these in typed facts, including default presence, without reconstructing them from attrs or signature text. |
+| The retained renderer has one directly affected exhaustive pattern | [public-api render.rs](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/render.rs#L158) | 2026-09-16 | `ItemEnum::AssocType {`; `generics,`; `bounds,`; `type_,` | Source-checked minimum patch: align the renderer dependency to exact 0.61.0 and account for default_unstable in this pattern. Function uses borrowed members and AssocConst already uses `..`. This is not a compile receipt; qualify the patched source and record its own identity. |
+| The renderer reparses the payload and materializes its corpus | [public-api Builder](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/lib.rs#L198), [deserializer](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/lib.rs#L310) | 2026-09-16 | `std::fs::read_to_string(self.rustdoc_json)?`; `deserializer.disable_recursion_limit()` | Verified: updating only the service's first parser leaves the renderer's old parser active. The minimum patch preserves two decode passes and an externally bounded materialization cost; it does not add a compiler invocation. |
+| Hosted format must be read from the actual artifact; available retained formats can differ | [docs.rs rustdoc JSON documentation](https://docs.rs/about/rustdoc-json) | 2026-09-16 | “we also keep old format versions around” | Verified current documentation: rebuilds can retain older format downloads. Do not infer format from the package version or assert a universal one-format URL policy. Qualify current external source-format routes separately from the removed historical internal epochs. |
+
+The current `tests/fixtures/rustdoc/enr-fixture-*-*.json` files each contain one ordinary stability
+record and eight const-stability records, all observed as unstable; none has non-null default_unstable.
+The existing format-v57/v60/v61 parse test therefore does not cover the breaking stable shape or
+the newly added default fields. The current `ItemFact` omits all three stability categories.
+
+Required focused oracle: capture a small real `nightly-2026-09-13` staged-API fixture containing
+ordinary stable/unstable and const stable/unstable items, plus non-null unstable defaults on a trait
+function, associated constant and associated type. Check independently expected typed facts through
+the worker and native normalization, and retain distinct declaration/import stability where used.
+Include absent metadata/defaults, multiple reexport occurrences, malformed format-61 stability,
+and an unsupported format that refuses before full parsing. Verify renderer output against a small
+independent expected signature set. Remove the parse-success-only multi-format claim; do not relabel
+or strip format-61 input to make the old renderer accept it. Final renderer compilation, runtime
+resource bounds and end-to-end field preservation remain unqualified by this research.
+
+## Native provider composition — verified 2026-09-16
+
+DataFusion catalog 55.1.0 and delta-rs core 58f07cd6 require the narrowly vendored seams in
+[ADR-0049](../adr/0049-bounded-native-provider-composition.md). Kernel stays at 8ba063f8.
+The independent [source verification](../design_review/reviews/evidence/combined-schema-runtime-plan-2026-09-16/provider-composition.md)
+records precise source locations, quotes and primary URLs: listing uses `try_collect().await?`;
+Delta factory uses `table.table_provider()` without an owned opener. Those interfaces were
+verified; complete composed-route behavior remains subject to the named tests, not inferred.

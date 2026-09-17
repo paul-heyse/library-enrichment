@@ -1,106 +1,22 @@
 //! Native command, transition, claim and client-interest contracts.
 //! Requests are finite typed structs at the Arrow boundary; control state contains no job JSON.
-use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
+use arrow::datatypes::{Schema, SchemaRef};
+use enrichment_core::native_union::NativeStruct;
 use std::sync::Arc;
 
 /// No replay starts a producer using a different compiled operation definition.
-pub const OPERATION_REVISION: &str = concat!("native-command/3/", env!("ENR_NATIVE_SOURCE_DIGEST"));
-fn field(name: &str, kind: DataType, nullable: bool) -> Field {
-    Field::new(name, kind, nullable)
-}
-fn text(name: &str) -> Field {
-    field(name, DataType::Utf8, false)
-}
-fn timestamp(name: &str, nullable: bool) -> Field {
-    field(
-        name,
-        DataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, Some("UTC".into())),
-        nullable,
-    )
-}
-fn number(name: &str, nullable: bool) -> Field {
-    field(name, DataType::UInt64, nullable)
-}
-fn list(kind: DataType) -> DataType {
-    DataType::List(Arc::new(field("item", kind, false)))
-}
-fn structure(fields: Vec<Field>) -> DataType {
-    DataType::Struct(fields.into())
-}
+pub const OPERATION_REVISION: &str = concat!("native-command/4/", env!("ENR_NATIVE_SOURCE_DIGEST"));
 pub(crate) fn commands() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        text("job_id"),
-        text("job_key"),
-        timestamp("submitted_at", false),
-        text("operation_revision"),
-        text("policy_id"),
-        field(
-            "policy_binding",
-            crate::immutable_definitions::binding_type(),
-            false,
-        ),
-        field(
-            "arguments",
-            enrichment_core::operation::arguments_type(),
-            false,
-        ),
-    ]))
+    Arc::new(Schema::new(Command::fields()))
 }
 pub(crate) fn transitions() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        text("job_id"),
-        number("sequence", false),
-        number("predecessor", true),
-        text("state"),
-        text("stage"),
-        timestamp("updated_at", false),
-        field(
-            "result",
-            enrichment_core::evidence::arrow_model::acquisitions::data_type(),
-            true,
-        ),
-        field(
-            "resolution",
-            structure(vec![
-                text("release_id"),
-                text("environment_id"),
-                text("context_id"),
-                text("attempt_id"),
-                field("input_artifact_ids", list(DataType::Utf8), false),
-                text("result_artifact_id"),
-            ]),
-            true,
-        ),
-    ]))
+    Arc::new(Schema::new(Transition::fields()))
 }
 pub(crate) fn claims() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        text("job_id"),
-        text("owner"),
-        text("attempt_id"),
-        number("fence", false),
-        number("sequence", false),
-        timestamp("lease_expires_at", false),
-        text("cleanup_state"),
-        text("job_key"),
-        text("policy_id"),
-        text("grant_id"),
-        text("profile"),
-        text("ecosystem"),
-        field("environment_id", DataType::Utf8, true),
-        field("snapshot_id", DataType::Utf8, true),
-        field("image_id", DataType::Utf8, true),
-        field("cleanup_observer", DataType::Utf8, true),
-        timestamp("cleanup_confirmed_at", true),
-    ]))
+    Arc::new(Schema::new(Claim::fields()))
 }
 pub(crate) fn interests() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        text("interest_id"),
-        text("job_id"),
-        number("sequence", false),
-        field("attached", DataType::Boolean, false),
-    ]))
+    Arc::new(Schema::new(Interest::fields()))
 }
 
 /// Encode bounded protocol values directly into the declared Arrow schema. Arrow's serializer
@@ -127,67 +43,9 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{col, lit},
 };
-use serde::{Deserialize, Serialize};
 
 pub use enrichment_core::operation::Arguments;
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Command {
-    pub job_id: String,
-    pub job_key: String,
-    pub submitted_at: String,
-    pub operation_revision: String,
-    pub policy_id: String,
-    pub policy_binding: crate::immutable_definitions::Binding,
-    pub arguments: Arguments,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Resolution {
-    pub release_id: String,
-    pub environment_id: String,
-    pub context_id: String,
-    pub attempt_id: String,
-    pub input_artifact_ids: Vec<String>,
-    pub result_artifact_id: String,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Transition {
-    pub job_id: String,
-    pub sequence: u64,
-    pub predecessor: Option<u64>,
-    pub state: enrichment_core::wire::JobState,
-    pub stage: String,
-    pub updated_at: String,
-    pub result: Option<enrichment_core::evidence::Artifact>,
-    pub resolution: Option<Resolution>,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Interest {
-    pub interest_id: String,
-    pub job_id: String,
-    pub sequence: u64,
-    pub attached: bool,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Claim {
-    pub job_id: String,
-    pub owner: String,
-    pub attempt_id: String,
-    pub fence: u64,
-    pub sequence: u64,
-    pub lease_expires_at: String,
-    pub cleanup_state: String,
-    pub job_key: String,
-    pub policy_id: String,
-    pub grant_id: String,
-    pub profile: String,
-    pub ecosystem: String,
-    pub environment_id: Option<String>,
-    pub snapshot_id: Option<String>,
-    pub image_id: Option<String>,
-    pub cleanup_observer: Option<String>,
-    pub cleanup_confirmed_at: Option<String>,
-}
-
+pub use enrichment_core::operation::jobs::{Claim, Command, Interest, Resolution, Transition};
 /// A retained command and live physical owner are required for every effect.
 /// The fields are private: a DTO, request or cached plan cannot construct authority.
 #[derive(Clone)]
@@ -279,7 +137,7 @@ impl JobStore {
         use datafusion::common::ScalarValue;
         let pin = self.pin().await?;
         let session = pin.session(&self.runtime).await?;
-        let live = session.sql("SELECT 'grant_revoked_or_expired' AS witness FROM state.records.claims c JOIN state.records.commands d ON c.job_id=d.job_id AND c.job_key=d.job_key AND c.policy_id=d.policy_id JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.grant_id=$4 AND c.policy_id=$5 AND d.operation_revision=$6 AND c.cleanup_state='owned' AND c.lease_expires_at>now() AND t.state='running' HAVING count(*)<>1").await?.with_param_values(vec![ScalarValue::from(claim.job_id.as_str()),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(claim.fence)),ScalarValue::from(claim.grant_id.as_str()),ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.value(self.config.as_ref())?),ScalarValue::from(OPERATION_REVISION)])?;
+        let live = session.sql("SELECT 'grant_revoked_or_expired' AS witness FROM state.records.claims c JOIN state.records.commands d ON c.job_id=d.job_id AND c.job_key=d.job_key AND c.policy_id=d.policy_id JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.grant_id=$4 AND c.policy_id=$5 AND d.operation_revision=$6 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running' HAVING count(*)<>1").await?.with_param_values(vec![ScalarValue::from(claim.job_id.as_str()),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(claim.fence)),ScalarValue::from(claim.grant_id.as_str()),ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?),ScalarValue::from(OPERATION_REVISION)])?;
         self.runtime
             .require_empty(live, "live_effect_grant", "effect_admission")
             .await
@@ -319,17 +177,18 @@ impl JobStore {
             .await?
             .clone();
         let policy_id =
-            enrichment_core::native_key::Key::OperationPolicy.value(self.config.as_ref())?;
+            enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?;
         let mut command = Command {
             job_id,
             job_key: String::new(),
-            submitted_at: enrichment_core::clock::now_rfc3339(),
+            submitted_at: enrichment_core::native_time::SubmissionTime::now()?,
             operation_revision: OPERATION_REVISION.into(),
             policy_id,
             policy_binding,
             arguments,
         };
-        command.job_key = enrichment_core::native_key::Key::OperationCommand.value(&command)?;
+        command.job_key = enrichment_core::native_key::Key::OperationCommand
+            .batch_value(&Command::batch(std::slice::from_ref(&command))?)?;
         Ok(command)
     }
     pub fn runtime(&self) -> &QueryRuntime {
@@ -356,20 +215,10 @@ impl JobStore {
             .await?;
         Ok(artifact)
     }
-    async fn rows<T: serde::de::DeserializeOwned>(&self, frame: DataFrame) -> Result<Vec<T>> {
-        let output = self.runtime.execute(frame.limit(0, Some(1025))?).await?;
-        if output.rows > 1024 {
-            return Err(DataFusionError::ResourcesExhausted(
-                "command delivery exceeds bounded rows".into(),
-            ));
-        }
-        // This is only a bounded effect/transport boundary, not persisted or queried JSON.
-        let mut writer = arrow::json::ArrayWriter::new(Vec::new());
-        writer.write_batches(&output.batches.iter().collect::<Vec<_>>())?;
-        writer.finish()?;
-        serde_json::from_slice(&writer.into_inner())
-            .map_err(|error| DataFusionError::External(Box::new(error)))
+    async fn rows<T: NativeStruct>(&self, frame: DataFrame) -> Result<Vec<T>> {
+        self.runtime.records(frame, 1024).await
     }
+
     pub async fn command(&self, pin: &ControlSnapshot, id: &str) -> Result<Option<Command>> {
         let session = pin.session(&self.runtime).await?;
         let mut rows: Vec<Command> = self
@@ -410,12 +259,33 @@ impl JobStore {
         )
         .await
     }
+    /// One captured native relation owns presentation state and interest selection.
+    pub async fn snapshot(
+        &self,
+        pin: &ControlSnapshot,
+        id: &str,
+    ) -> Result<enrichment_core::operation::jobs::JobSnapshot> {
+        let session = pin.session(&self.runtime).await?;
+        let frame = session.sql("WITH interest AS (SELECT job_id, array_agg(interest_id ORDER BY interest_id) AS tokens, count(*) AS active FROM state.records.interests WHERE attached GROUP BY job_id) SELECT d.job_id,d.job_key AS key,d.arguments AS specification,t.state,t.stage,coalesce(i.tokens,CAST([] AS VARCHAR[])) AS interests,CAST(coalesce(i.active,0) AS BIGINT UNSIGNED) AS active_interests,d.submitted_at,t.updated_at,t.result AS result_artifact,t.resolution FROM state.records.commands d JOIN state.records.job_transitions t ON d.job_id=t.job_id LEFT JOIN interest i ON d.job_id=i.job_id WHERE d.job_id=$1")
+            .await?.with_param_values(vec![datafusion::common::ScalarValue::from(id)])?;
+        let mut rows = self.runtime.records(frame, 2).await?;
+        if rows.len() != 1 {
+            return Err(invalid("unknown or ambiguous native job"));
+        }
+        Ok(rows.remove(0))
+    }
     pub async fn active(&self, pin: &ControlSnapshot) -> Result<Vec<Transition>> {
         let session = pin.session(&self.runtime).await?;
         self.rows(session.sql("SELECT * FROM state.records.job_transitions WHERE state IN ('queued','running','cancel_requested') ORDER BY job_id").await?).await
     }
     /// Submit or join one eligible job, publishing the caller interest in that same commit.
     pub async fn submit(&self, command: Command, interest_id: String) -> Result<(String, bool)> {
+        crate::request_admission::validate(
+            &self.runtime,
+            &command.arguments,
+            self.config.limits.verification_input_bytes,
+        )
+        .await?;
         crate::operation_policy::validate(&self.runtime, &command).await?;
         let policies = crate::operation_policies::Policies::new(
             self.control.delta_namespace(),
@@ -453,15 +323,12 @@ impl JobStore {
             let sequence = pin.generation() + 1;
             let mut records = vec![(
                 Table::Interests,
-                encode(
-                    interests(),
-                    &[Interest {
-                        interest_id: interest_id.clone(),
-                        job_id: id.clone(),
-                        sequence,
-                        attached: true,
-                    }],
-                )?,
+                Interest::batch(&[Interest {
+                    interest_id: interest_id.clone(),
+                    job_id: id.clone(),
+                    sequence,
+                    attached: true,
+                }])?,
             )];
             if existing.is_none() {
                 let capacity=session.sql("SELECT job_id FROM state.records.job_transitions WHERE state IN ('queued','running','cancel_requested')").await?;
@@ -478,23 +345,22 @@ impl JobStore {
                 }
                 records.push((
                     Table::Commands,
-                    encode(commands(), std::slice::from_ref(&command))?,
+                    Command::batch(std::slice::from_ref(&command))?,
                 ));
                 records.push((
                     Table::JobTransitions,
-                    encode(
-                        transitions(),
-                        &[Transition {
-                            job_id: id.clone(),
-                            sequence,
-                            predecessor: None,
-                            state: enrichment_core::wire::JobState::Queued,
-                            stage: "queued".into(),
-                            updated_at: command.submitted_at.clone(),
-                            result: None,
-                            resolution: None,
-                        }],
-                    )?,
+                    Transition::batch(&[Transition {
+                        job_id: id.clone(),
+                        sequence,
+                        predecessor: None,
+                        state: enrichment_core::wire::JobState::Queued,
+                        stage: "queued".into(),
+                        updated_at: enrichment_core::native_time::UpdateTime::from_micros(
+                            command.submitted_at.micros(),
+                        )?,
+                        result: None,
+                        resolution: None,
+                    }])?,
                 ));
             }
             if self
@@ -565,9 +431,9 @@ impl JobStore {
             )?;
             crate::native_catalog::work(&session, "queued_job", transition.into_view())?;
             let sequence = pin.generation() + 1;
-            let next = session.sql("SELECT * REPLACE ($1 AS sequence, sequence AS predecessor, 'running' AS state, 'owned native execution' AS stage, now() AS updated_at) FROM queued_job").await?
+            let next = session.sql("SELECT * REPLACE ($1 AS sequence, sequence AS predecessor, 'running' AS state, 'owned native execution' AS stage, update_time(date_trunc('microsecond',now())) AS updated_at) FROM queued_job").await?
                 .with_param_values(vec![ScalarValue::UInt64(Some(sequence))])?;
-            let claim = session.sql("SELECT job_id, $1 AS owner, $2 AS attempt_id, $3 AS fence, $3 AS sequence, now() AS lease_expires_at, 'owned' AS cleanup_state, CAST(NULL AS VARCHAR) AS cleanup_observer, CAST(NULL AS VARCHAR) AS cleanup_confirmed_at, job_key, policy_id, profile, ecosystem, environment_id, snapshot_id, image_id FROM admitted_command").await?
+            let claim = session.sql("SELECT job_id, $1 AS owner, $2 AS attempt_id, $3 AS fence, $3 AS sequence, expiry_time(date_trunc('microsecond',now())) AS lease_expires_at, 'owned' AS cleanup_state, CAST(NULL AS VARCHAR) AS cleanup_observer, observation_time(CAST(NULL AS TIMESTAMP)) AS cleanup_confirmed_at, job_key, policy_id, profile, ecosystem, environment_id, snapshot_id, image_id FROM admitted_command").await?
                 .with_param_values(vec![ScalarValue::from(self.owner.as_str()), ScalarValue::from(attempt_id),
                     ScalarValue::UInt64(Some(sequence))])?
                 .with_column("lease_expires_at",crate::native_policy::claim_deadline(&session.state())?)?
@@ -602,8 +468,8 @@ impl JobStore {
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let eligible = session.sql("SELECT c.* FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id JOIN state.records.commands d ON c.job_id=d.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND c.lease_expires_at>now() AND t.state='running' AND c.job_key=d.job_key AND c.policy_id=d.policy_id AND d.policy_id=$4 AND d.operation_revision=$5").await?
-                .with_param_values(vec![ScalarValue::from(id),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(fence)), ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.value(self.config.as_ref())?), ScalarValue::from(OPERATION_REVISION)])?;
+            let eligible = session.sql("SELECT c.* FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id JOIN state.records.commands d ON c.job_id=d.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running' AND c.job_key=d.job_key AND c.policy_id=d.policy_id AND d.policy_id=$4 AND d.operation_revision=$5").await?
+                .with_param_values(vec![ScalarValue::from(id),ScalarValue::from(self.owner.as_str()),ScalarValue::UInt64(Some(fence)), ScalarValue::from(enrichment_core::native_key::Key::OperationPolicy.record(self.config.as_ref())?), ScalarValue::from(OPERATION_REVISION)])?;
             if self.runtime.execute(eligible.clone()).await?.rows != 1 {
                 return Ok(false);
             }
@@ -611,10 +477,16 @@ impl JobStore {
                 .with_column("sequence", lit(pin.generation() + 1))?
                 .with_column(
                     "lease_expires_at",
-                    datafusion::functions::core::expr_fn::greatest(vec![
-                        col("lease_expires_at"),
-                        crate::native_policy::claim_deadline(&session.state())?,
-                    ]),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Expiry,
+                        datafusion::functions::core::expr_fn::greatest(vec![
+                            enrichment_core::native_time::function(None)
+                                .call(vec![col("lease_expires_at")]),
+                            enrichment_core::native_time::function(None).call(vec![
+                                crate::native_policy::claim_deadline(&session.state())?,
+                            ]),
+                        ]),
+                    ),
                 )?;
             if self
                 .commit_frames(
@@ -705,7 +577,7 @@ impl JobStore {
                 )?
                 .with_column("sequence", lit(pin.generation() + 1))?
                 .with_column("attached", lit(false))?;
-            let next=session.sql("SELECT t.* REPLACE ($3 AS sequence, t.sequence AS predecessor, CASE WHEN t.state IN ('queued','running') AND coalesce(i.remaining,0)=0 THEN 'cancel_requested' ELSE t.state END AS state, 'caller interest detached' AS stage, $4 AS updated_at) FROM state.records.job_transitions t LEFT JOIN (SELECT job_id,count(*) AS remaining FROM state.records.interests WHERE interest_id <> $2 AND attached GROUP BY job_id) i ON t.job_id=i.job_id WHERE t.job_id=$1").await?.with_param_values(vec![ScalarValue::from(id),ScalarValue::from(interest),ScalarValue::UInt64(Some(pin.generation()+1)),ScalarValue::from(enrichment_core::clock::now_rfc3339())])?;
+            let next=session.sql("SELECT t.* REPLACE ($3 AS sequence, t.sequence AS predecessor, CASE WHEN t.state IN ('queued','running') AND coalesce(i.remaining,0)=0 THEN 'cancel_requested' ELSE t.state END AS state, 'caller interest detached' AS stage, update_time(date_trunc('microsecond',now())) AS updated_at) FROM state.records.job_transitions t LEFT JOIN (SELECT job_id,count(*) AS remaining FROM state.records.interests WHERE interest_id <> $2 AND attached GROUP BY job_id) i ON t.job_id=i.job_id WHERE t.job_id=$1").await?.with_param_values(vec![ScalarValue::from(id),ScalarValue::from(interest),ScalarValue::UInt64(Some(pin.generation()+1))])?;
             if self
                 .commit_frames(
                     &pin,
@@ -721,10 +593,11 @@ impl JobStore {
     }
     /// Pin acquired inputs only while this daemon owns the active claim.
     pub async fn pin_resolution(&self, id: &str, fence: u64, resolution: Resolution) -> Result<()> {
+        crate::operation_policy::resolution(&self.runtime, &resolution).await?;
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
-            let input=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND t.state='running' AND t.resolution IS NULL AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND c.lease_expires_at>now()").await?.with_param_values(vec![datafusion::common::ScalarValue::from(id),datafusion::common::ScalarValue::from(self.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(fence))])?;
+            let input=session.sql("SELECT t.* FROM state.records.job_transitions t JOIN state.records.claims c ON t.job_id=c.job_id WHERE t.job_id=$1 AND t.state='running' AND t.resolution IS NULL AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now()").await?.with_param_values(vec![datafusion::common::ScalarValue::from(id),datafusion::common::ScalarValue::from(self.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(fence))])?;
             let rows: Vec<Transition> = self.rows(input).await?;
             let Some(previous) = rows.first() else {
                 return Err(invalid(
@@ -734,7 +607,7 @@ impl JobStore {
             let next = Transition {
                 sequence: pin.generation() + 1,
                 predecessor: Some(previous.sequence),
-                updated_at: enrichment_core::clock::now_rfc3339(),
+                updated_at: enrichment_core::native_time::UpdateTime::now()?,
                 resolution: Some(resolution.clone()),
                 ..previous.clone()
             };
@@ -742,7 +615,7 @@ impl JobStore {
                 .control
                 .commit_native(
                     pin.generation(),
-                    vec![(Table::JobTransitions, encode(transitions(), &[next])?)],
+                    vec![(Table::JobTransitions, Transition::batch(&[next])?)],
                     vec![format!("job/{id}"), format!("claim/{id}")],
                 )
                 .await?
@@ -882,7 +755,10 @@ impl JobStore {
                 .with_column("stage", lit("finished"))?
                 .with_column(
                     "updated_at",
-                    datafusion::functions::datetime::expr_fn::now(),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Update,
+                        enrichment_core::native_time::now_instant(),
+                    ),
                 )?
                 .with_column("result", result_literal(result)?)?;
             let claim = session
@@ -900,9 +776,18 @@ impl JobStore {
                 )?
                 .with_column(
                     "cleanup_confirmed_at",
-                    lit(ScalarValue::Utf8(
-                        settled.then(enrichment_core::clock::now_rfc3339),
-                    )),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Observation,
+                        lit(ScalarValue::TimestampMicrosecond(
+                            settled
+                                .then(|| {
+                                    enrichment_core::native_time::ObservationTime::now()
+                                        .map(|t| t.micros())
+                                })
+                                .transpose()?,
+                            Some("UTC".into()),
+                        )),
+                    ),
                 )?;
             if self
                 .commit_frames(
@@ -965,7 +850,10 @@ impl JobStore {
                 .with_column("stage", lit("physical recovery settled"))?
                 .with_column(
                     "updated_at",
-                    datafusion::functions::datetime::expr_fn::now(),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Update,
+                        enrichment_core::native_time::now_instant(),
+                    ),
                 )?
                 .with_column("result", result_literal(result)?)?;
             let claim = session
@@ -977,7 +865,10 @@ impl JobStore {
                 .with_column("cleanup_observer", lit(self.owner.as_str()))?
                 .with_column(
                     "cleanup_confirmed_at",
-                    lit(enrichment_core::clock::now_rfc3339()),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Observation,
+                        enrichment_core::native_time::now_instant(),
+                    ),
                 )?;
             if self
                 .commit_frames(
@@ -993,30 +884,24 @@ impl JobStore {
         Err(invalid("recovery conflict bound exceeded"))
     }
     pub async fn request_shutdown(&self) -> Result<()> {
-        for transition in self.active(self.pin().await?.as_ref()).await? {
-            for interest in self
-                .interests(self.pin().await?.as_ref(), &transition.job_id)
-                .await?
-            {
-                if interest.attached {
-                    self.cancel(&transition.job_id, &interest.interest_id)
-                        .await?;
-                }
-            }
+        let pin = self.pin().await?;
+        let session = pin.session(&self.runtime).await?;
+        let selected: Vec<Interest> = self.rows(session.sql("SELECT i.* FROM state.records.interests i JOIN state.records.job_transitions t ON i.job_id=t.job_id WHERE i.attached AND t.state IN ('queued','running','cancel_requested') ORDER BY i.job_id,i.interest_id").await?).await?;
+        for interest in selected {
+            self.cancel(&interest.job_id, &interest.interest_id).await?;
         }
         Ok(())
     }
     pub async fn counts(&self) -> Result<(usize, usize)> {
-        #[derive(Deserialize)]
-        struct Counts {
-            queued: u64,
-            running: u64,
-        }
+        use enrichment_core::operation::jobs::Counts;
         let pin = self.pin().await?;
         let session = pin.session(&self.runtime).await?;
-        let rows:Vec<Counts>=self.rows(session.sql("SELECT count(*) FILTER (WHERE state='queued') AS queued, count(*) FILTER (WHERE state IN ('running','cancel_requested')) AS running FROM state.records.job_transitions").await?).await?;
+        let rows:Vec<Counts>=self.rows(session.sql("SELECT CAST(count(*) FILTER (WHERE state='queued') AS BIGINT UNSIGNED) AS queued, CAST(count(*) FILTER (WHERE state IN ('running','cancel_requested')) AS BIGINT UNSIGNED) AS running FROM state.records.job_transitions").await?).await?;
         let row = rows.first().ok_or_else(|| invalid("missing job counts"))?;
-        Ok((row.queued as usize, row.running as usize))
+        Ok((
+            usize::try_from(row.queued).map_err(|e| invalid(&e.to_string()))?,
+            usize::try_from(row.running).map_err(|e| invalid(&e.to_string()))?,
+        ))
     }
 }
 
@@ -1068,7 +953,10 @@ impl JobStore {
                 .with_column("cleanup_observer", lit(self.owner.as_str()))?
                 .with_column(
                     "cleanup_confirmed_at",
-                    lit(enrichment_core::clock::now_rfc3339()),
+                    enrichment_core::native_time::expression(
+                        enrichment_core::native_types::ClockMeaning::Observation,
+                        enrichment_core::native_time::now_instant(),
+                    ),
                 )?;
             if self
                 .commit_frames(
@@ -1113,13 +1001,12 @@ mod tests {
         let make = |id: &'static str| {
             first.command_with_id(
                 id.into(),
-                Arguments {
-                    resolve: Some(enrichment_core::request::ResolveRequest {
+                Arguments::Resolve {
+                    request: enrichment_core::request::ResolveRequest {
                         name: "sample".into(),
                         version: Some("1.0.0".into()),
                         ..Default::default()
-                    }),
-                    ..Default::default()
+                    },
                 },
             )
         };
@@ -1152,6 +1039,11 @@ mod tests {
             ("one".into(), false)
         );
         assert_eq!(first.counts().await.unwrap(), (1, 0));
+        let pin = first.pin().await.unwrap();
+        let snapshot = first.snapshot(&pin, "one").await.unwrap();
+        assert_eq!(snapshot.state, enrichment_core::wire::JobState::Queued);
+        assert_eq!(snapshot.active_interests, 2);
+        assert_eq!(snapshot.interests, vec!["caller_a", "caller_b"]);
         let (a, b) = tokio::join!(
             first.start("one", "attempt_a", &policy),
             second.start("one", "attempt_b", &policy)
@@ -1174,10 +1066,7 @@ mod tests {
         assert_eq!(initial.fence, renewed.fence);
         assert_eq!(initial.attempt_id, renewed.attempt_id);
         assert!(renewed.sequence > initial.sequence);
-        assert!(
-            chrono::DateTime::parse_from_rfc3339(&renewed.lease_expires_at).unwrap()
-                >= chrono::DateTime::parse_from_rfc3339(&initial.lease_expires_at).unwrap()
-        );
+        assert!(renewed.lease_expires_at >= initial.lease_expires_at);
         let pin = owner.pin().await.unwrap();
         let session = pin.session(&owner.runtime).await.unwrap();
         let expired = session
@@ -1190,12 +1079,15 @@ mod tests {
             .unwrap()
             .with_column(
                 "lease_expires_at",
-                datafusion::functions::datetime::expr_fn::now()
-                    - lit(datafusion::common::ScalarValue::new_interval_mdn(
-                        0,
-                        0,
-                        1_000_000_000,
-                    )),
+                enrichment_core::native_time::expression(
+                    enrichment_core::native_types::ClockMeaning::Expiry,
+                    enrichment_core::native_time::now_instant()
+                        - lit(datafusion::common::ScalarValue::new_interval_mdn(
+                            0,
+                            0,
+                            1_000_000_000,
+                        )),
+                ),
             )
             .unwrap();
         assert!(
@@ -1230,7 +1122,7 @@ mod tests {
         let claim = owner.claim(&pin, "one").await.unwrap().unwrap();
         let session = pin.session(&owner.runtime).await.unwrap();
         let future = session
-            .sql("SELECT job_id FROM state.records.claims WHERE lease_expires_at > now()")
+            .sql("SELECT job_id FROM state.records.claims WHERE clock_instant(lease_expires_at) > now()")
             .await
             .unwrap();
         assert_eq!(owner.runtime.execute(future).await.unwrap().rows, 0);
@@ -1243,7 +1135,10 @@ mod tests {
             enrichment_core::evidence::ArtifactKind::Other,
             "text/plain",
             "service:test-result",
-            "2026-09-16T00:00:00Z",
+            enrichment_core::native_time::AcquisitionTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
         );
         assert!(
             stale

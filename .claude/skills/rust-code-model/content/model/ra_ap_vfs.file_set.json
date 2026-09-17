@@ -1,0 +1,108 @@
+{
+  "module": "ra_ap_vfs::file_set",
+  "crate": "ra_ap_vfs",
+  "api": "api/ra_ap_vfs.file_set.md",
+  "items": [
+    {
+      "path": "ra_ap_vfs::file_set::FileSet",
+      "name": "FileSet",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct FileSet",
+      "summary": "A set of [`VfsPath`]s identified by [`FileId`]s.",
+      "doc": "api/ra_ap_vfs.file_set.md#fileset",
+      "aliases": [
+        "ra_ap_base_db::FileSet"
+      ],
+      "methods": [
+        {
+          "name": "file_for_path",
+          "signature": "fn file_for_path(&self, path: &VfsPath) -> Option<&FileId>",
+          "summary": "Get the id corresponding to `path` if it exists in the set."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(&mut self, file_id: FileId, path: VfsPath)",
+          "summary": "Insert the `file_id, path` pair into the set."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = FileId> + '_",
+          "summary": "Iterate over this set's ids."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of stored paths."
+        },
+        {
+          "name": "path_for_file",
+          "signature": "fn path_for_file(&self, file: &FileId) -> Option<&VfsPath>",
+          "summary": "Get the path corresponding to `file` if it exists in the set."
+        },
+        {
+          "name": "resolve_path",
+          "signature": "fn resolve_path(&self, path: AnchoredPath<'_>) -> Option<FileId>",
+          "summary": "Get the id of the file corresponding to `path`."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::file_set::FileSetConfig",
+      "name": "FileSetConfig",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct FileSetConfig",
+      "summary": "This contains path prefixes to partition a [`Vfs`] into [`FileSet`]s.",
+      "doc": "api/ra_ap_vfs.file_set.md#filesetconfig",
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> FileSetConfigBuilder",
+          "summary": "Returns a builder for `FileSetConfig`."
+        },
+        {
+          "name": "classify_path",
+          "signature": "fn classify_path(&self, path: &VfsPath) -> Option<usize>",
+          "summary": "Returns the index of the set `path` would be partitioned into, or `None` if it belongs to none of the configured sets (that is, the catch-all set for everything else)."
+        },
+        {
+          "name": "partition",
+          "signature": "fn partition(&self, vfs: &Vfs) -> Vec<FileSet>",
+          "summary": "Partition `vfs` into `FileSet`s."
+        },
+        {
+          "name": "roots",
+          "signature": "fn roots(&self) -> Vec<(Vec<u8>, u64)>",
+          "summary": "Get the lexicographically ordered vector of the underlying map."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::file_set::FileSetConfigBuilder",
+      "name": "FileSetConfigBuilder",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct FileSetConfigBuilder",
+      "summary": "Builder for [`FileSetConfig`].",
+      "doc": "api/ra_ap_vfs.file_set.md#filesetconfigbuilder",
+      "methods": [
+        {
+          "name": "add_file_set",
+          "signature": "fn add_file_set(&mut self, roots: Vec<VfsPath>)",
+          "summary": "Add a new set of paths prefixes."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> FileSetConfig",
+          "summary": "Build the `FileSetConfig`."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of sets currently held."
+        }
+      ]
+    }
+  ]
+}

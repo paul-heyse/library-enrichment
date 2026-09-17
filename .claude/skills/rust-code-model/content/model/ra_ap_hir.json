@@ -1,0 +1,4442 @@
+{
+  "module": "ra_ap_hir",
+  "crate": "ra_ap_hir",
+  "api": "api/ra_ap_hir.md",
+  "items": [
+    {
+      "path": "ra_ap_hir::Access",
+      "name": "Access",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum Access",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Shared",
+        "Exclusive",
+        "Owned"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(mutability: hir_ty::next_solver::Mutability) -> Access",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Adjust",
+      "name": "Adjust",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum Adjust",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "NeverToAny",
+        "Deref",
+        "Borrow",
+        "Pointer"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::Adt",
+      "name": "Adt",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum Adt",
+      "summary": "A Data Type",
+      "doc": "api/ra_ap_hir.md#adt",
+      "variants": [
+        "Struct",
+        "Union",
+        "Enum"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "as_enum",
+          "signature": "fn as_enum(&self) -> Option<Enum>"
+        },
+        {
+          "name": "as_struct",
+          "signature": "fn as_struct(&self) -> Option<Struct>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(it: Enum) -> Adt",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_non_default_type_params",
+          "signature": "fn has_non_default_type_params(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "layout",
+          "signature": "fn layout<'db>(self, db: &'db dyn HirDatabase) -> Result<Layout<'db>, LayoutError>"
+        },
+        {
+          "name": "lifetime",
+          "signature": "fn lifetime(&self, db: &dyn HirDatabase) -> Option<LifetimeParamData>",
+          "summary": "Returns the lifetime of the DataType"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>",
+          "summary": "Turns this ADT into a type. Any type parameters of the ADT will be turned into unknown types, which is good for e.g. finding the most general set of completions, but will not look very nice when printed."
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::AssocItem",
+      "name": "AssocItem",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum AssocItem",
+      "summary": "Invariant: `inner.as_assoc_item(db).is_some()` We do not actively enforce this invariant.",
+      "doc": "api/ra_ap_hir.md#associtem",
+      "variants": [
+        "Function",
+        "Const",
+        "TypeAlias"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "as_const",
+          "signature": "fn as_const(self) -> Option<Const>"
+        },
+        {
+          "name": "as_function",
+          "signature": "fn as_function(self) -> Option<Function>"
+        },
+        {
+          "name": "as_type_alias",
+          "signature": "fn as_type_alias(self) -> Option<TypeAlias>"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(self, db: &dyn HirDatabase) -> AssocItemContainer"
+        },
+        {
+          "name": "container_or_implemented_trait",
+          "signature": "fn container_or_implemented_trait(self, db: &dyn HirDatabase) -> Option<Trait>"
+        },
+        {
+          "name": "container_trait",
+          "signature": "fn container_trait(self, db: &dyn HirDatabase) -> Option<Trait>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: method_resolution::CandidateId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "implemented_trait",
+          "signature": "fn implemented_trait(self, db: &dyn HirDatabase) -> Option<Trait>"
+        },
+        {
+          "name": "implementing_ty",
+          "signature": "fn implementing_ty(self, db: &dyn HirDatabase) -> Option<Type<'_>>"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::AssocItemContainer",
+      "name": "AssocItemContainer",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum AssocItemContainer",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Trait",
+        "Impl"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::AutoBorrow",
+      "name": "AutoBorrow",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum AutoBorrow",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Ref",
+        "RawPtr"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::BindingMode",
+      "name": "BindingMode",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum BindingMode",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Move",
+        "Ref"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::CallableKind",
+      "name": "CallableKind",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum CallableKind<'db>",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Function",
+        "TupleStruct",
+        "TupleEnumVariant",
+        "Closure",
+        "FnPtr",
+        "FnImpl"
+      ]
+    },
+    {
+      "path": "ra_ap_hir::CaptureKind",
+      "name": "CaptureKind",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum CaptureKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "SharedRef",
+        "UniqueSharedRef",
+        "MutableRef",
+        "Move"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::DefWithBody",
+      "name": "DefWithBody",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum DefWithBody",
+      "summary": "The defs which have a body.",
+      "doc": "api/ra_ap_hir.md#defwithbody",
+      "variants": [
+        "Function",
+        "Static",
+        "Const",
+        "EnumVariant"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem",
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "binding_types",
+          "signature": "fn binding_types<'db>(self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Type<'db>>",
+          "summary": "Returns an iterator over the inferred types of all bindings in this body."
+        },
+        {
+          "name": "body_type",
+          "signature": "fn body_type(self, db: &dyn HirDatabase) -> Type<'_>",
+          "summary": "Returns the type this def's body has to evaluate to."
+        },
+        {
+          "name": "debug_hir",
+          "signature": "fn debug_hir(self, db: &dyn HirDatabase) -> String",
+          "summary": "A textual representation of the HIR of this def's body for debugging purposes."
+        },
+        {
+          "name": "debug_mir",
+          "signature": "fn debug_mir(self, db: &dyn HirDatabase) -> String",
+          "summary": "A textual representation of the MIR of this def's body for debugging purposes."
+        },
+        {
+          "name": "expression_types",
+          "signature": "fn expression_types<'db>(self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Type<'db>>",
+          "summary": "Returns an iterator over the inferred types of all expressions in this body."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(it: Const) -> DefWithBody",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "pattern_types",
+          "signature": "fn pattern_types<'db>(self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Type<'db>>",
+          "summary": "Returns an iterator over the inferred types of all patterns in this body."
+        },
+        {
+          "name": "run_mir_body",
+          "signature": "fn run_mir_body(self, db: &dyn HirDatabase) -> Result<(), MirLowerError<'_>>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::DocLinkDef",
+      "name": "DocLinkDef",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum DocLinkDef",
+      "summary": "Subset of `ide_db::Definition` that doc links can resolve to.",
+      "doc": "api/ra_ap_hir.md#doclinkdef",
+      "variants": [
+        "ModuleDef",
+        "Field",
+        "SelfType"
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ExpressionStoreOwner",
+      "name": "ExpressionStoreOwner",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ExpressionStoreOwner",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Body",
+        "Signature",
+        "VariantFields"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: ExpressionStoreOwnerId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ExternAssocItem",
+      "name": "ExternAssocItem",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ExternAssocItem",
+      "summary": "Invariant: `inner.as_extern_assoc_item(db).is_some()` We do not actively enforce this invariant.",
+      "doc": "api/ra_ap_hir.md#externassocitem",
+      "variants": [
+        "Function",
+        "Static",
+        "TypeAlias"
+      ],
+      "implements": [
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "as_function",
+          "signature": "fn as_function(self) -> Option<Function>"
+        },
+        {
+          "name": "as_static",
+          "signature": "fn as_static(self) -> Option<Static>"
+        },
+        {
+          "name": "as_type_alias",
+          "signature": "fn as_type_alias(self) -> Option<TypeAlias>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::FieldSource",
+      "name": "FieldSource",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum FieldSource",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Named",
+        "Pos"
+      ],
+      "implements": [
+        "ra_ap_syntax::ast::AstNode"
+      ],
+      "methods": [
+        {
+          "name": "can_cast",
+          "signature": "fn can_cast(kind: syntax::SyntaxKind) -> bool where Self: Sized",
+          "via_trait": "ra_ap_syntax::ast::AstNode"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(syntax: SyntaxNode) -> Option<Self> where Self: Sized",
+          "via_trait": "ra_ap_syntax::ast::AstNode"
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&self) -> &SyntaxNode",
+          "via_trait": "ra_ap_syntax::ast::AstNode"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::FnTrait",
+      "name": "FnTrait",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum FnTrait",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "FnOnce",
+        "FnMut",
+        "Fn",
+        "AsyncFnOnce",
+        "AsyncFnMut",
+        "AsyncFn"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: traits::FnTrait) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "function_name",
+          "signature": "const fn function_name(&self) -> &'static str"
+        },
+        {
+          "name": "get_id",
+          "signature": "fn get_id(self, db: &dyn HirDatabase, krate: Crate) -> Option<Trait>"
+        },
+        {
+          "name": "lang_item",
+          "signature": "fn lang_item(self) -> LangItem"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::GenericDef",
+      "name": "GenericDef",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum GenericDef",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Function",
+        "Adt",
+        "Trait",
+        "TypeAlias",
+        "Impl",
+        "Const",
+        "Static"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "description",
+          "signature": "fn description(self) -> &'static str",
+          "summary": "Returns a string describing the kind of this type."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(it: Struct) -> GenericDef",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "lifetime_params",
+          "signature": "fn lifetime_params(self, db: &dyn HirDatabase) -> Vec<LifetimeParam>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "params",
+          "signature": "fn params(self, db: &dyn HirDatabase) -> Vec<GenericParam>"
+        },
+        {
+          "name": "type_or_const_params",
+          "signature": "fn type_or_const_params(self, db: &dyn HirDatabase) -> Vec<TypeOrConstParam>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::GenericParam",
+      "name": "GenericParam",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum GenericParam",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "TypeParam",
+        "ConstParam",
+        "LifetimeParam"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(it: TypeParam) -> GenericParam",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self) -> GenericDef"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(self, db: &dyn HirDatabase) -> Option<Variance>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::InferBody",
+      "name": "InferBody",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum InferBody<'db>",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Body",
+        "AnonConst"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::ItemContainer",
+      "name": "ItemContainer",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ItemContainer",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Trait",
+        "Impl",
+        "Module",
+        "ExternBlock",
+        "Crate"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::ItemInNs",
+      "name": "ItemInNs",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ItemInNs",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Types",
+        "Values",
+        "Macros"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "attrs",
+          "signature": "fn attrs(&self, db: &dyn HirDatabase) -> Option<AttrsWithOwner>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ModuleDef) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_module_def",
+          "signature": "fn into_module_def(self) -> ModuleDef"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Option<Crate>",
+          "summary": "Returns the crate defining this item (or `None` if `self` is built-in)."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::MacroBraces",
+      "name": "MacroBraces",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum MacroBraces",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Braces",
+        "Brackets",
+        "Parentheses"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::ModuleDef",
+      "name": "ModuleDef",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ModuleDef",
+      "summary": "The defs which can be visible in the module.",
+      "doc": "api/ra_ap_hir.md#moduledef",
+      "variants": [
+        "Module",
+        "Function",
+        "Adt",
+        "EnumVariant",
+        "Const",
+        "Static",
+        "Trait",
+        "TypeAlias",
+        "BuiltinType",
+        "Macro"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "as_def_with_body",
+          "signature": "fn as_def_with_body(self) -> Option<DefWithBody>"
+        },
+        {
+          "name": "as_generic_def",
+          "signature": "fn as_generic_def(self) -> Option<GenericDef>"
+        },
+        {
+          "name": "as_self_generic_def",
+          "signature": "fn as_self_generic_def(self) -> Option<GenericDef>",
+          "summary": "Returns only defs that have generics from themselves, not their parent."
+        },
+        {
+          "name": "attrs",
+          "signature": "fn attrs(&self, db: &dyn HirDatabase) -> Option<AttrsWithOwner>"
+        },
+        {
+          "name": "canonical_module_path",
+          "signature": "fn canonical_module_path(&self, db: &dyn HirDatabase) -> Option<impl Iterator<Item = Module>>"
+        },
+        {
+          "name": "canonical_path",
+          "signature": "fn canonical_path(&self, db: &dyn HirDatabase, edition: Edition) -> Option<String>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(it: Module) -> ModuleDef",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Option<Module>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::PredicateEvaluationStatus",
+      "name": "PredicateEvaluationStatus",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum PredicateEvaluationStatus",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_ide::PredicateEvaluationStatus"
+      ],
+      "variants": [
+        "Holds",
+        "NotProven",
+        "Invalid",
+        "Unsupported"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::PredicatePolarity",
+      "name": "PredicatePolarity",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum PredicatePolarity",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Positive",
+        "Negative"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::ScopeDef",
+      "name": "ScopeDef",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum ScopeDef<'db>",
+      "summary": "For IDE only",
+      "doc": "api/ra_ap_hir.md#scopedef",
+      "variants": [
+        "ModuleDef",
+        "GenericParam",
+        "ImplSelfType",
+        "AdtSelfType",
+        "Local",
+        "Label",
+        "Unknown"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "all_items",
+          "signature": "fn all_items(def: PerNs) -> ArrayVec<Self, 3>"
+        },
+        {
+          "name": "attrs",
+          "signature": "fn attrs(&self, db: &dyn HirDatabase) -> Option<AttrsWithOwner>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ItemInNs) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Option<Crate>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::StructKind",
+      "name": "StructKind",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum StructKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Record",
+        "Tuple",
+        "Unit"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::Variance",
+      "name": "Variance",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum Variance",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Bivariant",
+        "Covariant",
+        "Contravariant",
+        "Invariant"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: rustc_type_ir::Variance) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Variant",
+      "name": "Variant",
+      "kind": "enum",
+      "crate": "ra_ap_hir",
+      "signature": "enum Variant",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Struct",
+        "Union",
+        "EnumVariant"
+      ],
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::has_source::HasSource"
+      ],
+      "methods": [
+        {
+          "name": "adt",
+          "signature": "fn adt(&self, db: &dyn HirDatabase) -> Adt"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(self, db: &dyn HirDatabase) -> Vec<Field>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: VariantId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::resolve_absolute_path",
+      "name": "resolve_absolute_path",
+      "kind": "function",
+      "crate": "ra_ap_hir",
+      "signature": "fn resolve_absolute_path<'a, I: Iterator<Item = Symbol> + Clone + 'a>(db: &'a dyn HirDatabase, segments: I) -> impl Iterator<Item = ItemInNs> + use<{'lifetime': \"'a\"}, {'param': 'I'}>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_hir::Adjustment",
+      "name": "Adjustment",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Adjustment<'db>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "source",
+        "target",
+        "kind"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::AnonConst",
+      "name": "AnonConst",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct AnonConst<'db>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasCrate"
+      ],
+      "methods": [
+        {
+          "name": "eval",
+          "signature": "fn eval(self, db: &'db dyn HirDatabase) -> Result<EvaluatedConst<'db>, ConstEvalError<'db>>"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "owner",
+          "signature": "fn owner(self, db: &dyn HirDatabase) -> ExpressionStoreOwner"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &'db dyn HirDatabase) -> Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::BuiltinAttr",
+      "name": "BuiltinAttr",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct BuiltinAttr",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, _db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "template",
+          "signature": "fn template(&self) -> Option<AttributeTemplate>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::BuiltinDeriveMacroKind",
+      "name": "BuiltinDeriveMacroKind",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct BuiltinDeriveMacroKind",
+      "summary": "",
+      "doc": null,
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::BuiltinType",
+      "name": "BuiltinType",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct BuiltinType",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "bool",
+          "signature": "fn bool() -> BuiltinType"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(inner: hir_def::builtin_type::BuiltinType) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "i32",
+          "signature": "fn i32() -> BuiltinType"
+        },
+        {
+          "name": "is_bool",
+          "signature": "fn is_bool(&self) -> bool"
+        },
+        {
+          "name": "is_char",
+          "signature": "fn is_char(&self) -> bool"
+        },
+        {
+          "name": "is_f128",
+          "signature": "fn is_f128(&self) -> bool"
+        },
+        {
+          "name": "is_f16",
+          "signature": "fn is_f16(&self) -> bool"
+        },
+        {
+          "name": "is_f32",
+          "signature": "fn is_f32(&self) -> bool"
+        },
+        {
+          "name": "is_f64",
+          "signature": "fn is_f64(&self) -> bool"
+        },
+        {
+          "name": "is_float",
+          "signature": "fn is_float(&self) -> bool"
+        },
+        {
+          "name": "is_int",
+          "signature": "fn is_int(&self) -> bool"
+        },
+        {
+          "name": "is_str",
+          "signature": "fn is_str(&self) -> bool"
+        },
+        {
+          "name": "is_uint",
+          "signature": "fn is_uint(&self) -> bool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, _db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "str",
+          "signature": "fn str() -> BuiltinType"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty<'db>(self, db: &'db dyn HirDatabase) -> Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Callable",
+      "name": "Callable",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Callable<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> CallableKind<'db>"
+        },
+        {
+          "name": "n_params",
+          "signature": "fn n_params(&self) -> usize"
+        },
+        {
+          "name": "params",
+          "signature": "fn params(&self) -> Vec<Param<'db>>"
+        },
+        {
+          "name": "receiver_param",
+          "signature": "fn receiver_param(&self, db: &'db dyn HirDatabase) -> Option<(SelfParam, Type<'db>)>"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self) -> Type<'db>"
+        },
+        {
+          "name": "sig",
+          "signature": "fn sig(&self) -> impl Eq"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self) -> &Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::CaptureUsageSource",
+      "name": "CaptureUsageSource",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct CaptureUsageSource",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "file_id",
+          "signature": "fn file_id(&self) -> HirFileId"
+        },
+        {
+          "name": "is_ref",
+          "signature": "fn is_ref(&self) -> bool"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> AstPtr<Either<ast::Expr, ast::Pat>>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::CaptureUsages",
+      "name": "CaptureUsages",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct CaptureUsages<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "sources",
+          "signature": "fn sources(&self, db: &dyn HirDatabase) -> Vec<CaptureUsageSource>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Closure",
+      "name": "Closure",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Closure<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "captured_items",
+          "signature": "fn captured_items(&self, db: &'db dyn HirDatabase) -> Vec<ClosureCapture<'db>>"
+        },
+        {
+          "name": "display_with_id",
+          "signature": "fn display_with_id(&self, db: &dyn HirDatabase, display_target: DisplayTarget) -> String"
+        },
+        {
+          "name": "display_with_impl",
+          "signature": "fn display_with_impl(&self, db: &dyn HirDatabase, display_target: DisplayTarget) -> String"
+        },
+        {
+          "name": "fn_trait",
+          "signature": "fn fn_trait(&self, _db: &dyn HirDatabase) -> FnTrait"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ClosureCapture",
+      "name": "ClosureCapture",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct ClosureCapture<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "captured_ty",
+          "signature": "fn captured_ty(&self, db: &'db dyn HirDatabase) -> Type<'db>",
+          "summary": "The type that is stored in the closure, which is different from [`Self::ty()`], representing the place's type, when the capture is by ref."
+        },
+        {
+          "name": "display_place_source_code",
+          "signature": "fn display_place_source_code(&self, db: &dyn HirDatabase, edition: Edition) -> String"
+        },
+        {
+          "name": "has_field_projections",
+          "signature": "fn has_field_projections(&self) -> bool",
+          "summary": "Returns whether this place has any field (aka. non-deref) projections."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> CaptureKind"
+        },
+        {
+          "name": "local",
+          "signature": "fn local(&self) -> Local<'db>"
+        },
+        {
+          "name": "place_to_name",
+          "signature": "fn place_to_name(&self, db: &dyn HirDatabase, edition: Edition) -> String",
+          "summary": "Converts the place to a name that can be inserted into source code."
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self, db: &'db dyn HirDatabase) -> Type<'db>"
+        },
+        {
+          "name": "usages",
+          "signature": "fn usages(&self) -> CaptureUsages<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Const",
+      "name": "Const",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Const",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "eval",
+          "signature": "fn eval(self, db: &dyn HirDatabase) -> Result<EvaluatedConst<'_>, ConstEvalError<'_>>",
+          "summary": "Evaluate the constant."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::ConstId) -> Const",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_body",
+          "signature": "fn has_body(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(self, db: &dyn HirDatabase) -> Option<ast::Expr>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ConstParam",
+      "name": "ConstParam",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct ConstParam",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "signature": "fn default(self, db: &dyn HirDatabase, display_target: DisplayTarget) -> Option<String>"
+        },
+        {
+          "name": "default_source_code",
+          "signature": "fn default_source_code(self, db: &dyn HirDatabase, target_module: Module) -> Option<ast::ConstArg>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::ConstParamId) -> ConstParam",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(self) -> TypeOrConstParam"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> GenericDef"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Coroutine",
+      "name": "Coroutine",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Coroutine<'db>",
+      "summary": "A coroutine expression, including async, generator, and async-generator coroutines.",
+      "doc": "api/ra_ap_hir.md#coroutine",
+      "methods": [
+        {
+          "name": "captured_items",
+          "signature": "fn captured_items(&self, db: &'db dyn HirDatabase) -> Vec<ClosureCapture<'db>>",
+          "summary": "Returns the values captured by this coroutine."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Crate",
+      "name": "Crate",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Crate",
+      "summary": "hir::Crate describes a single crate. It's the main interface with which a crate's dependencies interact. Mostly, it should be just a proxy for the root module.",
+      "doc": "api/ra_ap_hir.md#crate",
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "all",
+          "signature": "fn all(db: &dyn HirDatabase) -> Vec<Crate>"
+        },
+        {
+          "name": "base",
+          "signature": "fn base(self) -> base_db::Crate"
+        },
+        {
+          "name": "cfg",
+          "signature": "fn cfg<'db>(&self, db: &'db dyn HirDatabase) -> &'db CfgOptions"
+        },
+        {
+          "name": "dependencies",
+          "signature": "fn dependencies(self, db: &dyn HirDatabase) -> Vec<CrateDependency>"
+        },
+        {
+          "name": "display_name",
+          "signature": "fn display_name(self, db: &dyn HirDatabase) -> Option<CrateDisplayName>"
+        },
+        {
+          "name": "edition",
+          "signature": "fn edition(self, db: &dyn HirDatabase) -> Edition"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: base_db::Crate) -> Crate",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_html_root_url",
+          "signature": "fn get_html_root_url(self, db: &dyn HirDatabase) -> Option<String>",
+          "summary": "Try to get the root URL of the documentation of a crate."
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_builtin",
+          "signature": "fn is_builtin(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_unstable_feature_enabled",
+          "signature": "fn is_unstable_feature_enabled(self, db: &dyn HirDatabase, feature: &Symbol) -> bool"
+        },
+        {
+          "name": "modules",
+          "signature": "fn modules(self, db: &dyn HirDatabase) -> Vec<Module>"
+        },
+        {
+          "name": "notable_traits_in_deps",
+          "signature": "fn notable_traits_in_deps(self, db: &dyn HirDatabase) -> impl Iterator<Item = &TraitId>"
+        },
+        {
+          "name": "origin",
+          "signature": "fn origin(self, db: &dyn HirDatabase) -> CrateOrigin"
+        },
+        {
+          "name": "potential_cfg",
+          "signature": "fn potential_cfg<'db>(&self, db: &'db dyn HirDatabase) -> &'db CfgOptions"
+        },
+        {
+          "name": "query_external_importables",
+          "signature": "fn query_external_importables(self, db: &dyn SourceDatabase, query: import_map::Query) -> impl Iterator<Item = (Either<ModuleDef, Macro>, Complete)>"
+        },
+        {
+          "name": "reverse_dependencies",
+          "signature": "fn reverse_dependencies(self, db: &dyn HirDatabase) -> Vec<Crate>"
+        },
+        {
+          "name": "root_file",
+          "signature": "fn root_file(self, db: &dyn HirDatabase) -> FileId"
+        },
+        {
+          "name": "root_module",
+          "signature": "fn root_module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "to_display_target",
+          "signature": "fn to_display_target(self, db: &dyn HirDatabase) -> DisplayTarget"
+        },
+        {
+          "name": "transitive_reverse_dependencies",
+          "signature": "fn transitive_reverse_dependencies(self, db: &dyn HirDatabase) -> impl Iterator<Item = Crate>"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(self, db: &dyn HirDatabase) -> Option<String>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::CrateDependency",
+      "name": "CrateDependency",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct CrateDependency",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "krate",
+        "name"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::DeriveHelper",
+      "name": "DeriveHelper",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct DeriveHelper",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "derive",
+          "signature": "fn derive(&self) -> Macro"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Enum",
+      "name": "Enum",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Enum",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::EnumId) -> Enum",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_data_carrying",
+          "signature": "fn is_data_carrying(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Returns true if at least one variant of this enum is a non-unit variant."
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "layout",
+          "signature": "fn layout<'db>(self, db: &'db dyn HirDatabase) -> Result<Layout<'db>, LayoutError>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "num_variants",
+          "signature": "fn num_variants(self, db: &dyn HirDatabase) -> usize"
+        },
+        {
+          "name": "repr",
+          "signature": "fn repr(self, db: &dyn HirDatabase) -> Option<ReprOptions>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty<'db>(self, db: &'db dyn HirDatabase) -> Type<'db>"
+        },
+        {
+          "name": "variant_body_ty",
+          "signature": "fn variant_body_ty<'db>(self, db: &'db dyn HirDatabase) -> Type<'db>",
+          "summary": "The type of the enum variant bodies."
+        },
+        {
+          "name": "variants",
+          "signature": "fn variants(self, db: &dyn HirDatabase) -> Vec<EnumVariant>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::EnumVariant",
+      "name": "EnumVariant",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct EnumVariant",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "constructor_ty",
+          "signature": "fn constructor_ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "eval",
+          "signature": "fn eval(self, db: &dyn HirDatabase) -> Result<i128, ConstEvalError<'_>>"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(self, db: &dyn HirDatabase) -> Vec<Field>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: EnumVariantId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(self, db: &dyn HirDatabase) -> StructKind"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "layout",
+          "signature": "fn layout<'db>(&self, db: &'db dyn HirDatabase) -> Result<Layout<'db>, LayoutError>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent_enum",
+          "signature": "fn parent_enum(self, db: &dyn HirDatabase) -> Enum"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<ast::Variant>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(self, db: &dyn HirDatabase) -> Option<ast::Expr>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::EvaluatedConst",
+      "name": "EvaluatedConst",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct EvaluatedConst<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "render",
+          "signature": "fn render(&self, db: &dyn HirDatabase, display_target: DisplayTarget) -> String"
+        },
+        {
+          "name": "render_debug",
+          "signature": "fn render_debug(&self, db: &'db dyn HirDatabase) -> Result<String, MirEvalError<'db>>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ExternBlock",
+      "name": "ExternBlock",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct ExternBlock",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer"
+      ],
+      "methods": [
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::ExternBlockId) -> ExternBlock",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ExternCrateDecl",
+      "name": "ExternCrateDecl",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct ExternCrateDecl",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(self, db: &dyn HirDatabase) -> Option<ImportAlias>"
+        },
+        {
+          "name": "alias_or_name",
+          "signature": "fn alias_or_name(self, db: &dyn HirDatabase) -> Option<Name>",
+          "summary": "Returns the name under which this crate is made accessible, taking `_` into account."
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::ExternCrateId) -> ExternCrateDecl",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "resolved_crate",
+          "signature": "fn resolved_crate(self, db: &dyn HirDatabase) -> Option<Crate>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Field",
+      "name": "Field",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Field",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(def: FieldId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> usize"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "layout",
+          "signature": "fn layout<'db>(&self, db: &'db dyn HirDatabase) -> Result<Layout<'db>, LayoutError>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent_def",
+          "signature": "fn parent_def(&self, _db: &dyn HirDatabase) -> Variant"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty<'db>(&self, db: &'db dyn HirDatabase) -> Type<'db>",
+          "summary": "Returns the type as in the signature of the struct. Only use this in the context of the field definition."
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Function",
+      "name": "Function",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Function",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem",
+        "ra_ap_hir::AsExternAssocItem",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "as_extern_assoc_item",
+          "signature": "fn as_extern_assoc_item(self, db: &dyn HirDatabase) -> Option<ExternAssocItem>",
+          "via_trait": "ra_ap_hir::AsExternAssocItem"
+        },
+        {
+          "name": "as_proc_macro",
+          "signature": "fn as_proc_macro(self, db: &dyn HirDatabase) -> Option<Macro>"
+        },
+        {
+          "name": "assoc_fn_params",
+          "signature": "fn assoc_fn_params(self, db: &dyn HirDatabase) -> Vec<Param<'_>>"
+        },
+        {
+          "name": "async_ret_type",
+          "signature": "fn async_ret_type<'db>(self, db: &'db dyn HirDatabase) -> Option<Type<'db>>"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "eval",
+          "signature": "fn eval(self, db: &dyn HirDatabase, span_formatter: impl Fn(FileId, TextRange) -> String) -> Result<String, ConstEvalError<'_>>"
+        },
+        {
+          "name": "exported_main",
+          "signature": "fn exported_main(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Is this a function with an `export_name` of `main`?"
+        },
+        {
+          "name": "extern_block",
+          "signature": "fn extern_block(self, db: &dyn HirDatabase) -> Option<ExternBlock>"
+        },
+        {
+          "name": "fn_ptr_type",
+          "signature": "fn fn_ptr_type(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: hir_def::FunctionId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_body",
+          "signature": "fn has_body(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Whether this function declaration has a definition."
+        },
+        {
+          "name": "has_self_param",
+          "signature": "fn has_self_param(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_async",
+          "signature": "fn is_async(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_bench",
+          "signature": "fn is_bench(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Does this function have `#[bench]` attribute?"
+        },
+        {
+          "name": "is_const",
+          "signature": "fn is_const(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_ignore",
+          "signature": "fn is_ignore(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Does this function have the ignore attribute?"
+        },
+        {
+          "name": "is_main",
+          "signature": "fn is_main(self, db: &dyn HirDatabase) -> bool",
+          "summary": "is this a `fn main` or a function with an `export_name` of `main`?"
+        },
+        {
+          "name": "is_test",
+          "signature": "fn is_test(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Does this function have `#[test]` attribute?"
+        },
+        {
+          "name": "is_unsafe",
+          "signature": "fn is_unsafe(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_unsafe_to_call",
+          "signature": "fn is_unsafe_to_call(self, db: &dyn HirDatabase, caller: Option<Function>, call_edition: Edition) -> bool"
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Is this function marked as unstable with `#[feature]` attribute?"
+        },
+        {
+          "name": "is_varargs",
+          "signature": "fn is_varargs(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "lang",
+          "signature": "fn lang(db: &dyn HirDatabase, krate: Crate, lang_item: LangItem) -> Option<Function>"
+        },
+        {
+          "name": "method_params",
+          "signature": "fn method_params(self, db: &dyn HirDatabase) -> Option<Vec<Param<'_>>>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "num_params",
+          "signature": "fn num_params(self, db: &dyn HirDatabase) -> usize"
+        },
+        {
+          "name": "params_without_self",
+          "signature": "fn params_without_self(self, db: &dyn HirDatabase) -> Vec<Param<'_>>"
+        },
+        {
+          "name": "ret_type",
+          "signature": "fn ret_type(self, db: &dyn HirDatabase) -> Type<'_>",
+          "summary": "Get this function's return type"
+        },
+        {
+          "name": "returns_impl_future",
+          "signature": "fn returns_impl_future(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "self_param",
+          "signature": "fn self_param(self, db: &dyn HirDatabase) -> Option<SelfParam>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "source_with_range",
+          "signature": "fn source_with_range(self, db: &dyn HirDatabase) -> Option<InFile<(TextRange, Option<Self::Ast>)>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::GenericSubstitution",
+      "name": "GenericSubstitution",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct GenericSubstitution<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "types",
+          "signature": "fn types(&self, db: &'db dyn HirDatabase) -> Vec<(Symbol, Type<'db>)>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Impl",
+      "name": "Impl",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Impl",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "all_for_trait",
+          "signature": "fn all_for_trait(db: &dyn HirDatabase, trait_: Trait) -> Vec<Impl>"
+        },
+        {
+          "name": "all_for_type",
+          "signature": "fn all_for_type<'db>(db: &'db dyn HirDatabase, ty: Type<'db>) -> Vec<Impl>",
+          "summary": "**Note:** This is an **approximation** that strives to give the *human-perceived notion* of an \"impl for type\", **not** answer the technical question \"what are all impls applying to this type\". In particular, it excludes blanket impls, and…"
+        },
+        {
+          "name": "all_in_crate",
+          "signature": "fn all_in_crate(db: &dyn HirDatabase, krate: Crate) -> Vec<Impl>"
+        },
+        {
+          "name": "all_in_module",
+          "signature": "fn all_in_module(db: &dyn HirDatabase, module: Module) -> Vec<Impl>"
+        },
+        {
+          "name": "check_orphan_rules",
+          "signature": "fn check_orphan_rules(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: hir_def::ImplId) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_negative",
+          "signature": "fn is_negative(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_unsafe",
+          "signature": "fn is_unsafe(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "items",
+          "signature": "fn items(self, db: &dyn HirDatabase) -> Vec<AssocItem>"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "self_ty",
+          "signature": "fn self_ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "source_with_range",
+          "signature": "fn source_with_range(self, db: &dyn HirDatabase) -> Option<InFile<(TextRange, Option<Self::Ast>)>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "trait_",
+          "signature": "fn trait_(self, db: &dyn HirDatabase) -> Option<Trait>"
+        },
+        {
+          "name": "trait_ref",
+          "signature": "fn trait_ref(self, db: &dyn HirDatabase) -> Option<TraitRef<'_>>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::InlineAsmOperand",
+      "name": "InlineAsmOperand",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct InlineAsmOperand",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> ExpressionStoreOwner"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Label",
+      "name": "Label",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Label",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from((parent, label_id): (ExpressionStoreOwnerId, LabelId)) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> ExpressionStoreOwner"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Layout",
+      "name": "Layout",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Layout<'db>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "align",
+          "signature": "fn align(&self) -> u64"
+        },
+        {
+          "name": "enum_tag_size",
+          "signature": "fn enum_tag_size(&self) -> Option<usize>"
+        },
+        {
+          "name": "field_offset",
+          "signature": "fn field_offset(&self, field: Field) -> Option<u64>"
+        },
+        {
+          "name": "largest_padding",
+          "signature": "fn largest_padding(&self, field_size: &mut impl FnMut(usize) -> Option<u64>) -> Option<u64>"
+        },
+        {
+          "name": "niches",
+          "signature": "fn niches(&self) -> Option<u128>"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> u64"
+        },
+        {
+          "name": "tail_padding",
+          "signature": "fn tail_padding(&self, field_size: &mut impl FnMut(usize) -> Option<u64>) -> Option<u64>"
+        },
+        {
+          "name": "tuple_field_offset",
+          "signature": "fn tuple_field_offset(&self, field: usize) -> Option<u64>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::LifetimeParam",
+      "name": "LifetimeParam",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct LifetimeParam",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::LifetimeParamId) -> LifetimeParam",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> GenericDef"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Local",
+      "name": "Local",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Local<'db>",
+      "summary": "A single local definition.",
+      "doc": "api/ra_ap_hir.md#local",
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(self) -> u32"
+        },
+        {
+          "name": "as_self_param",
+          "signature": "fn as_self_param(self, db: &dyn HirDatabase) -> Option<SelfParam>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from((parent, binding_id): (DefWithBodyId, BindingId)) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_mut",
+          "signature": "fn is_mut(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_param",
+          "signature": "fn is_param(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_ref",
+          "signature": "fn is_ref(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_self",
+          "signature": "fn is_self(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> ExpressionStoreOwner"
+        },
+        {
+          "name": "primary_source",
+          "signature": "fn primary_source(self, db: &dyn HirDatabase) -> LocalSource<'db>",
+          "summary": "The leftmost definition for this local. Example: `let (a$0, _) | (_, a) = it;`"
+        },
+        {
+          "name": "sources",
+          "signature": "fn sources(self, db: &dyn HirDatabase) -> Vec<LocalSource<'db>>",
+          "summary": "All definitions for this local. Example: `let (a$0, _) | (_, a$0) = it;`"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &'db dyn HirDatabase) -> Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::LocalSource",
+      "name": "LocalSource",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct LocalSource<'db>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "local",
+        "source"
+      ],
+      "implements": [
+        "ra_ap_hir::has_source::HasSource"
+      ],
+      "methods": [
+        {
+          "name": "as_ident_pat",
+          "signature": "fn as_ident_pat(&self) -> Option<&ast::IdentPat>"
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self) -> HirFileId"
+        },
+        {
+          "name": "into_ident_pat",
+          "signature": "fn into_ident_pat(self) -> Option<ast::IdentPat>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> Option<InFile<ast::Name>>"
+        },
+        {
+          "name": "original_file",
+          "signature": "fn original_file(&self, db: &dyn HirDatabase) -> EditionedFileId"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, _: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&self) -> &SyntaxNode"
+        },
+        {
+          "name": "syntax_ptr",
+          "signature": "fn syntax_ptr(self) -> InFile<SyntaxNodePtr>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Macro",
+      "name": "Macro",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Macro",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "builtin_derive_kind",
+          "signature": "fn builtin_derive_kind(&self, db: &dyn HirDatabase) -> Option<BuiltinDeriveMacroKind>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::MacroId) -> Macro",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_asm_like",
+          "signature": "fn is_asm_like(&self, db: &dyn HirDatabase) -> bool",
+          "summary": "Is this `asm!()`, or a variant of it (e.g. `global_asm!()`)?"
+        },
+        {
+          "name": "is_attr",
+          "signature": "fn is_attr(&self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_derive",
+          "signature": "fn is_derive(&self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_env_or_option_env",
+          "signature": "fn is_env_or_option_env(&self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_fn_like",
+          "signature": "fn is_fn_like(&self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_proc_macro",
+          "signature": "fn is_proc_macro(self) -> bool"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self, db: &dyn HirDatabase) -> MacroKind"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "preferred_brace_style",
+          "signature": "fn preferred_brace_style(&self, db: &dyn HirDatabase) -> Option<MacroBraces>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Module",
+      "name": "Module",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Module",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "as_source_file_id",
+          "signature": "fn as_source_file_id(self, db: &dyn HirDatabase) -> Option<EditionedFileId>"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(self, db: &dyn HirDatabase) -> impl Iterator<Item = Module>",
+          "summary": "Iterates over all child modules."
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "crate_root",
+          "signature": "fn crate_root(self, db: &dyn HirDatabase) -> Module",
+          "summary": "Topmost parent of this module. Every module has a `crate_root`, but some might be missing `krate`. This can happen if a module's file is not included in the module tree of any target in `Cargo.toml`."
+        },
+        {
+          "name": "declaration_source",
+          "signature": "fn declaration_source(self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>>",
+          "summary": "Returns a node which declares this module, either a `mod foo;` or a `mod foo {}`. `None` for the crate root."
+        },
+        {
+          "name": "declaration_source_range",
+          "signature": "fn declaration_source_range(self, db: &dyn HirDatabase) -> Option<InFile<TextRange>>",
+          "summary": "Returns a text range which declares this module, either a `mod foo;` or a `mod foo {}`. `None` for the crate root."
+        },
+        {
+          "name": "declarations",
+          "signature": "fn declarations(self, db: &dyn HirDatabase) -> Vec<ModuleDef>"
+        },
+        {
+          "name": "definition_source",
+          "signature": "fn definition_source(self, db: &dyn HirDatabase) -> InFile<ModuleSource>",
+          "summary": "Returns a node which defines this module. That is, a file or a `mod foo {}` with items."
+        },
+        {
+          "name": "definition_source_file_id",
+          "signature": "fn definition_source_file_id(self, db: &dyn HirDatabase) -> HirFileId"
+        },
+        {
+          "name": "definition_source_range",
+          "signature": "fn definition_source_range(self, db: &dyn HirDatabase) -> InFile<TextRange>",
+          "summary": "Returns a node which defines this module. That is, a file or a `mod foo {}` with items."
+        },
+        {
+          "name": "diagnostics",
+          "signature": "fn diagnostics<'db>(self, db: &'db dyn HirDatabase, acc: &mut Vec<AnyDiagnostic<'db>>, style_lints: bool)",
+          "summary": "Fills `acc` with the module's diagnostics."
+        },
+        {
+          "name": "doc_keyword",
+          "signature": "fn doc_keyword(self, db: &dyn HirDatabase) -> Option<Symbol>"
+        },
+        {
+          "name": "find_path",
+          "signature": "fn find_path(self, db: &dyn SourceDatabase, item: impl Into<ItemInNs>, cfg: FindPathConfig) -> Option<ModPath>",
+          "summary": "Finds a path that can be used to refer to the given item from within this module, if possible."
+        },
+        {
+          "name": "find_use_path",
+          "signature": "fn find_use_path(self, db: &dyn SourceDatabase, item: impl Into<ItemInNs>, prefix_kind: PrefixKind, cfg: FindPathConfig) -> Option<ModPath>",
+          "summary": "Finds a path that can be used to refer to the given item from within this module, if possible. This is used for returning import paths for use-statements."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::ModuleId) -> Module",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_path",
+          "signature": "fn has_path(&self, db: &dyn HirDatabase) -> bool",
+          "summary": "Whether it has `#[path = \"...\"]` attribute."
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "impl_defs",
+          "signature": "fn impl_defs(self, db: &dyn HirDatabase) -> Vec<Impl>"
+        },
+        {
+          "name": "is_crate_root",
+          "signature": "fn is_crate_root(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_inline",
+          "signature": "fn is_inline(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_mod_rs",
+          "signature": "fn is_mod_rs(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(self, db: &dyn HirDatabase) -> Crate",
+          "summary": "Returns the crate this module is part of."
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "legacy_macros",
+          "signature": "fn legacy_macros(self, db: &dyn HirDatabase) -> Vec<Macro>"
+        },
+        {
+          "name": "modules_in_scope",
+          "signature": "fn modules_in_scope(&self, db: &dyn HirDatabase, pub_only: bool) -> Vec<(Name, Module)>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Option<Name>",
+          "summary": "Name of this module."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "nearest_non_block_module",
+          "signature": "fn nearest_non_block_module(self, db: &dyn HirDatabase) -> Module",
+          "summary": "Finds nearest non-block ancestor `Module` (`self` included)."
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, db: &dyn HirDatabase) -> Option<Module>",
+          "summary": "Finds a parent module."
+        },
+        {
+          "name": "path_segments",
+          "signature": "fn path_segments(self, db: &dyn HirDatabase) -> impl Iterator<Item = Name>",
+          "summary": "Names of the modules enclosing `self`, crate root first, `self` last."
+        },
+        {
+          "name": "path_to_root",
+          "signature": "fn path_to_root(self, db: &dyn HirDatabase) -> Vec<Module>"
+        },
+        {
+          "name": "resolve_mod_path",
+          "signature": "fn resolve_mod_path(&self, db: &dyn HirDatabase, segments: impl IntoIterator<Item = Name>) -> Option<impl Iterator<Item = ItemInNs>>"
+        },
+        {
+          "name": "scope",
+          "signature": "fn scope(self, db: &dyn HirDatabase, visible_from: Option<Module>) -> Vec<(Name, ScopeDef<'_>)>",
+          "summary": "Returns a `ModuleScope`: a set of items, visible in this module."
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::OverloadedDeref",
+      "name": "OverloadedDeref",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct OverloadedDeref",
+      "summary": "",
+      "doc": null,
+      "methods": []
+    },
+    {
+      "path": "ra_ap_hir::Param",
+      "name": "Param",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Param<'db>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::has_source::HasSource"
+      ],
+      "methods": [
+        {
+          "name": "as_local",
+          "signature": "fn as_local(&self, db: &'db dyn HirDatabase) -> Option<Local<'db>>"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> usize"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent_fn",
+          "signature": "fn parent_fn(&self) -> Option<Function>"
+        },
+        {
+          "name": "pattern_source",
+          "signature": "fn pattern_source(self, db: &dyn HirDatabase) -> Option<ast::Pat>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self) -> &Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::PredicateEvaluationResult",
+      "name": "PredicateEvaluationResult",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct PredicateEvaluationResult",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_ide::PredicateEvaluationResult"
+      ],
+      "fields": [
+        "status",
+        "message"
+      ],
+      "methods": [
+        {
+          "name": "holds",
+          "signature": "fn holds(message: impl Into<String>) -> Self"
+        },
+        {
+          "name": "invalid",
+          "signature": "fn invalid(message: impl Into<String>) -> Self"
+        },
+        {
+          "name": "not_proven",
+          "signature": "fn not_proven(message: impl Into<String>) -> Self"
+        },
+        {
+          "name": "unsupported",
+          "signature": "fn unsupported(message: impl Into<String>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::SelfParam",
+      "name": "SelfParam",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct SelfParam",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "access",
+          "signature": "fn access(self, db: &dyn HirDatabase) -> Access"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "parent_fn",
+          "signature": "fn parent_fn(&self) -> Function"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty<'db>(&self, db: &'db dyn HirDatabase) -> Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Static",
+      "name": "Static",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Static",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsExternAssocItem",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "as_extern_assoc_item",
+          "signature": "fn as_extern_assoc_item(self, db: &dyn HirDatabase) -> Option<ExternAssocItem>",
+          "via_trait": "ra_ap_hir::AsExternAssocItem"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "eval",
+          "signature": "fn eval(self, db: &dyn HirDatabase) -> Result<EvaluatedConst<'_>, ConstEvalError<'_>>",
+          "summary": "Evaluate the static initializer."
+        },
+        {
+          "name": "extern_block",
+          "signature": "fn extern_block(self, db: &dyn HirDatabase) -> Option<ExternBlock>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::StaticId) -> Static",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_mut",
+          "signature": "fn is_mut(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(self, db: &dyn HirDatabase) -> Option<ast::Expr>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::StaticLifetime",
+      "name": "StaticLifetime",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct StaticLifetime",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(self) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, _db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Struct",
+      "name": "Struct",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Struct",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "constructor_ty",
+          "signature": "fn constructor_ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(self, db: &dyn HirDatabase) -> Vec<Field>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::StructId) -> Struct",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(self, db: &dyn HirDatabase) -> StructKind"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "repr",
+          "signature": "fn repr(self, db: &dyn HirDatabase) -> Option<ReprOptions>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::ToolModule",
+      "name": "ToolModule",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct ToolModule",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir::HasName"
+      ],
+      "methods": [
+        {
+          "name": "krate",
+          "signature": "fn krate(&self) -> Crate"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Trait",
+      "name": "Trait",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Trait",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "all_supertraits",
+          "signature": "fn all_supertraits(self, db: &dyn HirDatabase) -> Vec<Trait>"
+        },
+        {
+          "name": "complete",
+          "signature": "fn complete(self, db: &dyn HirDatabase) -> Complete",
+          "summary": "`#[rust_analyzer::completions(...)]` mode."
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "direct_supertraits",
+          "signature": "fn direct_supertraits(self, db: &dyn HirDatabase) -> Vec<Trait>"
+        },
+        {
+          "name": "dyn_compatibility",
+          "signature": "fn dyn_compatibility(&self, db: &dyn HirDatabase) -> Option<DynCompatibilityViolation>"
+        },
+        {
+          "name": "dyn_compatibility_all_violations",
+          "signature": "fn dyn_compatibility_all_violations(&self, db: &dyn HirDatabase) -> Option<Vec<DynCompatibilityViolation>>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::TraitId) -> Trait",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "function",
+          "signature": "fn function(self, db: &dyn HirDatabase, name: impl PartialEq<Name>) -> Option<Function>"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_auto",
+          "signature": "fn is_auto(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_unsafe",
+          "signature": "fn is_unsafe(&self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "items",
+          "signature": "fn items(self, db: &dyn HirDatabase) -> Vec<AssocItem>"
+        },
+        {
+          "name": "items_with_supertraits",
+          "signature": "fn items_with_supertraits(self, db: &dyn HirDatabase) -> Vec<AssocItem>"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "lang",
+          "signature": "fn lang(db: &dyn HirDatabase, krate: Crate, lang_item: LangItem) -> Option<Trait>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "must_implement_one_of",
+          "signature": "fn must_implement_one_of(self, db: &dyn HirDatabase) -> Option<&[Name]>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "prefer_underscore_import",
+          "signature": "fn prefer_underscore_import(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "type_or_const_param_count",
+          "signature": "fn type_or_const_param_count(&self, db: &dyn HirDatabase, count_required_only: bool) -> usize"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TraitPredicate",
+      "name": "TraitPredicate",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TraitPredicate<'db>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "polarity",
+          "signature": "fn polarity(&self) -> PredicatePolarity"
+        },
+        {
+          "name": "trait_ref",
+          "signature": "fn trait_ref(&self) -> TraitRef<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TraitRef",
+      "name": "TraitRef",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TraitRef<'db>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "get_type_argument",
+          "signature": "fn get_type_argument(&self, idx: usize) -> Option<Type<'db>>",
+          "summary": "Returns `idx`-th argument of this trait reference if it is a type argument. Note that the first argument is the `Self` type."
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "self_ty",
+          "signature": "fn self_ty(&self) -> Type<'_>"
+        },
+        {
+          "name": "trait_",
+          "signature": "fn trait_(&self) -> Trait"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TupleField",
+      "name": "TupleField",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TupleField<'db>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "owner",
+        "tuple",
+        "index"
+      ],
+      "implements": [
+        "ra_ap_hir::HasName",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, _db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self, db: &'db dyn HirDatabase) -> Type<'db>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Type",
+      "name": "Type",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Type<'db>",
+      "summary": "Note: A [`Type`] remembers its origin. Trying to do anything (except comparing) with types of different origins will cause errors or panics. Instead, use the `instantiate` methods.",
+      "doc": "api/ra_ap_hir.md#type",
+      "implements": [
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "add_reference",
+          "signature": "fn add_reference(&self, db: &'db dyn HirDatabase, mutability: Mutability) -> Self"
+        },
+        {
+          "name": "applicable_inherent_traits",
+          "signature": "fn applicable_inherent_traits(&self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Trait>",
+          "summary": "If a type can be represented as `dyn Trait`, returns all traits accessible via this type, or an empty iterator otherwise."
+        },
+        {
+          "name": "as_adt",
+          "signature": "fn as_adt(&self) -> Option<Adt>"
+        },
+        {
+          "name": "as_adt_with_args",
+          "signature": "fn as_adt_with_args(&self) -> Option<(Adt, Vec<Option<Type<'db>>>)>",
+          "summary": "Holes in the args can come from lifetime/const params."
+        },
+        {
+          "name": "as_array",
+          "signature": "fn as_array(&self, db: &'db dyn HirDatabase) -> Option<(Self, usize)>"
+        },
+        {
+          "name": "as_associated_type_parent_trait",
+          "signature": "fn as_associated_type_parent_trait(&self, db: &'db dyn HirDatabase) -> Option<Trait>"
+        },
+        {
+          "name": "as_builtin",
+          "signature": "fn as_builtin(&self) -> Option<BuiltinType>"
+        },
+        {
+          "name": "as_callable",
+          "signature": "fn as_callable(&self, db: &'db dyn HirDatabase) -> Option<Callable<'db>>"
+        },
+        {
+          "name": "as_closure",
+          "signature": "fn as_closure(&self) -> Option<Closure<'db>>"
+        },
+        {
+          "name": "as_coroutine",
+          "signature": "fn as_coroutine(&self) -> Option<Coroutine<'db>>",
+          "summary": "Returns this type as a coroutine."
+        },
+        {
+          "name": "as_dyn_trait",
+          "signature": "fn as_dyn_trait(&self) -> Option<Trait>"
+        },
+        {
+          "name": "as_impl_traits",
+          "signature": "fn as_impl_traits(&self, db: &'db dyn HirDatabase) -> Option<impl Iterator<Item = Trait>>"
+        },
+        {
+          "name": "as_raw_ptr",
+          "signature": "fn as_raw_ptr(&self) -> Option<(Type<'db>, Mutability)>"
+        },
+        {
+          "name": "as_reference",
+          "signature": "fn as_reference(&self) -> Option<(Type<'db>, Mutability)>"
+        },
+        {
+          "name": "as_reference_inner",
+          "signature": "fn as_reference_inner(&self) -> Option<Type<'db>>"
+        },
+        {
+          "name": "as_slice",
+          "signature": "fn as_slice(&self) -> Option<Type<'db>>"
+        },
+        {
+          "name": "as_type_param",
+          "signature": "fn as_type_param(&self, _db: &'db dyn HirDatabase) -> Option<TypeParam>"
+        },
+        {
+          "name": "autoderef",
+          "signature": "fn autoderef(&self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Type<'db>> + use<{'lifetime': \"'_\"}, {'lifetime': \"'db\"}>",
+          "summary": "Returns types that this type dereferences to (including this type itself). The returned iterator won't yield the same type more than once even if the deref chain contains a cycle."
+        },
+        {
+          "name": "contains_reference",
+          "signature": "fn contains_reference(&self, db: &'db dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "contains_unknown",
+          "signature": "fn contains_unknown(&self) -> bool"
+        },
+        {
+          "name": "could_coerce_to",
+          "signature": "fn could_coerce_to(&self, db: &'db dyn HirDatabase, to: &Type<'db>) -> bool"
+        },
+        {
+          "name": "could_unify_with",
+          "signature": "fn could_unify_with(&self, db: &'db dyn HirDatabase, other: &Type<'db>) -> bool",
+          "summary": "Check if type unifies with another type."
+        },
+        {
+          "name": "could_unify_with_deeply",
+          "signature": "fn could_unify_with_deeply(&self, db: &'db dyn HirDatabase, other: &Type<'db>) -> bool",
+          "summary": "Check if type unifies with another type eagerly making sure there are no unresolved goals."
+        },
+        {
+          "name": "drop_glue",
+          "signature": "fn drop_glue(&self, db: &'db dyn HirDatabase) -> DropGlue"
+        },
+        {
+          "name": "env_traits",
+          "signature": "fn env_traits(&self, db: &'db dyn HirDatabase) -> impl Iterator<Item = Trait>"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self, db: &'db dyn HirDatabase) -> Vec<(Field, Self)>"
+        },
+        {
+          "name": "fingerprint_for_trait_impl",
+          "signature": "fn fingerprint_for_trait_impl(&self, db: &'db dyn HirDatabase) -> Option<SimplifiedType<'db>>"
+        },
+        {
+          "name": "future_output",
+          "signature": "fn future_output(self, db: &'db dyn HirDatabase) -> Option<Type<'db>>",
+          "summary": "This does **not** resolve `IntoFuture`, only `Future`."
+        },
+        {
+          "name": "generic_parameters",
+          "signature": "fn generic_parameters<'a>(&'a self, db: &'a dyn HirDatabase, display_target: DisplayTarget) -> impl Iterator<Item = SmolStr> + 'a",
+          "summary": "Combines lifetime indicators, type and constant parameters into a single `Iterator`"
+        },
+        {
+          "name": "generic_params",
+          "signature": "fn generic_params(&self, db: &'db dyn HirDatabase) -> FxHashSet<GenericParam>",
+          "summary": "Returns unique `GenericParam`s contained in this type."
+        },
+        {
+          "name": "has_any_impl",
+          "signature": "fn has_any_impl(&self, db: &'db dyn HirDatabase, trait_: Trait, args: &[Type<'db>]) -> bool",
+          "summary": "Unlike [`Type::impls_trait()`], which checks whether the type always implements the trait, this check whether there are any generic args substitution for `args`` that will cause the trait to be implemented."
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "impls_fnonce",
+          "signature": "fn impls_fnonce(&self, db: &'db dyn HirDatabase) -> bool",
+          "summary": "Checks that particular type `ty` implements `std::ops::FnOnce`."
+        },
+        {
+          "name": "impls_iterator",
+          "signature": "fn impls_iterator(self, db: &'db dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "impls_trait",
+          "signature": "fn impls_trait(&self, db: &'db dyn HirDatabase, trait_: Trait, args: &[Type<'db>]) -> bool"
+        },
+        {
+          "name": "instantiate",
+          "signature": "fn instantiate(&self, args: impl IntoIterator<Item: Borrow<Type<'db>>>) -> Type<'db>"
+        },
+        {
+          "name": "instantiate_with_errors",
+          "signature": "fn instantiate_with_errors(&self) -> Self",
+          "summary": "Replace any generic parameters with error types."
+        },
+        {
+          "name": "into_future_output",
+          "signature": "fn into_future_output(&self, db: &'db dyn HirDatabase) -> Option<Type<'db>>",
+          "summary": "Checks that particular type `ty` implements `std::future::IntoFuture` or `std::future::Future` and returns the `Output` associated type. This function is used in `.await` syntax completion."
+        },
+        {
+          "name": "into_iterator_iter",
+          "signature": "fn into_iterator_iter(self, db: &'db dyn HirDatabase) -> Option<Type<'db>>",
+          "summary": "Resolves the projection `<Self as IntoIterator>::IntoIter` and returns the resulting type"
+        },
+        {
+          "name": "is_array",
+          "signature": "fn is_array(&self) -> bool"
+        },
+        {
+          "name": "is_bool",
+          "signature": "fn is_bool(&self) -> bool"
+        },
+        {
+          "name": "is_char",
+          "signature": "fn is_char(&self) -> bool"
+        },
+        {
+          "name": "is_closure",
+          "signature": "fn is_closure(&self) -> bool"
+        },
+        {
+          "name": "is_copy",
+          "signature": "fn is_copy(&self, db: &'db dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_float",
+          "signature": "fn is_float(&self) -> bool"
+        },
+        {
+          "name": "is_fn",
+          "signature": "fn is_fn(&self) -> bool"
+        },
+        {
+          "name": "is_int_or_uint",
+          "signature": "fn is_int_or_uint(&self) -> bool"
+        },
+        {
+          "name": "is_mutable_raw_ptr",
+          "signature": "fn is_mutable_raw_ptr(&self) -> bool"
+        },
+        {
+          "name": "is_mutable_reference",
+          "signature": "fn is_mutable_reference(&self) -> bool"
+        },
+        {
+          "name": "is_never",
+          "signature": "fn is_never(&self) -> bool"
+        },
+        {
+          "name": "is_packed",
+          "signature": "fn is_packed(&self, _db: &'db dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "is_raw_ptr",
+          "signature": "fn is_raw_ptr(&self) -> bool"
+        },
+        {
+          "name": "is_reference",
+          "signature": "fn is_reference(&self) -> bool"
+        },
+        {
+          "name": "is_scalar",
+          "signature": "fn is_scalar(&self) -> bool"
+        },
+        {
+          "name": "is_slice",
+          "signature": "fn is_slice(&self) -> bool"
+        },
+        {
+          "name": "is_str",
+          "signature": "fn is_str(&self) -> bool"
+        },
+        {
+          "name": "is_tuple",
+          "signature": "fn is_tuple(&self) -> bool"
+        },
+        {
+          "name": "is_unit",
+          "signature": "fn is_unit(&self) -> bool"
+        },
+        {
+          "name": "is_unknown",
+          "signature": "fn is_unknown(&self) -> bool"
+        },
+        {
+          "name": "is_usize",
+          "signature": "fn is_usize(&self) -> bool"
+        },
+        {
+          "name": "iterate_assoc_items",
+          "signature": "fn iterate_assoc_items<T>(&self, db: &'db dyn HirDatabase, callback: impl FnMut(AssocItem) -> Option<T>) -> Option<T>"
+        },
+        {
+          "name": "iterate_method_candidates",
+          "signature": "fn iterate_method_candidates<T>(&self, db: &'db dyn HirDatabase, scope: &SemanticsScope<'_>, name: Option<&Name>, callback: impl FnMut(Function) -> Option<T>) -> Option<T>"
+        },
+        {
+          "name": "iterate_method_candidates_split_inherent",
+          "signature": "fn iterate_method_candidates_split_inherent(&self, db: &'db dyn HirDatabase, scope: &SemanticsScope<'_>, traits_in_scope: &FxHashSet<TraitId>, name: Option<&Name>, callback: impl MethodCandidateCallback)",
+          "summary": "Allows you to treat inherent and non-inherent methods differently."
+        },
+        {
+          "name": "iterate_method_candidates_with_traits",
+          "signature": "fn iterate_method_candidates_with_traits<T>(&self, db: &'db dyn HirDatabase, scope: &SemanticsScope<'_>, traits_in_scope: &FxHashSet<TraitId>, name: Option<&Name>, callback: impl FnMut(Function) -> Option<T>) -> Option<T>"
+        },
+        {
+          "name": "iterate_path_candidates",
+          "signature": "fn iterate_path_candidates<T>(&self, db: &'db dyn HirDatabase, scope: &SemanticsScope<'_>, traits_in_scope: &FxHashSet<TraitId>, name: Option<&Name>, callback: impl FnMut(AssocItem) -> Option<T>) -> Option<T>"
+        },
+        {
+          "name": "iterate_path_candidates_split_inherent",
+          "signature": "fn iterate_path_candidates_split_inherent(&self, db: &'db dyn HirDatabase, scope: &SemanticsScope<'_>, traits_in_scope: &FxHashSet<TraitId>, name: Option<&Name>, callback: impl PathCandidateCallback)",
+          "summary": "Iterates over inherent methods."
+        },
+        {
+          "name": "iterator_item",
+          "signature": "fn iterator_item(self, db: &'db dyn HirDatabase) -> Option<Type<'db>>",
+          "summary": "This does **not** resolve `IntoIterator`, only `Iterator`."
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "layout",
+          "signature": "fn layout(&self, db: &'db dyn HirDatabase) -> Result<Layout<'db>, LayoutError>"
+        },
+        {
+          "name": "new_slice",
+          "signature": "fn new_slice(db: &'db dyn HirDatabase, ty: Self) -> Self"
+        },
+        {
+          "name": "new_tuple",
+          "signature": "fn new_tuple(db: &'db dyn HirDatabase, tys: impl IntoIterator<Item: Borrow<Type<'db>>>) -> Self"
+        },
+        {
+          "name": "new_unit",
+          "signature": "fn new_unit() -> Self"
+        },
+        {
+          "name": "normalize_trait_assoc_type",
+          "signature": "fn normalize_trait_assoc_type(&self, db: &'db dyn HirDatabase, args: &[Type<'db>], alias: TypeAlias) -> Option<Type<'db>>"
+        },
+        {
+          "name": "rebase_into_or_error",
+          "signature": "fn rebase_into_or_error(&self, db: &'db dyn HirDatabase, rebase_into: &Type<'db>) -> Type<'db>",
+          "summary": "If `self` can be rebased into `rebase_into`, returns that. Otherwise, instantiates `self` with errors and returns that."
+        },
+        {
+          "name": "rebase_into_owner_or_error",
+          "signature": "fn rebase_into_owner_or_error(&self, db: &'db dyn HirDatabase, new_owner: GenericDef) -> Self"
+        },
+        {
+          "name": "remove_raw_ptr",
+          "signature": "fn remove_raw_ptr(&self) -> Option<Type<'db>>"
+        },
+        {
+          "name": "strip_reference",
+          "signature": "fn strip_reference(&self) -> Self"
+        },
+        {
+          "name": "strip_references",
+          "signature": "fn strip_references(&self) -> Self"
+        },
+        {
+          "name": "try_rebase_into",
+          "signature": "fn try_rebase_into(&self, db: &'db dyn HirDatabase, rebase_into: &Type<'db>) -> Option<Self>",
+          "summary": "Tries to put this type as-is in the context of `rebase_into`. This will return `Some(_)` if:"
+        },
+        {
+          "name": "try_rebase_into_owner",
+          "signature": "fn try_rebase_into_owner(&self, db: &'db dyn HirDatabase, new_owner: GenericDef) -> Option<Self>"
+        },
+        {
+          "name": "tuple_fields",
+          "signature": "fn tuple_fields(&self, _db: &'db dyn HirDatabase) -> Vec<Self>"
+        },
+        {
+          "name": "type_and_const_arguments",
+          "signature": "fn type_and_const_arguments<'a>(&'a self, db: &'a dyn HirDatabase, display_target: DisplayTarget) -> impl Iterator<Item = SmolStr> + 'a",
+          "summary": "Iterates its type and const arguments"
+        },
+        {
+          "name": "type_arguments",
+          "signature": "fn type_arguments(&self) -> impl Iterator<Item = Type<'db>> + '_",
+          "summary": "Iterates its type arguments"
+        },
+        {
+          "name": "unknown",
+          "signature": "fn unknown() -> Self"
+        },
+        {
+          "name": "walk",
+          "signature": "fn walk(&self, db: &'db dyn HirDatabase, callback: impl FnMut(Type<'db>))",
+          "summary": "Visits every type, including generic arguments, in this type. `callback` is called with type itself first, and then with its generic arguments."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TypeAlias",
+      "name": "TypeAlias",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TypeAlias",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::AsAssocItem",
+        "ra_ap_hir::AsExternAssocItem",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>",
+          "via_trait": "ra_ap_hir::AsAssocItem"
+        },
+        {
+          "name": "as_extern_assoc_item",
+          "signature": "fn as_extern_assoc_item(self, db: &dyn HirDatabase) -> Option<ExternAssocItem>",
+          "via_trait": "ra_ap_hir::AsExternAssocItem"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::TypeAliasId) -> TypeAlias",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_non_default_type_params",
+          "signature": "fn has_non_default_type_params(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "has_type",
+          "signature": "fn has_type(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TypeOrConstParam",
+      "name": "TypeOrConstParam",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TypeOrConstParam",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "as_const_param",
+          "signature": "fn as_const_param(self, db: &dyn HirDatabase) -> Option<ConstParam>"
+        },
+        {
+          "name": "as_type_param",
+          "signature": "fn as_type_param(self, db: &dyn HirDatabase) -> Option<TypeParam>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::TypeOrConstParamId) -> TypeOrConstParam",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> GenericDef"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "split",
+          "signature": "fn split(self, db: &dyn HirDatabase) -> Either<ConstParam, TypeParam>"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::TypeParam",
+      "name": "TypeParam",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct TypeParam",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir_ty::display::HirDisplay",
+        "ra_ap_ide::navigation_target::TryToNav"
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "signature": "fn default(self, db: &dyn HirDatabase) -> Option<Type<'_>>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::TypeParamId) -> TypeParam",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_implicit",
+          "signature": "fn is_implicit(self, db: &dyn HirDatabase) -> bool",
+          "summary": "Is this type parameter implicitly introduced (eg. `Self` in a trait or an `impl Trait` argument)?"
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(self) -> TypeOrConstParam"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(self, _db: &dyn HirDatabase) -> GenericDef"
+        },
+        {
+          "name": "trait_bounds",
+          "signature": "fn trait_bounds(self, db: &dyn HirDatabase) -> Vec<Trait>",
+          "summary": "FIXME: this only lists trait bounds from the item defining the type parameter, not additional bounds that might be added e.g. by a method if the parameter comes from an impl!"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::Union",
+      "name": "Union",
+      "kind": "struct",
+      "crate": "ra_ap_hir",
+      "signature": "struct Union",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "ra_ap_hir::HasContainer",
+        "ra_ap_hir::HasCrate",
+        "ra_ap_hir::HasName",
+        "ra_ap_hir::HasVisibility",
+        "ra_ap_hir::attrs::HasAttrs",
+        "ra_ap_hir::has_source::HasSource",
+        "ra_ap_hir_ty::display::HirDisplay"
+      ],
+      "methods": [
+        {
+          "name": "constructor_ty",
+          "signature": "fn constructor_ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer",
+          "via_trait": "ra_ap_hir::HasContainer"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(self, db: &dyn HirDatabase) -> Vec<Field>"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(id: hir_def::UnionId) -> Union",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "hir_fmt",
+          "signature": "fn hir_fmt(&self, f: &mut HirFormatter<'_, 'db>) -> Result",
+          "via_trait": "ra_ap_hir_ty::display::HirDisplay"
+        },
+        {
+          "name": "is_unstable",
+          "signature": "fn is_unstable(self, db: &dyn HirDatabase) -> bool"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(self, db: &dyn HirDatabase) -> StructKind"
+        },
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate",
+          "via_trait": "ra_ap_hir::HasCrate"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(self, db: &dyn HirDatabase) -> Module"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(self, db: &dyn HirDatabase) -> Name"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>",
+          "via_trait": "ra_ap_hir::HasName"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(self, db: &dyn HirDatabase) -> Option<InFile<Self::Ast>>",
+          "via_trait": "ra_ap_hir::has_source::HasSource"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(self, db: &dyn HirDatabase) -> Type<'_>"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility",
+          "via_trait": "ra_ap_hir::HasVisibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::AsAssocItem",
+      "name": "AsAssocItem",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait AsAssocItem",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_hir::Const",
+        "ra_ap_hir::DefWithBody",
+        "ra_ap_hir::Function",
+        "ra_ap_hir::GenericDef",
+        "ra_ap_hir::ModuleDef",
+        "ra_ap_hir::TypeAlias"
+      ],
+      "required_methods": [
+        "as_assoc_item"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_assoc_item",
+          "signature": "fn as_assoc_item(self, db: &dyn HirDatabase) -> Option<AssocItem>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::AsExternAssocItem",
+      "name": "AsExternAssocItem",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait AsExternAssocItem",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_hir::Function",
+        "ra_ap_hir::Static",
+        "ra_ap_hir::TypeAlias"
+      ],
+      "required_methods": [
+        "as_extern_assoc_item"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_extern_assoc_item",
+          "signature": "fn as_extern_assoc_item(self, db: &dyn HirDatabase) -> Option<ExternAssocItem>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::HasContainer",
+      "name": "HasContainer",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait HasContainer",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_hir::Const",
+        "ra_ap_hir::Enum",
+        "ra_ap_hir::ExternBlock",
+        "ra_ap_hir::ExternCrateDecl",
+        "ra_ap_hir::Function",
+        "ra_ap_hir::Module",
+        "ra_ap_hir::Static",
+        "ra_ap_hir::Struct",
+        "ra_ap_hir::Trait",
+        "ra_ap_hir::TypeAlias",
+        "ra_ap_hir::Union"
+      ],
+      "required_methods": [
+        "container"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "container",
+          "signature": "fn container(&self, db: &dyn HirDatabase) -> ItemContainer"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::HasCrate",
+      "name": "HasCrate",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait HasCrate",
+      "summary": "Trait for obtaining the defining crate of an item.",
+      "doc": "api/ra_ap_hir.md#hascrate",
+      "implementors": [
+        "ra_ap_hir::Adt",
+        "ra_ap_hir::AnonConst",
+        "ra_ap_hir::AssocItem",
+        "ra_ap_hir::Const",
+        "ra_ap_hir::Enum",
+        "ra_ap_hir::EnumVariant",
+        "ra_ap_hir::Field",
+        "ra_ap_hir::Function",
+        "ra_ap_hir::Impl",
+        "ra_ap_hir::Macro",
+        "ra_ap_hir::Module",
+        "ra_ap_hir::ModuleDef",
+        "ra_ap_hir::Static",
+        "ra_ap_hir::Struct",
+        "ra_ap_hir::Trait",
+        "ra_ap_hir::Type",
+        "ra_ap_hir::TypeAlias",
+        "ra_ap_hir::Union"
+      ],
+      "required_methods": [
+        "krate"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "krate",
+          "signature": "fn krate(&self, db: &dyn HirDatabase) -> Crate"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::HasName",
+      "name": "HasName",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait HasName",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_hir::Adt",
+        "ra_ap_hir::AssocItem",
+        "ra_ap_hir::BuiltinAttr",
+        "ra_ap_hir::BuiltinType",
+        "ra_ap_hir::Const",
+        "ra_ap_hir::ConstParam",
+        "ra_ap_hir::DefWithBody",
+        "ra_ap_hir::DeriveHelper",
+        "ra_ap_hir::Enum",
+        "ra_ap_hir::EnumVariant",
+        "ra_ap_hir::ExternAssocItem",
+        "ra_ap_hir::ExternCrateDecl",
+        "ra_ap_hir::Field",
+        "ra_ap_hir::Function",
+        "ra_ap_hir::GenericParam",
+        "ra_ap_hir::InlineAsmOperand",
+        "ra_ap_hir::Label",
+        "ra_ap_hir::LifetimeParam",
+        "ra_ap_hir::Local",
+        "ra_ap_hir::Macro",
+        "ra_ap_hir::Module",
+        "ra_ap_hir::ModuleDef",
+        "ra_ap_hir::Param",
+        "ra_ap_hir::Static",
+        "ra_ap_hir::StaticLifetime",
+        "ra_ap_hir::Struct",
+        "ra_ap_hir::ToolModule",
+        "ra_ap_hir::Trait",
+        "ra_ap_hir::TupleField",
+        "ra_ap_hir::TypeAlias",
+        "ra_ap_hir::TypeOrConstParam",
+        "ra_ap_hir::TypeParam",
+        "ra_ap_hir::Union",
+        "ra_ap_hir::Variant"
+      ],
+      "required_methods": [
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self, db: &dyn HirDatabase) -> Option<Name>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::HasVisibility",
+      "name": "HasVisibility",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait HasVisibility",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_hir::Adt",
+        "ra_ap_hir::AssocItem",
+        "ra_ap_hir::Const",
+        "ra_ap_hir::Enum",
+        "ra_ap_hir::EnumVariant",
+        "ra_ap_hir::ExternCrateDecl",
+        "ra_ap_hir::Field",
+        "ra_ap_hir::Function",
+        "ra_ap_hir::Macro",
+        "ra_ap_hir::Module",
+        "ra_ap_hir::ModuleDef",
+        "ra_ap_hir::Static",
+        "ra_ap_hir::Struct",
+        "ra_ap_hir::Trait",
+        "ra_ap_hir::TypeAlias",
+        "ra_ap_hir::Union"
+      ],
+      "required_methods": [
+        "visibility"
+      ],
+      "provided_methods": [
+        "is_visible_from"
+      ],
+      "methods": [
+        {
+          "name": "is_visible_from",
+          "signature": "fn is_visible_from(&self, db: &dyn HirDatabase, module: Module) -> bool"
+        },
+        {
+          "name": "visibility",
+          "signature": "fn visibility(&self, db: &dyn HirDatabase) -> Visibility"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::MacroCallIdExt",
+      "name": "MacroCallIdExt",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait MacroCallIdExt",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "ra_ap_span::MacroCallId"
+      ],
+      "required_methods": [
+        "loc"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "loc",
+          "signature": "fn loc(self, db: &dyn HirDatabase) -> &hir_expand::MacroCallLoc"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::MethodCandidateCallback",
+      "name": "MethodCandidateCallback",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait MethodCandidateCallback",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "on_inherent_method",
+        "on_trait_method"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "on_inherent_method",
+          "signature": "fn on_inherent_method(&mut self, f: Function) -> ControlFlow<()>"
+        },
+        {
+          "name": "on_trait_method",
+          "signature": "fn on_trait_method(&mut self, f: Function) -> ControlFlow<()>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_hir::PathCandidateCallback",
+      "name": "PathCandidateCallback",
+      "kind": "trait",
+      "crate": "ra_ap_hir",
+      "signature": "trait PathCandidateCallback",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "on_inherent_item",
+        "on_trait_item"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "on_inherent_item",
+          "signature": "fn on_inherent_item(&mut self, item: AssocItem) -> ControlFlow<()>"
+        },
+        {
+          "name": "on_trait_item",
+          "signature": "fn on_trait_item(&mut self, item: AssocItem) -> ControlFlow<()>"
+        }
+      ]
+    }
+  ]
+}

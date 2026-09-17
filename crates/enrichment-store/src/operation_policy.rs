@@ -7,6 +7,38 @@ use datafusion::{
 };
 use enrichment_core::native_key::Key;
 
+/// Resolution inputs are an ordered exact acquisition set, admitted before any transition.
+pub(crate) async fn resolution(
+    runtime: &QueryRuntime,
+    value: &crate::control_jobs::Resolution,
+) -> Result<()> {
+    use enrichment_core::native_union::NativeStruct;
+    let session = runtime.session();
+    let batch = crate::control_jobs::Resolution::batch(std::slice::from_ref(value))?;
+    let schema = batch.schema();
+    let frame = session.read_batch(batch)?;
+    let predicates = frame.clone();
+    let invalid = runtime
+        .native_read(async move {
+            enrichment_core::native_schema::intrinsic_violations(predicates, &schema)
+        })
+        .await?;
+    if let Some(invalid) = invalid {
+        runtime
+            .require_empty(
+                invalid.select(vec![lit("resolution_fields").alias("witness")])?,
+                "resolution_fields",
+                "resolution_ingress",
+            )
+            .await?;
+    }
+    crate::native_catalog::work(&session, "resolution_input", frame.into_view())?;
+    let witness = session.sql("WITH members AS (SELECT unnest(input_artifact_ids) AS artifact_id FROM resolution_input) SELECT 'resolution_acquisition_set' AS witness FROM resolution_input WHERE input_artifact_ids<>array_sort(input_artifact_ids) OR cardinality(array_distinct(input_artifact_ids))<>cardinality(input_artifact_ids) OR NOT array_has(input_artifact_ids,result_artifact_id) UNION ALL SELECT 'resolution_artifact_identity' AS witness FROM members WHERE NOT regexp_like(artifact_id,'^art_[0-9a-f]{64}$')").await?;
+    runtime
+        .require_empty(witness, "resolution_inputs", "resolution_ingress")
+        .await
+}
+
 pub(crate) async fn admit(
     runtime: &QueryRuntime,
     session: &SessionContext,
@@ -21,18 +53,16 @@ pub(crate) async fn admit(
     )?;
     let input = session.sql(r#"
         SELECT d.job_id,d.job_key,d.policy_id,d.operation_revision,
-          CASE WHEN d.arguments.resolve IS NOT NULL THEN 'resolve'
-               WHEN d.arguments.compare IS NOT NULL THEN 'compare'
-               WHEN d.arguments.inspect IS NOT NULL THEN 'inspect' ELSE 'verify' END AS operation,
-          coalesce(d.arguments.resolve.ecosystem,d.arguments.compare.ecosystem,CASE WHEN d.arguments.compare IS NOT NULL THEN 'rust' END) AS ecosystem,
-          coalesce(d.arguments.verify.context_id,d.arguments.inspect.context_id) AS context_id,
-          coalesce(d.arguments.verify.snapshot_id,d.arguments.inspect.snapshot_id) AS snapshot_id,
-          CASE WHEN d.arguments.verify IS NOT NULL THEN CASE WHEN d.arguments.verify.mode='runtime' THEN 'runtime' ELSE 'build' END
-               WHEN d.arguments.inspect IS NOT NULL THEN CASE WHEN d.arguments.inspect.execution.runtime IS NOT NULL THEN 'runtime' ELSE 'build' END
+          d.arguments.kind AS operation,
+          coalesce(d.arguments.resolve.request.ecosystem,d.arguments.compare.request.ecosystem,CASE WHEN d.arguments.compare IS NOT NULL THEN 'rust' END) AS ecosystem,
+          coalesce(d.arguments.verify.request.context_id,d.arguments.inspect.request.context_id) AS context_id,
+          coalesce(d.arguments.verify.request.snapshot_id,d.arguments.inspect.request.snapshot_id) AS snapshot_id,
+          CASE WHEN d.arguments.verify IS NOT NULL THEN CASE WHEN d.arguments.verify.request.mode='runtime' THEN 'runtime' ELSE 'build' END
+               WHEN d.arguments.inspect IS NOT NULL THEN CASE WHEN d.arguments.inspect.request.execution.runtime IS NOT NULL THEN 'runtime' ELSE 'build' END
                ELSE 'static' END AS profile,
-          coalesce(d.arguments.verify.profile,d.arguments.inspect.execution.profile,'static') AS requested_profile,
-          d.arguments.resolve.freshness AS freshness,
-          coalesce(d.arguments.verify.snippet,d.arguments.inspect.execution.snippet) AS snippet,
+          coalesce(d.arguments.verify.request.profile,d.arguments.inspect.request.execution.profile,'static') AS requested_profile,
+          d.arguments.resolve.request.freshness AS freshness,
+          coalesce(d.arguments.verify.request.snippet,d.arguments.inspect.request.execution.snippet) AS snippet,
           p.limits.verification_input_bytes AS snippet_limit
         FROM operation_queued t JOIN state.records.commands d ON t.job_id=d.job_id CROSS JOIN operation_configuration p
     "#).await?;
@@ -79,10 +109,11 @@ pub(crate) async fn admit(
 /// Verify identities at the bounded ingress; callers cannot invent a shared key or policy ID.
 pub(crate) async fn validate(runtime: &QueryRuntime, command: &Command) -> Result<()> {
     let session = runtime.session();
-    let frame = session.read_batch(crate::control_jobs::encode(
-        crate::control_jobs::commands(),
-        std::slice::from_ref(command),
-    )?)?;
+    let frame = session.read_batch(
+        <Command as enrichment_core::native_union::NativeStruct>::batch(std::slice::from_ref(
+            command,
+        ))?,
+    )?;
     let witness = frame
         .filter(col("job_key").not_eq(Key::OperationCommand.expression()))?
         .select(vec![lit("command_identity_mismatch").alias("witness")])?;

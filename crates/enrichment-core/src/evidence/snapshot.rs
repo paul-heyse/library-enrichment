@@ -8,7 +8,7 @@ use crate::identity::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-pub const FORMAT: &str = "7.0";
+pub const FORMAT: &str = "8.0";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -65,46 +65,46 @@ impl SnapshotMetadata {
     }
 }
 
+crate::native_struct! {
 /// Small snapshot publication metadata. Release/environment records belong to catalog Parquet.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct SnapshotDescriptor {
-    pub context_id: ContextId,
-    pub release_id: ReleaseId,
-    pub environment_id: EnvironmentId,
-    pub ecosystem: Ecosystem,
-    pub symbol_package: String,
-    pub crate_name: String,
-    pub crate_version: Option<String>,
-    pub normalizer_version: String,
-    pub observed_configuration: Option<ObservedConfiguration>,
-    pub producer_items: u64,
+    context_id: ContextId => crate::native_union::Rule::Text,
+    release_id: ReleaseId => crate::native_union::Rule::Text,
+    environment_id: EnvironmentId => crate::native_union::Rule::Text,
+    ecosystem: Ecosystem => crate::native_union::Rule::Text,
+    symbol_package: String => crate::native_union::Rule::NonEmpty,
+    crate_name: String => crate::native_union::Rule::NonEmpty,
+    crate_version: Option<String> => crate::native_union::Rule::Text,
+    normalizer_version: String => crate::native_union::Rule::NonEmpty,
+    observed_configuration: Option<ObservedConfiguration> => crate::native_union::Rule::Text,
+    producer_items: u64 => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct DeltaBinding {
-    pub relation: String,
-    pub table_uri: String,
-    pub table_id: String,
-    pub version: u64,
-    pub cohort_id: String,
-    pub contract_id: String,
-    pub rows: u64,
+    relation: String => crate::native_union::Rule::NonEmpty,
+    table_uri: String => crate::native_union::Rule::NonEmpty,
+    table_id: String => crate::native_union::Rule::NonEmpty,
+    version: u64 => crate::native_union::Rule::Text,
+    cohort_id: String => crate::native_union::Rule::NonEmpty,
+    contract_id: String => crate::native_union::Rule::NonEmpty,
+    rows: u64 => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct EvidenceManifest {
-    pub snapshot_id: SnapshotId,
-    pub schema_version: String,
-    pub metadata: SnapshotDescriptor,
-    pub components: BTreeMap<String, String>,
-    pub tables: Vec<DeltaBinding>,
-    pub counts: SnapshotCounts,
-    pub indexed: Vec<EvidenceKind>,
-    pub missing: Vec<EvidenceKind>,
-    pub published_at: String,
+    snapshot_id: SnapshotId => crate::native_union::Rule::Text,
+    schema_version: String => crate::native_union::Rule::Vocabulary(vec![FORMAT.into()]),
+    metadata: SnapshotDescriptor => crate::native_union::Rule::Text,
+    components: BTreeMap<String, String> => crate::native_union::Rule::Map,
+    tables: Vec<DeltaBinding> => crate::native_union::Rule::SequenceBounds { min: 1, max: 32 },
+    counts: SnapshotCounts => crate::native_union::Rule::Text,
+    indexed: Vec<EvidenceKind> => crate::native_union::Rule::Set,
+    missing: Vec<EvidenceKind> => crate::native_union::Rule::Set,
+    published_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+}
 }
 
 impl std::ops::Deref for EvidenceManifest {
@@ -128,14 +128,9 @@ impl EvidenceManifest {
         {
             return Err("snapshot descriptor is incomplete".into());
         }
-        let qualifiers = crate::canonical::digest_hex(&serde_json::json!([
-            "snapshot-qualifiers/1",
-            metadata.symbol_package,
-            metadata.crate_name,
-            metadata.crate_version,
-            metadata.observed_configuration,
-            metadata.producer_items,
-        ]));
+        let qualifiers = crate::native_key::Key::SnapshotDescriptor
+            .record(metadata)
+            .map_err(|error| error.to_string())?;
         Ok(SnapshotId::derive(&SnapshotInputs {
             schema_version: FORMAT.into(),
             normalizer_version: metadata.normalizer_version.clone(),

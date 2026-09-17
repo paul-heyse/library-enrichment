@@ -75,7 +75,8 @@ fn validate_transport(path: &Path) -> Result<()> {
     for batch in &mut reader {
         let batch = batch?;
         if batch.num_rows() > worker::MAX_BATCH_ROWS
-            || batch.get_array_memory_size() > worker::MAX_BATCH_BYTES + 65536
+            || datafusion::common::utils::memory::get_record_batch_memory_size(&batch)
+                > worker::MAX_BATCH_BYTES + 65536
         {
             return Err(invalid("worker Arrow batch bound"));
         }
@@ -327,7 +328,9 @@ use datafusion::{
     prelude::{col, lit},
 };
 use enrichment_core::{
-    evidence::arrow_model::expressions::{child, null, record},
+    evidence::arrow_model::expressions::{
+        child, null, record, variant, variants as union_variants,
+    },
     evidence::{ingest::IngestContext, relational::FactSource},
     native_key::Key,
 };
@@ -352,17 +355,54 @@ fn symbol_key(package: &str, path: Expr, kind: Expr) -> Result<Expr> {
         null(&DataType::Utf8)?,
     ])
 }
+fn callable_expr(value: Expr, kind: &DataType) -> Result<Expr> {
+    use enrichment_core::evidence::arrow_model::expressions::derive_record;
+    let parameters = child(kind, "parameters")?;
+    let DataType::List(item) = &parameters else {
+        return datafusion::common::plan_err!("callable parameters require List");
+    };
+    let parameter = Expr::LambdaVariable(datafusion::logical_expr::expr::LambdaVariable::new(
+        "parameter".into(),
+        Some(item.clone()),
+    ));
+    let origin = datafusion::logical_expr::when(
+        get_field(parameter.clone(), "kind").in_list(
+            vec![lit("variadic positional"), lit("variadic keyword")],
+            false,
+        ),
+        lit("implicit_variadic"),
+    )
+    .when(
+        get_field(parameter.clone(), "reported_default").is_null(),
+        lit("absent"),
+    )
+    .otherwise(lit("declared"))?;
+    let transformed = enrichment_core::evidence::arrow_model::expressions::derive_record(
+        parameter,
+        item.data_type(),
+        &[("default_origin", origin)],
+    )?;
+    let parameters = datafusion::functions_nested::expr_fn::array_transform(
+        get_field(value.clone(), "parameters"),
+        datafusion::logical_expr::expr_fn::lambda(vec!["parameter"], transformed),
+    );
+    derive_record(value, kind, &[("parameters", parameters)])
+}
+
 fn source_expr(source: &FactSource, overload: Option<Expr>) -> Result<Expr> {
     let kind = field_type(Relation::ApiObservations, "source")?;
-    let locator = record(
+    let locator = variant(
         &child(&kind, "locator")?,
+        "python_declaration",
         &[
-            ("kind", lit("python_declaration")),
             ("file", get_field(col("o"), "file")),
             ("declaration", get_field(col("o"), "path")),
-            ("start", get_field(col("o"), "line")),
+            ("line", get_field(col("o"), "line")),
             ("origin", get_field(col("o"), "origin")),
-            ("overload", overload.unwrap_or(null(&DataType::UInt32)?)),
+            (
+                "overload",
+                overload.unwrap_or(get_field(col("o"), "overload_ordinal")),
+            ),
         ],
     )?;
     let encoded = enrichment_core::evidence::arrow_model::encode::source(&[source])?;
@@ -453,16 +493,48 @@ impl PythonFacts {
         let bound = self.session.sql("SELECT b.*, v.symbol_id FROM bound_observations b JOIN identified_variants v ON b.path=v.path AND b.declared_kind=v.declared_kind").await?;
         self.session
             .register_table("identified_observations", bound.clone().into_view())?;
-        let subject = record(
+        let subject = variant(
             &field_type(Relation::ApiObservations, "subject")?,
-            &[("kind", lit("symbol")), ("symbol_id", col("symbol_id"))],
+            "symbol",
+            &[("symbol_id", col("symbol_id"))],
         )?;
         let payload_kind = field_type(Relation::ApiObservations, "payload")?;
         let python_kind = child(&payload_kind, "python")?;
+        let callable_kind = child(&python_kind, "callable")?;
+        let overload_kind = child(&python_kind, "overloads")?;
+        let DataType::List(overload_item) = &overload_kind else {
+            return datafusion::common::plan_err!("overloads require List");
+        };
+        let overload = Expr::LambdaVariable(datafusion::logical_expr::expr::LambdaVariable::new(
+            "overload".into(),
+            Some(overload_item.clone()),
+        ));
+        let overload_value = enrichment_core::evidence::arrow_model::expressions::derive_record(
+            overload.clone(),
+            overload_item.data_type(),
+            &[(
+                "callable",
+                callable_expr(get_field(overload, "callable"), &callable_kind)?,
+            )],
+        )?;
         let python = record(
             &python_kind,
-            &["overloads", "alias_target", "bases", "publicness"]
-                .map(|name| (name, get_field(col("o"), name))),
+            &[
+                (
+                    "callable",
+                    callable_expr(get_field(col("o"), "callable"), &callable_kind)?,
+                ),
+                (
+                    "overloads",
+                    datafusion::functions_nested::expr_fn::array_transform(
+                        get_field(col("o"), "overloads"),
+                        datafusion::logical_expr::expr_fn::lambda(vec!["overload"], overload_value),
+                    ),
+                ),
+                ("alias_target", get_field(col("o"), "alias_target")),
+                ("bases", get_field(col("o"), "bases")),
+                ("publicness", get_field(col("o"), "publicness")),
+            ],
         )?;
         let declared_kind = datafusion::logical_expr::when(
             get_field(col("o"), "kind").eq(lit("alias")),
@@ -511,16 +583,12 @@ impl PythonFacts {
             FROM identified_observations b WHERE declared_kind='alias' AND o['kind']='alias' AND o['alias_target'] IS NOT NULL"#).await?
             .with_column("target_symbol",datafusion::logical_expr::when(col("resolved"),symbol_key(package,col("definition_path"),col("kind"))?).otherwise(null(&DataType::Utf8)?)?)?;
         let target_type = field_type(Relation::Relationships, "target")?;
-        let target = record(
+        let target = union_variants(
             &target_type,
+            col("target_kind"),
             &[
-                ("kind", col("target_kind")),
-                ("symbol_id", col("target_symbol")),
-                (
-                    "path",
-                    datafusion::logical_expr::when(col("resolved"), null(&DataType::Utf8)?)
-                        .otherwise(col("target_path"))?,
-                ),
+                ("symbol", vec![("symbol_id", col("target_symbol"))]),
+                ("unresolved", vec![("path", col("target_path"))]),
             ],
         )?;
         let relationships = reexports.select(vec![
@@ -542,9 +610,10 @@ impl PythonFacts {
             )?;
         let bases = bases.select(vec![
             subject.clone().alias("subject"),
-            record(
+            variant(
                 &target_type,
-                &[("kind", lit("unresolved")), ("path", col("base"))],
+                "unresolved",
+                &[("path", get_field(col("base"), "rendering"))],
             )?
             .alias("target"),
             lit("inherits").alias("relation"),
@@ -570,12 +639,57 @@ impl PythonFacts {
                 get_field(col("o"), "docs").alias("text"),
                 source_expr(source, None)?.alias("source"),
             ])?;
-        let signatures = self.session.sql("SELECT *,array_concat(CASE WHEN o['signature'] IS NULL THEN CAST(make_array() AS VARCHAR[]) ELSE make_array(o['signature']) END,o['overloads']) AS texts FROM identified_observations").await?;
-        self.session
-            .register_table("signature_lists", signatures.into_view())?;
-        let signatures = self.session.sql("SELECT symbol_id,path,o,texts,range(0,CAST(array_length(texts) AS BIGINT)) AS ordinals FROM signature_lists").await?
-            .unnest_columns_with_options(&["texts","ordinals"],datafusion::common::UnnestOptions::new().with_preserve_nulls(false))?
-            .select(vec![lit("api_signature").alias("kind"),subject.alias("subject"),col("path").alias("display_subject"),col("texts").alias("text"),source_expr(source,Some(col("ordinals")))?.alias("source")])?;
+        // Ordinal and text travel in one generated native record. Typed lambda bindings
+        // also avoid treating a struct lambda variable as a SQL table qualifier.
+        let rendering_kind = DataType::Struct(
+            vec![
+                arrow::datatypes::Field::new("ordinal", DataType::UInt32, true),
+                arrow::datatypes::Field::new("signature", DataType::Utf8, true),
+            ]
+            .into(),
+        );
+        let main = record(
+            &rendering_kind,
+            &[
+                ("ordinal", get_field(col("o"), "overload_ordinal")),
+                ("signature", get_field(col("o"), "signature")),
+            ],
+        )?;
+        let overload = Expr::LambdaVariable(datafusion::logical_expr::expr::LambdaVariable::new(
+            "rendered_overload".into(),
+            Some(overload_item.clone()),
+        ));
+        let other = record(
+            &rendering_kind,
+            &[
+                ("ordinal", get_field(overload.clone(), "ordinal")),
+                ("signature", get_field(overload, "signature")),
+            ],
+        )?;
+        let renderings = datafusion::functions_nested::expr_fn::array_concat(vec![
+            datafusion::functions_nested::expr_fn::make_array(vec![main]),
+            datafusion::functions_nested::expr_fn::array_transform(
+                get_field(col("o"), "overloads"),
+                datafusion::logical_expr::expr_fn::lambda(vec!["rendered_overload"], other),
+            ),
+        ]);
+        let signatures = self
+            .session
+            .table("identified_observations")
+            .await?
+            .with_column("rendering", renderings)?
+            .unnest_columns_with_options(
+                &["rendering"],
+                datafusion::common::UnnestOptions::new().with_preserve_nulls(false),
+            )?
+            .filter(get_field(col("rendering"), "signature").is_not_null())?
+            .select(vec![
+                lit("api_signature").alias("kind"),
+                subject.alias("subject"),
+                col("path").alias("display_subject"),
+                get_field(col("rendering"), "signature").alias("text"),
+                source_expr(source, Some(get_field(col("rendering"), "ordinal")))?.alias("source"),
+            ])?;
         let docs = crate::native_delta::project(docs, Key::TextFragment.schema().as_ref())?;
         let signatures =
             crate::native_delta::project(signatures, Key::TextFragment.schema().as_ref())?;
@@ -721,7 +835,10 @@ mod tests {
             ArtifactKind::Other,
             "application/vnd.apache.arrow.stream",
             "producer:griffe-static",
-            "2026-09-16T00:00:00Z",
+            enrichment_core::native_time::AcquisitionTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
         );
         let source = FactSource {
             producer_binding_id: format!("producer_{}", "a".repeat(64)),

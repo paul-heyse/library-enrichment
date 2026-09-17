@@ -133,65 +133,27 @@ impl ProducerPlan {
     }
 }
 
+crate::native_vocabulary! {
 /// How one producer run ended.
 ///
 /// The values are, in order: `succeeded`, `partial`, `failed`, `skipped`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum RunOutcome {
-    Succeeded,
-    Partial,
-    Failed,
-    Skipped,
+    #[schemars(inline)]
+    pub enum RunOutcome { Succeeded = "succeeded", Partial = "partial", Failed = "failed", Skipped = "skipped" }
 }
-
-impl RunOutcome {
-    /// Canonical producer outcome, shared by typed storage and provenance DTOs.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Succeeded => "succeeded",
-            Self::Partial => "partial",
-            Self::Failed => "failed",
-            Self::Skipped => "skipped",
-        }
+crate::native_struct! {
+    pub struct ProducerRun {
+        attempt_id: String => crate::native_union::Rule::NonEmpty,
+        producer: String => crate::native_union::Rule::NonEmpty,
+        producer_version: String => crate::native_union::Rule::NonEmpty,
+        config_digest: String => crate::native_union::Rule::Sha256,
+        inputs: BTreeMap<String, String> => crate::native_union::Rule::Map,
+        profile: ExecutionProfile => crate::native_union::Rule::Text,
+        started_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+        finished_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+        outcome: RunOutcome => crate::native_union::Rule::Text,
+        gaps: Vec<Gap> => crate::native_union::Rule::Set,
+        log: Option<String> => crate::native_union::Rule::Text,
     }
-
-    /// Parse an outcome without accepting alternate or debug spellings.
-    #[must_use]
-    pub fn parse(value: &str) -> Option<Self> {
-        [Self::Succeeded, Self::Partial, Self::Failed, Self::Skipped]
-            .into_iter()
-            .find(|v| v.as_str() == value)
-    }
-}
-
-/// Provenance for one producer execution (§6.1).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct ProducerRun {
-    /// Unique execution-attempt identity, excluded from semantic content and reuse keys.
-    pub attempt_id: String,
-    /// Producer name.
-    pub producer: String,
-    /// Exact producer version.
-    pub producer_version: String,
-    /// Digest of the normalized options the run was configured with.
-    pub config_digest: String,
-    /// Input artifact digests by role.
-    pub inputs: BTreeMap<String, String>,
-    /// The execution profile the run was performed under.
-    pub profile: ExecutionProfile,
-    /// RFC 3339 start time. Provenance only.
-    pub started_at: String,
-    /// RFC 3339 finish time. Provenance only.
-    pub finished_at: String,
-    /// How it ended.
-    pub outcome: RunOutcome,
-    /// Evidence the run was expected to yield and did not, each with a reason.
-    pub gaps: Vec<Gap>,
-    /// Bounded log text, when any was kept.
-    pub log: Option<String>,
 }
 
 impl ProducerRun {
@@ -262,15 +224,15 @@ mod tests {
             config_digest: config_digest(&serde_json::json!({"a": 1})),
             inputs: BTreeMap::from([("x".to_owned(), "ab".repeat(32))]),
             profile: ExecutionProfile::Static,
-            started_at: "t1".to_owned(),
-            finished_at: "t2".to_owned(),
+            started_at: crate::native_time::ObservationTime::from_micros(1).unwrap(),
+            finished_at: crate::native_time::ObservationTime::from_micros(2).unwrap(),
             outcome: RunOutcome::Succeeded,
             gaps: Vec::new(),
             log: None,
         };
         let key = run.dedupe_key();
-        run.started_at = "t3".to_owned();
-        run.finished_at = "t4".to_owned();
+        run.started_at = crate::native_time::ObservationTime::from_micros(3).unwrap();
+        run.finished_at = crate::native_time::ObservationTime::from_micros(4).unwrap();
         assert_eq!(run.dedupe_key(), key);
         run.inputs.insert("y".to_owned(), "cd".repeat(32));
         assert_ne!(run.dedupe_key(), key);

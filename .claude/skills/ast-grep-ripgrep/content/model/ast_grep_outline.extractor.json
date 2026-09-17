@@ -1,0 +1,284 @@
+{
+  "module": "ast_grep_outline::extractor",
+  "crate": "ast-grep-outline",
+  "api": "api/ast_grep_outline.extractor.md",
+  "items": [
+    {
+      "path": "ast_grep_outline::extractor::OutlineRuleError",
+      "name": "OutlineRuleError",
+      "kind": "enum",
+      "crate": "ast-grep-outline",
+      "signature": "enum OutlineRuleError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "RuleConfig",
+        "Predicate",
+        "Template",
+        "UnknownParentRuleId",
+        "InvalidParentRuleRole"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: TemplateFixError) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::SerializableOutlineRule",
+      "name": "SerializableOutlineRule",
+      "kind": "enum",
+      "crate": "ast-grep-outline",
+      "signature": "enum SerializableOutlineRule<L>",
+      "summary": "Serializable outline extractor definition loaded from an outline rule YAML document.",
+      "doc": "api/ast_grep_outline.extractor.md#serializableoutlinerule",
+      "variants": [
+        "Item",
+        "Member"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "common",
+          "signature": "fn common(&self) -> &SerializableOutlineCommon<L>"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::SerializablePredicate",
+      "name": "SerializablePredicate",
+      "kind": "enum",
+      "crate": "ast-grep-outline",
+      "signature": "enum SerializablePredicate",
+      "summary": "Boolean derivation for outline flags.",
+      "doc": "api/ast_grep_outline.extractor.md#serializablepredicate",
+      "variants": [
+        "Literal",
+        "Rule"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::parse_outline_rules",
+      "name": "parse_outline_rules",
+      "kind": "function",
+      "crate": "ast-grep-outline",
+      "signature": "fn parse_outline_rules<'a, L>(src: &'a str) -> Result<Vec<SerializableOutlineRule<L>>, serde_yaml::Error> where L: Deserialize<'a>",
+      "summary": "Parse a stream of YAML outline extractor documents.",
+      "doc": "api/ast_grep_outline.extractor.md#parse_outline_rules"
+    },
+    {
+      "path": "ast_grep_outline::extractor::ExtractorCommon",
+      "name": "ExtractorCommon",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct ExtractorCommon<L: Language>",
+      "summary": "Shared parsed fields for every runnable outline extractor.",
+      "doc": "api/ast_grep_outline.extractor.md#extractorcommon",
+      "fields": [
+        "rule",
+        "symbol_type",
+        "name",
+        "signature"
+      ],
+      "methods": [
+        {
+          "name": "try_from",
+          "signature": "fn try_from(common: SerializableOutlineCommon<L>, globals: &GlobalRules, detail: OutlineEntryDetail) -> Result<Self, OutlineRuleError>"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::ItemExtractor",
+      "name": "ItemExtractor",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct ItemExtractor<L: Language>",
+      "summary": "Runnable item extractor for top-level file/module structure.",
+      "doc": "api/ast_grep_outline.extractor.md#itemextractor",
+      "fields": [
+        "common"
+      ],
+      "methods": [
+        {
+          "name": "extract",
+          "signature": "fn extract<'tree, D: Doc>(&self, node_match: &NodeMatch<'tree, D>, members: Vec<OutlineMember<'tree>>) -> OutlineItem<'tree>"
+        },
+        {
+          "name": "match_node",
+          "signature": "fn match_node<'tree, D: Doc>(&self, node: &Node<'tree, D>) -> Option<NodeMatch<'tree, D>>"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(item: SerializableItemRule<L>, globals: &GlobalRules, detail: OutlineEntryDetail) -> Result<Self, OutlineRuleError>"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::MemberExtractor",
+      "name": "MemberExtractor",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct MemberExtractor<L: Language>",
+      "summary": "Runnable member extractor for direct child structure under an item.",
+      "doc": "api/ast_grep_outline.extractor.md#memberextractor",
+      "fields": [
+        "common",
+        "parent_rule_ids"
+      ],
+      "methods": [
+        {
+          "name": "extract",
+          "signature": "fn extract<'tree, D: Doc>(&self, node_match: &NodeMatch<'tree, D>) -> OutlineMember<'tree>"
+        },
+        {
+          "name": "match_node",
+          "signature": "fn match_node<'tree, D: Doc>(&self, node: &Node<'tree, D>) -> Option<NodeMatch<'tree, D>>"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(member: SerializableMemberRule<L>, globals: &GlobalRules, detail: OutlineEntryDetail) -> Result<Self, OutlineRuleError>"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::SerializableItemRule",
+      "name": "SerializableItemRule",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct SerializableItemRule<L>",
+      "summary": "Item extractor for top-level file/module structure.",
+      "doc": "api/ast_grep_outline.extractor.md#serializableitemrule",
+      "fields": [
+        "common",
+        "is_import",
+        "is_exported"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::SerializableMemberRule",
+      "name": "SerializableMemberRule",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct SerializableMemberRule<L>",
+      "summary": "Member extractor for direct child structure under an item.",
+      "doc": "api/ast_grep_outline.extractor.md#serializablememberrule",
+      "fields": [
+        "common",
+        "parent_rule_ids",
+        "is_public"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_outline::extractor::SerializableOutlineCommon",
+      "name": "SerializableOutlineCommon",
+      "kind": "struct",
+      "crate": "ast-grep-outline",
+      "signature": "struct SerializableOutlineCommon<L>",
+      "summary": "Shared serializable fields for every outline extractor.",
+      "doc": "api/ast_grep_outline.extractor.md#serializableoutlinecommon",
+      "fields": [
+        "id",
+        "language",
+        "symbol_type",
+        "matcher",
+        "rewriters",
+        "name",
+        "signature"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,286 @@
+{
+  "module": "regex_automata::dfa::onepass",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.dfa.onepass.md",
+  "items": [
+    {
+      "path": "regex_automata::dfa::onepass::BuildError",
+      "name": "BuildError",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct BuildError",
+      "summary": "An error that occurred during the construction of a one-pass DFA.",
+      "doc": "api/regex_automata.dfa.onepass.md#builderror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> Option<&dyn std::error::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::onepass::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for a [one-pass DFA](DFA).",
+      "doc": "api/regex_automata.dfa.onepass.md#builder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<DFA, BuildError>",
+          "summary": "Build a one-pass DFA from the given pattern."
+        },
+        {
+          "name": "build_from_nfa",
+          "signature": "fn build_from_nfa(&self, nfa: NFA) -> Result<DFA, BuildError>",
+          "summary": "Build a DFA from the given NFA."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<DFA, BuildError>",
+          "summary": "Build a one-pass DFA from the given patterns."
+        },
+        {
+          "name": "configure",
+          "signature": "fn configure(&mut self, config: Config) -> &mut Builder",
+          "summary": "Apply the given one-pass DFA configuration options to this builder."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new one-pass DFA builder with the default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        },
+        {
+          "name": "thompson",
+          "signature": "fn thompson(&mut self, config: thompson::Config) -> &mut Builder",
+          "summary": "Set the Thompson NFA configuration for this builder using [`nfa::thompson::Config`](crate::nfa::thompson::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::onepass::Cache",
+      "name": "Cache",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Cache",
+      "summary": "A cache represents mutable state that a one-pass [`DFA`] requires during a search.",
+      "doc": "api/regex_automata.dfa.onepass.md#cache",
+      "methods": [
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the heap memory usage, in bytes, of this cache."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(re: &DFA) -> Cache",
+          "summary": "Create a new [`onepass::DFA`](DFA) cache."
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self, re: &DFA)",
+          "summary": "Reset this cache such that it can be used for searching with a different [`onepass::DFA`](DFA)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::onepass::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Config",
+      "summary": "The configuration used for building a [one-pass DFA](DFA).",
+      "doc": "api/regex_automata.dfa.onepass.md#config",
+      "methods": [
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(self, yes: bool) -> Config",
+          "summary": "Whether to attempt to shrink the size of the DFA's alphabet or not."
+        },
+        {
+          "name": "get_byte_classes",
+          "signature": "fn get_byte_classes(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled byte classes or not. This is typically a debugging oriented option, as disabling it confers no speed benefit."
+        },
+        {
+          "name": "get_match_kind",
+          "signature": "fn get_match_kind(&self) -> MatchKind",
+          "summary": "Returns the match semantics set in this configuration."
+        },
+        {
+          "name": "get_size_limit",
+          "signature": "fn get_size_limit(&self) -> Option<usize>",
+          "summary": "Returns the DFA size limit of this configuration if one was set. The size limit is total number of bytes on the heap that a DFA is permitted to use. If the DFA exceeds this limit during construction, then construction is stopped and an err…"
+        },
+        {
+          "name": "get_starts_for_each_pattern",
+          "signature": "fn get_starts_for_each_pattern(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled anchored starting states for every pattern in the DFA."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(self, kind: MatchKind) -> Config",
+          "summary": "Set the desired match semantics."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Return a new default one-pass DFA configuration."
+        },
+        {
+          "name": "size_limit",
+          "signature": "fn size_limit(self, limit: Option<usize>) -> Config",
+          "summary": "Set a size limit on the total heap used by a one-pass DFA."
+        },
+        {
+          "name": "starts_for_each_pattern",
+          "signature": "fn starts_for_each_pattern(self, yes: bool) -> Config",
+          "summary": "Whether to compile a separate start state for each pattern in the one-pass DFA."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::onepass::DFA",
+      "name": "DFA",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct DFA",
+      "summary": "A one-pass DFA for executing a subset of anchored regex searches while resolving capturing groups.",
+      "doc": "api/regex_automata.dfa.onepass.md#dfa",
+      "methods": [
+        {
+          "name": "alphabet_len",
+          "signature": "fn alphabet_len(&self) -> usize",
+          "summary": "Returns the total number of elements in the alphabet for this DFA."
+        },
+        {
+          "name": "always_match",
+          "signature": "fn always_match() -> Result<DFA, BuildError>",
+          "summary": "Create a new one-pass DFA that matches every input."
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Return a builder for configuring the construction of a DFA."
+        },
+        {
+          "name": "captures",
+          "signature": "fn captures<'h, I: Into<Input<'h>>>(&self, cache: &mut Cache, input: I, caps: &mut Captures)",
+          "summary": "Executes an anchored leftmost forward search and writes the spans of capturing groups that participated in a match into the provided [`Captures`] value. If no match was found, then [`Captures::is_match`] is guaranteed to return `false`."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "Return a default configuration for a DFA."
+        },
+        {
+          "name": "create_cache",
+          "signature": "fn create_cache(&self) -> Cache",
+          "summary": "Create a new cache for this DFA."
+        },
+        {
+          "name": "create_captures",
+          "signature": "fn create_captures(&self) -> Captures",
+          "summary": "Create a new empty set of capturing groups that is guaranteed to be valid for the search APIs on this DFA."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h, I: Into<Input<'h>>>(&self, cache: &mut Cache, input: I) -> Option<Match>",
+          "summary": "Executes an anchored leftmost forward search, and returns a `Match` if and only if this one-pass DFA matches the given haystack."
+        },
+        {
+          "name": "get_config",
+          "signature": "fn get_config(&self) -> &Config",
+          "summary": "Return the config for this one-pass DFA."
+        },
+        {
+          "name": "get_nfa",
+          "signature": "fn get_nfa(&self) -> &NFA",
+          "summary": "Returns a reference to the underlying NFA."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<'h, I: Into<Input<'h>>>(&self, cache: &mut Cache, input: I) -> bool",
+          "summary": "Executes an anchored leftmost forward search, and returns true if and only if this one-pass DFA matches the given haystack."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the memory usage, in bytes, of this DFA."
+        },
+        {
+          "name": "never_match",
+          "signature": "fn never_match() -> Result<DFA, BuildError>",
+          "summary": "Create a new one-pass DFA that never matches any input."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<DFA, BuildError>",
+          "summary": "Parse the given regular expression using the default configuration and return the corresponding one-pass DFA."
+        },
+        {
+          "name": "new_from_nfa",
+          "signature": "fn new_from_nfa(nfa: NFA) -> Result<DFA, BuildError>",
+          "summary": "Like `new`, but builds a one-pass DFA directly from an NFA. This is useful if you already have an NFA, or even if you hand-assembled the NFA."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<DFA, BuildError>",
+          "summary": "Like `new`, but parses multiple patterns into a single \"multi regex.\" This similarly uses the default regex configuration."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns compiled into this DFA."
+        },
+        {
+          "name": "reset_cache",
+          "signature": "fn reset_cache(&self, cache: &mut Cache)",
+          "summary": "Reset the given cache such that it can be used for searching with the this DFA (and only this DFA)."
+        },
+        {
+          "name": "state_len",
+          "signature": "fn state_len(&self) -> usize",
+          "summary": "Returns the total number of states in this one-pass DFA."
+        },
+        {
+          "name": "stride",
+          "signature": "fn stride(&self) -> usize",
+          "summary": "Returns the total stride for every state in this DFA. This corresponds to the total number of transitions used by each state in this DFA's transition table."
+        },
+        {
+          "name": "stride2",
+          "signature": "fn stride2(&self) -> usize",
+          "summary": "Returns the total stride for every state in this DFA, expressed as the exponent of a power of 2. The stride is the amount of space each state takes up in the transition table, expressed as a number of transitions. (Unused transitions map t…"
+        },
+        {
+          "name": "try_search",
+          "signature": "fn try_search(&self, cache: &mut Cache, input: &Input<'_>, caps: &mut Captures) -> Result<(), MatchError>",
+          "summary": "Executes an anchored leftmost forward search and writes the spans of capturing groups that participated in a match into the provided [`Captures`] value. If no match was found, then [`Captures::is_match`] is guaranteed to return `false`."
+        },
+        {
+          "name": "try_search_slots",
+          "signature": "fn try_search_slots(&self, cache: &mut Cache, input: &Input<'_>, slots: &mut [Option<NonMaxUsize>]) -> Result<Option<PatternID>, MatchError>",
+          "summary": "Executes an anchored leftmost forward search and writes the spans of capturing groups that participated in a match into the provided `slots`, and returns the matching pattern ID. The contents of the slots for patterns other than the matchi…"
+        }
+      ]
+    }
+  ]
+}

@@ -1,146 +1,159 @@
 //! Typed Arrow observations for native runtime, operation and failure diagnostics.
-use serde::{Deserialize, Serialize};
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+use crate::native_union::{Cell, NativeStruct, Rule};
+crate::native_struct! {
+#[derive(Default)]
 pub struct InventorySummary {
-    pub relations: Vec<String>,
-    pub nested_fields: usize,
-    pub truncated: bool,
+    relations: Vec<String> => Rule::Set,
+    nested_fields: usize => Rule::Text,
+    truncated: bool => Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+crate::native_struct! {
 pub struct OperationDescriptor {
-    pub method: String,
-    pub request_digest: String,
-    pub policy_digest: String,
+    method: String => Rule::Text,
+    request_digest: String => Rule::Text,
+    policy_digest: String => Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+crate::native_struct! {
 pub struct SnapshotBinding {
-    pub snapshot_id: String,
-    pub context_id: String,
-    pub environment_id: String,
-    pub control: u64,
-    pub manifest_digest: String,
-    pub projection_version: String,
+    snapshot_id: String => Rule::Text,
+    context_id: String => Rule::Text,
+    environment_id: String => Rule::Text,
+    control: u64 => Rule::Text,
+    manifest_digest: String => Rule::Text,
+    projection_version: String => Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+crate::native_struct! {
 pub struct OperationBinding {
-    pub request: OperationDescriptor,
-    pub snapshots: Vec<SnapshotBinding>,
-    pub retained_byte_limit: usize,
-    pub artifact_byte_limit: u64,
-    pub deadline_millis: u64,
+    request: OperationDescriptor => Rule::Text,
+    snapshots: Vec<SnapshotBinding> => Rule::Sequence,
+    retained_byte_limit: usize => Rule::Text,
+    artifact_byte_limit: u64 => Rule::Text,
+    deadline_millis: u64 => Rule::Text,
+}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+crate::native_struct! {
 pub struct Metric {
-    pub node: usize,
-    pub name: String,
-    pub partition: Option<usize>,
-    pub labels: Vec<Label>,
+    node: usize => Rule::Text,
+    name: String => Rule::Text,
+    partition: Option<usize> => Rule::Text,
+    labels: Vec<Label> => Rule::Sequence,
     /// Counts/gauges/time values are copied, never live shared counters.
-    pub value: Option<usize>,
-    pub unit: String,
-    pub pruned: Option<usize>,
-    pub matched: Option<usize>,
-    pub part: Option<usize>,
-    pub total: Option<usize>,
+    value: Option<usize> => Rule::Text,
+    unit: String => Rule::Text,
+    pruned: Option<usize> => Rule::Text,
+    matched: Option<usize> => Rule::Text,
+    part: Option<usize> => Rule::Text,
+    total: Option<usize> => Rule::Text,
+}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+crate::native_struct! {
 pub struct QueryDiagnostics {
-    pub catalog: InventorySummary,
-    pub rules: Vec<RuleTransition>,
-    pub rules_truncated: bool,
-    pub query_id: u64,
-    pub operation_id: Option<String>,
-    pub binding: Option<OperationBinding>,
-    pub relations: Vec<String>,
-    pub functions: Vec<String>,
-    pub inventory_truncated: bool,
-    pub logical: String,
-    pub stage: String,
-    pub family: Option<String>,
-    pub analyzed: String,
-    pub analysis_micros: u64,
-    pub optimization_micros: u64,
-    pub physical: String,
-    pub truncated: bool,
-    pub metrics_truncated: bool,
+    catalog: InventorySummary => Rule::Text,
+    rules: Vec<RuleTransition> => Rule::Sequence,
+    rules_truncated: bool => Rule::Text,
+    query_id: u64 => Rule::Text,
+    operation_id: Option<String> => Rule::Text,
+    binding: Option<OperationBinding> => Rule::Text,
+    relations: Vec<String> => Rule::Set,
+    functions: Vec<String> => Rule::Set,
+    inventory_truncated: bool => Rule::Text,
+    logical: String => Rule::Text,
+    stage: String => Rule::Text,
+    family: Option<String> => Rule::Text,
+    analyzed: String => Rule::Text,
+    analysis_micros: u64 => Rule::Text,
+    optimization_micros: u64 => Rule::Text,
+    physical: String => Rule::Text,
+    truncated: bool => Rule::Text,
+    metrics_truncated: bool => Rule::Text,
     /// False includes failed execution, timeout and dropped requests; counters may be partial.
-    pub completed: bool,
+    completed: bool => Rule::Text,
     /// Time waiting for the shared query permit before native planning starts.
-    #[serde(default)]
-    pub queue_micros: u64,
-    pub planning_micros: u64,
-    pub elapsed_micros: u64,
-    pub output_rows: usize,
-    pub output_arrow_bytes: usize,
-    pub metrics: Vec<Metric>,
+    queue_micros: u64 => Rule::Text,
+    planning_micros: u64 => Rule::Text,
+    elapsed_micros: u64 => Rule::Text,
+    output_rows: usize => Rule::Text,
+    output_arrow_bytes: usize => Rule::Text,
+    metrics: Vec<Metric> => Rule::Sequence,
+}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+crate::native_struct! {
 pub struct RuleTransition {
-    pub phase: String,
-    pub rule: String,
+    phase: String => Rule::Text,
+    rule: String => Rule::Text,
     /// Unknown if the plan exceeded the bounded fingerprint traversal.
-    pub changed: Option<bool>,
+    changed: Option<bool> => Rule::Text,
+}
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+crate::native_struct! {
+#[derive(Default)]
 pub struct Summary {
-    pub executions: u64,
-    pub completed: u64,
-    pub incomplete: u64,
-    pub planning_micros: u64,
+    executions: u64 => Rule::Text,
+    completed: u64 => Rule::Text,
+    incomplete: u64 => Rule::Text,
+    planning_micros: u64 => Rule::Text,
     /// Sum of query elapsed durations; concurrent durations overlap and are not wall time.
-    pub elapsed_micros: u64,
-    pub index_materializations: u64,
-    pub index_spill_bytes: u64,
-    pub index_reads: u64,
-    pub queue_micros: u64,
-    pub output_rows: u64,
-    pub output_arrow_bytes: u64,
+    elapsed_micros: u64 => Rule::Text,
+    index_materializations: u64 => Rule::Text,
+    index_spill_bytes: u64 => Rule::Text,
+    index_reads: u64 => Rule::Text,
+    queue_micros: u64 => Rule::Text,
+    output_rows: u64 => Rule::Text,
+    output_arrow_bytes: u64 => Rule::Text,
 }
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+}
+crate::native_struct! {
 pub struct OperationDiagnostics {
-    pub operation_id: String,
-    pub request: OperationDescriptor,
-    pub snapshots: Vec<SnapshotBinding>,
-    pub owned_lifetime_micros: u64,
-    pub retained_output_bytes: usize,
-    pub artifact_bytes: usize,
-    pub native: Summary,
+    operation_id: String => Rule::Text,
+    request: OperationDescriptor => Rule::Text,
+    snapshots: Vec<SnapshotBinding> => Rule::Sequence,
+    owned_lifetime_micros: u64 => Rule::Text,
+    retained_output_bytes: usize => Rule::Text,
+    artifact_bytes: usize => Rule::Text,
+    native: Summary => Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+crate::native_struct! {
 pub struct OperationEnd {
-    pub operation_id: String,
-    pub request: OperationDescriptor,
-    pub snapshots: Vec<SnapshotBinding>,
-    pub owned_lifetime_micros: u64,
-    pub retained_output_bytes: usize,
-    pub artifact_bytes: usize,
+    operation_id: String => Rule::Text,
+    request: OperationDescriptor => Rule::Text,
+    snapshots: Vec<SnapshotBinding> => Rule::Sequence,
+    owned_lifetime_micros: u64 => Rule::Text,
+    retained_output_bytes: usize => Rule::Text,
+    artifact_bytes: usize => Rule::Text,
+}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+crate::native_struct! {
 pub struct Label {
-    pub name: String,
-    pub value: String,
+    name: String => Rule::Text,
+    value: String => Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The recovery payload is an opaque MCP wire value. Cause, scope and bounds are native fields.
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Failure {
-    pub cause: crate::wire::DiagnosticCause,
-    pub stage: String,
-    pub affected_ids: Vec<String>,
-    pub rule: Option<String>,
-    pub observed: Option<u64>,
-    pub allowed: Option<u64>,
-    pub correlation_id: Option<String>,
-    pub recovery_payload: String,
+    cause: crate::wire::DiagnosticCause => Rule::Text,
+    stage: String => Rule::Text,
+    affected_ids: Vec<String> => Rule::Set,
+    rule: Option<String> => Rule::Text,
+    observed: Option<u64> => Rule::Text,
+    allowed: Option<u64> => Rule::Text,
+    correlation_id: Option<String> => Rule::Text,
+    recovery_payload: String => Rule::Json,
+}
 }
 impl TryFrom<crate::wire::Diagnostic> for Failure {
     type Error = serde_json::Error;
@@ -158,176 +171,73 @@ impl TryFrom<crate::wire::Diagnostic> for Failure {
     }
 }
 
+crate::native_vocabulary! {
+    pub enum CacheOutcome { Hit = "hit", Revalidated = "revalidated", Miss = "miss" }
+}
+crate::native_vocabulary! {
+    pub enum ProbeOutcome { Succeeded = "succeeded", Failed = "failed", Unresolved = "unresolved" }
+}
+crate::native_union! {
+    /// Mechanically captured service outcomes. Native aggregates own their interpretation.
+    pub enum ServiceObservation {
+        Fetch = "fetch" { outcome: CacheOutcome => Rule::Text, transferred: u64 => Rule::Text },
+        FetchFailure = "fetch_failure",
+        Probe = "probe" { outcome: ProbeOutcome => Rule::Text },
+        Response = "response" {
+            method: String => Rule::NonEmpty,
+            status: Option<crate::wire::Status> => Rule::Text,
+            has_gap: bool => Rule::Text,
+            elapsed_micros: u64 => Rule::Text,
+            bytes: u64 => Rule::Text,
+        },
+    }
+}
+crate::native_struct! {
+    #[derive(Default)]
+    pub struct ServiceCounters {
+        fetch: crate::wire::status::FetchCounters => Rule::Text,
+        evidence: crate::wire::status::EvidenceCounters => Rule::Text,
+        verification: crate::wire::status::VerificationCounters => Rule::Text,
+    }
+}
+
+crate::native_union! {
+    pub enum EventPayload {
+        Query = "query" { value: Box<QueryDiagnostics> => Rule::Text },
+        Operation = "operation" { value: OperationEnd => Rule::Text },
+        Failure = "failure" { value: Failure => Rule::Text },
+        IndexMaterialization = "index_materialization" { bytes: u64 => Rule::Text },
+        IndexRead = "index_read",
+        Service = "service" { value: ServiceObservation => Rule::Text },
+    }
+}
+crate::native_struct! {
+    pub struct Event {
+        runtime_id: String => Rule::NonEmpty,
+        sequence: u64 => Rule::Text,
+        recorded_at: crate::native_time::EventTime => Rule::Text,
+        operation_id: Option<String> => Rule::Text,
+        payload: EventPayload => Rule::Text,
+    }
+}
+
 pub mod schema {
-    use arrow::datatypes::{DataType as D, Field, Schema, SchemaRef, TimeUnit};
+    use super::*;
+    use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
     use std::sync::Arc;
-    fn field(name: &str, kind: D, nullable: bool) -> Field {
-        Field::new(name, kind, nullable)
-    }
-    fn text(name: &str) -> Field {
-        field(name, D::Utf8, false)
-    }
-    fn optional(name: &str) -> Field {
-        field(name, D::Utf8, true)
-    }
-    fn number(name: &str) -> Field {
-        field(name, D::UInt64, false)
-    }
-    fn boolean(name: &str) -> Field {
-        field(name, D::Boolean, false)
-    }
-    fn record(fields: Vec<Field>) -> D {
-        D::Struct(fields.into())
-    }
-    fn list(kind: D) -> D {
-        D::List(Arc::new(field("item", kind, false)))
-    }
-    fn strings(name: &str) -> Field {
-        field(name, list(D::Utf8), false)
-    }
-    fn descriptor() -> D {
-        record(vec![
-            text("method"),
-            text("request_digest"),
-            text("policy_digest"),
-        ])
-    }
-    fn snapshot() -> D {
-        record(vec![
-            text("snapshot_id"),
-            text("context_id"),
-            text("environment_id"),
-            number("control"),
-            text("manifest_digest"),
-            text("projection_version"),
-        ])
-    }
-    fn binding() -> D {
-        record(vec![
-            field("request", descriptor(), false),
-            field("snapshots", list(snapshot()), false),
-            number("retained_byte_limit"),
-            number("artifact_byte_limit"),
-            number("deadline_millis"),
-        ])
-    }
     pub fn summary_fields() -> Vec<Field> {
-        [
-            "executions",
-            "completed",
-            "incomplete",
-            "planning_micros",
-            "elapsed_micros",
-            "index_materializations",
-            "index_spill_bytes",
-            "index_reads",
-            "queue_micros",
-            "output_rows",
-            "output_arrow_bytes",
-        ]
-        .map(number)
-        .to_vec()
+        Summary::fields()
+            .iter()
+            .map(|f| f.as_ref().clone())
+            .collect()
     }
-    fn metric() -> D {
-        let mut fields = vec![
-            number("node"),
-            text("name"),
-            field("partition", D::UInt64, true),
-            field(
-                "labels",
-                list(record(vec![text("name"), text("value")])),
-                false,
-            ),
-            text("unit"),
-        ];
-        fields.extend(
-            ["value", "pruned", "matched", "part", "total"]
-                .map(|name| field(name, D::UInt64, true)),
-        );
-        record(fields)
+    pub fn query() -> DataType {
+        QueryDiagnostics::data_type()
     }
-    pub fn query() -> D {
-        record(vec![
-            field(
-                "catalog",
-                record(vec![
-                    strings("relations"),
-                    number("nested_fields"),
-                    boolean("truncated"),
-                ]),
-                false,
-            ),
-            field(
-                "rules",
-                list(record(vec![
-                    text("phase"),
-                    text("rule"),
-                    field("changed", D::Boolean, true),
-                ])),
-                false,
-            ),
-            boolean("rules_truncated"),
-            number("query_id"),
-            optional("operation_id"),
-            field("binding", binding(), true),
-            strings("relations"),
-            strings("functions"),
-            boolean("inventory_truncated"),
-            text("logical"),
-            text("stage"),
-            optional("family"),
-            text("analyzed"),
-            number("analysis_micros"),
-            number("optimization_micros"),
-            text("physical"),
-            boolean("truncated"),
-            boolean("metrics_truncated"),
-            boolean("completed"),
-            number("queue_micros"),
-            number("planning_micros"),
-            number("elapsed_micros"),
-            number("output_rows"),
-            number("output_arrow_bytes"),
-            field("metrics", list(metric()), false),
-        ])
-    }
-    pub fn operation() -> D {
-        record(vec![
-            text("operation_id"),
-            field("request", descriptor(), false),
-            field("snapshots", list(snapshot()), false),
-            number("owned_lifetime_micros"),
-            number("retained_output_bytes"),
-            number("artifact_bytes"),
-        ])
-    }
-    fn failure() -> D {
-        record(vec![
-            text("cause"),
-            text("stage"),
-            strings("affected_ids"),
-            optional("rule"),
-            field("observed", D::UInt64, true),
-            field("allowed", D::UInt64, true),
-            optional("correlation_id"),
-            text("recovery_payload"),
-        ])
+    pub fn operation() -> DataType {
+        OperationEnd::data_type()
     }
     pub fn events() -> SchemaRef {
-        Arc::new(Schema::new(vec![
-            text("runtime_id"),
-            number("sequence"),
-            field(
-                "recorded_at",
-                D::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
-                false,
-            ),
-            text("kind"),
-            optional("operation_id"),
-            field("query", query(), true),
-            field("operation", operation(), true),
-            field("failure", failure(), true),
-            field("index_bytes", D::UInt64, true),
-        ]))
+        Arc::new(Schema::new(Event::fields()))
     }
 }

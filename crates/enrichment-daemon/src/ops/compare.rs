@@ -8,7 +8,7 @@ use enrichment_core::compare::{
 };
 use enrichment_core::evidence::EvidenceKind;
 use enrichment_core::request::CompareRequest;
-use enrichment_core::wire::data::{CompareData, ComparisonSide, ConfigurationDifference};
+use enrichment_core::wire::data::{CompareData, ComparisonSide};
 use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Page};
 use serde_json::json;
 
@@ -125,51 +125,19 @@ async fn read_inner(
     let want_api = scopes.contains(&Scope::Api);
     let a = before.reader.manifest();
     let b = after.reader.manifest();
-    let mut confounders = Vec::new();
-    let mut configuration_differences = Vec::new();
-    let environments = [json!(before.environment), json!(after.environment)];
-    for field in [
-        "toolchain",
-        "target",
-        "features",
-        "features_known",
-        "default_features",
-        "lock_digest",
-        "resolution",
-    ] {
-        if environments[0][field] != environments[1][field] {
-            configuration_differences.push(ConfigurationDifference {
-                field: field.into(),
-                before: environments[0][field].clone(),
-                after: environments[1][field].clone(),
-            });
-        }
-    }
-    if a.observed_configuration != b.observed_configuration {
-        configuration_differences.push(ConfigurationDifference {
-            field: "observed_configuration".into(),
-            before: json!(a.observed_configuration),
-            after: json!(b.observed_configuration),
-        });
-    }
-    for (label, env) in [
-        ("before", &before.environment),
-        ("after", &after.environment),
-    ] {
-        for (field, unknown) in [
-            ("toolchain", env.toolchain.is_none()),
-            ("target", env.target.is_none()),
-            ("features/extras", !env.features_known),
-            ("dependency resolution", env.lock_digest.is_none()),
-        ] {
-            if unknown {
-                confounders.push(format!("{label} {field} is unknown"));
-            }
-        }
-    }
-    if !configuration_differences.is_empty() {
-        confounders.push("Environment or observed configuration differs; do not attribute every difference to the release".into());
-    }
+    let (configuration_differences, mut confounders) =
+        match enrichment_store::comparison_context::assess(
+            &service.repository.runtime,
+            &before.environment,
+            &after.environment,
+            &a.observed_configuration,
+            &b.observed_configuration,
+        )
+        .await
+        {
+            Ok(value) => value,
+            Err(error) => return common::operation_error(&error, "comparison_configuration"),
+        };
     let kinds: BTreeSet<_> = scopes
         .iter()
         .map(|scope| match scope {
@@ -339,7 +307,7 @@ async fn read_inner(
     }
     let result = Research {
         summary: format!("{total} evidence change(s); returning {returned} from offset {offset}"),
-        data: common::to_object(&data),
+        data: common::payload(&data),
         coverage,
         freshness: envelope::unverified_freshness(),
         context_id: Some(after.context.context_id.to_string()),
@@ -348,41 +316,34 @@ async fn read_inner(
         artifacts: Vec::new(),
     };
     let mut result = result.ok_with_page(Page::new(returned, Some(total), false, None));
-    loop {
-        let returned = data.changes.len() as u64;
-        let more = detail.is_none() && (page.has_more || offset + returned < total);
-        let next_cursor = if more && let Some(key) = keys.get(data.changes.len().saturating_sub(1))
+    let returned = data.changes.len() as u64;
+    let more = detail.is_none() && (page.has_more || offset + returned < total);
+    let next_cursor = if more && let Some(key) = keys.get(data.changes.len().saturating_sub(1)) {
+        match ComparisonCursor::new(
+            scope.clone(),
+            digest.clone(),
+            offset + returned,
+            key.clone(),
+        )
+        .encode()
         {
-            match ComparisonCursor::new(
-                scope.clone(),
-                digest.clone(),
-                offset + returned,
-                key.clone(),
-            )
-            .encode()
-            {
-                Ok(value) => Some(value),
-                Err(e) => return common::operation_error(&e, "comparison_projection"),
-            }
-        } else {
-            None
-        };
-        result.summary = format!(
-            "{total} evidence change(s); returning {returned}, with {offset} already returned"
-        );
-        data.page = Page::new(
-            returned,
-            Some(if detail.is_some() { returned } else { total }),
-            more,
-            next_cursor,
-        );
-        result.data = common::to_object(&data);
-        result.artifacts = value_artifacts(&data.changes);
-        if common::json_size(&result) <= budget || data.changes.len() <= 1 {
-            break;
+            Ok(value) => Some(value),
+            Err(e) => return common::operation_error(&e, "comparison_projection"),
         }
-        data.changes.pop();
-    }
+    } else {
+        None
+    };
+    result.summary =
+        format!("{total} evidence change(s); returning {returned}, with {offset} already returned");
+    data.page = Page::new(
+        returned,
+        Some(if detail.is_some() { returned } else { total }),
+        more,
+        next_cursor,
+    );
+    result.data = common::payload(&data);
+    result.artifacts = value_artifacts(&data.changes);
+
     if !data.comparable || !scope_complete || (want_api && !api_complete) {
         result = result.into_partial();
     }
@@ -393,14 +354,10 @@ async fn read_inner(
             enrichment_core::wire::JobState::Partial
         };
         let blobs = service.blobs.clone();
-        let prepared = service
-            .repository
-            .runtime
-            .blocking(move || crate::delivery::prepare_comparison(&blobs, result))
-            .await;
+        let prepared =
+            crate::delivery::prepare_comparison(&blobs, &service.repository.runtime, result).await;
         let (delivery, bounded) = match prepared {
-            Ok(Ok(value)) => value,
-            Ok(Err(error)) => return common::operation_error(&error, "comparison_delivery"),
+            Ok(value) => value,
             Err(error) => return common::operation_error(&error, "comparison_delivery"),
         };
         let publication = enrichment_core::evidence::catalog::ComparisonPublication {

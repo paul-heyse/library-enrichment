@@ -1,0 +1,124 @@
+{
+  "module": "ra_ap_load_cargo",
+  "crate": "ra_ap_load-cargo",
+  "api": "api/ra_ap_load_cargo.md",
+  "items": [
+    {
+      "path": "ra_ap_load_cargo::ProcMacroServerChoice",
+      "name": "ProcMacroServerChoice",
+      "kind": "enum",
+      "crate": "ra_ap_load-cargo",
+      "signature": "enum ProcMacroServerChoice",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Sysroot",
+        "Explicit",
+        "None"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_load_cargo::load_proc_macro",
+      "name": "load_proc_macro",
+      "kind": "function",
+      "crate": "ra_ap_load-cargo",
+      "signature": "fn load_proc_macro(server: &proc_macro_api::ProcMacroClient, path: &vfs::AbsPath, ignored_macros: &[Box<str>]) -> hir_expand::proc_macro::ProcMacroLoadResult",
+      "summary": "Load the proc-macros for the given lib path, disabling all expanders whose names are in `ignored_macros`.",
+      "doc": "api/ra_ap_load_cargo.md#load_proc_macro"
+    },
+    {
+      "path": "ra_ap_load_cargo::load_workspace",
+      "name": "load_workspace",
+      "kind": "function",
+      "crate": "ra_ap_load-cargo",
+      "signature": "fn load_workspace(ws: project_model::ProjectWorkspace, extra_env: &ide_db::FxHashMap<String, Option<String>>, load_config: &LoadCargoConfig) -> anyhow::Result<(ide_db::RootDatabase, vfs::Vfs, Option<proc_macro_api::ProcMacroClient>)>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_load_cargo::load_workspace_at",
+      "name": "load_workspace_at",
+      "kind": "function",
+      "crate": "ra_ap_load-cargo",
+      "signature": "fn load_workspace_at(root: &std::path::Path, cargo_config: &project_model::CargoConfig, load_config: &LoadCargoConfig, progress: &dyn Fn(String) + Sync) -> anyhow::Result<(ide_db::RootDatabase, vfs::Vfs, Option<proc_macro_api::ProcMacroClient>)>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_load_cargo::load_workspace_into_db",
+      "name": "load_workspace_into_db",
+      "kind": "function",
+      "crate": "ra_ap_load-cargo",
+      "signature": "fn load_workspace_into_db(ws: project_model::ProjectWorkspace, extra_env: &ide_db::FxHashMap<String, Option<String>>, load_config: &LoadCargoConfig, db: &mut ide_db::RootDatabase) -> anyhow::Result<(vfs::Vfs, Option<proc_macro_api::ProcMacroClient>)>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ra_ap_load_cargo::LoadCargoConfig",
+      "name": "LoadCargoConfig",
+      "kind": "struct",
+      "crate": "ra_ap_load-cargo",
+      "signature": "struct LoadCargoConfig",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "load_out_dirs_from_check",
+        "with_proc_macro_server",
+        "prefill_caches",
+        "num_worker_threads",
+        "proc_macro_processes"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_load_cargo::ProjectFolders",
+      "name": "ProjectFolders",
+      "kind": "struct",
+      "crate": "ra_ap_load-cargo",
+      "signature": "struct ProjectFolders",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "load",
+        "watch",
+        "source_root_config"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(workspaces: &[ProjectWorkspace], global_excludes: &[AbsPathBuf], user_config_dir_path: Option<&AbsPath>) -> ProjectFolders"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_load_cargo::SourceRootConfig",
+      "name": "SourceRootConfig",
+      "kind": "struct",
+      "crate": "ra_ap_load-cargo",
+      "signature": "struct SourceRootConfig",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "fsc",
+        "local_filesets"
+      ],
+      "methods": [
+        {
+          "name": "partition",
+          "signature": "fn partition(&self, vfs: &vfs::Vfs) -> Vec<SourceRoot>"
+        },
+        {
+          "name": "path_is_library",
+          "signature": "fn path_is_library(&self, path: &VfsPath) -> bool",
+          "summary": "Returns whether `path` belongs to a library (non-local) source root, such as the sysroot sources or a cargo registry dependency."
+        },
+        {
+          "name": "source_root_parent_map",
+          "signature": "fn source_root_parent_map(&self) -> FxHashMap<SourceRootId, SourceRootId>",
+          "summary": "Maps local source roots to their parent source roots by bytewise comparing of root paths . If a `SourceRoot` doesn't have a parent and is local then it is not contained in this mapping but it can be asserted that it is a root `SourceRoot`."
+        }
+      ]
+    }
+  ]
+}

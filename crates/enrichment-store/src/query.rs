@@ -12,7 +12,7 @@ use datafusion::{
 };
 use enrichment_core::{
     evidence::{
-        EvidenceFragment, FragmentKind, Symbol,
+        FragmentKind, SymbolHeader, TextFragment,
         metadata::ReleaseMetadata,
         path::PublicPath,
         relational::{CoverageFact, InputArtifact, RelationshipObservation},
@@ -166,6 +166,25 @@ impl SnapshotReader {
     }
 
     /// Relationship identities preserve direction, self edges and external endpoints.
+    pub async fn ancillary_facts(
+        &self,
+        symbol: &str,
+    ) -> Result<enrichment_core::evidence::model::AncillaryFacts, QueryError> {
+        let plan = self.ctx.sql("SELECT
+            CASE WHEN count(DISTINCT payload.cfg_hints)=1 THEN first_value(payload.cfg_hints) ELSE NULL END AS cfg_hints,
+            CASE WHEN count(DISTINCT source.locator)=1 THEN first_value(source.locator) ELSE NULL END AS locator,
+            CAST(count(DISTINCT payload.cfg_hints) AS BIGINT UNSIGNED) AS cfg_alternatives,
+            CAST(count(DISTINCT source.locator) AS BIGINT UNSIGNED) AS locator_alternatives
+            FROM snapshot.evidence.inspection_observations o
+            LEFT SEMI JOIN snapshot.domain.inspection_bound b
+                ON o.observation_id=b.observation_id AND b.binding_id=$1")
+            .await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
+        self.runtime.records(plan, 1).await?.pop().ok_or_else(|| {
+            DataFusionError::Internal("ancillary aggregate returned no row".into()).into()
+        })
+    }
+
+    /// Relationship identities preserve direction, self edges and external endpoints.
     pub async fn relationship_page(
         &self,
         symbol: &str,
@@ -176,8 +195,8 @@ impl SnapshotReader {
             .ctx
             .sql(
                 "SELECT r.* FROM snapshot.evidence.relationships r LEFT SEMI JOIN snapshot.evidence.symbols s ON (
-            r.subject.symbol_id = s.symbol_id OR r.subject.definition_id = s.definition_id OR
-            r.target.symbol_id = s.symbol_id OR r.target.definition_id = s.definition_id)
+            r.subject.symbol.symbol_id = s.symbol_id OR r.subject.definition.definition_id = s.definition_id OR
+            r.target.symbol.symbol_id = s.symbol_id OR r.target.definition.definition_id = s.definition_id)
             AND s.symbol_id = $1",
             )
             .await?
@@ -206,20 +225,20 @@ impl SnapshotReader {
         }))
     }
 
-    /// Symbol documentation and examples are reachable without complete-set hydration.
+    /// SymbolHeader documentation and examples are reachable without complete-set hydration.
     pub async fn navigation_page(
         &self,
         symbol: &str,
         members: bool,
         limit: usize,
         after: Option<&str>,
-    ) -> Result<NativePage<Symbol>, QueryError> {
+    ) -> Result<NativePage<SymbolHeader>, QueryError> {
         let sql = if members {
             "SELECT h.* FROM snapshot.domain.symbol_headers h LEFT SEMI JOIN (
                 SELECT r.subject FROM snapshot.evidence.relationships r JOIN snapshot.evidence.symbols owner
-                ON r.target.symbol_id = owner.symbol_id OR r.target.definition_id = owner.definition_id
+                ON r.target.symbol.symbol_id = owner.symbol_id OR r.target.definition.definition_id = owner.definition_id
                 WHERE owner.symbol_id = $1 AND r.relation = 'member_of'
-            ) m ON m.subject.symbol_id = h.symbol_id OR m.subject.definition_id = h.definition_id"
+            ) m ON m.subject.symbol.symbol_id = h.symbol_id OR m.subject.definition.definition_id = h.definition_id"
         } else {
             "SELECT h.* FROM snapshot.domain.symbol_headers h LEFT SEMI JOIN (
                 SELECT m.symbol_id FROM snapshot.domain.namespace_members m JOIN snapshot.evidence.symbols owner
@@ -248,7 +267,7 @@ impl SnapshotReader {
         ))
     }
 
-    /// Symbol documentation and examples are reachable without complete-set hydration.
+    /// SymbolHeader documentation and examples are reachable without complete-set hydration.
     pub async fn fragment_page(
         &self,
         symbol: &str,
@@ -256,7 +275,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(EvidenceFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
         self.fragment_projection(Some(symbol), kinds, limit, after, max_characters)
             .await
     }
@@ -267,7 +286,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(EvidenceFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
         self.fragment_projection(None, &[kind], limit, after, max_characters)
             .await
     }
@@ -279,7 +298,7 @@ impl SnapshotReader {
         limit: usize,
         after: Option<&str>,
         max_characters: Option<usize>,
-    ) -> Result<NativePage<(EvidenceFragment, bool)>, QueryError> {
+    ) -> Result<NativePage<(TextFragment, bool)>, QueryError> {
         let relation = if symbol.is_some() {
             "snapshot.domain.fragment_surface f LEFT SEMI JOIN snapshot.domain.fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $2"
         } else {
@@ -487,7 +506,12 @@ impl SnapshotReader {
             )?;
         }
         if let Some(document) = selection.document_id {
-            plan = plan.filter(col("subject").field("artifact_id").eq(lit(document)))?;
+            plan = plan.filter(
+                col("subject")
+                    .field("document")
+                    .field("artifact_id")
+                    .eq(lit(document)),
+            )?;
         }
         if let Some(kind) = selection.kind {
             plan = plan.filter(col("payload").field("kind").eq(lit(kind)))?;
@@ -536,7 +560,7 @@ impl SnapshotReader {
             .map_err(|e| DataFusionError::Plan(e).into())
     }
 
-    async fn render_symbols(&self, frame: DataFrame) -> Result<Vec<Symbol>, QueryError> {
+    async fn render_symbols(&self, frame: DataFrame) -> Result<Vec<SymbolHeader>, QueryError> {
         // A small exact inspection can have multiple declaration/trait alternatives. The
         // sentinel is checked before rendering rather than silently dropping alternatives.
         let output = self
@@ -563,7 +587,7 @@ impl SnapshotReader {
         &self,
         path: &str,
         definition_id: Option<&str>,
-    ) -> Result<Vec<Symbol>, QueryError> {
+    ) -> Result<Vec<SymbolHeader>, QueryError> {
         let mut predicate = col("path").eq(lit(path));
         if let Some(id) = definition_id {
             predicate = predicate.and(col("definition_id").eq(lit(id)));
@@ -583,7 +607,7 @@ impl SnapshotReader {
         &self,
         suffix: &str,
         definition_id: Option<&str>,
-    ) -> Result<Vec<Symbol>, QueryError> {
+    ) -> Result<Vec<SymbolHeader>, QueryError> {
         use datafusion::{
             common::ScalarValue,
             functions_nested::expr_fn::{array_length, array_slice},
@@ -645,10 +669,7 @@ impl SnapshotReader {
         Ok(projection::render::strings(&output.batches, "path")?)
     }
 
-    async fn render_fragments(
-        &self,
-        frame: DataFrame,
-    ) -> Result<Vec<EvidenceFragment>, QueryError> {
+    async fn render_fragments(&self, frame: DataFrame) -> Result<Vec<TextFragment>, QueryError> {
         let output = self
             .runtime
             .execute_family(
@@ -663,7 +684,7 @@ impl SnapshotReader {
     pub async fn fragments(
         &self,
         selection: FragmentSelection<'_>,
-    ) -> Result<Vec<EvidenceFragment>, QueryError> {
+    ) -> Result<Vec<TextFragment>, QueryError> {
         if selection.limit == 0 || selection.limit > 1024 || selection.kinds.is_empty() {
             return Err(DataFusionError::Plan(
                 "fragment kinds and a limit in 1..=1024 are required".into(),
@@ -709,7 +730,7 @@ impl SnapshotReader {
     }
     /// # Errors
     /// Example eligibility remains literal and the plan limits the final citations.
-    pub async fn examples_for(&self, name: &str) -> Result<Vec<EvidenceFragment>, QueryError> {
+    pub async fn examples_for(&self, name: &str) -> Result<Vec<TextFragment>, QueryError> {
         let spec = enrichment_core::search::spec::SearchSpec::new(name);
         let frame = self
             .ctx

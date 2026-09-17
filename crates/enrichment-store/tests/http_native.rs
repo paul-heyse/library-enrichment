@@ -126,7 +126,7 @@ async fn delta_http_cache_reopens_exact_bytes_and_native_freshness_and_validator
         etag: Some("v1".into()),
         last_modified: Some("Wed, 16 Sep 2026 00:00:00 GMT".into()),
         final_url: "https://example.org/package".into(),
-        retrieved_at: enrichment_core::clock::now_rfc3339(),
+        retrieved_at: enrichment_core::native_time::AcquisitionTime::now().unwrap(),
     };
     cache
         .record(&url, Some("text/plain"), &response)

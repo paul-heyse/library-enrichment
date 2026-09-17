@@ -1,0 +1,647 @@
+{
+  "note": "Every probe that claims a capability carries a control that must come out the other way. A probe whose control also passes proves nothing and is recorded as divergent. Probes with `control: null` are shape probes -- they record what a command emits without claiming the observation was discriminating -- and the index keeps them apart as `recorded` rather than `confirmed`.",
+  "probes": [
+    {
+      "id": "DF001",
+      "layer": "dataflow",
+      "topic": "shipped analyses",
+      "question": "Can the compiler dump the results of its own dataflow analyses?",
+      "command": [
+        "sh",
+        "-c",
+        "rm -rf df001 && rustc +{toolchain} -Zdump-mir=all -Zdump-mir-dataflow=yes -Zdump-mir-dir=df001 --crate-type=lib --emit=metadata owned.rs >/dev/null 2>&1; ls df001 | grep -c 'maybe_uninit.*dot' || true"
+      ],
+      "expect": "re:^[1-9]",
+      "control": [
+        "sh",
+        "-c",
+        "rm -rf df001c && rustc +{toolchain} -Zdump-mir=all -Zdump-mir-dir=df001c --crate-type=lib --emit=metadata owned.rs >/dev/null 2>&1; ls df001c | grep -c 'maybe_uninit.*dot' || true"
+      ],
+      "control_expect": "re:^0$",
+      "note": "The analyses in rustc_mir_dataflow can be observed without linking it. The control is the same compilation without the dataflow flag, which produces MIR dumps but no dataflow ones, so the flag is what produces them."
+    },
+    {
+      "id": "DF002",
+      "layer": "dataflow",
+      "topic": "shipped analyses",
+      "question": "Are initialisation and borrow analyses dumped alongside liveness?",
+      "command": [
+        "sh",
+        "-c",
+        "ls df001 | grep -cE 'ever_init|borrows' || true"
+      ],
+      "expect": "re:^[1-9]",
+      "control": [
+        "sh",
+        "-c",
+        "ls df001 | grep -c 'no_such_analysis' || true"
+      ],
+      "control_expect": "re:^0$",
+      "note": "ever_init, maybe_uninit, borrows and liveness are the analyses borrowck actually runs. The control is an invented analysis name, which rules out the listing matching anything asked of it."
+    },
+    {
+      "id": "DF003",
+      "layer": "mir",
+      "topic": "pass pipeline",
+      "question": "Is more than one MIR produced per function during a compilation?",
+      "command": [
+        "sh",
+        "-c",
+        "ls df001 | grep -c 'build.*mir' || true"
+      ],
+      "expect": "re:^[1-9]",
+      "control": [
+        "sh",
+        "-c",
+        "ls df001 | grep -c 'nonexistent_pass' || true"
+      ],
+      "control_expect": "re:^0$",
+      "note": "The dump filenames are the pass pipeline: built, then analysis passes, then runtime. 'The MIR' of a function is ambiguous until you say which phase, and the phases differ in what they contain."
+    },
+    {
+      "id": "DF004",
+      "layer": "dataflow",
+      "topic": "region inference",
+      "question": "Does NLL region inference output require -Zdump-mir-dataflow?",
+      "command": [
+        "sh",
+        "-c",
+        "ls df001c | grep -c regioncx || true"
+      ],
+      "expect": "re:^[1-9]",
+      "control": [
+        "sh",
+        "-c",
+        "ls df001c | grep -c maybe_uninit || true"
+      ],
+      "control_expect": "re:^0$",
+      "note": "No. Region inference and the nll MIR are dumped by -Zdump-mir=all on its own; only the dataflow .dot files -- borrows, ever_init, maybe_uninit, liveness -- need the extra flag. The control is the same directory checked for a dataflow dump, which is absent. Asking for the wrong flag is how a reader concludes a facility is unavailable."
+    },
+    {
+      "id": "HI001",
+      "layer": "hir",
+      "topic": "inference",
+      "question": "Does the semantic layer report inferred bodies for a loaded project?",
+      "command": [
+        "rust-analyzer",
+        "analysis-stats",
+        ".",
+        "--no-sysroot",
+        "--disable-build-scripts",
+        "--disable-proc-macros"
+      ],
+      "cwd": "proj",
+      "expect": "re:bodies: \\d+",
+      "control": null,
+      "note": "Shape probe: the counts vary with the fixture, so there is nothing here for a control to falsify. It establishes that the layer loads and infers at all."
+    },
+    {
+      "id": "HI002",
+      "layer": "hir",
+      "topic": "structural search",
+      "question": "Does structural search-and-replace resolve its replacement path, or treat it as text?",
+      "command": [
+        "rust-analyzer",
+        "ssr",
+        "old($a) ==>> no_such_function($a)"
+      ],
+      "cwd": "proj",
+      "expect": "Failed to resolve path",
+      "control": [
+        "rust-analyzer",
+        "ssr",
+        "old($a) ==>> renamed($a)"
+      ],
+      "control_expect": "absent:Failed to resolve path",
+      "note": "This is the difference between SSR and a textual tool: a replacement naming something that does not resolve is refused, where ast-grep or sed would happily write it. Note the invocation -- `ssr` takes rules only and works on the current directory; passing a path makes it parse the path as a rule and report a missing delimiter, naming the wrong cause."
+    },
+    {
+      "id": "HI003",
+      "layer": "hir",
+      "topic": "exit codes",
+      "question": "Does a failing rust-analyzer subcommand exit non-zero?",
+      "command": [
+        "rust-analyzer",
+        "ssr",
+        "old($a) ==>> no_such_function($a)"
+      ],
+      "cwd": "proj",
+      "expect": "exit:1",
+      "control": [
+        "rust-analyzer",
+        "--version"
+      ],
+      "note": "It does -- a refused SSR rule exits 1 while --version exits 0. Worth stating because the neighbouring layer behaves differently: `rust-analyzer parse` exits 0 on source it could not parse cleanly (SY004), so the exit code discriminates for some subcommands and not others. Assert on output when the subcommand is `parse`.",
+      "control_expect": "exit:0"
+    },
+    {
+      "id": "HI004",
+      "layer": "hir",
+      "topic": "self-description",
+      "question": "Does the binary emit a machine-readable schema of its own configuration?",
+      "command": [
+        "rust-analyzer",
+        "--print-config-schema"
+      ],
+      "expect": "re:\"[a-zA-Z_]+\"\\s*:",
+      "control": null,
+      "note": "A catalogue the tool publishes about itself, and the authoritative list of what can be configured when driving it as a server."
+    },
+    {
+      "id": "HI005",
+      "layer": "hir",
+      "topic": "outline",
+      "question": "Does the symbol outline carry inferred signatures?",
+      "command": [
+        "rust-analyzer",
+        "symbols"
+      ],
+      "stdin": "valid.rs",
+      "expect": "SymbolKind(Function)",
+      "control": [
+        "rust-analyzer",
+        "symbols"
+      ],
+      "control_stdin": "commented.rs",
+      "control_expect": "absent:-> i32",
+      "note": "`symbols` works on a single file with no project, so what it reports is structural plus a locally derived signature. The control file declares no return type and none is invented."
+    },
+    {
+      "id": "HI006",
+      "layer": "hir",
+      "topic": "structural search",
+      "question": "Does ssr complete a rewrite whose replacement path does resolve?",
+      "command": [
+        "rust-analyzer",
+        "ssr",
+        "old($a) ==>> renamed($a)"
+      ],
+      "cwd": "proj",
+      "expect": "exit:101",
+      "control": null,
+      "note": "No: it panics on this build (101 is a Rust panic). Recorded rather than hidden, because an agent planning a mechanical rewrite needs to know the resolving path is the broken one here. Every rust-analyzer subcommand is documented as carrying no stability guarantee. If upstream fixes this the probe goes divergent, which is the intended signal to revisit the row rather than a failure of the build."
+    },
+    {
+      "id": "MI001",
+      "layer": "mir",
+      "topic": "control flow",
+      "question": "Does a conditional produce a switchInt terminator?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "switchInt",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "straight.rs"
+      ],
+      "control_expect": "absent:switchInt",
+      "note": "The layer's reason to exist: control flow is explicit here and implicit everywhere above. A straight-line function produces no switchInt, so the terminator tracks the branch rather than appearing in every body."
+    },
+    {
+      "id": "MI002",
+      "layer": "mir",
+      "topic": "basic blocks",
+      "question": "Is a function body presented as a graph of basic blocks?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "re:bb\\d+: \\{",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=normal",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "control_expect": "absent:bb0",
+      "note": "The control is the same source through the `normal` view, which is just the source back again. Nested expressions become blocks and terminators only at this layer."
+    },
+    {
+      "id": "MI003",
+      "layer": "mir",
+      "topic": "drops",
+      "question": "Does an owned value produce an explicit drop terminator?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "dropped.rs"
+      ],
+      "expect": "drop(",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "copyonly.rs"
+      ],
+      "control_expect": "absent:drop(",
+      "note": "Drops are inserted by the compiler and appear nowhere in the source. A function over Copy types has none, so the terminator reflects ownership rather than being boilerplate. Note what the first version of this probe got wrong: a String that is RETURNED is moved out and never dropped in the callee, so the fixture has to let the value die locally."
+    },
+    {
+      "id": "MI004",
+      "layer": "mir",
+      "topic": "views",
+      "question": "Does the typed pre-MIR view exist and carry types?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=thir-flat",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "Thir {",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=hir-tree",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "control_expect": "absent:Thir {",
+      "note": "THIR sits between HIR and MIR: fully typed, still expression-shaped. The control shows the neighbouring view is a different thing, not a synonym."
+    },
+    {
+      "id": "MI005",
+      "layer": "mir",
+      "topic": "views",
+      "question": "Is there a semi-stable API surface for MIR?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=stable-mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "rustc_public",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "control_expect": "absent:rustc_public",
+      "note": "StableMIR has been renamed to rustc_public, and the view names the project in its own banner. Anything written against a crate called stable_mir is looking for a name that no longer exists."
+    },
+    {
+      "id": "MI006",
+      "layer": "mir",
+      "topic": "stability",
+      "question": "Does the textual MIR view describe itself as an interface?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "intended for human consumers only",
+      "control": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 --no-deps"
+      ],
+      "control_expect": "absent:intended for human consumers only",
+      "note": "It says so itself, in the first line of its own output. The control is the one layer here that IS a documented wire format, which is the contrast worth drawing: parse cargo metadata, read textual MIR."
+    },
+    {
+      "id": "MI007",
+      "layer": "mir",
+      "topic": "macros",
+      "question": "Can the compiler show a macro's expansion?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=expanded",
+        "--crate-type=lib",
+        "macro.rs"
+      ],
+      "expect": "::std::io::_print",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=normal",
+        "--crate-type=lib",
+        "macro.rs"
+      ],
+      "control_expect": "absent:::std::io::_print",
+      "note": "The complement of SY003. The syntax layer holds the invocation; the compiler will show what it becomes. Both are correct about different questions. Note that `expanded` stops short of full desugaring: format_args! survives in the output as a built-in macro."
+    },
+    {
+      "id": "MI008",
+      "layer": "mir",
+      "topic": "views",
+      "question": "Is a graphviz rendering of the control-flow graph available?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir-cfg",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "expect": "digraph",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "branch.rs"
+      ],
+      "control_expect": "absent:digraph",
+      "note": "Useful when the shape of the graph is the question rather than the contents of the blocks."
+    },
+    {
+      "id": "PL001",
+      "layer": "cargo-metadata",
+      "topic": "resolution",
+      "question": "Does --no-deps omit the resolved dependency graph?",
+      "command": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 --no-deps | python3 -c \"import json,sys;print('ABSENT' if json.load(sys.stdin)['resolve'] is None else 'PRESENT')\""
+      ],
+      "cwd": "proj",
+      "expect": "ABSENT",
+      "control": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 | python3 -c \"import json,sys;print('ABSENT' if json.load(sys.stdin)['resolve'] is None else 'PRESENT')\""
+      ],
+      "control_expect": "PRESENT",
+      "note": "`resolve` is the whole dependency graph and it is null under --no-deps. Reading a field that is null for a reason as 'this project has no dependencies' is the characteristic error at this layer."
+    },
+    {
+      "id": "PL002",
+      "layer": "cargo-metadata",
+      "topic": "schema",
+      "question": "What schema version does cargo metadata report?",
+      "command": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 --no-deps | python3 -c \"import json,sys;print(json.load(sys.stdin)['version'])\""
+      ],
+      "cwd": "proj",
+      "expect": "re:^1$",
+      "control": null,
+      "note": "It has read 1 for years while the envelope beneath it gained keys -- `build_directory` is recent. The version is a weak guarantee: new fields and new enum values arrive without a bump, so a deserializer must tolerate unknown keys."
+    },
+    {
+      "id": "PL003",
+      "layer": "cargo-metadata",
+      "topic": "features",
+      "question": "Does the metadata report a feature that is declared but not enabled?",
+      "command": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 --no-deps | python3 -c \"import json,sys;print('DECLARED' if 'extra' in json.load(sys.stdin)['packages'][0]['features'] else 'MISSING')\""
+      ],
+      "cwd": "proj",
+      "expect": "DECLARED",
+      "control": [
+        "sh",
+        "-c",
+        "cargo metadata --format-version 1 --no-deps | python3 -c \"import json,sys;print('DECLARED' if 'not_a_feature' in json.load(sys.stdin)['packages'][0]['features'] else 'MISSING')\""
+      ],
+      "control_expect": "MISSING",
+      "note": "This layer reports the feature table as DECLARED, which is not the same as what a build resolved. It is the complement of RD005: rustdoc drops what was not enabled, cargo lists what could be."
+    },
+    {
+      "id": "RD001",
+      "layer": "rustdoc-json",
+      "topic": "what rustdoc JSON contains",
+      "question": "Does rustdoc JSON contain function bodies?",
+      "command": [
+        "rustdoc",
+        "+{toolchain}",
+        "-Z",
+        "unstable-options",
+        "--output-format",
+        "json",
+        "--out-dir",
+        "rd001",
+        "--crate-name",
+        "bodies",
+        "bodies.rs"
+      ],
+      "expect": "exit:0",
+      "control": null,
+      "note": "Emission step for RD002 and RD003. Kept separate so a failure to emit is not misread as a fact about content."
+    },
+    {
+      "id": "RD002",
+      "layer": "rustdoc-json",
+      "topic": "what rustdoc JSON contains",
+      "question": "Is a function's body present anywhere in its rustdoc JSON?",
+      "command": [
+        "sh",
+        "-c",
+        "grep -c distinctive_body_token rd001/bodies.json || true"
+      ],
+      "expect": "re:^0$",
+      "control": [
+        "sh",
+        "-c",
+        "grep -c documented_fn rd001/bodies.json || true"
+      ],
+      "control_expect": "re:^[1-9]",
+      "note": "The single most important negative fact about this layer. The control is what makes it mean anything: the same document DOES contain the function's name, so the absent body is absent by design rather than because the probe read the wrong file. Any question about what code does must go to another layer."
+    },
+    {
+      "id": "RD003",
+      "layer": "rustdoc-json",
+      "topic": "visibility",
+      "question": "Does a type in a private module appear without --document-private-items?",
+      "command": [
+        "sh",
+        "-c",
+        "rustdoc +{toolchain} -Z unstable-options --output-format json --document-private-items --out-dir rd003 --crate-name bodies bodies.rs >/dev/null 2>&1; grep -c PrivateThing rd003/bodies.json || true"
+      ],
+      "expect": "re:^[1-9]",
+      "control": [
+        "sh",
+        "-c",
+        "grep -c PrivateThing rd001/bodies.json || true"
+      ],
+      "control_expect": "re:^0$",
+      "note": "Absence from a default rustdoc document means 'not public', not 'does not exist'. The two documents differ on exactly this type."
+    },
+    {
+      "id": "RD004",
+      "layer": "rustdoc-json",
+      "topic": "identity",
+      "question": "Is an item's Id stable when an unrelated item is added before it?",
+      "command": [
+        "sh",
+        "-c",
+        "rustdoc +{toolchain} -Z unstable-options --output-format json --out-dir rd004a --crate-name ids ids_a.rs >/dev/null 2>&1; rustdoc +{toolchain} -Z unstable-options --output-format json --out-dir rd004b --crate-name ids ids_b.rs >/dev/null 2>&1; python3 -c \"import json;f=lambda p:next(k for k,v in json.load(open(p))['index'].items() if v.get('name')=='Target');print('SHIFTED' if f('rd004a/ids.json')!=f('rd004b/ids.json') else 'STABLE')\""
+      ],
+      "expect": "SHIFTED",
+      "control": [
+        "sh",
+        "-c",
+        "rustdoc +{toolchain} -Z unstable-options --output-format json --out-dir rd004c --crate-name ids ids_a.rs >/dev/null 2>&1; python3 -c \"import json;f=lambda p:next(k for k,v in json.load(open(p))['index'].items() if v.get('name')=='Target');print('STABLE' if f('rd004a/ids.json')==f('rd004c/ids.json') else 'SHIFTED')\""
+      ],
+      "control_expect": "STABLE",
+      "note": "An Id is a position within one document, not an identity for an item. Adding a struct BEFORE Target moves Target's Id; rebuilding the same source does not. The control rules out nondeterminism, which isolates the real hazard: an Id cached across two versions of a crate silently refers to something else."
+    },
+    {
+      "id": "RD005",
+      "layer": "rustdoc-json",
+      "topic": "feature gating",
+      "question": "Does rustdoc JSON record a cfg(feature) gate for an item it excluded?",
+      "command": [
+        "sh",
+        "-c",
+        "rustdoc +{toolchain} -Z unstable-options --output-format json --out-dir rd005 --crate-name cfgfeat cfgfeat.rs >/dev/null 2>&1; grep -c OnlyWithExtra rd005/cfgfeat.json || true"
+      ],
+      "expect": "re:^0$",
+      "control": [
+        "sh",
+        "-c",
+        "grep -c Always rd005/cfgfeat.json || true"
+      ],
+      "control_expect": "re:^[1-9]",
+      "note": "A feature-gated item that was not enabled is simply not in the document -- there is no record that it exists or what would enable it. This is why features.tsv is built from Cargo.toml instead: the manifest is the only evidence of the gate."
+    },
+    {
+      "id": "RD006",
+      "layer": "rustdoc-json",
+      "topic": "version",
+      "question": "Does the locally emitted format version match the pinned one?",
+      "command": [
+        "sh",
+        "-c",
+        "python3 -c \"import json;print(json.load(open('rd001/bodies.json'))['format_version'])\""
+      ],
+      "expect": "61",
+      "control": null,
+      "note": "What this toolchain emits. Deliberately not compared with what docs.rs served -- see PROVENANCE `versions`, where rustdoc-types 0.61.0 is itself served at format 60."
+    },
+    {
+      "id": "SY001",
+      "layer": "syntax",
+      "topic": "error resilience",
+      "question": "Does the parser produce a tree for source that does not compile?",
+      "command": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "stdin": "broken.rs",
+      "expect": "ERROR@",
+      "control": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "control_stdin": "valid.rs",
+      "control_expect": "absent:ERROR@",
+      "note": "The defining property of this layer, and the reason it is the only one that can be used on code mid-edit. Valid source yields no ERROR node, so the marker is a real signal rather than something the parser always emits."
+    },
+    {
+      "id": "SY002",
+      "layer": "syntax",
+      "topic": "full fidelity",
+      "question": "Are comments retained in the tree?",
+      "command": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "stdin": "commented.rs",
+      "expect": "COMMENT@",
+      "control": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "control_stdin": "uncommented.rs",
+      "control_expect": "absent:COMMENT@",
+      "note": "Trivia survives here and nowhere above. Any question about comments, formatting or exact source offsets has exactly one layer that can answer it."
+    },
+    {
+      "id": "SY003",
+      "layer": "syntax",
+      "topic": "macros",
+      "question": "Is a macro invocation expanded in the concrete syntax tree?",
+      "command": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "stdin": "macro.rs",
+      "expect": "MACRO_CALL@",
+      "control": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "control_stdin": "macro.rs",
+      "control_expect": "absent:Arguments::new",
+      "note": "The tree holds the invocation, not its expansion. The control looks for machinery that only appears once println! is expanded, and does not find it. To see through a macro you need the semantic layer or the compiler's own `-Zunpretty=expanded`."
+    },
+    {
+      "id": "SY004",
+      "layer": "syntax",
+      "topic": "error resilience",
+      "question": "Does the parser signal failure through its exit code?",
+      "command": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "stdin": "broken.rs",
+      "expect": "exit:0",
+      "control": null,
+      "note": "It exits 0 on input it could not parse cleanly. Scripting this means reading the tree for ERROR nodes; the exit code discriminates nothing."
+    },
+    {
+      "id": "XL001",
+      "layer": "cross-layer",
+      "topic": "layer selection",
+      "question": "Does the syntax layer know the type of an expression?",
+      "command": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "stdin": "valid.rs",
+      "expect": "absent:i32 (inferred)",
+      "control": [
+        "rust-analyzer",
+        "parse"
+      ],
+      "control_stdin": "valid.rs",
+      "control_expect": "RET_TYPE@",
+      "note": "The control finds the return type as written -- RET_TYPE is a syntax node. What is absent is any inferred type. The tree records what the source says, never what it means, which is the single most common layer confusion."
+    },
+    {
+      "id": "XL002",
+      "layer": "cross-layer",
+      "topic": "layer selection",
+      "question": "Does MIR retain the name of a local variable?",
+      "command": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "owned.rs"
+      ],
+      "expect": "debug s =",
+      "control": [
+        "rustc",
+        "+{toolchain}",
+        "-Zunpretty=mir",
+        "--crate-type=lib",
+        "owned.rs"
+      ],
+      "control_expect": "_1",
+      "note": "Partly. Locals are numbered, and the original names survive only as `debug` annotations for the debugger. Code that matches on variable names will not find them where it expects."
+    }
+  ]
+}

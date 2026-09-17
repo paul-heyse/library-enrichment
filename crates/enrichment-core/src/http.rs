@@ -1,22 +1,21 @@
-//! HTTP response facts shared by the physical client and native response plans.
-use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
-use serde::{Deserialize, Serialize};
+//! HTTP observations share generated field contracts with acquisition and cache plans.
+use crate::evidence::{Artifact, ArtifactKind};
+use crate::native_union::{NativeStruct, Rule};
+use arrow::datatypes::{Schema, SchemaRef};
 use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Fetched {
-    pub status: u16,
-    #[serde(skip)]
-    pub bytes: Vec<u8>,
-    pub content_type: Option<String>,
-    pub etag: Option<String>,
-    pub last_modified: Option<String>,
-    pub final_url: String,
-    pub retrieved_at: String,
+crate::native_struct! {
+    pub struct Fetched {
+        status: u16 => Rule::UnsignedRange { min: 100, max: 599 },
+        content_type: Option<String> => Rule::Text,
+        etag: Option<String> => Rule::Text,
+        last_modified: Option<String> => Rule::Text,
+        final_url: String => Rule::NonEmpty,
+        retrieved_at: crate::native_time::AcquisitionTime => Rule::Text,
+    } ephemeral { bytes: Vec<u8> = Vec::new() }
 }
-
 impl Fetched {
-    /// Copy bounded response headers without copying the independently owned body buffer.
+    /// Capture response facts without copying the separately owned, bounded byte buffer.
     pub fn metadata(&self) -> Self {
         Self {
             status: self.status,
@@ -25,33 +24,58 @@ impl Fetched {
             etag: self.etag.clone(),
             last_modified: self.last_modified.clone(),
             final_url: self.final_url.clone(),
-            retrieved_at: self.retrieved_at.clone(),
+            retrieved_at: self.retrieved_at,
         }
     }
 }
-
+crate::native_struct! {
+    pub struct CacheRecord {
+        response: Fetched => Rule::Text,
+        request_url: String => Rule::NonEmpty,
+        accept: Option<String> => Rule::Text,
+        body_digest: String => Rule::Sha256,
+        body_bytes: u64 => Rule::Text,
+    }
+}
 pub fn response_schema() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        Field::new("status", DataType::UInt16, false),
-        Field::new("content_type", DataType::Utf8, true),
-        Field::new("etag", DataType::Utf8, true),
-        Field::new("last_modified", DataType::Utf8, true),
-        Field::new("final_url", DataType::Utf8, false),
-        Field::new("retrieved_at", DataType::Utf8, false),
-    ]))
+    Arc::new(Schema::new(Fetched::fields()))
+}
+pub fn cache_schema() -> SchemaRef {
+    Arc::new(Schema::new(CacheRecord::fields()))
 }
 
-pub fn cache_schema() -> SchemaRef {
-    let mut fields = response_schema()
-        .fields()
-        .iter()
-        .map(|f| f.as_ref().clone())
-        .collect::<Vec<_>>();
-    fields.extend([
-        Field::new("request_url", DataType::Utf8, false),
-        Field::new("accept", DataType::Utf8, true),
-        Field::new("body_digest", DataType::Utf8, false),
-        Field::new("body_bytes", DataType::UInt64, false),
-    ]);
-    Arc::new(Schema::new(fields))
+crate::native_struct! {
+    pub struct Cached {
+        record: CacheRecord => Rule::Text,
+        reuse: bool => Rule::Text,
+        validator_name: Option<String> => Rule::Text,
+        validator_value: Option<String> => Rule::Text,
+    }
+}
+
+impl Cached {
+    pub fn response(&self) -> &Fetched {
+        &self.record.response
+    }
+    pub fn artifact(&self) -> Artifact {
+        // Decode the admitted cache's physical descriptor. No state selection occurs here.
+        Artifact {
+            artifact_id: crate::evidence::artifact_id_for(&self.record.body_digest),
+            sha256: self.record.body_digest.clone(),
+            size_bytes: self.record.body_bytes,
+            media_type: self
+                .record
+                .response
+                .content_type
+                .clone()
+                .unwrap_or_else(|| "application/octet-stream".into()),
+            kind: ArtifactKind::Other,
+            source_uri: self.record.request_url.clone(),
+            final_url: Some(self.record.response.final_url.clone()),
+            retrieved_at: self.record.response.retrieved_at,
+            etag: self.record.response.etag.clone(),
+            last_modified: self.record.response.last_modified.clone(),
+            compression: None,
+        }
+    }
 }

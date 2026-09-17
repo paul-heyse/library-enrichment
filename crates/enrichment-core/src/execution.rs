@@ -1,33 +1,36 @@
 //! Concrete isolated producer intent. Callers cannot supply process arguments or host paths.
 use crate::policy::ExecutionProfile;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 pub mod facts;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum ProbeMode {
-    Compile,
-    Typecheck,
-    Runtime,
+crate::native_vocabulary! {
+    #[schemars(inline)]
+    pub enum ProbeMode { Compile = "compile", Typecheck = "typecheck", Runtime = "runtime" }
 }
 
+crate::native_struct! {
 /// Exact consumer input, pinned to a snapshot before scheduling.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct VerifyRequest {
-    pub context_id: String,
+    context_id: String => crate::native_union::Rule::Text,
     #[serde(default)]
-    pub snapshot_id: Option<String>,
-    pub snippet: String,
-    pub mode: ProbeMode,
-    pub profile: ExecutionProfile,
+    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    snippet: String => crate::native_union::Rule::Text,
+    #[serde(default = "default_probe_mode")]
+    mode: ProbeMode => crate::native_union::Rule::Text,
+    #[serde(default = "default_probe_profile")]
+    profile: ExecutionProfile => crate::native_union::Rule::Text,
     #[serde(default)]
-    pub test_intent: Option<String>,
+    test_intent: Option<String> => crate::native_union::Rule::Text,
     #[serde(default)]
-    pub max_bytes: Option<usize>,
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
+}
+
+fn default_probe_mode() -> ProbeMode {
+    ProbeMode::Typecheck
+}
+fn default_probe_profile() -> ExecutionProfile {
+    ExecutionProfile::Build
 }
 
 impl VerifyRequest {
@@ -67,99 +70,65 @@ impl VerifyRequest {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
+#[derive(Default)]
 #[schemars(inline)]
 pub enum JobAction {
     #[default]
-    Status,
-    Wait,
-    Cancel,
+    Status = "status",
+    Wait = "wait",
+    Cancel = "cancel",
+}
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(default, deny_unknown_fields)]
+crate::native_struct! {
+#[derive(Default)]
 pub struct JobRequest {
-    pub job_id: String,
-    pub action: JobAction,
-    pub interest_token: Option<String>,
-    pub wait_seconds: u64,
-    pub max_bytes: Option<usize>,
+    #[schemars(length(min = 1))]
+    job_id: String => crate::native_union::Rule::NonEmpty,
+    #[serde(default)]
+    action: JobAction => crate::native_union::Rule::Text,
+    #[serde(default)]
+    interest_token: Option<String> => crate::native_union::Rule::Text,
+    #[serde(default)]
+    #[schemars(range(max = 10))]
+    wait_seconds: u64 => crate::native_union::Rule::Text,
+    #[serde(default)]
+    #[schemars(range(min = 1024))]
+    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct JobData {
-    pub job_id: String,
-    pub state: crate::wire::JobState,
-    pub stage: String,
-    pub interest_token: Option<String>,
-    pub active_interests: usize,
-    pub submitted_at: String,
-    pub updated_at: String,
-    pub result: Option<JobResult>,
+    job_id: String => crate::native_union::Rule::Text,
+    state: crate::wire::JobState => crate::native_union::Rule::Text,
+    stage: String => crate::native_union::Rule::Text,
+    interest_token: Option<String> => crate::native_union::Rule::Text,
+    active_interests: usize => crate::native_union::Rule::Text,
+    submitted_at: String => crate::native_union::Rule::Text,
+    updated_at: String => crate::native_union::Rule::Text,
+    result: Option<JobResult> => crate::native_union::Rule::Text,
+}
 }
 
-/// Compact terminal research outcome; the complete answer is directly retrievable.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(try_from = "RawJobResult")]
-#[schemars(deny_unknown_fields, transform = terminal_conditionals)]
+crate::native_union! { @tag "status";
+/// Only terminal states are representable; a failure always carries its typed diagnostic.
+pub enum TerminalOutcome {
+    Ok = "ok", Partial = "partial",
+    Error = "error" { error: crate::wire::ErrorDetail => crate::native_union::Rule::Text },
+}
+}
+crate::native_struct! {
+/// Compact terminal research result with a directly retrievable complete answer.
 pub struct JobResult {
-    pub outcome: crate::wire::Status,
-    pub summary: String,
-    pub context_id: Option<String>,
-    pub snapshot_id: Option<String>,
-    pub coverage: crate::wire::Coverage,
-    pub delivery: crate::wire::DeliveryDescriptor,
-    pub error: Option<crate::wire::ErrorDetail>,
+    outcome: TerminalOutcome => crate::native_union::Rule::Text,
+    summary: String => crate::native_union::Rule::Text,
+    context_id: Option<String> => crate::native_union::Rule::Text,
+    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    coverage: crate::wire::Coverage => crate::native_union::Rule::Text,
+    delivery: crate::wire::DeliveryDescriptor => crate::native_union::Rule::Text,
 }
-
-#[derive(Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-#[schemars(inline)]
-struct RawJobResult {
-    outcome: crate::wire::Status,
-    summary: String,
-    #[serde(deserialize_with = "crate::wire::required_option")]
-    context_id: Option<String>,
-    #[serde(deserialize_with = "crate::wire::required_option")]
-    snapshot_id: Option<String>,
-    coverage: crate::wire::Coverage,
-    delivery: crate::wire::DeliveryDescriptor,
-    #[serde(deserialize_with = "crate::wire::required_option")]
-    error: Option<crate::wire::ErrorDetail>,
-}
-
-impl TryFrom<RawJobResult> for JobResult {
-    type Error = &'static str;
-    fn try_from(raw: RawJobResult) -> Result<Self, Self::Error> {
-        if raw.outcome == crate::wire::Status::Pending
-            || (raw.outcome == crate::wire::Status::Error) != raw.error.is_some()
-        {
-            return Err("terminal results require a completed outcome and exactly its error");
-        }
-        Ok(Self {
-            outcome: raw.outcome,
-            summary: raw.summary,
-            context_id: raw.context_id,
-            snapshot_id: raw.snapshot_id,
-            coverage: raw.coverage,
-            delivery: raw.delivery,
-            error: raw.error,
-        })
-    }
-}
-
-fn terminal_conditionals(schema: &mut schemars::Schema) {
-    schema.insert(
-        "allOf".into(),
-        serde_json::json!([
-            {"properties": {"outcome": {"enum": ["ok", "partial", "error"]}}},
-            {"if": {"properties": {"outcome": {"const": "error"}}},
-             "then": {"properties": {"error": {"not": {"type": "null"}}}},
-             "else": {"properties": {"error": {"type": "null"}}}}
-        ]),
-    );
 }
 
 impl From<&crate::wire::Envelope> for JobResult {
@@ -170,77 +139,77 @@ impl From<&crate::wire::Envelope> for JobResult {
             "terminal research outcome"
         );
         Self {
-            outcome: value.status(),
+            outcome: match value.outcome().expect("valid terminal envelope") {
+                crate::wire::Outcome::Ok { .. } => TerminalOutcome::Ok,
+                crate::wire::Outcome::Partial { .. } => TerminalOutcome::Partial,
+                crate::wire::Outcome::Error { error, .. } => TerminalOutcome::Error { error },
+                crate::wire::Outcome::Pending { .. } => {
+                    unreachable!("terminal outcome checked above")
+                }
+            },
             summary: value.summary.clone(),
             context_id: value.context_id.clone(),
             snapshot_id: value.snapshot_id.clone(),
             coverage: value.coverage.clone(),
             delivery: value.delivery.clone(),
-            error: value.error().cloned(),
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum ProcessEnd {
-    Exited,
-    Deadline,
-    OutputLimit,
-    Cancelled,
+crate::native_vocabulary! {
+    #[schemars(inline)]
+    pub enum ProcessEnd { Exited = "exited", Deadline = "deadline", OutputLimit = "output_limit", Cancelled = "cancelled" }
 }
 
-/// Raw bounded process observation, independent of what a probe establishes.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+crate::native_union! {
+/// Actual process authority, independent of the probe's semantic outcome.
 pub enum ProcessAuthority {
-    Command {
-        effect_id: String,
-        grant_id: String,
-        environment_id: Option<String>,
-        snapshot_id: Option<String>,
+    Command = "command" {
+        effect_id: String => crate::native_union::Rule::NonEmpty,
+        grant_id: String => crate::native_union::Rule::NonEmpty,
+        environment_id: Option<String> => crate::native_union::Rule::Text,
+        snapshot_id: Option<String> => crate::native_union::Rule::Text,
     },
-    Qualification {
-        definition_id: String,
-    },
+    Qualification = "qualification" { definition_id: String => crate::native_union::Rule::NonEmpty },
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+crate::native_struct! {
 pub struct ProcessObservation {
-    pub operation_id: String,
-    pub authority: ProcessAuthority,
-    pub image_id: String,
-    pub command: Vec<String>,
-    pub started_at: String,
-    pub finished_at: String,
-    pub exit_code: Option<i32>,
-    pub end: ProcessEnd,
-    pub stdout: String,
-    pub stderr: String,
-    pub cleanup_confirmed: bool,
+    operation_id: String => crate::native_union::Rule::Text,
+    authority: ProcessAuthority => crate::native_union::Rule::Text,
+    image_id: String => crate::native_union::Rule::Text,
+    command: Vec<String> => crate::native_union::Rule::Sequence,
+    started_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+    finished_at: crate::native_time::ObservationTime => crate::native_union::Rule::Text,
+    exit_code: Option<i32> => crate::native_union::Rule::Text,
+    end: ProcessEnd => crate::native_union::Rule::Text,
+    stdout: String => crate::native_union::Rule::Text,
+    stderr: String => crate::native_union::Rule::Text,
+    cleanup_confirmed: bool => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Scoped consumer verification; original static evidence remains independently readable.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct VerificationData {
-    pub evidence_class: crate::wire::EvidenceClass,
-    pub producer_runs: Vec<crate::producer::ProducerRun>,
-    pub source_context_id: String,
-    pub source_snapshot_id: String,
-    pub derived_context: Option<crate::identity::Context>,
-    pub derived_snapshot_id: Option<String>,
-    pub environment: Option<crate::identity::Environment>,
-    pub mode: ProbeMode,
-    pub profile: ExecutionProfile,
-    pub snippet_origin: String,
-    pub test_intent: Option<String>,
-    pub snippet_artifact_id: String,
-    pub lock_artifact_id: Option<String>,
-    pub result_artifact_id: String,
-    pub observations: Vec<ProcessObservation>,
-    pub limitations: Vec<String>,
+    evidence_class: crate::wire::EvidenceClass => crate::native_union::Rule::Text,
+    producer_runs: Vec<crate::producer::ProducerRun> => crate::native_union::Rule::Sequence,
+    source_context_id: String => crate::native_union::Rule::Text,
+    source_snapshot_id: String => crate::native_union::Rule::Text,
+    derived_context: Option<crate::identity::Context> => crate::native_union::Rule::Text,
+    derived_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    environment: Option<crate::identity::Environment> => crate::native_union::Rule::Text,
+    mode: ProbeMode => crate::native_union::Rule::Text,
+    profile: ExecutionProfile => crate::native_union::Rule::Text,
+    snippet_origin: String => crate::native_union::Rule::Text,
+    test_intent: Option<String> => crate::native_union::Rule::Text,
+    snippet_artifact_id: String => crate::native_union::Rule::Text,
+    lock_artifact_id: Option<String> => crate::native_union::Rule::Text,
+    result_artifact_id: String => crate::native_union::Rule::Text,
+    observations: Vec<ProcessObservation> => crate::native_union::Rule::Sequence,
+    limitations: Vec<String> => crate::native_union::Rule::Sequence,
+}
 }
 
 #[cfg(test)]
@@ -255,10 +224,10 @@ mod research_contract_tests {
         assert!(serde_json::from_value::<JobResult>(valid.clone()).is_ok());
         for outcome in ["pending", "error"] {
             let mut invalid = valid.clone();
-            invalid["outcome"] = serde_json::json!(outcome);
+            invalid["outcome"] = serde_json::json!({"status":outcome});
             assert!(serde_json::from_value::<JobResult>(invalid).is_err());
         }
-        for field in ["context_id", "snapshot_id", "error"] {
+        for field in ["context_id", "snapshot_id", "outcome"] {
             let mut invalid = valid.clone();
             invalid.as_object_mut().expect("object").remove(field);
             assert!(serde_json::from_value::<JobResult>(invalid).is_err());

@@ -1,0 +1,261 @@
+{
+  "module": "aho_corasick::automaton",
+  "crate": "aho-corasick",
+  "api": "api/aho_corasick.automaton.md",
+  "items": [
+    {
+      "path": "aho_corasick::automaton::FindIter",
+      "name": "FindIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct FindIter<'a, 'h, A>",
+      "summary": "An iterator of non-overlapping matches in a particular haystack.",
+      "doc": "api/aho_corasick.automaton.md#finditer",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::automaton::FindOverlappingIter",
+      "name": "FindOverlappingIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct FindOverlappingIter<'a, 'h, A>",
+      "summary": "An iterator of overlapping matches in a particular haystack.",
+      "doc": "api/aho_corasick.automaton.md#findoverlappingiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::automaton::OverlappingState",
+      "name": "OverlappingState",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct OverlappingState",
+      "summary": "Represents the current state of an overlapping search.",
+      "doc": "api/aho_corasick.automaton.md#overlappingstate",
+      "methods": [
+        {
+          "name": "get_match",
+          "signature": "fn get_match(&self) -> Option<Match>",
+          "summary": "Return the match result of the most recent search to execute with this state."
+        },
+        {
+          "name": "start",
+          "signature": "fn start() -> OverlappingState",
+          "summary": "Create a new overlapping state that begins at the start state."
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::automaton::StreamFindIter",
+      "name": "StreamFindIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct StreamFindIter<'a, A, R>",
+      "summary": "An iterator that reports matches in a stream.",
+      "doc": "api/aho_corasick.automaton.md#streamfinditer",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<std::io::Result<Match>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::automaton::Automaton",
+      "name": "Automaton",
+      "kind": "trait",
+      "crate": "aho-corasick",
+      "signature": "unsafe trait Automaton: private::Sealed",
+      "summary": "A trait that abstracts over Aho-Corasick automata.",
+      "doc": "api/aho_corasick.automaton.md#automaton",
+      "implementors": [
+        "aho_corasick::dfa::DFA",
+        "aho_corasick::nfa::contiguous::NFA",
+        "aho_corasick::nfa::noncontiguous::NFA"
+      ],
+      "required_methods": [
+        "is_dead",
+        "is_match",
+        "is_special",
+        "is_start",
+        "match_kind",
+        "match_len",
+        "match_pattern",
+        "max_pattern_len",
+        "memory_usage",
+        "min_pattern_len",
+        "next_state",
+        "pattern_len",
+        "patterns_len",
+        "prefilter",
+        "start_state"
+      ],
+      "provided_methods": [
+        "try_find",
+        "try_find_iter",
+        "try_find_overlapping",
+        "try_find_overlapping_iter",
+        "try_replace_all",
+        "try_replace_all_bytes",
+        "try_replace_all_with",
+        "try_replace_all_with_bytes",
+        "try_stream_find_iter",
+        "try_stream_replace_all",
+        "try_stream_replace_all_with"
+      ],
+      "methods": [
+        {
+          "name": "is_dead",
+          "signature": "fn is_dead(&self, sid: StateID) -> bool",
+          "summary": "Returns true if the given ID represents a dead state."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match(&self, sid: StateID) -> bool",
+          "summary": "Returns true if the given ID represents a match state."
+        },
+        {
+          "name": "is_special",
+          "signature": "fn is_special(&self, sid: StateID) -> bool",
+          "summary": "Returns true if the given ID represents a \"special\" state. A special state is a dead, match or start state."
+        },
+        {
+          "name": "is_start",
+          "signature": "fn is_start(&self, sid: StateID) -> bool",
+          "summary": "Returns true if the given ID represents a start state."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(&self) -> MatchKind",
+          "summary": "Returns the match semantics that this automaton was built with."
+        },
+        {
+          "name": "match_len",
+          "signature": "fn match_len(&self, sid: StateID) -> usize",
+          "summary": "Returns the total number of matches for the given state ID."
+        },
+        {
+          "name": "match_pattern",
+          "signature": "fn match_pattern(&self, sid: StateID, index: usize) -> PatternID",
+          "summary": "Returns the pattern ID for the match state given by `sid` at the `index` given."
+        },
+        {
+          "name": "max_pattern_len",
+          "signature": "fn max_pattern_len(&self) -> usize",
+          "summary": "Returns the length, in bytes, of the longest pattern in this automaton."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the heap memory usage, in bytes, used by this automaton."
+        },
+        {
+          "name": "min_pattern_len",
+          "signature": "fn min_pattern_len(&self) -> usize",
+          "summary": "Returns the length, in bytes, of the shortest pattern in this automaton."
+        },
+        {
+          "name": "next_state",
+          "signature": "fn next_state(&self, anchored: Anchored, sid: StateID, byte: u8) -> StateID",
+          "summary": "Performs a state transition from `sid` for `byte` and returns the next state."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self, pid: PatternID) -> usize",
+          "summary": "Returns the length of the pattern for the given ID."
+        },
+        {
+          "name": "patterns_len",
+          "signature": "fn patterns_len(&self) -> usize",
+          "summary": "Returns the total number of patterns compiled into this automaton."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(&self) -> Option<&Prefilter>",
+          "summary": "Returns a prefilter, if available, that can be used to accelerate searches for this automaton."
+        },
+        {
+          "name": "start_state",
+          "signature": "fn start_state(&self, anchored: Anchored) -> Result<StateID, MatchError>",
+          "summary": "Returns the starting state for the given anchor mode."
+        },
+        {
+          "name": "try_find",
+          "signature": "fn try_find(&self, input: &Input<'_>) -> Result<Option<Match>, MatchError>",
+          "summary": "Executes a non-overlapping search with this automaton using the given configuration."
+        },
+        {
+          "name": "try_find_iter",
+          "signature": "fn try_find_iter<'a, 'h>(&'a self, input: Input<'h>) -> Result<FindIter<'a, 'h, Self>, MatchError> where Self: Sized",
+          "summary": "Returns an iterator of non-overlapping matches with this automaton using the given configuration."
+        },
+        {
+          "name": "try_find_overlapping",
+          "signature": "fn try_find_overlapping(&self, input: &Input<'_>, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Executes a overlapping search with this automaton using the given configuration."
+        },
+        {
+          "name": "try_find_overlapping_iter",
+          "signature": "fn try_find_overlapping_iter<'a, 'h>(&'a self, input: Input<'h>) -> Result<FindOverlappingIter<'a, 'h, Self>, MatchError> where Self: Sized",
+          "summary": "Returns an iterator of overlapping matches with this automaton using the given configuration."
+        },
+        {
+          "name": "try_replace_all",
+          "signature": "fn try_replace_all<B>(&self, haystack: &str, replace_with: &[B]) -> Result<String, MatchError> where Self: Sized, B: AsRef<str>",
+          "summary": "Replaces all non-overlapping matches in `haystack` with strings from `replace_with` depending on the pattern that matched. The `replace_with` slice must have length equal to `Automaton::patterns_len`."
+        },
+        {
+          "name": "try_replace_all_bytes",
+          "signature": "fn try_replace_all_bytes<B>(&self, haystack: &[u8], replace_with: &[B]) -> Result<Vec<u8>, MatchError> where Self: Sized, B: AsRef<[u8]>",
+          "summary": "Replaces all non-overlapping matches in `haystack` with strings from `replace_with` depending on the pattern that matched. The `replace_with` slice must have length equal to `Automaton::patterns_len`."
+        },
+        {
+          "name": "try_replace_all_with",
+          "signature": "fn try_replace_all_with<F>(&self, haystack: &str, dst: &mut String, replace_with: F) -> Result<(), MatchError> where Self: Sized, F: FnMut(&Match, &str, &mut String) -> bool",
+          "summary": "Replaces all non-overlapping matches in `haystack` by calling the `replace_with` closure given."
+        },
+        {
+          "name": "try_replace_all_with_bytes",
+          "signature": "fn try_replace_all_with_bytes<F>(&self, haystack: &[u8], dst: &mut Vec<u8>, replace_with: F) -> Result<(), MatchError> where Self: Sized, F: FnMut(&Match, &[u8], &mut Vec<u8>) -> bool",
+          "summary": "Replaces all non-overlapping matches in `haystack` by calling the `replace_with` closure given."
+        },
+        {
+          "name": "try_stream_find_iter",
+          "signature": "fn try_stream_find_iter<'a, R: std::io::Read>(&'a self, rdr: R) -> Result<StreamFindIter<'a, Self, R>, MatchError> where Self: Sized",
+          "summary": "Returns an iterator of non-overlapping matches with this automaton from the stream given."
+        },
+        {
+          "name": "try_stream_replace_all",
+          "signature": "fn try_stream_replace_all<R, W, B>(&self, rdr: R, wtr: W, replace_with: &[B]) -> std::io::Result<()> where Self: Sized, R: std::io::Read, W: std::io::Write, B: AsRef<[u8]>",
+          "summary": "Replaces all non-overlapping matches in `rdr` with strings from `replace_with` depending on the pattern that matched, and writes the result to `wtr`. The `replace_with` slice must have length equal to `Automaton::patterns_len`."
+        },
+        {
+          "name": "try_stream_replace_all_with",
+          "signature": "fn try_stream_replace_all_with<R, W, F>(&self, rdr: R, wtr: W, replace_with: F) -> std::io::Result<()> where Self: Sized, R: std::io::Read, W: std::io::Write, F: FnMut(&Match, &[u8], &mut W) -> std::io::Result<()>",
+          "summary": "Replaces all non-overlapping matches in `rdr` by calling the `replace_with` closure given and writing the result to `wtr`."
+        }
+      ]
+    }
+  ]
+}

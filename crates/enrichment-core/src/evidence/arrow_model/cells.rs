@@ -17,10 +17,15 @@ pub fn invalid(message: impl Into<String>) -> ArrowError {
 enum CellColumn {
     Text(TextColumn),
     Bool(arrow::array::BooleanArray),
+    U16(arrow::array::UInt16Array),
     U32(arrow::array::UInt32Array),
     U64(arrow::array::UInt64Array),
     I64(arrow::array::Int64Array),
+    Timestamp(arrow::array::TimestampMicrosecondArray),
+    I32(arrow::array::Int32Array),
     List(arrow::array::ListArray, TextColumn),
+    Values(arrow::array::ListArray),
+    Map(arrow::array::MapArray),
     Records(arrow::array::ListArray, RowSet),
     Struct(StructArray, RowSet),
 }
@@ -30,21 +35,34 @@ impl CellColumn {
         use arrow::array::{BooleanArray, ListArray, UInt32Array, UInt64Array};
         if let Some(a) = array.as_any().downcast_ref::<BooleanArray>() {
             Ok(Self::Bool(a.clone()))
+        } else if let Some(a) = array.as_any().downcast_ref::<arrow::array::UInt16Array>() {
+            Ok(Self::U16(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<UInt32Array>() {
             Ok(Self::U32(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<UInt64Array>() {
             Ok(Self::U64(a.clone()))
+        } else if let Some(a) = array
+            .as_any()
+            .downcast_ref::<arrow::array::TimestampMicrosecondArray>()
+        {
+            Ok(Self::Timestamp(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<arrow::array::Int64Array>() {
             Ok(Self::I64(a.clone()))
+        } else if let Some(a) = array.as_any().downcast_ref::<arrow::array::Int32Array>() {
+            Ok(Self::I32(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<ListArray>() {
             if let Some(values) = a.values().as_any().downcast_ref::<StructArray>() {
                 Ok(Self::Records(
                     a.clone(),
                     RowSet::new(values.fields(), values.columns())?,
                 ))
+            } else if let Ok(text) = TextColumn::new(a.values().as_ref()) {
+                Ok(Self::List(a.clone(), text))
             } else {
-                Ok(Self::List(a.clone(), TextColumn::new(a.values().as_ref())?))
+                Ok(Self::Values(a.clone()))
             }
+        } else if let Some(a) = array.as_any().downcast_ref::<arrow::array::MapArray>() {
+            Ok(Self::Map(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<StructArray>() {
             Ok(Self::Struct(
                 a.clone(),
@@ -59,10 +77,15 @@ impl CellColumn {
         match self {
             Self::Text(a) => a.get(row).is_none(),
             Self::Bool(a) => a.is_null(row),
+            Self::U16(a) => a.is_null(row),
             Self::U32(a) => a.is_null(row),
             Self::U64(a) => a.is_null(row),
             Self::I64(a) => a.is_null(row),
+            Self::Timestamp(a) => a.is_null(row),
+            Self::I32(a) => a.is_null(row),
             Self::List(a, _) => a.is_null(row),
+            Self::Values(a) => a.is_null(row),
+            Self::Map(a) => a.is_null(row),
             Self::Records(a, _) => a.is_null(row),
             Self::Struct(a, _) => a.is_null(row),
         }
@@ -102,6 +125,20 @@ pub struct Row<'a> {
 }
 
 impl<'a> Row<'a> {
+    pub fn is_null(self, name: &str) -> Result<bool, ArrowError> {
+        Ok(self.column(name)?.is_null(self.index))
+    }
+
+    pub fn exact_fields(self, fields: &arrow::datatypes::Fields) -> Result<(), ArrowError> {
+        if self.set.0.len() != fields.len()
+            || fields
+                .iter()
+                .any(|field| !self.set.0.contains_key(field.name()))
+        {
+            return Err(invalid("record fields differ from declared contract"));
+        }
+        Ok(())
+    }
     fn column(self, name: &str) -> Result<&'a CellColumn, ArrowError> {
         self.set
             .0
@@ -139,6 +176,7 @@ impl<'a> Row<'a> {
 
     pub fn number(self, name: &str) -> Result<u64, ArrowError> {
         match self.column(name)? {
+            CellColumn::U16(c) if !c.is_null(self.index) => Ok(u64::from(c.value(self.index))),
             CellColumn::U32(c) if !c.is_null(self.index) => Ok(u64::from(c.value(self.index))),
             CellColumn::U64(c) if !c.is_null(self.index) => Ok(c.value(self.index)),
             CellColumn::I64(c) if !c.is_null(self.index) => u64::try_from(c.value(self.index))
@@ -162,10 +200,40 @@ impl<'a> Row<'a> {
             self.signed(name).map(Some)
         }
     }
+    pub fn timestamp_micros(self, name: &str) -> Result<i64, ArrowError> {
+        match self.column(name)? {
+            CellColumn::Timestamp(array) if !array.is_null(self.index) => {
+                Ok(array.value(self.index))
+            }
+            _ => Err(invalid("required UTC microsecond value")),
+        }
+    }
+
     pub fn signed(self, name: &str) -> Result<i64, ArrowError> {
         match self.column(name)? {
             CellColumn::I64(c) if !c.is_null(self.index) => Ok(c.value(self.index)),
+            CellColumn::I32(c) if !c.is_null(self.index) => Ok(i64::from(c.value(self.index))),
             _ => Err(invalid(format!("null or non-signed-integer column {name}"))),
+        }
+    }
+
+    pub fn list_values(self, name: &str) -> Result<ArrayRef, ArrowError> {
+        match self.column(name)? {
+            CellColumn::List(array, _)
+            | CellColumn::Records(array, _)
+            | CellColumn::Values(array)
+                if !array.is_null(self.index) =>
+            {
+                Ok(array.value(self.index))
+            }
+            _ => Err(invalid(format!("null or non-list column {name}"))),
+        }
+    }
+
+    pub fn map_entries(self, name: &str) -> Result<StructArray, ArrowError> {
+        match self.column(name)? {
+            CellColumn::Map(array) if !array.is_null(self.index) => Ok(array.value(self.index)),
+            _ => Err(invalid(format!("null or non-map column {name}"))),
         }
     }
 
@@ -217,11 +285,17 @@ impl<'a> Row<'a> {
     /// A tagged variant may populate only its declared fields, even if the extra field is
     /// nullable in the union schema. This catches malformed alternatives before indexing.
     pub fn variant(self, allowed: &[&str]) -> Result<(), ArrowError> {
+        self.variant_named("kind", allowed)
+    }
+    pub fn variant_named(self, discriminator: &str, allowed: &[&str]) -> Result<(), ArrowError> {
         for (name, column) in &self.set.0 {
-            if name != "kind" && !allowed.contains(&name.as_str()) && !column.is_null(self.index) {
+            if name != discriminator
+                && !allowed.contains(&name.as_str())
+                && !column.is_null(self.index)
+            {
                 return Err(invalid(format!(
                     "unexpected {name} for {}",
-                    self.text("kind")?
+                    self.text(discriminator)?
                 )));
             }
         }
@@ -355,15 +429,36 @@ pub fn column(name: &str, array: ArrayRef, nullable: bool, role: &str) -> (Field
     (field(name, &array, nullable, role), array)
 }
 
+pub fn ruled_column(
+    name: &str,
+    array: ArrayRef,
+    nullable: bool,
+    role: &str,
+    rule: crate::native_union::Rule,
+) -> (Field, ArrayRef) {
+    let (mut field, array) = column(name, array, nullable, role);
+    field.metadata_mut().insert(
+        "enrichment.rule".into(),
+        serde_json::to_string(&rule).expect("finite field rule"),
+    );
+    (field, array)
+}
+
 pub fn structure(
     columns: Vec<(Field, ArrayRef)>,
     valid: Option<Vec<bool>>,
 ) -> Result<ArrayRef, ArrowError> {
     let (fields, arrays): (Vec<_>, Vec<_>) = columns.into_iter().unzip();
-    Ok(Arc::new(StructArray::try_new(
+    let length = arrays
+        .first()
+        .map(|array| array.len())
+        .or_else(|| valid.as_ref().map(Vec::len))
+        .unwrap_or(0);
+    Ok(Arc::new(StructArray::try_new_with_length(
         fields.into(),
         arrays,
         valid.map(NullBuffer::from),
+        length,
     )?))
 }
 

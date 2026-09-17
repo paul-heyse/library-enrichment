@@ -35,7 +35,6 @@ def _write_config(path: Path, upstream: FixtureUpstream) -> None:
     path.write_text(
         "\n".join(
             [
-                'config_version = "1.0"',
                 "[policy]",
                 'enabled_profiles = ["static"]',
                 "[producers.rust]",

@@ -14,10 +14,12 @@ mod arrow_input;
 pub mod artifact_catalog;
 pub mod atomic;
 mod attempt_plan;
+pub mod availability;
 pub mod blob;
 pub mod browse;
 pub mod bundle;
 pub mod comparison;
+pub mod comparison_context;
 pub mod control;
 pub mod control_jobs;
 pub mod coverage;
@@ -28,11 +30,14 @@ pub mod delta_evidence;
 pub mod dependency_plan;
 mod durable_store;
 pub mod execution_policy;
+mod field_admission;
 pub mod http_cache;
 pub mod ingest;
+mod invariants;
 pub mod leases;
 mod native_catalog;
 pub mod native_delta;
+pub mod native_discovery;
 pub mod native_effect;
 mod native_policy;
 pub mod native_rustdoc;
@@ -51,13 +56,20 @@ pub mod repository;
 pub mod resolution_policy;
 pub mod result;
 pub mod result_catalog;
+pub mod result_delivery;
+pub mod result_plan;
+mod result_relations;
 pub mod runtime;
 pub mod scoring;
 pub mod search_plan;
 pub mod search_projection;
 mod semantic;
+#[cfg(test)]
+mod semantic_contract_tests;
 pub mod semantic_scope;
 pub mod state;
+pub mod status_plan;
+mod task_context;
 pub mod views;
 
 pub use blob::{BlobStore, StoredBlob};
@@ -76,6 +88,7 @@ pub mod rust_normalize;
 pub mod native_worker;
 
 mod operation_policy;
+mod request_admission;
 
 pub mod operation_policies;
 
@@ -84,3 +97,5 @@ pub mod immutable_definitions;
 pub mod process_grants;
 
 mod telemetry_history;
+
+pub mod physical_ownership;

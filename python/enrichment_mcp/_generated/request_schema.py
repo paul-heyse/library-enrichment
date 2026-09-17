@@ -79,16 +79,16 @@ class JobRequest(BaseModel):
     )
     action: Action | None = Action.status
     interest_token: str | None = None
-    job_id: str | None = ""
-    max_bytes: int | None = Field(None, ge=0)
-    wait_seconds: int | None = Field(0, ge=0)
+    job_id: str = Field(..., min_length=1)
+    max_bytes: int | None = Field(None, ge=1024)
+    wait_seconds: int | None = Field(0, ge=0, le=10)
 
 
 class ManifestRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    snapshot_id: str | None = Field("", description="The snapshot to describe.")
+    snapshot_id: str = Field(..., description="The snapshot to describe.", min_length=1)
 
 
 class OverviewRequest(BaseModel):
@@ -96,18 +96,18 @@ class OverviewRequest(BaseModel):
         extra="forbid",
     )
     area: str | None = Field(None, description="Narrow to one module subtree.")
-    context_id: str | None = Field("", description="The context from `resolve_library`.")
+    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
     discovery: list[DiscoverySelection] | None = Field(
         None,
         description="Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.",
     )
     max_bytes: int | None = Field(
-        None, description="Advisory byte budget; the configured inline budget bounds it.", ge=0
+        None, description="Advisory byte budget; the configured inline budget bounds it.", ge=1024
     )
     max_items: int | None = Field(
         None,
         description="Cap on child entries per namespace; the configured limit bounds it.",
-        ge=0,
+        ge=1,
     )
     snapshot_id: str | None = Field(
         None, description="A specific snapshot; the context's current one when omitted."
@@ -157,7 +157,7 @@ class ResolveRequest(BaseModel):
     default_features: bool | None = Field(
         None, description="Whether the caller's project enables default features, when known."
     )
-    ecosystem: Ecosystem1 | None = Field(Ecosystem1.rust, description="Which ecosystem.")
+    ecosystem: Ecosystem1 = Field(..., description="Which ecosystem.")
     extras: list[str] | None = Field(
         None, description="Explicit Python extras, distinct from Rust feature selection."
     )
@@ -171,7 +171,7 @@ class ResolveRequest(BaseModel):
         None,
         description="Research mode; defaults to `project` when a version is given and `upstream` otherwise.",
     )
-    name: str | None = Field("", description="Package name as the caller spelled it.")
+    name: str = Field(..., description="Package name as the caller spelled it.", min_length=1)
     package_subdir: str | None = Field(
         None, description="Explicit package root within the repository; omitted means root."
     )
@@ -192,6 +192,7 @@ class ResolveRequest(BaseModel):
 
 
 class ResultSectionName(StrEnum):
+    envelope = "envelope"
     coverage = "coverage"
     signature = "signature"
     changes = "changes"
@@ -223,19 +224,21 @@ class SearchRequest(BaseModel):
     area: str | None = Field(
         None, description="Restrict symbol/fragment subjects to this namespace subtree."
     )
-    context_id: str | None = Field("", description="The context from `resolve_library`.")
+    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
     cursor: str | None = Field(None, description="Continue a previous page.")
     kinds: list[str] | None = Field(
         None,
         description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
     )
     max_bytes: int | None = Field(
-        None, description="Byte budget for the page; the configured inline budget bounds it.", ge=0
+        None,
+        description="Byte budget for the page; the configured inline budget bounds it.",
+        ge=1024,
     )
     max_items: int | None = Field(
-        None, description="Page size; the configured limit bounds it.", ge=0
+        None, description="Page size; the configured limit bounds it.", ge=1
     )
-    query: str | None = Field("", description="The query.")
+    query: str = Field(..., description="The query.", min_length=1)
     snapshot_id: str | None = Field(
         None, description="A specific snapshot; the context's current one when omitted."
     )
@@ -282,9 +285,9 @@ class VerifyRequest(BaseModel):
     )
     context_id: str
     max_bytes: int | None = Field(None, ge=0)
-    mode: Mode1
-    profile: Profile1 = Field(
-        ...,
+    mode: Mode1 | None = Mode1.typecheck
+    profile: Profile1 | None = Field(
+        Profile1.build,
         description="The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
     )
     snapshot_id: str | None = None
@@ -293,36 +296,57 @@ class VerifyRequest(BaseModel):
 
 
 class ResearchRequest1(BaseModel):
-    method: Literal["service_status"]
-    params: StatusRequest
-
-
-class ResearchRequest2(BaseModel):
-    method: Literal["verify_usage"]
-    params: VerifyRequest
-
-
-class ResearchRequest3(BaseModel):
-    method: Literal["job_control"]
-    params: JobRequest
-
-
-class ResearchRequest5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["resolve_library"]
     params: ResolveRequest
 
 
-class ResearchRequest6(BaseModel):
+class ResearchRequest2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["library_overview"]
     params: OverviewRequest
 
 
-class ResearchRequest7(BaseModel):
+class ResearchRequest3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["search_evidence"]
     params: SearchRequest
 
 
+class ResearchRequest6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    method: Literal["verify_usage"]
+    params: VerifyRequest
+
+
+class ResearchRequest8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    method: Literal["job_control"]
+    params: JobRequest
+
+
+class ResearchRequest9(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    method: Literal["service_status"]
+    params: StatusRequest
+
+
 class ResearchRequest10(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["snapshot_manifest"]
     params: ManifestRequest
 
@@ -410,12 +434,12 @@ class ReadArtifactRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    artifact_id: str | None = Field("", description="A service-issued artifact handle.")
+    artifact_id: str = Field(..., description="A service-issued artifact handle.", min_length=1)
     cursor: str | None = Field(None, description="Continue a previous read.")
     max_bytes: int | None = Field(
         None,
         description="Byte budget for this slice; the configured inline budget bounds it.",
-        ge=0,
+        ge=1024,
     )
     section: ArtifactSection | None = Field(
         None,
@@ -438,12 +462,18 @@ class ResearchSelection(RootModel[ResearchSelection1 | ResearchSelection2]):
     )
 
 
-class ResearchRequest4(BaseModel):
+class ResearchRequest5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["compare_releases"]
     params: CompareRequest
 
 
-class ResearchRequest9(BaseModel):
+class ResearchRequest7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["read_artifact"]
     params: ReadArtifactRequest
 
@@ -452,7 +482,7 @@ class InspectRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    context_id: str | None = Field("", description="The context from `resolve_library`.")
+    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
     definition_id: str | None = Field(
         None,
         description="Select one definition at this path, using an inspection candidate or search result.",
@@ -461,7 +491,7 @@ class InspectRequest(BaseModel):
         None, description="Retained execution selection and explicit execution intent (ADR-0026)."
     )
     max_bytes: int | None = Field(
-        None, description="Byte budget; the configured inline budget bounds it.", ge=0
+        None, description="Byte budget; the configured inline budget bounds it.", ge=1024
     )
     selection: ResearchSelection | None = Field(
         {"mode": "default"},
@@ -471,12 +501,15 @@ class InspectRequest(BaseModel):
     snapshot_id: str | None = Field(
         None, description="A specific snapshot; the context's current one when omitted."
     )
-    symbol_path: str | None = Field(
-        "", description="A qualified path, or a bare name when unambiguous."
+    symbol_path: str = Field(
+        ..., description="A qualified path, or a bare name when unambiguous.", min_length=1
     )
 
 
-class ResearchRequest8(BaseModel):
+class ResearchRequest4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     method: Literal["inspect_symbol"]
     params: InspectRequest
 
@@ -508,6 +541,6 @@ class ResearchRequest(
         | ResearchRequest10
     ) = Field(
         ...,
-        description="Authoritative request schemas for implemented research methods.",
+        description="Every operation shares its native field, wire and MCP binding declaration.",
         title="ResearchRequest",
     )

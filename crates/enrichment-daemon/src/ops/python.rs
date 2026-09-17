@@ -4,6 +4,7 @@ use std::path::Path;
 use std::process::Stdio;
 use std::time::Duration;
 
+use enrichment_core::canonical;
 use enrichment_core::evidence::{ArtifactKind, EvidenceKind, Gap, GapReason, PlannedFallback};
 use enrichment_core::identity::{Context, Ecosystem, Release, ReleaseKey};
 use enrichment_core::policy::ArchivePolicy;
@@ -14,7 +15,6 @@ use enrichment_core::producer::{
 use enrichment_core::request::{FreshnessMode, ResolveRequest};
 use enrichment_core::wire::data::ResolveData;
 use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch};
-use enrichment_core::{canonical, clock};
 use serde_json::Value;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use url::Url;
@@ -37,7 +37,7 @@ fn failure(detail: impl Into<String>) -> Envelope {
     )
 }
 fn gap(kind: EvidenceKind, detail: impl Into<String>) -> Gap {
-    Gap {kind,reason:GapReason::ExtractionFailed,detail:detail.into(),planned_fallback:Some(PlannedFallback{producer:"python-isolated-verification".into(),profile:"runtime".into(),enabled:false,next_action:"Static evidence is incomplete; use an explicitly enabled isolated verification environment when available.".into()})}
+    Gap {kind,reason:GapReason::ExtractionFailed,detail:detail.into(),planned_fallback:Some(PlannedFallback{producer:"python-isolated-verification".into(),profile:enrichment_core::policy::ExecutionProfile::Runtime,enabled:false,next_action:"Static evidence is incomplete; use an explicitly enabled isolated verification environment when available.".into()})}
 }
 
 pub(super) async fn acquire(
@@ -57,7 +57,8 @@ async fn acquire_inner(
     work: &super::resolve_job::Work,
 ) -> Result<Envelope, String> {
     let mut acq = Acquisition::new(service).for_job(work);
-    let started = clock::now_rfc3339();
+    let started =
+        enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?;
     let registry = &service.config.producers.python.pypi_url;
     let versions = if let Some(v) = &request.version {
         vec![v.clone()]
@@ -293,7 +294,7 @@ pub(super) struct Production<'a> {
     pub(super) source_root: &'a str,
     pub(super) file: &'a DistributionFile,
     pub(super) archive: &'a enrichment_core::evidence::Artifact,
-    pub(super) started: String,
+    pub(super) started: enrichment_core::native_time::ObservationTime,
     pub(super) revision_tree: bool,
 }
 
@@ -366,6 +367,8 @@ pub(super) async fn produce(
             let blobs = service.blobs.clone();
             let artifact = tokio::task::spawn_blocking(move || {
                 let _directory = directory;
+                let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
+                    .map_err(std::io::Error::other)?;
                 blobs.put_stream(
                     python::worker::MAX_BYTES,
                     |output| {
@@ -378,7 +381,7 @@ pub(super) async fn produce(
                             ArtifactKind::Other,
                             "application/vnd.apache.arrow.stream",
                             "producer:griffe-static",
-                            &clock::now_rfc3339(),
+                            retrieved_at,
                         );
                         artifact.artifact_id = enrichment_core::evidence::artifact_id_for(digest);
                         artifact.sha256 = digest.into();
@@ -528,7 +531,7 @@ pub(super) async fn produce(
         started,
         outcome,
         run_gaps,
-    );
+    )?;
     for kind in documents.kinds() {
         if kind == enrichment_core::evidence::FragmentKind::ChangelogSection {
             acq.indexed.insert(EvidenceKind::ReleaseNotes);
@@ -568,7 +571,10 @@ pub(super) async fn produce(
     };
     let coverage=Coverage{details:None,assessments: Vec::new(),scope:format!("Static contents of {} {} ({})",request.name,release.key.version,file.filename),indexed:acq.indexed.iter().map(|k|k.as_str().into()).collect(),missing:acq.gaps.iter().map(|g|g.kind.as_str().into()).collect(),limitations:vec!["Static source/stub declarations are not executed or typechecker observations; dependencies and namespace contributions are not complete environments.".into()]};
     let freshness = Freshness {
-        registry_checked_at: Some(clock::now_rfc3339()),
+        registry_checked_at: Some(
+            enrichment_core::native_time::AcquisitionTime::now()
+                .map_err(|error| error.to_string())?,
+        ),
         source_version_match: SourceVersionMatch::Exact,
         latest_verified: !revision_tree && request.version.is_none(),
     };
@@ -585,7 +591,7 @@ pub(super) async fn produce(
         .collect::<Vec<_>>();
     let result = Research {
         summary,
-        data: common::to_object(&data),
+        data: common::payload(&data),
         coverage,
         freshness,
         context_id: Some(context.context_id.to_string()),

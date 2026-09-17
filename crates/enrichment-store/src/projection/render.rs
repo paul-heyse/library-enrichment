@@ -4,42 +4,27 @@ use super::{
     decode,
 };
 use arrow::{error::ArrowError, record_batch::RecordBatch};
-use enrichment_core::evidence::{EvidenceFragment, FragmentKind, Symbol, SymbolKind};
+use enrichment_core::evidence::{FragmentKind, SymbolHeader, SymbolKind, TextFragment};
 
 /// Identity selection has no observation join: large alternatives cannot hide the binding.
-pub(crate) fn symbol_headers(batches: &[RecordBatch]) -> Result<Vec<Symbol>, ArrowError> {
+pub(crate) fn symbol_headers(batches: &[RecordBatch]) -> Result<Vec<SymbolHeader>, ArrowError> {
     let mut out = Vec::new();
     for batch in batches {
         let rows = RowSet::batch(batch)?;
         for i in 0..batch.num_rows() {
             let r = rows.row(i);
-            let components = r.list("components")?;
-            let separator = match r.text("ecosystem")? {
-                "rust" => "::",
-                "python" => ".",
-                _ => return Err(invalid("unknown ecosystem")),
-            };
-            out.push(Symbol {
+            out.push(SymbolHeader {
                 symbol_id: r.text("symbol_id")?.into(),
                 definition_id: r.text("definition_id")?.into(),
                 path: r.text("path")?.into(),
                 name: r.text("name")?.into(),
                 kind: SymbolKind::parse(r.text("kind")?)
                     .ok_or_else(|| invalid("unknown symbol kind"))?,
-                parent_path: (components.len() > 1)
-                    .then(|| components[..components.len() - 1].join(separator)),
-                signature: None,
-                doc_summary: None,
-                docs: None,
-                deprecated: None,
-                span_file: None,
-                span_line: None,
-                producer_local_id: 0,
+                parent_path: r.owned("parent_path")?,
                 is_reexport: r.boolean("is_reexport")?,
                 definition_path: r.text("definition_path")?.into(),
-                defined_in_crate: r.text("defined_in_package")?.into(),
+                defined_in_package: r.text("defined_in_package")?.into(),
                 qualifier: r.owned("qualifier")?,
-                cfg_hints: Vec::new(),
             });
         }
     }
@@ -82,31 +67,20 @@ pub(crate) fn api_observations(
     Ok(out)
 }
 
-pub(crate) fn fragments(batches: &[RecordBatch]) -> Result<Vec<EvidenceFragment>, ArrowError> {
+pub(crate) fn fragments(batches: &[RecordBatch]) -> Result<Vec<TextFragment>, ArrowError> {
     let mut out = Vec::new();
     for batch in batches {
         let rows = RowSet::batch(batch)?;
         for i in 0..batch.num_rows() {
             let r = rows.row(i);
-            let source = decode::source(r.structure("source")?)?;
-            let serde_json::Value::Object(locator) = serde_json::to_value(source.locator)
-                .map_err(|e| ArrowError::JsonError(e.to_string()))?
-            else {
-                return Err(invalid("typed locator did not encode as an object"));
-            };
-            out.push(EvidenceFragment {
+            out.push(TextFragment {
                 fragment_id: r.text("fragment_id")?.into(),
                 kind: FragmentKind::parse(r.text("kind")?)
                     .ok_or_else(|| invalid("unknown fragment kind"))?,
-                subject: r.text("label")?.into(),
+                subject: decode::subject(r.structure("subject_ref")?)?,
+                display_subject: r.text("label")?.into(),
                 text: r.text("text")?.into(),
-                artifact_id: source.artifact_id,
-                locator,
-                producer: source.extractor,
-                producer_version: source.extractor_version,
-                source_uri: source.source_uri,
-                source_version_match: Some(source.source_version_match),
-                evidence_class: source.evidence_class,
+                source: decode::source(r.structure("source")?)?,
             });
         }
     }

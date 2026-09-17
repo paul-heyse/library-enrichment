@@ -1,0 +1,165 @@
+{
+  "module": "ra_ap_vfs::loader",
+  "crate": "ra_ap_vfs",
+  "api": "api/ra_ap_vfs.loader.md",
+  "items": [
+    {
+      "path": "ra_ap_vfs::loader::Entry",
+      "name": "Entry",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum Entry",
+      "summary": "A set of files on the file system.",
+      "doc": "api/ra_ap_vfs.loader.md#entry",
+      "variants": [
+        "Files",
+        "Directories"
+      ],
+      "methods": [
+        {
+          "name": "cargo_package_dependency",
+          "signature": "fn cargo_package_dependency(base: AbsPathBuf) -> Entry",
+          "summary": "Returns: ```text Entry::Directories(Directories {     extensions: [\"rs\"],     include: [base],     exclude: [base/.git, /tests, /examples, /benches], }) ```"
+        },
+        {
+          "name": "contains_dir",
+          "signature": "fn contains_dir(&self, path: &AbsPath) -> bool",
+          "summary": "Returns `true` if `path` is included in `self`."
+        },
+        {
+          "name": "contains_file",
+          "signature": "fn contains_file(&self, path: &AbsPath) -> bool",
+          "summary": "Returns `true` if `path` is included in `self`."
+        },
+        {
+          "name": "local_cargo_package",
+          "signature": "fn local_cargo_package(base: AbsPathBuf) -> Entry",
+          "summary": "Returns: ```text Entry::Directories(Directories {     extensions: [\"rs\"],     include: [base],     exclude: [base/.git, base/target], }) ```"
+        },
+        {
+          "name": "rs_files_recursively",
+          "signature": "fn rs_files_recursively(base: AbsPathBuf) -> Entry",
+          "summary": "Returns: ```text Entry::Directories(Directories {     extensions: [\"rs\"],     include: [base],     exclude: [base/.git], }) ```"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::loader::LoadingProgress",
+      "name": "LoadingProgress",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum LoadingProgress",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Started",
+        "Progress",
+        "Finished"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::loader::Message",
+      "name": "Message",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum Message",
+      "summary": "Message about an action taken by a [`Handle`].",
+      "doc": "api/ra_ap_vfs.loader.md#message",
+      "variants": [
+        "Progress",
+        "Loaded",
+        "Changed"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::loader::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct Config",
+      "summary": "[`Handle`]'s configuration.",
+      "doc": "api/ra_ap_vfs.loader.md#config",
+      "fields": [
+        "version",
+        "load",
+        "watch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::loader::Directories",
+      "name": "Directories",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct Directories",
+      "summary": "Specifies a set of files on the file system.",
+      "doc": "api/ra_ap_vfs.loader.md#directories",
+      "fields": [
+        "extensions",
+        "include",
+        "exclude"
+      ],
+      "methods": [
+        {
+          "name": "contains_dir",
+          "signature": "fn contains_dir(&self, path: &AbsPath) -> bool",
+          "summary": "Returns `true` if `path` is included in `self`."
+        },
+        {
+          "name": "contains_file",
+          "signature": "fn contains_file(&self, path: &AbsPath) -> bool",
+          "summary": "Returns `true` if `path` is included in `self`."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::loader::Handle",
+      "name": "Handle",
+      "kind": "trait",
+      "crate": "ra_ap_vfs",
+      "signature": "trait Handle: fmt::Debug",
+      "summary": "Interface for reading and watching files.",
+      "doc": "api/ra_ap_vfs.loader.md#handle",
+      "required_methods": [
+        "invalidate",
+        "load_sync",
+        "set_config",
+        "spawn"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "invalidate",
+          "signature": "fn invalidate(&mut self, path: AbsPathBuf)",
+          "summary": "The file's content at `path` has been modified, and should be reloaded."
+        },
+        {
+          "name": "load_sync",
+          "signature": "fn load_sync(&mut self, path: &AbsPath) -> Option<Vec<u8>>",
+          "summary": "Load the content of the given file, returning [`None`] if it does not exists."
+        },
+        {
+          "name": "set_config",
+          "signature": "fn set_config(&mut self, config: Config)",
+          "summary": "Set this handle's configuration."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn(sender: Sender) -> Self where Self: Sized",
+          "summary": "Spawn a new handle with the given `sender`."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::loader::Sender",
+      "name": "Sender",
+      "kind": "type_alias",
+      "crate": "ra_ap_vfs",
+      "signature": "type Sender = crossbeam_channel::Sender<Message>",
+      "summary": "Type that will receive [`Messages`](Message) from a [`Handle`].",
+      "doc": "api/ra_ap_vfs.loader.md#sender"
+    }
+  ]
+}

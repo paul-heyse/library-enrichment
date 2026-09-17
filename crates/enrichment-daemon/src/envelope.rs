@@ -12,7 +12,7 @@
 
 use enrichment_core::wire::{
     ArtifactUri, Coverage, DeliveryDescriptor, Diagnostic, Envelope, EnvelopeBody, ErrorCode,
-    ErrorDetail, Freshness, JsonObject, Outcome, Page, RequestId, SourceVersionMatch,
+    ErrorDetail, Freshness, Outcome, Page, RequestId, SourceVersionMatch,
 };
 
 /// Use the admitted request identity, or mint one outside a foreground operation.
@@ -43,7 +43,11 @@ pub fn unverified_freshness() -> Freshness {
 }
 
 /// Assemble the status-independent half of an envelope.
-fn body(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> EnvelopeBody {
+fn body(
+    summary: impl Into<String>,
+    data: enrichment_core::wire::data::ToolData,
+    coverage: Coverage,
+) -> EnvelopeBody {
     EnvelopeBody {
         request_id: new_request_id(),
         summary: summary.into(),
@@ -62,13 +66,21 @@ fn body(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> Env
 
 /// A successful result, within the stated coverage.
 #[must_use]
-pub fn ok(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> Envelope {
+pub fn ok(
+    summary: impl Into<String>,
+    data: enrichment_core::wire::data::ToolData,
+    coverage: Coverage,
+) -> Envelope {
     Envelope::new(body(summary, data, coverage), Outcome::Ok { job: None })
 }
 
 /// A result carrying usable evidence together with explicit gaps.
 #[must_use]
-pub fn partial(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> Envelope {
+pub fn partial(
+    summary: impl Into<String>,
+    data: enrichment_core::wire::data::ToolData,
+    coverage: Coverage,
+) -> Envelope {
     Envelope::new(
         body(summary, data, coverage),
         Outcome::Partial { job: None },
@@ -82,7 +94,7 @@ pub struct Research {
     /// One-line summary.
     pub summary: String,
     /// Tool-specific payload.
-    pub data: JsonObject,
+    pub data: enrichment_core::wire::data::ToolData,
     /// What was looked at and what was not.
     pub coverage: Coverage,
     /// What was consulted and when.
@@ -129,10 +141,7 @@ impl Research {
     #[must_use]
     pub fn ok_with_page(self, page: Page) -> Envelope {
         let mut body = self.body();
-        body.data.insert(
-            "page".into(),
-            serde_json::to_value(page).expect("typed page"),
-        );
+        body.data.set_page(page);
         Envelope::new(body, Outcome::Ok { job: None })
     }
 }
@@ -158,7 +167,11 @@ pub fn error(
         limitations: vec![message.clone()],
     };
     Envelope::new(
-        body(message.clone(), JsonObject::new(), coverage),
+        body(
+            message.clone(),
+            enrichment_core::wire::data::ToolData::default(),
+            coverage,
+        ),
         Outcome::Error {
             job: None,
             error: ErrorDetail {
@@ -198,7 +211,7 @@ mod tests {
     fn an_ok_envelope_carries_no_error() {
         let envelope = ok(
             "done",
-            JsonObject::new(),
+            enrichment_core::wire::data::ToolData::default(),
             Coverage {
                 details: None,
                 assessments: Vec::new(),
@@ -233,4 +246,34 @@ mod tests {
         let uri = artifact_uri("artifacts/x").expect("well formed");
         assert!(uri.as_str().starts_with("library-evidence://"));
     }
+}
+
+#[cfg(test)]
+pub(crate) fn fixture_payload(text: &str) -> enrichment_core::wire::data::ToolData {
+    use enrichment_core::wire::data::{HitKind, SearchData, SearchHit};
+    SearchData {
+        page: Page::new(1, Some(1), false, None),
+        query: "fixture".into(),
+        tokens: vec!["fixture".into()],
+        kinds: vec!["documentation".into()],
+        area: None,
+        hits: vec![SearchHit {
+            hit: HitKind::Fragment,
+            score: 1,
+            factors: vec![],
+            evidence_id: "ev_fixture".into(),
+            path: None,
+            symbol_kind: None,
+            signature: None,
+            also_at: vec![],
+            deprecated: false,
+            fragment_kind: Some(enrichment_core::evidence::FragmentKind::DocText),
+            subject: None,
+            excerpt: text.into(),
+        }],
+        scoring: vec![],
+        searched: vec!["documentation".into()],
+        offset: 0,
+    }
+    .into()
 }

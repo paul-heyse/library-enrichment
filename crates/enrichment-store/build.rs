@@ -63,6 +63,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             files(&package.join("src"), &mut inputs, |_| true)?;
         }
     }
+    files(&root.join("vendor"), &mut inputs, |_| true)?;
+    println!("cargo:rerun-if-changed={}", root.join("vendor").display());
     files(&root.join("python"), &mut inputs, |path| {
         path.extension()
             .is_some_and(|ext| ext == "py" || ext == "arrow" || ext == "json")

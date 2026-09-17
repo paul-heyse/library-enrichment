@@ -2,9 +2,9 @@
 use super::{common, inspect, verify};
 use crate::{execution::capsule, jobs, service::Service};
 use enrichment_core::{
-    canonical, clock,
+    canonical,
     evidence::{
-        Artifact, ArtifactKind, Symbol,
+        Artifact, ArtifactKind, SymbolHeader,
         catalog::{JobPublication, PublishedJobKind},
         execution::*,
         relational::{FactSource, Locator, SubjectRef},
@@ -29,8 +29,8 @@ pub struct Produced {
     pub producer: String,
     pub version: String,
     pub profile: ExecutionProfile,
-    pub started_at: String,
-    pub finished_at: String,
+    pub started_at: enrichment_core::native_time::ObservationTime,
+    pub finished_at: enrichment_core::native_time::ObservationTime,
     pub facts: Vec<(SubjectRef, ExecutionPayload, EvidenceClass)>,
     pub inputs: Vec<Artifact>,
     pub lock: Vec<u8>,
@@ -53,7 +53,7 @@ pub fn methods(options: &InspectionOptions) -> Vec<SemanticMethod> {
 /// Exact source/query selection is lowered before result hydration and alternatives bounds.
 pub async fn retained_page(
     reader: &SnapshotReader,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     options: Option<&InspectionOptions>,
     runtime: bool,
     limit: usize,
@@ -112,7 +112,7 @@ pub(super) fn producer_identity(runtime: bool) -> (&'static str, String) {
 
 async fn retained_matching(
     reader: &SnapshotReader,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     options: Option<&InspectionOptions>,
     runtime: bool,
     qualification: Option<(&str, &str, &str, &str)>,
@@ -182,7 +182,7 @@ async fn retained_child(
     service: &Service,
     request: &InspectRequest,
     opened: &common::Opened,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     options: &InspectionOptions,
 ) -> Result<Option<Envelope>, Box<Envelope>> {
     let catalog = std::sync::Arc::clone(&opened.reader.pinned().catalog);
@@ -289,8 +289,7 @@ async fn retained_child(
                     execution.intent = InspectionIntent::Retained;
                 }
                 enrichment_core::wire::RecoveryAction::CallTool {
-                    tool: "inspect_symbol".into(),
-                    arguments: common::to_object(&selected),
+                    request: Box::new(enrichment_core::request::ResearchRequest::Inspect(selected)),
                 }
             })
             .collect();
@@ -311,9 +310,7 @@ async fn retained_child(
 pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope {
     let options = request.execution.clone().unwrap_or_default();
     let initial = inspect::read(service, request.clone()).await;
-    let Ok(data) =
-        serde_json::from_value::<InspectData>(serde_json::Value::Object(initial.data.clone()))
-    else {
+    let enrichment_core::wire::data::ToolData::InspectSymbol(data) = initial.data.clone() else {
         return initial;
     };
     let Some(symbol) = data.symbol else {
@@ -375,7 +372,9 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     request.definition_id = Some(symbol.definition_id.clone());
     let (record, token, new) = match service
         .jobs
-        .submit(jobs::JobSpec::Inspect(request.clone()))
+        .submit(jobs::Arguments::Inspect {
+            request: request.clone(),
+        })
         .await
     {
         Ok(v) => v,
@@ -448,7 +447,7 @@ async fn run(
     service: &Service,
     job: &str,
     opened: &common::Opened,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     request: &InspectRequest,
 ) -> io::Result<(JobState, Envelope)> {
     let cancel = service.jobs.cancellation(job)?;
@@ -478,15 +477,17 @@ async fn run(
 }
 
 pub fn store(service: &Service, bytes: &[u8], uri: &str, media: &str) -> io::Result<Artifact> {
+    let retrieved_at =
+        enrichment_core::native_time::AcquisitionTime::now().map_err(std::io::Error::other)?;
     service
         .blobs
         .put(bytes, |_| {
-            enrichment_store::blob::describe_local(
+            enrichment_core::evidence::Artifact::describe(
                 bytes,
                 ArtifactKind::Other,
                 media,
                 uri,
-                &clock::now_rfc3339(),
+                retrieved_at,
             )
         })
         .map(|b| b.acquired)
@@ -637,7 +638,7 @@ async fn publish(
     job: &str,
     request: &InspectRequest,
     opened: &common::Opened,
-    symbol: &Symbol,
+    symbol: &SymbolHeader,
     produced: Produced,
 ) -> io::Result<(JobState, Envelope)> {
     if crate::execution::description::containment_identity(&service.config.execution)?
@@ -671,8 +672,8 @@ async fn publish(
         let artifact = store(
             service,
             &bytes,
-            "producer-result://inspection/2",
-            "application/json",
+            "producer-result://inspection/3",
+            "application/vnd.library-enrichment.canonical-arrow",
         )?;
         match &payload {
             ExecutionPayload::SemanticQuery(q) => {
@@ -825,19 +826,8 @@ async fn publish(
         state,
     )?;
     crate::delivery::size(&result, crate::delivery::MAX_RESULT_BYTES)?;
-    let (prepare_delivery, delivery) =
-        crate::delivery::prepare_job(service.blobs.clone(), move |manifest, coverage| {
-            let mut result = result.clone();
-            let limitations = std::mem::take(&mut result.coverage.limitations);
-            result.coverage = coverage.clone();
-            result.coverage.limitations.extend(limitations);
-            if !result.coverage.complete() {
-                result = result.into_partial();
-            }
-            result.context_id = Some(manifest.context_id.to_string());
-            result.snapshot_id = Some(manifest.snapshot_id.to_string());
-            Ok(result)
-        });
+    let result = enrichment_core::operation::results::ResultRecord::from_envelope(&result)
+        .map_err(io::Error::other)?;
     let manifest = service
         .repository
         .publish_execution(
@@ -859,15 +849,23 @@ async fn publish(
                 publication_fence: service.jobs.publication_fence(job)?,
                 job_id: job.into(),
                 kind: PublishedJobKind::Inspect,
-                state,
+
                 attempt_id: run.attempt_id.clone(),
                 result_artifact_ids: ids.clone(),
-                prepare_delivery,
+                result,
             },
         )
         .await
         .map_err(io::Error::other)?;
-    Ok((state, delivery.get(manifest.snapshot_id.as_str())?))
+    let result = manifest
+        .result
+        .ok_or_else(|| io::Error::other("published execution lacks native result"))?;
+    Ok((
+        manifest
+            .state
+            .ok_or_else(|| io::Error::other("published execution lacks native state"))?,
+        result,
+    ))
 }
 
 async fn deliver(
@@ -923,12 +921,23 @@ async fn deliver(
         .validate_delivery(publication)
         .await
         .map_err(io::Error::other)?;
-    crate::delivery::recover_job(blobs, publication)
+    crate::delivery::recover_job(
+        blobs,
+        &repository.runtime,
+        repository
+            .catalog
+            .pin()
+            .await
+            .map_err(io::Error::other)?
+            .as_ref(),
+        publication,
+    )
+    .await
 }
 
 fn render(
     request: &InspectRequest,
-    mut symbol: Symbol,
+    symbol: SymbolHeader,
     mut facts: Vec<ExecutionObservation>,
     run: ProducerRun,
     mut artifacts: Vec<Artifact>,
@@ -936,7 +945,6 @@ fn render(
 ) -> io::Result<Envelope> {
     facts.sort_by(|a, b| a.observation_id.cmp(&b.observation_id));
     artifacts.sort_by(|a, b| a.artifact_id.cmp(&b.artifact_id));
-    symbol.docs = None;
     let mut limitations = Vec::new();
     for fact in &facts {
         match &fact.payload {
@@ -974,7 +982,7 @@ fn render(
             if runtime { "runtime" } else { "semantic" },
             request.symbol_path
         ),
-        data: common::to_object(&data),
+        data: common::payload(&data),
         context_id: None,
         snapshot_id: None,
         coverage: Coverage {
@@ -1023,7 +1031,7 @@ pub async fn recover(
     blobs: &enrichment_store::BlobStore,
     record: &jobs::JobRecord,
 ) -> io::Result<Option<(JobState, Envelope)>> {
-    let jobs::JobSpec::Inspect(request) = &record.specification else {
+    let jobs::Arguments::Inspect { request } = &record.specification else {
         return Err(io::Error::other("wrong inspection journal variant"));
     };
     let catalog = repository.catalog.pin().await?;
@@ -1135,7 +1143,7 @@ mod tests {
             producer_items: 0,
         };
         let definition = Definition {
-            definition_id: Symbol::definition_id_for(
+            definition_id: SymbolHeader::definition_id_for(
                 "python:fixture",
                 "fixture.f",
                 SymbolKind::Function,
@@ -1225,7 +1233,9 @@ mod tests {
         };
         let (record, _, _) = service
             .jobs
-            .submit(jobs::JobSpec::Inspect(request.clone()))
+            .submit(jobs::Arguments::Inspect {
+                request: request.clone(),
+            })
             .await
             .unwrap();
         service.jobs.start(&record.job_id).await.unwrap();
@@ -1276,8 +1286,14 @@ mod tests {
             ]
             .into(),
             profile: ExecutionProfile::Build,
-            started_at: "2026-09-14T00:00:00Z".into(),
-            finished_at: "2026-09-14T00:00:01Z".into(),
+            started_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+            finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-14T00:00:01.000000Z".to_owned(),
+            )
+            .unwrap(),
             outcome: RunOutcome::Succeeded,
             gaps: Vec::new(),
             log: Some(receipt.artifact_id.clone()),
@@ -1331,13 +1347,9 @@ mod tests {
                 .limitations
                 .push("🌎\"\n".repeat(180_000));
         }
-        let (prepare_delivery, _delivery) =
-            crate::delivery::prepare_job(service.blobs.clone(), move |manifest, _coverage| {
-                let mut reply = fixture_reply.clone();
-                reply.context_id = Some(manifest.context_id.to_string());
-                reply.snapshot_id = Some(manifest.snapshot_id.to_string());
-                Ok(reply)
-            });
+        let native_result =
+            enrichment_core::operation::results::ResultRecord::from_envelope(&fixture_reply)
+                .unwrap();
         let publication_artifacts = vec![document, lock, result.clone(), receipt];
         let manifest = service
             .repository
@@ -1350,10 +1362,10 @@ mod tests {
                     publication_fence: service.jobs.publication_fence(&record.job_id).unwrap(),
                     job_id: record.job_id.clone(),
                     kind: PublishedJobKind::Inspect,
-                    state: JobState::Succeeded,
+
                     attempt_id: run.attempt_id,
                     result_artifact_ids: vec![result.artifact_id],
-                    prepare_delivery,
+                    result: native_result,
                 },
             )
             .await
@@ -1383,8 +1395,9 @@ mod tests {
             Some(context.context_id.as_str()),
             "{answer:?}"
         );
-        let data: InspectData =
-            serde_json::from_value(serde_json::Value::Object(answer.data)).unwrap();
+        let enrichment_core::wire::data::ToolData::InspectSymbol(data) = answer.data else {
+            panic!("native inspection payload")
+        };
         assert_eq!(data.execution_observations, vec![fact.clone()]);
         assert_eq!(
             service.jobs.counts().await.unwrap(),
@@ -1393,8 +1406,9 @@ mod tests {
         );
         read.execution.as_mut().unwrap().intent = InspectionIntent::Retained;
         let answer = inspect::inspect(&service, read).await;
-        let data: InspectData =
-            serde_json::from_value(serde_json::Value::Object(answer.data)).unwrap();
+        let enrichment_core::wire::data::ToolData::InspectSymbol(data) = answer.data else {
+            panic!("native inspection payload")
+        };
         assert_eq!(
             data.execution_observations,
             if derive { vec![] } else { vec![fact] },

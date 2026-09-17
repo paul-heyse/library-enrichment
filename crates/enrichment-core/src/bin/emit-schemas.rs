@@ -44,10 +44,7 @@ fn main() -> ExitCode {
             format!(
                 "{}\n",
                 serde_json::to_string_pretty(&enrichment_core::canonical::canonicalize(
-                    schemars::generate::SchemaSettings::draft2020_12()
-                        .into_generator()
-                        .into_root_schema_for::<enrichment_core::request::ResearchRequest>()
-                        .to_value()
+                    enrichment_core::request::request_schema()
                 ))
                 .expect("request schema")
             ),

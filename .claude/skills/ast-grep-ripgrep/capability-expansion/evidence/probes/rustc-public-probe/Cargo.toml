@@ -1,0 +1,23 @@
+# PB15 -- is `rustc_public` a usable extraction surface for `staging.mir`, and does it agree
+# with the textual one?
+#
+# `[workspace]` is present and empty on purpose: this crate lives inside the library-enrichment
+# repository tree but is NOT a member of its workspace, the same arrangement
+# `delta-arrow-probe` uses.
+#
+# There is deliberately NO `rust-toolchain.toml` here. AGENTS.md says "There is no second
+# `rust-toolchain.toml`" and "Never invoke a bare `cargo +nightly`; always use the dated pin",
+# so the toolchain is named on the command line -- `cargo +nightly-2026-09-13` -- exactly as
+# the rustdoc-JSON fallback producer names it. A `rust-toolchain.toml` here would be a second
+# unrecorded producer identity in a file nobody joins to `config/toolchains.toml`.
+[workspace]
+
+[package]
+name = "rustc-public-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+# No dependencies. `rustc_public` is not on crates.io: it is a compiler-internal crate shipped
+# by the `rustc-dev` rustup component and reached through `#![feature(rustc_private)]`.
+[dependencies]

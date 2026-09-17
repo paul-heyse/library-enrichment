@@ -24,22 +24,19 @@
 //! producer run, and gate C17 needs `lsp.started` to check that a signature-only inspection
 //! started no language server.
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+crate::native_struct! {
 /// One producer or component and whether it is actually usable.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ComponentStatus {
     /// The component's stable name.
-    pub name: String,
+    name: String => crate::native_union::Rule::Text,
     /// Whether it can be used right now.
-    pub available: bool,
+    available: bool => crate::native_union::Rule::Text,
     /// The exact version when known, `None` when the component is absent.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
+    version: Option<String> => crate::native_union::Rule::Text,
     /// Why it is unavailable, or what it covers when it is. Never left blank on an absent
     /// component -- "blocked" must always name its missing prerequisite.
-    pub detail: String,
+    detail: String => crate::native_union::Rule::Text,
+}
 }
 
 impl ComponentStatus {
@@ -66,88 +63,92 @@ impl ComponentStatus {
     }
 }
 
+crate::native_struct! {
 /// Versions of the daemon and its toolchain.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Versions {
     /// The daemon crate version.
-    pub daemon: String,
+    daemon: String => crate::native_union::Rule::Text,
     /// The wire schema version this build emits.
-    pub schema: String,
+    schema: String => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Wire schema compatibility.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SchemaCompatibility {
     /// The version emitted on every response.
-    pub emits: String,
+    emits: String => crate::native_union::Rule::Text,
     /// Every version this daemon can accept.
-    pub accepts: Vec<String>,
+    accepts: Vec<String> => crate::native_union::Rule::Sequence,
+}
 }
 
+crate::native_struct! {
 /// Execution-profile availability (blueprint §10).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Sandbox {
     /// Implemented execution routes assessed by the same admission logic used by tools.
     /// Empty when no running service is available to assess qualification and cleanup.
-    pub execution_routes: Vec<ExecutionReadiness>,
+    execution_routes: Vec<ExecutionReadiness> => crate::native_union::Rule::Sequence,
     /// Profiles configuration has enabled.
     ///
     /// Read from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are
     /// built-in defaults. A caller selects from this list and never grants itself permission.
-    pub enabled_profiles: Vec<String>,
+    enabled_profiles: Vec<String> => crate::native_union::Rule::Sequence,
     /// Where `enabled_profiles` came from, so a caller is never misled about policy.
-    pub enabled_profiles_source: String,
+    enabled_profiles_source: String => crate::native_union::Rule::Text,
     /// Container/isolation runtimes detected on this host.
     ///
     /// Detection only. A runtime being present is not the same as a profile being enabled, and
     /// this never enables one.
-    pub available_runtimes: Vec<String>,
+    available_runtimes: Vec<String> => crate::native_union::Rule::Sequence,
     /// Whether an actual containment run has qualified the configured execution images.
     ///
     /// Three different facts live next to each other here on purpose: a profile can be
     /// *enabled*, a runtime can be *present*, and images can be *configured*, and none of the
     /// three means the service can contain anything. Only `execution_qualified` says that, and
     /// it is set only by a receipt from `just execution-qualify`.
-    pub execution_qualified: bool,
+    execution_qualified: bool => crate::native_union::Rule::Text,
     /// When qualification happened and against which images, or the missing prerequisite.
-    pub execution_readiness: String,
+    execution_readiness: String => crate::native_union::Rule::Text,
     /// The image IDs a qualification receipt covers. Empty when there is none.
-    pub admitted_images: std::collections::BTreeMap<String, String>,
+    admitted_images: std::collections::BTreeMap<String, String> => crate::native_union::Rule::Map,
+}
 }
 
+crate::native_struct! {
 /// Producer runs started and callers served by a shared run (§8.2, gate C04).
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Copy, Default, PartialOrd, Ord)]
 pub struct SingleFlightCounts {
     /// Producer runs this process actually started.
-    pub started: u64,
+    started: u64 => crate::native_union::Rule::Text,
     /// Callers that attached to a run someone else started.
-    pub shared: u64,
+    shared: u64 => crate::native_union::Rule::Text,
     /// Distinct pieces of work running right now.
-    pub inflight: u64,
+    inflight: u64 => crate::native_union::Rule::Text,
     /// Total wall time spent inside producer work, across every started run.
     ///
     /// Summed rather than averaged: a mean loses the one run that took a minute, and §14.3 wants
     /// a diagnostic, not a statistic. Divide by `started` if a mean is what you want.
-    pub total_millis: u64,
+    total_millis: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Language-server starts, reuses and evictions in this daemon process (§9.2, gate C17).
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Copy, Default, PartialOrd, Ord)]
 pub struct LspMetrics {
     /// Sessions actually started, each one a language-server process.
-    pub started: u64,
+    started: u64 => crate::native_union::Rule::Text,
     /// Queries answered by a session that was already warm.
-    pub reused: u64,
+    reused: u64 => crate::native_union::Rule::Text,
     /// Sessions shut down to stay within the configured bound, or after idling out.
-    pub evicted: u64,
+    evicted: u64 => crate::native_union::Rule::Text,
     /// Sessions warm right now.
-    pub warm: u64,
+    warm: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// HTTP cache behaviour and transferred bytes (§14.3, §8.4).
 ///
 /// The three cache outcomes are kept apart because they answer different questions. A `hit`
@@ -160,170 +161,172 @@ pub struct LspMetrics {
 /// that increments `hits` is the bounded negative cache — a recent `404`/`410` reused within
 /// `freshness.negative_cache_ttl_seconds`. `hits + revalidated` is the number an operator
 /// probably means by "the cache worked"; `hits` alone is "we did not even ask".
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Copy, Default, PartialOrd, Ord)]
 pub struct FetchCounters {
     /// Requests answered from the service cache without contacting the origin.
-    pub hits: u64,
+    hits: u64 => crate::native_union::Rule::Text,
     /// Requests where validators matched and the origin returned `304`.
-    pub revalidated: u64,
+    revalidated: u64 => crate::native_union::Rule::Text,
     /// Requests that transferred a body from the origin.
-    pub misses: u64,
+    misses: u64 => crate::native_union::Rule::Text,
     /// Requests that failed before producing a response.
-    pub failures: u64,
+    failures: u64 => crate::native_union::Rule::Text,
     /// Body bytes actually transferred, excluding reused cache bytes.
-    pub fetched_bytes: u64,
+    fetched_bytes: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// What this process has answered, and how truthfully it could (§14.3, §6.2).
 ///
 /// `gaps` counts answers that declared at least one missing piece of coverage -- not answers
 /// that failed. An `ok` result with a named gap is a correct answer to a bounded question, and
 /// the count exists so an operator can see how often the service is working with partial
 /// evidence, which is a different question from how often it errors.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Copy, Default, PartialOrd, Ord)]
 pub struct EvidenceCounters {
     /// Requests dispatched, of every method.
-    pub requests: u64,
+    requests: u64 => crate::native_union::Rule::Text,
     /// Envelopes answered `ok`.
-    pub ok: u64,
+    ok: u64 => crate::native_union::Rule::Text,
     /// Envelopes answered `partial`.
-    pub partial: u64,
+    partial: u64 => crate::native_union::Rule::Text,
     /// Envelopes answered `pending`, having handed back a job.
-    pub pending: u64,
+    pending: u64 => crate::native_union::Rule::Text,
     /// Envelopes answered `error`.
-    pub errors: u64,
+    errors: u64 => crate::native_union::Rule::Text,
     /// Answers that named at least one gap in `coverage.missing`.
-    pub gaps: u64,
+    gaps: u64 => crate::native_union::Rule::Text,
     /// Response bytes produced, after budget enforcement.
     ///
     /// "Produced", not "written": a JSON-RPC *notification* is dispatched and answered with
     /// nothing, and its answer is measured here anyway. The work happened and the bytes were
     /// built; excluding them would make this number disagree with `requests` for no reason a
     /// reader could see.
-    pub response_bytes: u64,
+    response_bytes: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// How verification work finished (§9.3, §14.3).
 ///
 /// `unresolved` is its own outcome rather than a kind of failure: a probe the service could not
 /// run -- an unqualified image, an unavailable profile -- says nothing about the code under
 /// test, and counting it as a failure would overstate what was observed.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Copy, Default, PartialOrd, Ord)]
 pub struct VerificationCounters {
     /// Probes that ran and succeeded.
-    pub succeeded: u64,
+    succeeded: u64 => crate::native_union::Rule::Text,
     /// Probes that ran and failed, which is an observation about the code.
-    pub failed: u64,
+    failed: u64 => crate::native_union::Rule::Text,
     /// Probes that could not be run, which is an observation about the service.
-    pub unresolved: u64,
+    unresolved: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Process-scoped native query diagnostics; neither library coverage nor a peak-RSS claim.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Default)]
 pub struct NativeQueryCounters {
-    pub diagnostic_observations_dropped: u64,
+    diagnostic_observations_dropped: u64 => crate::native_union::Rule::Text,
     /// Current shared-runtime managed reservations, not process RSS.
-    pub managed_memory_reserved_bytes: usize,
+    managed_memory_reserved_bytes: usize => crate::native_union::Rule::Text,
     /// Shared-runtime maximum since startup; never reset or attributed to one query.
-    pub managed_memory_peak_bytes: usize,
+    managed_memory_peak_bytes: usize => crate::native_union::Rule::Text,
     /// The read-only values consumed by native source construction.
-    pub effective_native_settings: std::collections::BTreeMap<String, String>,
+    effective_native_settings: std::collections::BTreeMap<String, String> => crate::native_union::Rule::Map,
     /// Completed or interrupted physical executions recorded since startup.
-    pub executions: u64,
-    pub completed: u64,
+    executions: u64 => crate::native_union::Rule::Text,
+    completed: u64 => crate::native_union::Rule::Text,
     /// Failed, cancelled or dropped executions, including partial operator counters.
-    pub incomplete: u64,
+    incomplete: u64 => crate::native_union::Rule::Text,
     /// Sum of observed planning time across recorded executions.
-    pub planning_micros: u64,
+    planning_micros: u64 => crate::native_union::Rule::Text,
     /// Sum of elapsed execution durations, which overlap for concurrent queries.
-    pub elapsed_micros: u64,
+    elapsed_micros: u64 => crate::native_union::Rule::Text,
     /// Queries currently holding a shared admission permit, including stream writers.
-    pub admitted: usize,
-    pub concurrency_limit: usize,
+    admitted: usize => crate::native_union::Rule::Text,
+    concurrency_limit: usize => crate::native_union::Rule::Text,
     /// Configured managed memory ceiling; external parser/scan allocations are separate.
-    pub managed_memory_limit_bytes: usize,
-    pub spill_limit_bytes: u64,
-    pub metadata_cache_limit_bytes: usize,
+    managed_memory_limit_bytes: usize => crate::native_union::Rule::Text,
+    spill_limit_bytes: u64 => crate::native_union::Rule::Text,
+    metadata_cache_limit_bytes: usize => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// Queue, cache and operational health.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Health {
     /// Jobs currently queued.
-    pub queued_jobs: u64,
+    queued_jobs: u64 => crate::native_union::Rule::Text,
     /// Jobs currently running.
-    pub running_jobs: u64,
+    running_jobs: u64 => crate::native_union::Rule::Text,
     /// Whether the evidence store is open and writable.
-    pub cache_ready: bool,
+    cache_ready: bool => crate::native_union::Rule::Text,
     /// The data root in use, when a store is open. Absent otherwise.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data_root: Option<String>,
+    data_root: Option<String> => crate::native_union::Rule::Text,
     /// Producer runs started, and callers served by a run someone else started (§8.2, C04).
-    pub single_flight: SingleFlightCounts,
+    single_flight: SingleFlightCounts => crate::native_union::Rule::Text,
     /// Language-server starts, reuses and evictions in this daemon process.
     ///
     /// Published because gate C17 -- "inspection does not start an LSP unnecessarily" -- is only
     /// checkable against a counter. A caller reading `started` before and after a signature-only
     /// inspection can see for itself that nothing was started. Blueprint §14.3 asks for the same
     /// numbers as operational metrics.
-    pub lsp: LspMetrics,
+    lsp: LspMetrics => crate::native_union::Rule::Text,
     /// HTTP cache outcomes and transferred bytes since this process started.
-    pub fetch: FetchCounters,
+    fetch: FetchCounters => crate::native_union::Rule::Text,
     /// What this process has answered, and how completely.
-    pub evidence: EvidenceCounters,
+    evidence: EvidenceCounters => crate::native_union::Rule::Text,
     /// How verification probes finished.
-    pub verification: VerificationCounters,
+    verification: VerificationCounters => crate::native_union::Rule::Text,
     /// Native query counters and configured limits, absent when no runtime is open.
-    pub native_queries: Option<NativeQueryCounters>,
+    native_queries: Option<NativeQueryCounters> => crate::native_union::Rule::Text,
     /// How long this process has been up, in seconds.
     ///
     /// Every counter beside it is scoped to that window. Without this an operator reading
     /// `fetch.misses = 3` cannot tell a quiet hour from a daemon that restarted a minute ago.
-    pub uptime_seconds: u64,
+    uptime_seconds: u64 => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// The `service_status` result (§7.1).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct StatusData {
     /// Component versions.
-    pub versions: Versions,
+    versions: Versions => crate::native_union::Rule::Text,
     /// Which wire schema versions this daemon can speak.
-    pub schema_compatibility: SchemaCompatibility,
+    schema_compatibility: SchemaCompatibility => crate::native_union::Rule::Text,
     /// On-disk storage compatibility; independent of the MCP response envelope.
-    pub snapshot_compatibility: SchemaCompatibility,
+    snapshot_compatibility: SchemaCompatibility => crate::native_union::Rule::Text,
     /// Which execution profiles are actually usable here.
-    pub sandbox: Sandbox,
+    sandbox: Sandbox => crate::native_union::Rule::Text,
     /// Evidence producers and whether each is installed.
-    pub producers: Vec<ComponentStatus>,
+    producers: Vec<ComponentStatus> => crate::native_union::Rule::Sequence,
     /// Optional capabilities and whether each is supported.
-    pub features: Vec<ComponentStatus>,
+    features: Vec<ComponentStatus> => crate::native_union::Rule::Sequence,
     /// Job queue and cache health.
-    pub health: Health,
+    health: Health => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_vocabulary! {
 /// A concrete execution prerequisite; configuration presence never implies qualification.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum ExecutionPrerequisite {
-    EnabledProfile,
-    ImmutableImage,
-    Qualification,
-    Cleanup,
+    EnabledProfile = "enabled_profile",
+    ImmutableImage = "immutable_image",
+    Qualification = "qualification",
+    Cleanup = "cleanup",
+}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct ExecutionReadiness {
-    pub ecosystem: crate::identity::Ecosystem,
-    pub profile: crate::policy::ExecutionProfile,
-    pub available: bool,
-    pub image_id: Option<String>,
-    pub prerequisites: Vec<ExecutionPrerequisite>,
-    pub actions: Vec<super::RecoveryAction>,
+    ecosystem: crate::identity::Ecosystem => crate::native_union::Rule::Text,
+    profile: crate::policy::ExecutionProfile => crate::native_union::Rule::Text,
+    available: bool => crate::native_union::Rule::Text,
+    image_id: Option<String> => crate::native_union::Rule::Text,
+    prerequisites: Vec<ExecutionPrerequisite> => crate::native_union::Rule::Sequence,
+    actions: Vec<super::RecoveryAction> => crate::native_union::Rule::Sequence,
+}
 }

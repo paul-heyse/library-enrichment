@@ -1,0 +1,16 @@
+# Not reachable from the CLI
+
+Capability that exists in the underlying libraries and cannot be reached through these command-line tools. This page exists because an invisible limitation is indistinguishable from an absent capability: without it, an agent that fails to find a way to do one of these things cannot tell whether it looked in the wrong place.
+
+| capability | exists in | reachable | why not | instead |
+|---|---|---|---|---|
+| --regex-size-limit / --dfa-size-limit as PCRE2 guards | rg | partial | Both flags bound the default engine only. Under -P they do not constrain PCRE2 at all. | Use in-pattern (*LIMIT_MATCH=n) and (*LIMIT_DEPTH=n), plus process-level limits. |
+| UTS#18 extended classes | pcre2 | no | Requires the PCRE2_ALT_EXTENDED_CLASS compile option, which ripgrep never sets. | Use the Perl-style (?[A & B]) form, which needs no option. |
+| custom callout handler | pcre2 | no | ripgrep registers no callout callback, so (?C...) has nothing to call. | Post-process rg --json output in the host program instead. |
+| in-place file rewriting | rg | no | -r rewrites printed output. ripgrep never modifies a file, by design. | Use ast-grep -U for a structural rewrite, or a dedicated tool for a textual one. |
+| partial-match substitution (PCRE2_ERROR_PARTIALSUBS) | pcre2 | no | New in 10.48: pcre2_substitute() gained partial-match support and a new error code. It is the only public API addition in the release, and ripgrep calls none of it. | None at the CLI. rg -r rewrites printed output through its own printer layer. |
+| pcre2_next_match() | pcre2 | no | ripgrep owns match iteration. | None needed at the CLI; relevant only when embedding PCRE2 directly. |
+| pcre2_set_optimize and the PCRE2_EXTRA_* options | pcre2 | no | Compile-time options such as PCRE2_EXTRA_TURKISH_CASING and PCRE2_EXTRA_PYTHON_OCTAL have no CLI mapping. | Bind PCRE2 directly if one of these is genuinely required. |
+| pcre2_substitute and its $+ replacement | pcre2 | no | ripgrep implements -r in its own printer layer and never calls PCRE2's substitution API. | Use rg -r with $1 / $name, remembering it rewrites output only, never the file. |
+| semantic resolution | both | no | Neither tool resolves imports, types, overloads or dispatch. ast-grep establishes syntax; ripgrep establishes lexical occurrence. | Confirm candidates with a compiler, language server or type checker. |
+| variable-lookbehind maximum setter | pcre2 | no | The library default caps variable-length lookbehind at 255 characters and ripgrep exposes no setter. | Rewrite the pattern using \K, a capture, or a lookahead from an earlier anchor. |

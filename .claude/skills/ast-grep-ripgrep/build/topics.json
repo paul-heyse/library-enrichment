@@ -1,0 +1,688 @@
+{
+  "_comment": [
+    "Seeds for the use-case router. Each topic pairs a curated mental model -- the part a",
+    "generator cannot write -- with selectors that pull the rest from the indexes, so the flag",
+    "tables, construct rows and probe evidence on every page cannot drift from what was built.",
+    "",
+    "A seed that does not resolve fails the build. A page that quietly drops a flag it can no",
+    "longer find would assert by omission that the capability does not exist, which is the exact",
+    "failure this repository exists to prevent."
+  ],
+  "topics": [
+    {
+      "slug": "choosing-the-tool",
+      "title": "Choosing the tool",
+      "group": "cross-cutting",
+      "question": "Which of these tools answers my question at all?",
+      "mental_model": "The two tools answer different questions and neither is a better version of the other. ripgrep answers **where does this text occur**; ast-grep answers **where does this syntax occur**. The distinction is not pedantic: a call written `foo(x)` and the word `foo` inside a comment are the same text and different syntax, so the tools disagree by design, and probe A013 measures the disagreement on a two-line fixture.\n\nPick the weakest instrument that can express the requirement. A literal beats a regex, a regex beats PCRE2, a node kind beats a code pattern, and a code pattern beats a relational YAML rule. Each step up costs speed, adds a way to be subtly wrong, and widens what you must verify. Escalate when the weaker form genuinely cannot express the constraint -- not because the stronger one feels more thorough.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A013",
+        "P012",
+        "P032"
+      ],
+      "decision_rules": [
+        "Text that is not code -- a comment, a docstring, a config key, a log string, a generated identifier -- is ripgrep's, always. ast-grep cannot match what is not a node.",
+        "A question about structure -- is this a call, a declaration, an implementation, an import -- is ast-grep's. A regex that approximates structure will be wrong at the first line break.",
+        "Needing to know *which* declaration a name refers to is neither tool's. Both establish occurrence; only a compiler or language server establishes identity.",
+        "When both could work, ripgrep first: it is faster, and its output narrows the file set ast-grep then parses."
+      ],
+      "anti_patterns": [
+        "Reaching for `-P` because the pattern looks complicated. Most complicated-looking patterns are ordinary regexes.",
+        "Rebuilding a parser out of regex. If the pattern is growing a case for every way the code might be formatted, the question was structural two revisions ago.",
+        "Treating a match as proof that a symbol is used. It is proof that the text or the syntax occurs."
+      ],
+      "checklist": [
+        "Is the target text, or syntax?",
+        "Is the weakest sufficient form being used?",
+        "Does the conclusion need semantic identity that neither tool establishes?"
+      ]
+    },
+    {
+      "slug": "search-space",
+      "title": "Deciding which files get searched",
+      "group": "cross-cutting",
+      "question": "Why was this file skipped, and how do I control the file set?",
+      "mental_model": "Both tools decide *which files to look at* before they decide *what matches*, and nearly every surprising empty result comes from the first decision rather than the second. The file set is the first thing to check when a search returns less than expected -- not the pattern.\n\nThe ignore machinery is a stack of independent layers, not one switch: VCS ignore files, `.ignore` files, parent-directory ignores, global git excludes, repository-local excludes, and the hidden-file rule. Turning one off leaves the others on. Probe P023 is the case worth internalising: `config/` is hidden by `.ignore`, so `--no-ignore-vcs` does not reveal it, and a search that looks thorough is quietly incomplete. Paths named explicitly on the command line bypass the stack entirely (P025), which is why testing a behaviour on one named file and generalising to a recursive search gets binary handling exactly backwards (P029).",
+      "flag_categories": [
+        "FILTER OPTIONS"
+      ],
+      "constructs": [],
+      "probes": [
+        "P022",
+        "P023",
+        "P024",
+        "P025",
+        "P026",
+        "P027",
+        "P028",
+        "P029"
+      ],
+      "decision_rules": [
+        "Narrow by path and type before tuning the pattern. Fewer files is the cheapest speedup available and it never changes what a match means.",
+        "`-u` / `-uu` / `-uuu` is a ladder, not a switch: one relaxes ignores, two adds hidden files, three adds binary. Name the layer instead when you know which one is in the way.",
+        "`--files` shows the candidate set without searching it. When results look wrong, look at the candidates first.",
+        "ast-grep exposes the same vocabulary -- `--globs`, `--no-ignore <layer>`, `--follow`, `--threads` -- so a file-set policy worked out for one tool transfers to the other."
+      ],
+      "anti_patterns": [
+        "Reaching for `-uuu` to make a search work. It usually means one specific layer is in the way; find out which, or you will also be searching `.git` and `node_modules`.",
+        "Assuming `--no-ignore-vcs` reveals everything. `.ignore` is a separate layer (P023).",
+        "Concluding a symbol is absent without checking whether its file was in the candidate set at all."
+      ],
+      "checklist": [
+        "Was the file in `rg --files` output?",
+        "Which ignore layer excluded it -- vcs, dot, parent, global, hidden?",
+        "Is the path explicit, and therefore exempt from the stack?"
+      ]
+    },
+    {
+      "slug": "pcre2-advanced-regex",
+      "title": "Regex beyond the default engine",
+      "group": "lexical",
+      "question": "I need lookaround, backreferences, or something the default engine rejects.",
+      "mental_model": "ripgrep ships two regex engines. The default is Rust's `regex`, which guarantees linear-time matching and therefore cannot offer lookaround, backreferences or recursion -- those features are what make a backtracking engine able to blow up. `-P` switches to PCRE2, which offers all of them and gives up the guarantee.\n\n**PCRE2 10.48 is the baseline here**, asserted at build time, so everything below is simply available through `-P`. The `since` column in the construct table is history -- when upstream introduced a thing -- not a gate on whether you have it.\n\nThe trap is not knowing which features exist; it is assuming the default engine will **tell you** when one is missing. Sometimes it does, loudly and helpfully: lookaround produces an error naming `-P`. Sometimes it does not. Probe P012 records the case that matters -- the default engine parses `(?R)` as an inline group, silently degrades a balanced-delimiter pattern to `\\([^()]*\\)`, and returns `(b)` where PCRE2 returns `(a(b)c)`. A wrong answer, exit 0, no warning.\n\nAnd do not read `rg --pcre2-version` to decide any of this. It prints a constant compiled into ripgrep at *its* build time, so it describes the build and not the runtime: on this machine it reads 10.45 while the linked library is 10.48, three releases of drift. If you genuinely need to know at runtime, ask PCRE2 itself with its own conditional, `(?(VERSION=10.48)yes|no)`, which is evaluated inside libpcre2.",
+      "flag_categories": [],
+      "constructs": [
+        "lookahead",
+        "lookbehind",
+        "variable-lookbehind",
+        "backreference",
+        "named-backreference",
+        "match-reset",
+        "possessive-quantifier",
+        "atomic-group",
+        "branch-reset",
+        "conditional",
+        "recursion",
+        "subroutine",
+        "recursion-returned-captures",
+        "control-verb-skip-fail",
+        "control-verb-commit",
+        "control-verb-accept",
+        "resource-limits",
+        "no-jit"
+      ],
+      "probes": [
+        "P001",
+        "P002",
+        "P003",
+        "P004",
+        "P005",
+        "P006",
+        "P008",
+        "P009",
+        "P010",
+        "P011",
+        "P012",
+        "P013",
+        "P018"
+      ],
+      "decision_rules": [
+        "Use `-P` when the constraint is genuinely relational -- this token only when preceded by that, this delimiter matched by the same delimiter. Not because the pattern is long.",
+        "Feature-probe a version-gated construct against a two-line fixture with a control that must fail. Never gate on `--pcre2-version`.",
+        "`(*SKIP)(*F)` excludes a region without a parser: match the region you want to discard, fail it, and let a later alternative match outside it.",
+        "`\\K` drops everything matched so far from the reported span -- the cheapest way to assert a prefix without printing it.",
+        "Untrusted patterns belong on the default engine. PCRE2 backtracks, and a hostile pattern is a resource-consumption vector."
+      ],
+      "anti_patterns": [
+        "Assuming an unsupported construct will error. Lookaround errors; recursion degrades silently (P012).",
+        "Reading `--pcre2-version` and concluding a feature is unavailable.",
+        "Expecting `--regex-size-limit` or `--dfa-size-limit` to bound PCRE2. They bound the default engine only; see `unreachable.tsv`.",
+        "Unbounded variable-length lookbehind. Every branch needs a known maximum, capped at 255 by default with no CLI setter."
+      ],
+      "checklist": [
+        "Could the default engine express this?",
+        "If version-gated: is there a probe, with a control that fails?",
+        "Is the pattern trusted?",
+        "Would a structural query be more precise than a cleverer regex?"
+      ]
+    },
+    {
+      "slug": "multiline-matching",
+      "title": "Matching across line boundaries",
+      "group": "lexical",
+      "question": "My pattern needs to span more than one line.",
+      "mental_model": "ripgrep is line-oriented by default: the haystack handed to the matcher is a single line, so a pattern containing `\\n` cannot match. `-U` changes what the haystack *is*, letting it span lines.\n\nWhat `-U` does not change is what `^` and `$` mean. They remain **line** anchors even in multiline mode. Probe P020 measures this: under `-U`, `^end block` matches, and `\\Aend block` does not. If you want the start of the whole haystack, `\\A` and `\\z` are the anchors. Nearly everyone assumes `-U` turns `^` into a haystack anchor, and it does not.\n\n`.` also still stops at a newline under `-U`; `--multiline-dotall` is the separate switch for that (P021). Three independent concepts -- haystack extent, anchor meaning, dot behaviour -- and one flag only moves the first.",
+      "flag_categories": [],
+      "constructs": [
+        "anchor-line",
+        "anchor-haystack",
+        "dot"
+      ],
+      "probes": [
+        "P019",
+        "P020",
+        "P021"
+      ],
+      "decision_rules": [
+        "`-U` widens the haystack. `--multiline-dotall` widens `.`. `\\A` / `\\z` are the haystack anchors. Reach for whichever of the three you actually need.",
+        "Multiline search buffers more, so bound it by path and type first.",
+        "For a construct that nests -- braces, parentheses, tags -- a multiline regex is the wrong instrument. Use ast-grep, which parses."
+      ],
+      "anti_patterns": [
+        "Expecting `-U` to make `^` mean start-of-file.",
+        "Repository-wide `-U --multiline-dotall` with a `.*` between two anchors. It will match nearly everything, slowly.",
+        "Matching a nested structure by counting delimiters in a regex."
+      ],
+      "checklist": [
+        "Is `-U` needed, or only `--multiline-dotall`?",
+        "Should the anchors be `^`/`$` or `\\A`/`\\z`?",
+        "Would ast-grep express this as one node?"
+      ]
+    },
+    {
+      "slug": "output-shaping-and-extraction",
+      "title": "Getting a value out, not a line",
+      "group": "lexical",
+      "question": "I want the matched value itself, or a count, or context around it.",
+      "mental_model": "By default ripgrep prints the whole line a match occurs on. When the goal is a *value* rather than evidence of a line, `-o` narrows the output to the match itself, and `-r` rewrites that output using capture groups.\n\n`-r` is the one to be careful with, because it looks like `sed -i` and is not. It rewrites **printed output only** and never touches the file -- probe P031 runs the replacement and then re-reads the original text to prove it. ripgrep has no in-place edit mode at all, by design. If a file must change, that is ast-grep's `-U` for a structural rewrite, or a different tool for a textual one.\n\nFor extraction, `\\K` under `-P` is often cleaner than a capture group: it drops the prefix from the reported span, so `-o` prints only the part you wanted without a second processing step.",
+      "flag_categories": [
+        "OUTPUT OPTIONS",
+        "OUTPUT MODES"
+      ],
+      "constructs": [
+        "match-reset",
+        "group-capturing",
+        "group-named"
+      ],
+      "probes": [
+        "P007",
+        "P031"
+      ],
+      "decision_rules": [
+        "`-o` for the value, plain output for the evidence, `-c` for how many, `-l` for which files.",
+        "`\\K` or `-o` with a lookahead beats post-processing with `cut`.",
+        "`--json` rather than parsing the text output, whenever another program reads the result.",
+        "`-A` / `-B` / `-C` are for humans. A machine consumer should take ranges from `--json`."
+      ],
+      "anti_patterns": [
+        "Expecting `-r` to edit files (P031).",
+        "Parsing `path:line:text` with a naive split on `:`. Paths contain colons; use `--json` or `-0`.",
+        "Using `-C` in a pipeline where the context lines are then discarded."
+      ],
+      "checklist": [
+        "Is the value wanted, or the line?",
+        "Will a program read this? Then `--json`.",
+        "Does anything here imply a file should change? ripgrep will not do it."
+      ]
+    },
+    {
+      "slug": "structural-patterns",
+      "title": "Matching code by its shape",
+      "group": "structural",
+      "question": "Find this code construct, wherever and however it is formatted.",
+      "mental_model": "An ast-grep pattern is **code**, parsed with the same grammar as the file it searches, then matched as a tree. It is not a wildcard syntax layered over text. That is why it is immune to formatting: a call split across four lines is the same tree as one on a single line.\n\nMetavariables are the wildcards. `$A` captures one named node; `$$$ARGS` captures a run of them; `$_` matches without capturing. A repeated capturing name imposes **equality** -- `$A == $A` matches `x == x` and not `x == y` -- which is powerful and is still syntactic equality, not proof that both names resolve to the same declaration.\n\nWhen a pattern will not match, inspect the parse before making the pattern cleverer. `--debug-query=cst` shows what the grammar actually produced, including the unnamed punctuation nodes that ordinary metavariables do not capture. Most failed patterns are a misunderstanding about which node is the root, not a missing feature.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A001",
+        "A002",
+        "A003",
+        "A004",
+        "A005",
+        "A006",
+        "A011"
+      ],
+      "decision_rules": [
+        "If a node kind alone expresses it, use `-k`. It is exact and needs no pattern to parse.",
+        "Give the pattern enough context to parse, then use `--selector` to pick the node you actually meant.",
+        "Choose strictness from the invariants the task depends on, not from habit. Stricter is not safer; it is more brittle to formatting.",
+        "Look up the kind in `kinds.tsv` rather than guessing -- and note the three kinds this binary rejects despite being published in `languages.json`.",
+        "Field names for `has: {field: ...}` live in `fields.tsv`. Guessing them is the commonest reason a relational rule matches nothing."
+      ],
+      "anti_patterns": [
+        "Treating `$X` as `.*`. It is one node.",
+        "A bare `$$$A` as the whole pattern.",
+        "Lowercase metavariable names -- they are not metavariables.",
+        "Expecting `$OP` to capture an operator. Operators are usually unnamed nodes; `$$OP` is the form.",
+        "Adding relational clauses to fix a pattern whose root node was wrong."
+      ],
+      "checklist": [
+        "Would `-k` do?",
+        "Has `--debug-query=cst` been run?",
+        "Is repeated-metavariable equality intended?",
+        "Zero, one and many cases all tested for `$$$`?"
+      ]
+    },
+    {
+      "slug": "code-navigation",
+      "title": "Mapping code without reading it",
+      "group": "structural",
+      "question": "What is in this file or directory, without opening everything?",
+      "mental_model": "`ast-grep outline` produces a syntax-aware table of contents: top-level items, and their direct members, with line numbers. It exists so an agent can learn a file's shape for a few hundred tokens instead of reading two thousand lines.\n\nDefaults are chosen for that use: a directory yields exported names, a file yields a richer digest. `--view` trades detail against tokens -- `names`, `signatures`, `digest`, `expanded`, in that order of cost.\n\nTwo behaviours will surprise you. `--match` filters **top-level items only**, so filtering for a method name finds nothing even though the method is right there in the output (A009); select its parent instead. And `outline` exits 0 no matter what -- for an empty result, which is defensible, and also for a file that does not exist, which is not (A007). The exit status carries no information; branch on stdout and watch stderr.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A007",
+        "A008",
+        "A009",
+        "A012"
+      ],
+      "decision_rules": [
+        "Unknown directory: `outline <dir>` and read the exported names.",
+        "Known file, unknown shape: the default digest.",
+        "Known type, want its members: `--match <Type> --view expanded`.",
+        "Dependency direction: `--items imports`. It is syntax only -- it does not follow a re-export to its source.",
+        "Feeding another program: `--json=stream`, one file object per line, coordinates zero-based."
+      ],
+      "anti_patterns": [
+        "`--match` on a member name and concluding the member is absent (A009).",
+        "Branching on outline's exit status (A007).",
+        "Treating an export list as a resolved public API. It is syntax-only classification.",
+        "Reading a whole file to find its class names."
+      ],
+      "checklist": [
+        "Is the smallest sufficient `--view` in use?",
+        "Does `--match` target an item rather than a member?",
+        "Is empty output being distinguished from a read error via stderr?"
+      ]
+    },
+    {
+      "slug": "composing-the-two",
+      "title": "Using both tools together",
+      "group": "cross-cutting",
+      "question": "How do I combine lexical and structural search?",
+      "mental_model": "The two tools compose in one direction far more often than the other: **ripgrep narrows, ast-grep confirms**. ripgrep is faster and needs no parse, so it is the right way to reduce thousands of files to the few worth parsing. ast-grep is precise, so it is the right way to decide whether a candidate is really the construct you meant.\n\nProbe A013 is the argument in miniature. On a file where `helper` appears both as a call and inside a comment, `rg -c helper` and `ast-grep -p 'helper($X)'` return different counts. Neither is wrong; they answer different questions. Composing them gives you ripgrep's speed over the corpus and ast-grep's precision over the survivors.\n\nThe reverse direction has one good use: `outline` to locate the structural region, then ripgrep inside it for the things outline cannot see -- comments, string literals, configuration keys, dynamically built names.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A013"
+      ],
+      "decision_rules": [
+        "Narrow with `rg -l`, then pipe the file list into ast-grep. NUL-delimit with `-0` and `xargs -0` so unusual filenames survive.",
+        "A count that differs between the two tools is information, not a bug: the difference is comments, strings and generated text.",
+        "After both, a semantic tool if the conclusion depends on identity rather than occurrence.",
+        "Structural first, lexical second, when the question is 'what else is in this function' rather than 'where is this token'."
+      ],
+      "anti_patterns": [
+        "Running ast-grep over an entire monorepo when ripgrep could have cut it to twenty files first.",
+        "Reporting a ripgrep count as the number of call sites.",
+        "Stopping at syntax when the question was about meaning."
+      ],
+      "checklist": [
+        "Has the file set been narrowed before parsing?",
+        "Are filenames NUL-delimited through the pipeline?",
+        "Is the final claim within what syntax can establish?"
+      ]
+    },
+    {
+      "slug": "machine-output",
+      "title": "Consuming results from a program",
+      "group": "cross-cutting",
+      "question": "Another program has to read these results.",
+      "mental_model": "Both tools emit structured output, and neither's human output is an API. ripgrep's `--json` is JSON Lines with `begin` / `match` / `context` / `end` / `summary` records; ast-grep's `--json` takes a style with `pretty`, `compact` or `stream`.\n\nast-grep's style argument must be attached with `=`. Written with a space, `stream` is consumed as a **path** -- the command succeeds, searches the wrong thing, and reports no error. Probe A010 records both halves because the failure is silent rather than loud.\n\nCoordinates are machine values and should be carried, not re-derived. ast-grep reports zero-based line and column plus byte offsets; ripgrep reports byte offsets and one-based line numbers. Converting once at the boundary where a human sees them is correct; converting in the middle of a pipeline is how off-by-one errors are born.",
+      "flag_categories": [
+        "OUTPUT MODES",
+        "LOGGING OPTIONS"
+      ],
+      "constructs": [],
+      "probes": [
+        "P030",
+        "P034",
+        "A010"
+      ],
+      "decision_rules": [
+        "`rg --json` over parsing `path:line:text`. Paths contain colons.",
+        "`ast-grep --json=stream` -- with the `=` -- for large result sets.",
+        "Exit codes differ between the tools and are not interchangeable. `exit-codes.tsv` has the table.",
+        "Preserve byte offsets end to end; convert to display coordinates once, at the edge."
+      ],
+      "anti_patterns": [
+        "`--json stream` with a space (A010).",
+        "Treating every nonzero exit as 'no matches'. For ripgrep 1 and 2 are different answers (P034).",
+        "Assuming ast-grep uses ripgrep's exit vocabulary. An unparseable kind exits 8.",
+        "Depending on human output field order or colour."
+      ],
+      "checklist": [
+        "Is `=` used for ast-grep's JSON style?",
+        "Are exit 1 and exit 2 distinguished?",
+        "Are byte offsets preserved rather than recomputed?"
+      ]
+    },
+    {
+      "slug": "debugging-a-query",
+      "title": "Why did this not match?",
+      "group": "cross-cutting",
+      "question": "I expected results and got none, or got the wrong ones.",
+      "mental_model": "Classify the failure before changing the query, because the two causes need opposite fixes. Either the file was never searched, or it was searched and the pattern did not match.\n\nSettle the first question first, and cheaply. `rg --files` lists the candidate set; `rg --debug` says why a path was skipped; `ast-grep --inspect` reports config discovery and file routing. If the file is not in the candidate set, no amount of pattern work will help -- and this is the more common cause of the two.\n\nOnly then look at the pattern. For ast-grep, `--debug-query=cst` shows what the grammar produced, which usually reveals that the root node is not the one you assumed. For ripgrep, the question is normally which engine is running and whether a construct is silently degrading (P012).",
+      "flag_categories": [
+        "LOGGING OPTIONS"
+      ],
+      "constructs": [],
+      "probes": [
+        "A011",
+        "P012",
+        "P022",
+        "P023"
+      ],
+      "decision_rules": [
+        "File set before pattern, always.",
+        "`--debug-query=cst` before adding a relational clause.",
+        "If an unsupported construct is suspected, run the control: a pattern that *must* fail. Silence proves nothing on its own.",
+        "Test a pattern against a two-line fixture before running it over a repository."
+      ],
+      "anti_patterns": [
+        "Making a pattern more complex to fix a file-set problem.",
+        "Assuming an empty result means absence.",
+        "Trusting a playground or a doc example over the installed binary."
+      ],
+      "checklist": [
+        "Was the file a candidate?",
+        "Which ignore layer, if not?",
+        "What did the query actually parse to?",
+        "Is there a control proving the query can match anything at all?"
+      ]
+    },
+    {
+      "slug": "untrusted-input",
+      "title": "Patterns and repositories you do not control",
+      "group": "cross-cutting",
+      "question": "The pattern or the corpus comes from someone else.",
+      "mental_model": "Two different risks, often confused. A hostile **pattern** is a resource-consumption problem: PCRE2 backtracks, and recursion, nested quantifiers and backreferences can be made to cost enormously. A hostile **repository** is a configuration problem: ast-grep's `sgconfig.yml` can register custom languages that load native parser libraries.\n\nThe default regex engine is the safer request language, because its linear-time guarantee is exactly the property a hostile pattern attacks. Prefer it for anything user-supplied and escalate to `-P` only for trusted patterns.\n\nRipgrep's `--regex-size-limit` and `--dfa-size-limit` do **not** bound PCRE2 -- they constrain the default engine only. Under `-P` the available limits are in-pattern (`(*LIMIT_MATCH=n)`, `(*LIMIT_DEPTH=n)`, `(*LIMIT_HEAP=n)`) plus whatever the operating system enforces. `unreachable.tsv` records this explicitly, because assuming otherwise is a plausible and wrong inference.",
+      "flag_categories": [],
+      "constructs": [
+        "resource-limits",
+        "no-jit"
+      ],
+      "probes": [],
+      "decision_rules": [
+        "Untrusted pattern: default engine, and a timeout owned by the parent process.",
+        "Untrusted repository: do not let its `sgconfig.yml` be discovered. Pass `-c` explicitly.",
+        "`--pre` runs an arbitrary command per file. Treat enabling it as granting execution.",
+        "Relaxing ignore layers can pull in secrets that were ignored deliberately."
+      ],
+      "anti_patterns": [
+        "Believing `--regex-size-limit` protects a PCRE2 search.",
+        "Running `scan` on a cloned repository with its own config discovered implicitly.",
+        "Treating in-pattern limits as a sandbox. They are defence in depth, not isolation."
+      ],
+      "checklist": [
+        "Who wrote the pattern?",
+        "Who wrote the config that will be discovered?",
+        "Is there a timeout, and does the parent own it?"
+      ]
+    },
+    {
+      "slug": "performance",
+      "title": "Making a slow search fast",
+      "group": "cross-cutting",
+      "question": "This is taking too long on a large tree.",
+      "mental_model": "Three independent costs: how many files are opened, how much of each is read, and how expensive the pattern is per byte. They are attacked separately, and the first is almost always the cheapest win.\n\nNarrowing by type and path removes files before anything is parsed or matched, and unlike pattern tuning it cannot change what a match means. Do it first, every time.\n\nPattern cost is dominated by whether a literal can be extracted. A pattern with a fixed substring lets the engine skip most of the haystack with a fast scan; one that begins with `.*` or an alternation of classes cannot. Under `-P`, JIT compilation matters too, and it is attempted but not guaranteed. For ast-grep the equivalent lever is anchoring on a node kind so that most files are rejected before any relational traversal runs.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [],
+      "decision_rules": [
+        "Narrow the file set first. It is free and safe.",
+        "Keep a literal in the pattern where you can; it is what makes the fast path possible.",
+        "Anchor ast-grep rules on a positive `kind` before adding `inside` or `has`.",
+        "Bound `stopBy`. `stopBy: end` walks to the root on every candidate.",
+        "More threads is not always faster, especially on a network filesystem."
+      ],
+      "anti_patterns": [
+        "`-uuu` on a large tree, which adds `.git` and every build artifact.",
+        "Repository-wide multiline dotall.",
+        "Unbounded nested quantifiers under `-P`.",
+        "Optimising the pattern when the file set was the problem."
+      ],
+      "checklist": [
+        "How many files are actually being opened?",
+        "Does the pattern contain a usable literal?",
+        "Is the ast-grep rule anchored on a kind?"
+      ]
+    },
+    {
+      "slug": "literal-and-regex-search",
+      "title": "Plain text and ordinary regex",
+      "group": "lexical",
+      "question": "Find this string or this ordinary pattern.",
+      "mental_model": "Most searches are literal, and saying so makes them faster and more correct. `-F` treats the pattern as text, which matters most when searching for code punctuation: `println!(` is an unclosed group as a regex and an ordinary substring as a literal (P032).\n\nCase handling has three modes and the middle one is usually right: `-s` exact, `-i` insensitive, `-S` smart-case, which stays sensitive until you type an uppercase letter. Smart-case is the good default for interactive use and a poor one for scripts, where the behaviour then depends on the pattern's spelling.\n\n`-w` and `-x` wrap the pattern rather than requiring you to write boundaries by hand, which avoids the usual mistake of anchoring one end and forgetting the other.",
+      "flag_categories": [
+        "INPUT OPTIONS",
+        "SEARCH OPTIONS"
+      ],
+      "constructs": [
+        "literal",
+        "character-class",
+        "alternation",
+        "word-boundary",
+        "quantifier-greedy",
+        "repetition-bounded"
+      ],
+      "probes": [
+        "P032",
+        "P033"
+      ],
+      "decision_rules": [
+        "`-F` whenever the pattern is text, especially when it contains punctuation.",
+        "`-S` for a human at a terminal; an explicit `-s` or `-i` in a script.",
+        "`-w` rather than hand-written `\\b` on both ends.",
+        "Several patterns: repeat `-e`, or `-f` a file. They are OR-ed into one search.",
+        "`-F` still means literal under `-P` (P033); the pattern is escaped before PCRE2 compiles it."
+      ],
+      "anti_patterns": [
+        "Escaping punctuation by hand instead of using `-F`.",
+        "Smart-case in a script, where behaviour then depends on the pattern's spelling.",
+        "One enormous alternation where a type filter was the real requirement."
+      ],
+      "checklist": [
+        "Is this literal? Then `-F`.",
+        "Is the case mode explicit?",
+        "Would `-w` express the boundary more simply?"
+      ]
+    },
+    {
+      "slug": "unicode-and-encodings",
+      "title": "Text that is not plain ASCII UTF-8",
+      "group": "lexical",
+      "question": "The text has accents, another script, or another encoding.",
+      "mental_model": "Both engines are Unicode-aware by default, which is usually what you want and occasionally expensive. `\\w`, `\\b` and `\\d` cover far more than ASCII, and under `-P` ripgrep enables both UTF and UCP so PCRE2 behaves the same way. `--no-unicode` narrows them back to ASCII, which is a real speedup when searching identifiers in code that has none.\n\nThe baseline carries **Unicode 17.0.0** -- PCRE2 10.48's headline change, and the only large user-visible difference from 10.47. Four scripts arrived with it: Sidetic, Tai_Yo, Tolong_Siki and Beria_Erfe. That also means the extent of `\\p{L}`, `\\p{Nd}`, `\\p{Han}`, `\\w` and `\\d` is wider than any reference written against Unicode 16 will say.\n\nFor set algebra over character classes, the form that works through `rg -P` is the Perl-style `(?[A & B])`. Since 10.48 it also composes with lookarounds, which was an internal compile error before (P035). The UTS#18 spelling `[A&&[B]]` is a genuine PCRE2 feature that ripgrep cannot reach, because it needs a compile option `rg` never sets -- probe P016 records what actually happens, and `unreachable.tsv` carries the conclusion. This is the clearest case in the repository of a feature existing in the library and not in the tool.\n\nEncoding is separate from Unicode. `-E` transcodes on the way in; `-E none` disables it and searches raw bytes.",
+      "flag_categories": [],
+      "constructs": [
+        "unicode-property",
+        "extended-class-perl",
+        "extended-class-with-lookaround",
+        "unicode-17-script",
+        "extended-class-uts18",
+        "script-run",
+        "class-nested-rust"
+      ],
+      "probes": [
+        "P015",
+        "P016",
+        "P017",
+        "P035",
+        "P036"
+      ],
+      "decision_rules": [
+        "`--no-unicode` when searching ASCII identifiers in bulk.",
+        "`(?[A & B])` for set algebra under `-P`, never `[A&&[B]]`.",
+        "Extended classes compose with lookarounds at this baseline; on 10.47 the same pattern was a compile error, so code written against an older reference may have worked around a limit that is gone.",
+        "`(*sr:...)` to require one script throughout -- useful against mixed-script spoofing, and note its answers moved with Unicode 17.",
+        "`-E` for a known encoding; `-E none` when byte offsets must line up with the file on disk."
+      ],
+      "anti_patterns": [
+        "Using the UTS#18 class form and assuming it intersected anything.",
+        "Assuming `\\w` is ASCII.",
+        "Comparing byte offsets across a transcoding boundary."
+      ],
+      "checklist": [
+        "Is Unicode matching needed here, or just costing time?",
+        "Is the class-algebra form the Perl one?",
+        "Do byte offsets need to match the on-disk bytes?"
+      ]
+    },
+    {
+      "slug": "reading-odd-inputs",
+      "title": "Archives, binaries, and generated input",
+      "group": "lexical",
+      "question": "The content is compressed, binary, or has to be produced first.",
+      "mental_model": "`-z` searches inside gzip, bzip2, xz and zstd without unpacking them first. `--pre` is the general form: run a command per file and search its output, which handles PDFs, databases and anything else with a text projection.\n\n`--pre` executes an arbitrary program for every file in the search. Enabling it is a decision about trust, not about convenience, and `--pre-glob` should bound which files reach it.\n\nBinary handling is two rules that look like one. A file named explicitly on the command line is searched; the same file reached by directory traversal is skipped. Probe P029 measures both halves, because testing on an explicit path and generalising to a recursive search gets it backwards in the direction that silently loses results.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "P029"
+      ],
+      "decision_rules": [
+        "`-z` for ordinary compressed logs.",
+        "`--pre` plus `--pre-glob` for anything needing a real conversion.",
+        "`-a` to search binary content deliberately; `--binary` to search it but keep the output safe.",
+        "`--null-data` for NUL-delimited records rather than lines."
+      ],
+      "anti_patterns": [
+        "Enabling `--pre` repository-wide without a glob.",
+        "Generalising binary behaviour from an explicit path to a traversal (P029).",
+        "Piping binary output to a terminal."
+      ],
+      "checklist": [
+        "Is the file set for `--pre` bounded?",
+        "Explicit path, or traversal?",
+        "Is the output safe to print?"
+      ]
+    },
+    {
+      "slug": "rule-authoring",
+      "title": "Writing a durable rule",
+      "group": "structural",
+      "question": "I need this check to run repeatedly, not once.",
+      "mental_model": "A rule file is a matching predicate plus everything needed to report it: an id, a language, a message, a severity, and optionally a fix. The predicate is the rule object, whose complete field list is in `rule-fields.tsv` -- generated from ast-grep's own JSON Schema, so it cannot drift from what the binary validates.\n\nThe field group to understand first is relational: `inside`, `has`, `precedes`, `follows`, each accepting `stopBy` and `field`. `field` is the one that most often makes a rule work, and the one hardest to guess -- which is why `fields.tsv` exists, with 631 field names across 23 languages.\n\nWhen a later clause uses a metavariable an earlier clause captured, write them under an explicit `all:`. Field order within a rule object is not a promise about evaluation order; `all` is.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A004",
+        "A005"
+      ],
+      "decision_rules": [
+        "Anchor on a positive `kind` first; add relations second.",
+        "`all:` whenever one clause depends on another's capture.",
+        "Bound `stopBy`. The default neighbour behaviour is usually what you meant.",
+        "Look `field` up in `fields.tsv` rather than guessing.",
+        "Prototype with `scan --inline-rules` before creating a file."
+      ],
+      "anti_patterns": [
+        "One rule with an `any:` covering unrelated concerns.",
+        "`stopBy: end` everywhere.",
+        "Rebuilding a parser with `regex:` inside a rule that already has structural context.",
+        "Relying on field order for evaluation order."
+      ],
+      "checklist": [
+        "Is there a positive kind anchor?",
+        "Are capture dependencies inside `all:`?",
+        "Do the field names exist in `fields.tsv`?",
+        "Are there valid and invalid test cases?"
+      ]
+    },
+    {
+      "slug": "codemods-and-rewrites",
+      "title": "Changing code at scale",
+      "group": "structural",
+      "question": "I need to rewrite this construct across a repository.",
+      "mental_model": "ast-grep rewrites what it matched, so a rewrite is only as safe as the match set. The order that keeps this safe is not negotiable: enumerate, preview, review, apply, verify. `-U` applies everything, and it belongs after a clean VCS state and a tested rule, never before.\n\n`fix` is a text template with the captured metavariables interpolated. `transform` derives new values from captures -- case conversion, substring, regex replacement -- before they reach the template. `rewriters` handle the recursive case, where each element of a matched list needs its own rewrite.\n\nThe thing syntax cannot tell you is whether the rewrite preserved behaviour. A rewrite that produced exactly the intended edit is edit-confirmed; that it is correct needs a compiler and a test suite. Keep the two claims apart when reporting.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "P031"
+      ],
+      "decision_rules": [
+        "Enumerate, preview, review interactively, then apply.",
+        "`-U` only from a clean working tree, with a rule that has tests.",
+        "`transform` rather than encoding a case convention into the pattern.",
+        "Re-parse the result: a rewrite that produces invalid syntax should fail loudly.",
+        "ripgrep cannot do this. `-r` rewrites output only (P031)."
+      ],
+      "anti_patterns": [
+        "`-U` before seeing the match set.",
+        "A rewrite whose correctness depends on an import the tool never resolved.",
+        "Claiming behaviour preservation from a syntactic edit.",
+        "Hand-editing the output of a codemod instead of fixing the rule."
+      ],
+      "checklist": [
+        "Has the match set been reviewed?",
+        "Is the working tree clean?",
+        "Does the rule have fixture tests?",
+        "Has a formatter and a type check run afterwards?"
+      ]
+    },
+    {
+      "slug": "repo-linting-and-ci",
+      "title": "Running rules in CI",
+      "group": "structural",
+      "question": "These rules should gate a pipeline.",
+      "mental_model": "`scan` runs a project's rules and reports findings with severity. Severity is deployment policy, not a property of the rule: the same rule can be a hint locally and an error in a release pipeline, set with `--error=<id>` and friends, or filtered with `--min-severity`.\n\nCI output has dedicated formats -- `--format github` for inline annotations, `--format sarif` for a code-scanning pipeline, `--json` for anything else.\n\nThe exit codes deserve care. `ast-grep test` exits 3 when `--filter` matched no rule, so a typo in a filter looks like a clean run; and `--update-all` always exits 0, which means it can never be part of a gate. Both are in `exit-codes.tsv`.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [
+        "A007"
+      ],
+      "decision_rules": [
+        "Severity at deployment, not baked into the rule.",
+        "`--format sarif` for code scanning, `--format github` for annotations.",
+        "Assert on the number of test cases executed, not merely on 'nothing failed'.",
+        "Pass `-c` explicitly in CI rather than relying on discovery from the working directory."
+      ],
+      "anti_patterns": [
+        "Failing a build on any match regardless of severity.",
+        "`--update-all` in a gate.",
+        "Not noticing exit 3 from a mistyped `--filter`.",
+        "Config discovery that depends on which directory CI happened to start in."
+      ],
+      "checklist": [
+        "Is severity set by policy?",
+        "Is the config path explicit?",
+        "Are exit 3 and exit 0-with-zero-tests both caught?"
+      ]
+    },
+    {
+      "slug": "languages-and-parsers",
+      "title": "Languages, grammars and custom parsers",
+      "group": "structural",
+      "question": "Is my language supported, and what if it is not?",
+      "mental_model": "ast-grep's built-in language set is not enumerable from `--help`, which links to a web page instead. So `languages.tsv` is built by **probing the binary** with candidate names, and records what this binary accepted and what it rejected.\n\nNode kinds come from the shipped schemas -- and the two schema sources disagree. `languages.json` and the per-language `<lang>_rule.json` each list kinds the other omits, so disputed kinds are adjudicated by running them. Three published kinds turned out to be rejected by this binary: `python/except_group_clause`, `rust/constrained_type_parameter` and `rust/optional_type_parameter`. A rule using one of those fails with exit 8.\n\nBeyond the built-ins, `customLanguages` registers a Tree-sitter grammar from a native library, and `languageGlobs` routes an unusual extension to a known language. Custom grammars load native code, which makes an untrusted `sgconfig.yml` a trust decision.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [],
+      "decision_rules": [
+        "Check `languages.tsv` before assuming support. It records this binary's answer, not a web page's.",
+        "Check `kinds.tsv` for the adjudication column before using a kind from documentation.",
+        "`languageGlobs` for an odd extension; `customLanguages` only when the grammar is genuinely absent.",
+        "A kind list is evidence about the grammar this ast-grep bundles, not about tree-sitter in general."
+      ],
+      "anti_patterns": [
+        "Trusting the published language table over the installed binary.",
+        "Using a kind from a blog post without checking it is accepted.",
+        "Loading a custom parser from an untrusted repository's config."
+      ],
+      "checklist": [
+        "Does `languages.tsv` say this binary accepts the language?",
+        "Is the kind marked accepted?",
+        "Does anything here load native code from a config you did not write?"
+      ]
+    },
+    {
+      "slug": "embedding",
+      "title": "Using these as libraries",
+      "group": "structural",
+      "question": "I want this behaviour inside my own program.",
+      "mental_model": "Both tools are thin shells over library crates that can be used directly, and both ship bindings for other languages.\n\nripgrep's search pipeline is `grep-matcher` (the matcher interface), `grep-regex` and `grep-pcre2` (the two engines), `grep-searcher` (the line-oriented reader), `grep-printer` (output), with `ignore` and `globset` supplying the file-set machinery that is often the only part worth borrowing. Those crates are indexed here at the versions ripgrep 15.2.0's `Cargo.lock` actually pins -- `ignore` 0.4.29, not the newer release on crates.io -- because that is the code whose behaviour the probes observed.\n\nast-grep exposes `ast-grep-core` and `ast-grep-config` for Rust, plus `@ast-grep/napi` for Node and `ast-grep-py` for Python. Their shipped type declarations are indexed alongside the Rust crates.\n\nThe usual reason to embed is needing to interleave your own logic with matching. The usual reason not to is that the CLI is a stable process boundary and the library API is not.",
+      "flag_categories": [],
+      "constructs": [],
+      "probes": [],
+      "decision_rules": [
+        "Borrow `ignore` and `globset` alone if the file-set semantics are what you want. They are the reusable part.",
+        "Shell out to the CLI for a stable boundary; embed when per-match host computation is needed.",
+        "Pin bindings independently of the CLI. They release on their own schedule.",
+        "Read the crate versions from `PROVENANCE.json`; they are lock-resolved, not latest."
+      ],
+      "anti_patterns": [
+        "Reimplementing gitignore semantics instead of using `ignore`.",
+        "Assuming the binding version tracks the CLI version.",
+        "Indexing crates.io latest and expecting it to describe the installed binary."
+      ],
+      "checklist": [
+        "Is the CLI boundary really insufficient?",
+        "Are the crate versions the lock-resolved ones?",
+        "Is the binding pinned separately?"
+      ]
+    }
+  ]
+}

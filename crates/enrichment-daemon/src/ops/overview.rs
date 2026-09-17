@@ -95,12 +95,10 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         .flat_map(|facet| &facet.items)
         .take(per_namespace)
     {
-        evidence.push(evidence_from_fragment(
-            service,
-            &fragment.fragment,
-            source_version_match,
-            excerpt_chars,
-        ));
+        match evidence_from_fragment(&fragment.fragment, excerpt_chars) {
+            Ok(citation) => evidence.push(citation),
+            Err(error) => return common::operation_error(&error, "citation_identity"),
+        }
     }
 
     let mut data = OverviewData {
@@ -110,7 +108,7 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
             snapshot_id: manifest.snapshot_id.to_string(),
             normalizer_version: manifest.normalizer_version.clone(),
             counts: manifest.counts.clone(),
-            published_at: manifest.published_at.clone(),
+            published_at: manifest.published_at,
         },
         observed_configuration: manifest.observed_configuration.clone(),
         area: area.map(str::to_owned),
@@ -206,7 +204,7 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
                 .map(|facet| facet.items.len())
                 .sum::<usize>()
         ),
-        data: common::to_object(&data),
+        data: common::payload(&data),
         coverage,
         freshness: Freshness {
             registry_checked_at: None,
@@ -300,12 +298,16 @@ async fn discovery_facet(
                     .expect("bounded retained identity serializes")
             });
             Some(RecoveryAction::CallTool {
-                tool: "library_overview".into(),
-                arguments: common::to_object(&serde_json::json!({
-                    "context_id": request.context_id, "snapshot_id": manifest.snapshot_id,
-                    "area": request.area, "max_items": request.max_items, "max_bytes": request.max_bytes,
-                    "discovery": [full],
-                })),
+                request: Box::new(enrichment_core::request::ResearchRequest::Overview(
+                    OverviewRequest {
+                        context_id: request.context_id.clone(),
+                        snapshot_id: Some(manifest.snapshot_id.to_string()),
+                        area: request.area.clone(),
+                        max_items: request.max_items,
+                        max_bytes: request.max_bytes,
+                        discovery: Some(vec![full]),
+                    },
+                )),
             })
         };
         items.push(enrichment_core::wire::data::FragmentProjection {

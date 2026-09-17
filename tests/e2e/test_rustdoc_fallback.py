@@ -49,7 +49,6 @@ def write_config(
     path.write_text(
         "\n".join(
             [
-                'config_version = "1.0"',
                 "[policy]",
                 f"enabled_profiles = {profiles}",
                 "[limits]",

@@ -148,7 +148,6 @@ impl Frontier {
     }
     fn session(&self) -> Result<SessionContext> {
         let session = self.runtime.session();
-        session.register_udf(enrichment_core::native_version::pep440_matches());
         register(&session, "package_facts", package_schema(), &self.packages)?;
         register(
             &session,

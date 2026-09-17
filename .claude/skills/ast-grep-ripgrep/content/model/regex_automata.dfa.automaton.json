@@ -1,0 +1,236 @@
+{
+  "module": "regex_automata::dfa::automaton",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.dfa.automaton.md",
+  "items": [
+    {
+      "path": "regex_automata::dfa::automaton::StartError",
+      "name": "StartError",
+      "kind": "enum",
+      "crate": "regex-automata",
+      "signature": "enum StartError",
+      "summary": "An error that can occur when computing the start state for a search.",
+      "doc": "api/regex_automata.dfa.automaton.md#starterror",
+      "aliases": [
+        "regex_automata::dfa::StartError"
+      ],
+      "variants": [
+        "Quit",
+        "UnsupportedAnchored"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::automaton::OverlappingState",
+      "name": "OverlappingState",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct OverlappingState",
+      "summary": "Represents the current state of an overlapping search.",
+      "doc": "api/regex_automata.dfa.automaton.md#overlappingstate",
+      "aliases": [
+        "regex_automata::dfa::OverlappingState"
+      ],
+      "methods": [
+        {
+          "name": "get_match",
+          "signature": "fn get_match(&self) -> Option<HalfMatch>",
+          "summary": "Return the match result of the most recent search to execute with this state."
+        },
+        {
+          "name": "start",
+          "signature": "fn start() -> OverlappingState",
+          "summary": "Create a new overlapping state that begins at the start state of any automaton."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::dfa::automaton::Automaton",
+      "name": "Automaton",
+      "kind": "trait",
+      "crate": "regex-automata",
+      "signature": "unsafe trait Automaton",
+      "summary": "A trait describing the interface of a deterministic finite automaton (DFA).",
+      "doc": "api/regex_automata.dfa.automaton.md#automaton",
+      "aliases": [
+        "regex_automata::dfa::Automaton"
+      ],
+      "implementors": [
+        "regex_automata::dfa::dense::DFA",
+        "regex_automata::dfa::sparse::DFA"
+      ],
+      "required_methods": [
+        "has_empty",
+        "is_accel_state",
+        "is_always_start_anchored",
+        "is_dead_state",
+        "is_match_state",
+        "is_quit_state",
+        "is_special_state",
+        "is_start_state",
+        "is_utf8",
+        "match_len",
+        "match_pattern",
+        "next_eoi_state",
+        "next_state",
+        "next_state_unchecked",
+        "pattern_len",
+        "start_state"
+      ],
+      "provided_methods": [
+        "accelerator",
+        "get_prefilter",
+        "start_state_forward",
+        "start_state_reverse",
+        "try_search_fwd",
+        "try_search_overlapping_fwd",
+        "try_search_overlapping_rev",
+        "try_search_rev",
+        "try_which_overlapping_matches",
+        "universal_start_state"
+      ],
+      "methods": [
+        {
+          "name": "accelerator",
+          "signature": "fn accelerator(&self, _id: StateID) -> &[u8]",
+          "summary": "Return a slice of bytes to accelerate for the given state, if possible."
+        },
+        {
+          "name": "get_prefilter",
+          "signature": "fn get_prefilter(&self) -> Option<&Prefilter>",
+          "summary": "Returns the prefilter associated with a DFA, if one exists."
+        },
+        {
+          "name": "has_empty",
+          "signature": "fn has_empty(&self) -> bool",
+          "summary": "Returns true if and only if this automaton can match the empty string. When it returns false, all possible matches are guaranteed to have a non-zero length."
+        },
+        {
+          "name": "is_accel_state",
+          "signature": "fn is_accel_state(&self, id: StateID) -> bool",
+          "summary": "Returns true if and only if the given identifier corresponds to an accelerated state."
+        },
+        {
+          "name": "is_always_start_anchored",
+          "signature": "fn is_always_start_anchored(&self) -> bool",
+          "summary": "Returns true if and only if this DFA is limited to returning matches whose start position is `0`."
+        },
+        {
+          "name": "is_dead_state",
+          "signature": "fn is_dead_state(&self, id: StateID) -> bool",
+          "summary": "Returns true if and only if the given identifier corresponds to a dead state. When a DFA enters a dead state, it is impossible to leave. That is, every transition on a dead state by definition leads back to the same dead state."
+        },
+        {
+          "name": "is_match_state",
+          "signature": "fn is_match_state(&self, id: StateID) -> bool",
+          "summary": "Returns true if and only if the given identifier corresponds to a match state. A match state is also referred to as a \"final\" state and indicates that a match has been found."
+        },
+        {
+          "name": "is_quit_state",
+          "signature": "fn is_quit_state(&self, id: StateID) -> bool",
+          "summary": "Returns true if and only if the given identifier corresponds to a quit state. A quit state is like a dead state (it has no transitions other than to itself), except it indicates that the DFA failed to complete the search. When this occurs,…"
+        },
+        {
+          "name": "is_special_state",
+          "signature": "fn is_special_state(&self, id: StateID) -> bool",
+          "summary": "Returns true if and only if the given identifier corresponds to a \"special\" state. A special state is one or more of the following: a dead state, a quit state, a match state, a start state or an accelerated state."
+        },
+        {
+          "name": "is_start_state",
+          "signature": "fn is_start_state(&self, id: StateID) -> bool",
+          "summary": "Returns true only if the given identifier corresponds to a start state"
+        },
+        {
+          "name": "is_utf8",
+          "signature": "fn is_utf8(&self) -> bool",
+          "summary": "Whether UTF-8 mode is enabled for this DFA or not."
+        },
+        {
+          "name": "match_len",
+          "signature": "fn match_len(&self, id: StateID) -> usize",
+          "summary": "Returns the total number of patterns that match in this state."
+        },
+        {
+          "name": "match_pattern",
+          "signature": "fn match_pattern(&self, id: StateID, index: usize) -> PatternID",
+          "summary": "Returns the pattern ID corresponding to the given match index in the given state."
+        },
+        {
+          "name": "next_eoi_state",
+          "signature": "fn next_eoi_state(&self, current: StateID) -> StateID",
+          "summary": "Transitions from the current state to the next state for the special EOI symbol."
+        },
+        {
+          "name": "next_state",
+          "signature": "fn next_state(&self, current: StateID, input: u8) -> StateID",
+          "summary": "Transitions from the current state to the next state, given the next byte of input."
+        },
+        {
+          "name": "next_state_unchecked",
+          "signature": "unsafe fn next_state_unchecked(&self, current: StateID, input: u8) -> StateID",
+          "summary": "Transitions from the current state to the next state, given the next byte of input."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns compiled into this DFA."
+        },
+        {
+          "name": "start_state",
+          "signature": "fn start_state(&self, config: &start::Config) -> Result<StateID, StartError>",
+          "summary": "Return the ID of the start state for this DFA for the given starting configuration."
+        },
+        {
+          "name": "start_state_forward",
+          "signature": "fn start_state_forward(&self, input: &Input<'_>) -> Result<StateID, MatchError>",
+          "summary": "Return the ID of the start state for this DFA when executing a forward search."
+        },
+        {
+          "name": "start_state_reverse",
+          "signature": "fn start_state_reverse(&self, input: &Input<'_>) -> Result<StateID, MatchError>",
+          "summary": "Return the ID of the start state for this DFA when executing a reverse search."
+        },
+        {
+          "name": "try_search_fwd",
+          "signature": "fn try_search_fwd(&self, input: &Input<'_>) -> Result<Option<HalfMatch>, MatchError>",
+          "summary": "Executes a forward search and returns the end position of the leftmost match that is found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_search_overlapping_fwd",
+          "signature": "fn try_search_overlapping_fwd(&self, input: &Input<'_>, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Executes an overlapping forward search. Matches, if one exists, can be obtained via the [`OverlappingState::get_match`] method."
+        },
+        {
+          "name": "try_search_overlapping_rev",
+          "signature": "fn try_search_overlapping_rev(&self, input: &Input<'_>, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Executes a reverse overlapping forward search. Matches, if one exists, can be obtained via the [`OverlappingState::get_match`] method."
+        },
+        {
+          "name": "try_search_rev",
+          "signature": "fn try_search_rev(&self, input: &Input<'_>) -> Result<Option<HalfMatch>, MatchError>",
+          "summary": "Executes a reverse search and returns the start of the position of the leftmost match that is found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_which_overlapping_matches",
+          "signature": "fn try_which_overlapping_matches(&self, input: &Input<'_>, patset: &mut PatternSet) -> Result<(), MatchError>",
+          "summary": "Writes the set of patterns that match anywhere in the given search configuration to `patset`. If multiple patterns match at the same position and the underlying DFA supports overlapping matches, then all matching patterns are written to th…"
+        },
+        {
+          "name": "universal_start_state",
+          "signature": "fn universal_start_state(&self, _mode: Anchored) -> Option<StateID>",
+          "summary": "If this DFA has a universal starting state for the given anchor mode and the DFA supports universal starting states, then this returns that state's identifier."
+        }
+      ]
+    }
+  ]
+}

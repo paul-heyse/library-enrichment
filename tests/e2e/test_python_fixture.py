@@ -96,7 +96,7 @@ def build_upstream(root, canary):
 
 def config_for(path, base):
     path.write_text(
-        'config_version = "1.0"\n[policy]\nenabled_profiles = ["static"]\n'
+        '[policy]\nenabled_profiles = ["static"]\n'
         f'[producers.python]\npypi_url = "{base}/pypi"\nsimple_url = "{base}/simple"\n'
         f'worker_python = "{sys.executable}"\n'
     )

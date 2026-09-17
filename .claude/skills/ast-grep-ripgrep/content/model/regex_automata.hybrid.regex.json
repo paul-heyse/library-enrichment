@@ -1,0 +1,199 @@
+{
+  "module": "regex_automata::hybrid::regex",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.hybrid.regex.md",
+  "items": [
+    {
+      "path": "regex_automata::hybrid::regex::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for a regex based on a hybrid NFA/DFA.",
+      "doc": "api/regex_automata.hybrid.regex.md#builder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Build a regex from the given pattern."
+        },
+        {
+          "name": "build_from_dfas",
+          "signature": "fn build_from_dfas(&self, forward: DFA, reverse: DFA) -> Regex",
+          "summary": "Build a regex from its component forward and reverse hybrid NFA/DFAs."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Build a regex from the given patterns."
+        },
+        {
+          "name": "dfa",
+          "signature": "fn dfa(&mut self, config: dfa::Config) -> &mut Builder",
+          "summary": "Set the lazy DFA compilation configuration for this builder using [`dfa::Config`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new regex builder with the default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        },
+        {
+          "name": "thompson",
+          "signature": "fn thompson(&mut self, config: thompson::Config) -> &mut Builder",
+          "summary": "Set the Thompson NFA configuration for this builder using [`nfa::thompson::Config`](thompson::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::regex::Cache",
+      "name": "Cache",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Cache",
+      "summary": "A cache represents a partially computed forward and reverse DFA.",
+      "doc": "api/regex_automata.hybrid.regex.md#cache",
+      "methods": [
+        {
+          "name": "as_parts",
+          "signature": "fn as_parts(&self) -> (&dfa::Cache, &dfa::Cache)",
+          "summary": "Return references to the forward and reverse caches, respectively."
+        },
+        {
+          "name": "as_parts_mut",
+          "signature": "fn as_parts_mut(&mut self) -> (&mut dfa::Cache, &mut dfa::Cache)",
+          "summary": "Return mutable references to the forward and reverse caches, respectively."
+        },
+        {
+          "name": "forward",
+          "signature": "fn forward(&mut self) -> &dfa::Cache",
+          "summary": "Return a reference to the forward cache."
+        },
+        {
+          "name": "forward_mut",
+          "signature": "fn forward_mut(&mut self) -> &mut dfa::Cache",
+          "summary": "Return a mutable reference to the forward cache."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the heap memory usage, in bytes, as a sum of the forward and reverse lazy DFA caches."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(re: &Regex) -> Cache",
+          "summary": "Create a new cache for the given `Regex`."
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self, re: &Regex)",
+          "summary": "Reset this cache such that it can be used for searching with the given `Regex` (and only that `Regex`)."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&mut self) -> &dfa::Cache",
+          "summary": "Return a reference to the reverse cache."
+        },
+        {
+          "name": "reverse_mut",
+          "signature": "fn reverse_mut(&mut self) -> &mut dfa::Cache",
+          "summary": "Return a mutable reference to the reverse cache."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::regex::FindMatches",
+      "name": "FindMatches",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct FindMatches<'r, 'c, 'h>",
+      "summary": "An iterator over all non-overlapping matches for an infallible search.",
+      "doc": "api/regex_automata.hybrid.regex.md#findmatches",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::regex::Regex",
+      "name": "Regex",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Regex",
+      "summary": "A regular expression that uses hybrid NFA/DFAs (also called \"lazy DFAs\") for searching.",
+      "doc": "api/regex_automata.hybrid.regex.md#regex",
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Return a builder for configuring the construction of a `Regex`."
+        },
+        {
+          "name": "create_cache",
+          "signature": "fn create_cache(&self) -> Cache",
+          "summary": "Create a new cache for this `Regex`."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h, I: Into<Input<'h>>>(&self, cache: &mut Cache, input: I) -> Option<Match>",
+          "summary": "Returns the start and end offset of the leftmost match. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'r, 'c, 'h, I: Into<Input<'h>>>(&'r self, cache: &'c mut Cache, input: I) -> FindMatches<'r, 'c, 'h>",
+          "summary": "Returns an iterator over all non-overlapping leftmost matches in the given bytes. If no match exists, then the iterator yields no elements."
+        },
+        {
+          "name": "forward",
+          "signature": "fn forward(&self) -> &DFA",
+          "summary": "Return the underlying lazy DFA responsible for forward matching."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<'h, I: Into<Input<'h>>>(&self, cache: &mut Cache, input: I) -> bool",
+          "summary": "Returns true if and only if this regex matches the given haystack."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Parse the given regular expression using the default configuration and return the corresponding regex."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Like `new`, but parses multiple patterns into a single \"multi regex.\" This similarly uses the default regex configuration."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns matched by this regex."
+        },
+        {
+          "name": "reset_cache",
+          "signature": "fn reset_cache(&self, cache: &mut Cache)",
+          "summary": "Reset the given cache such that it can be used for searching with the this `Regex` (and only this `Regex`)."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&self) -> &DFA",
+          "summary": "Return the underlying lazy DFA responsible for reverse matching."
+        },
+        {
+          "name": "try_search",
+          "signature": "fn try_search(&self, cache: &mut Cache, input: &Input<'_>) -> Result<Option<Match>, MatchError>",
+          "summary": "Returns the start and end offset of the leftmost match. If no match exists, then `None` is returned."
+        }
+      ]
+    }
+  ]
+}

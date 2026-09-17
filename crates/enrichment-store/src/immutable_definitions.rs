@@ -10,18 +10,10 @@ use datafusion::{
     prelude::{col, lit},
 };
 use enrichment_core::native_key::Key;
-use serde::{Deserialize, Serialize};
+use enrichment_core::native_union::NativeStruct;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Binding {
-    pub table_id: String,
-    pub version: u64,
-    pub contract_id: String,
-}
-pub(crate) fn binding_type() -> DataType {
-    enrichment_core::operation::definition_binding_type()
-}
+pub use enrichment_core::operation::DefinitionBinding as Binding;
 #[derive(Clone)]
 pub(crate) struct Definitions {
     table: &'static str,
@@ -51,8 +43,8 @@ impl Definitions {
         fields.push(Arc::new(Field::new(self.id_column, DataType::Utf8, false)));
         StorageContract::new(Arc::new(Schema::new(fields)))
     }
-    pub(crate) async fn retain<T: Serialize>(&self, value: &T) -> Result<Binding> {
-        let id = self.key.value(value)?;
+    pub(crate) async fn retain<T: NativeStruct>(&self, value: &T) -> Result<Binding> {
+        let id = self.key.record(value)?;
         let contract = self.contract()?;
         self.delta.prepare_root(self.table)?;
         for _ in 0..16 {
@@ -91,10 +83,7 @@ impl Definitions {
                 return binding(&table, &contract);
             }
             let input = session
-                .read_batch(crate::control_jobs::encode(
-                    self.key.schema(),
-                    std::slice::from_ref(value),
-                )?)?
+                .read_batch(T::batch(std::slice::from_ref(value))?)?
                 .with_column(self.id_column, self.key.expression())?;
             match self
                 .delta

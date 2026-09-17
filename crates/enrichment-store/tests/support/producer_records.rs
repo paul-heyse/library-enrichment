@@ -76,6 +76,10 @@ pub fn collect(
             }
             let base = super::native_ingest::normalize(context, documents)?;
             evidence.extend(base);
+            runtime
+                .close_diagnostics()
+                .await
+                .map_err(|e| e.to_string())?;
             Ok((facts.header, evidence))
         })
     })

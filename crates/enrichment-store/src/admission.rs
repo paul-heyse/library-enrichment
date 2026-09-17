@@ -9,7 +9,6 @@ use arrow_schema::SchemaRef;
 use datafusion::catalog::TableProvider;
 use datafusion::common::TableReference;
 use datafusion::error::{DataFusionError, Result};
-use datafusion::functions::core::expr_ext::FieldAccessor;
 use datafusion::prelude::SessionContext;
 use datafusion::prelude::{col, lit};
 use enrichment_core::identity::Ecosystem;
@@ -271,17 +270,7 @@ pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     crate::native_catalog::SqlRule {
         id: "execution document outside its producer inputs",
         relation: "execution_observations",
-        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.subject.artifact_id = i.artifact_id AND o.source.producer_binding_id = i.producer_binding_id WHERE o.subject.kind = 'document' LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "dangling semantic anchor",
-        relation: "execution_observations",
-        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o LEFT ANTI JOIN candidate.evidence.symbols s ON o.payload.semantic_query.anchor_symbol_id = s.symbol_id WHERE o.payload.kind = 'semantic_query' AND o.payload.semantic_query.anchor_symbol_id IS NOT NULL LIMIT 1",
-    },
-    crate::native_catalog::SqlRule {
-        id: "semantic location outside artifact closure",
-        relation: "execution_observations",
-        sql: "SELECT t.artifact_id FROM (SELECT unnest(payload.semantic_query.locations) AS t FROM candidate.evidence.execution_observations WHERE payload.kind = 'semantic_query') q LEFT ANTI JOIN candidate.evidence.input_artifacts i ON q.t.artifact_id = i.artifact_id WHERE q.t.kind = 'artifact' LIMIT 1",
+        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.subject.document.artifact_id = i.artifact_id AND o.source.producer_binding_id = i.producer_binding_id WHERE o.subject.kind = 'document' LIMIT 1",
     },
 ];
 
@@ -413,6 +402,28 @@ impl NativeAdmission {
                     .await?;
             }
         }
+        for relation in Relation::ALL {
+            let frame = session
+                .table(TableReference::full(
+                    "candidate",
+                    "evidence",
+                    relation.name(),
+                ))
+                .await?;
+            for (rule, violations) in crate::field_admission::violations(
+                &session,
+                frame,
+                relation.schema()?.as_ref(),
+                relation.key(),
+                &scope.release_id,
+            )
+            .await?
+            {
+                self.runtime
+                    .require_empty(violations, &rule, "declared_references")
+                    .await?;
+            }
+        }
         self.validate_identities(&session, scope).await?;
         for relation in [Relation::ApiObservations, Relation::ExecutionObservations] {
             let outside_environment = session
@@ -454,82 +465,6 @@ impl NativeAdmission {
             )
             .await?;
 
-        for relation in [
-            Relation::Relationships,
-            Relation::Fragments,
-            Relation::Coverage,
-            Relation::ExecutionObservations,
-        ] {
-            let outside_release = session
-                .table(TableReference::full(
-                    "candidate",
-                    "evidence",
-                    relation.name(),
-                ))
-                .await?
-                .filter(
-                    col("subject").field("kind").eq(lit("library")).and(
-                        col("subject")
-                            .field("release_id")
-                            .not_eq(lit(&scope.release_id)),
-                    ),
-                )?
-                .select(vec![col(relation.key())])?
-                .limit(0, Some(1))?;
-            self.runtime
-                .require_empty(
-                    outside_release,
-                    "library subject disagrees with snapshot release",
-                    "relation_admission",
-                )
-                .await?;
-        }
-        for (tag, table, key) in [
-            ("symbol", "symbols", "symbol_id"),
-            ("definition", "definitions", "definition_id"),
-        ] {
-            let sql = format!(
-                "SELECT o.relationship_id FROM candidate.evidence.relationships o LEFT ANTI JOIN candidate.evidence.{table} t ON o.target.{key} = t.{key} WHERE o.target.kind = '{tag}' LIMIT 1"
-            );
-            self.require_empty(&session, &sql, "dangling local relationship target")
-                .await?;
-        }
-        for relation in [
-            Relation::ApiObservations,
-            Relation::ExecutionObservations,
-            Relation::Relationships,
-            Relation::Fragments,
-            Relation::ReleaseMetadata,
-        ] {
-            let sql = format!(
-                "SELECT o.{} FROM candidate.evidence.{} o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.source.producer_binding_id = i.producer_binding_id AND o.source.artifact_id = i.artifact_id AND (o.source.source_uri IS NULL OR o.source.source_uri = i.source_uri) LIMIT 1",
-                relation.key(),
-                relation.name()
-            );
-            self.require_empty(
-                &session,
-                &sql,
-                "fact provenance outside producer input closure",
-            )
-            .await?;
-        }
-        for relation in [
-            Relation::Fragments,
-            Relation::Coverage,
-            Relation::ExecutionObservations,
-        ] {
-            let sql = format!(
-                "SELECT o.{} FROM candidate.evidence.{} o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.subject.artifact_id = i.artifact_id WHERE o.subject.kind IN ('document', 'example') LIMIT 1",
-                relation.key(),
-                relation.name()
-            );
-            self.require_empty(
-                &session,
-                &sql,
-                "document/example subject outside artifact closure",
-            )
-            .await?;
-        }
         let wrong_operation = match scope.ecosystem {
             Ecosystem::Rust => {
                 "SELECT observation_id FROM candidate.evidence.execution_observations WHERE payload.kind = 'runtime_object' OR payload.usage_probe.mode = 'typecheck' OR (payload.kind = 'semantic_query' AND source.evidence_class != 'compiler_derived') LIMIT 1"

@@ -5,7 +5,7 @@ use crate::{
 };
 use arrow::{
     array::StringArray,
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{DataType, Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use datafusion::{
@@ -20,26 +20,30 @@ use enrichment_core::{
     },
     native_key::Key,
 };
+use enrichment_core::{native_union::NativeStruct, operation::results::ArtifactReceipt};
 use std::sync::Arc;
 
 pub(crate) fn schema() -> SchemaRef {
-    Arc::new(Schema::new(vec![
-        Field::new("receipt_id", arrow::datatypes::DataType::Utf8, false),
-        Field::new("artifact", acquisitions::data_type(), false),
-    ]))
+    Arc::new(Schema::new(ArtifactReceipt::fields()))
 }
 
 pub(crate) fn encode(artifacts: &[Artifact]) -> Result<RecordBatch> {
-    let keys = artifacts
-        .iter()
-        .map(|artifact| Key::ArtifactReceipt.value(&serde_json::json!({"artifact": artifact})))
+    let input = RecordBatch::try_new(
+        Arc::new(Schema::new(vec![
+            ArtifactReceipt::fields()
+                .find("artifact")
+                .expect("declared receipt")
+                .1
+                .clone(),
+        ])),
+        vec![acquisitions::values(&artifacts.iter().collect::<Vec<_>>())?],
+    )?;
+    let keys = (0..artifacts.len())
+        .map(|index| Key::ArtifactReceipt.batch_value(&input.slice(index, 1)))
         .collect::<Result<Vec<_>>>()?;
     Ok(RecordBatch::try_new(
         schema(),
-        vec![
-            Arc::new(StringArray::from(keys)),
-            acquisitions::values(&artifacts.iter().collect::<Vec<_>>())?,
-        ],
+        vec![Arc::new(StringArray::from(keys)), input.column(0).clone()],
     )?)
 }
 
@@ -49,9 +53,7 @@ pub(crate) fn decode(batch: &RecordBatch) -> Result<Vec<Artifact>> {
         .map(|i| {
             let row = rows.row(i);
             let artifact = acquisitions::decode_one(row.structure("artifact")?)?;
-            if row.text("receipt_id")?
-                != Key::ArtifactReceipt.value(&serde_json::json!({"artifact": artifact}))?
-            {
+            if row.text("receipt_id")? != Key::ArtifactReceipt.batch_value(&batch.slice(i, 1))? {
                 return Err(DataFusionError::Execution(
                     "artifact receipt identity mismatch".into(),
                 ));

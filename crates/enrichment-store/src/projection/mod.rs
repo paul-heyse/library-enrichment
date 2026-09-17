@@ -3,7 +3,6 @@
 pub(crate) mod browse;
 pub mod catalog;
 pub(crate) mod comparison;
-pub(crate) mod comparison_publication;
 pub(crate) mod comparison_value;
 pub(crate) mod contracts;
 pub mod publication;

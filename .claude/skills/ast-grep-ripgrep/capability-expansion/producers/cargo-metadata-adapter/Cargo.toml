@@ -1,0 +1,27 @@
+# The first producer adapter: `cargo metadata` over the crates a skill pinned.
+#
+# `[workspace]` is present and empty on purpose. This crate lives inside the library-enrichment
+# tree but is NOT a member of its workspace, and it is not a member of `codesearch/`'s either --
+# the whole point is that `codesearch-build` does not depend on it. Linking producers into the
+# build binary would put `cargo_metadata` here, `ra_ap_*` (223 crates) next, and `rustc_public`
+# after that, into a binary that currently resolves twelve dependencies.
+#
+# The seam is the filesystem: this writes a skill-shaped directory, and `codesearch-build` reads
+# it with the reader it already has.
+[workspace]
+
+[package]
+name = "cargo-metadata-adapter"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+publish = false
+
+[dependencies]
+# Pinned to the version the `rust-code-model` skill records, which is also crates.io's current
+# release. The typed crate rather than raw JSON because `cargo metadata`'s envelope gains keys
+# over time -- that skill's `version-oracles.tsv` records `--format-version 1` reading 1 "for
+# years while new keys were added" -- and a struct that tolerates unknown fields is the difference
+# between a new key being ignored and a new key being mistaken for a missing one.
+cargo_metadata = "=0.23.1"
+serde_json = "1"

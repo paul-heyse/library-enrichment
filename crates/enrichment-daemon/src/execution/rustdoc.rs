@@ -95,8 +95,8 @@ pub struct LocalBuild {
     pub observations: Vec<ProcessObservation>,
     pub lock: Vec<u8>,
     pub environment: Environment,
-    pub started_at: String,
-    pub finished_at: String,
+    pub started_at: enrichment_core::native_time::ObservationTime,
+    pub finished_at: enrichment_core::native_time::ObservationTime,
     pub image_id: String,
     pub containment_identity: String,
 }
@@ -124,7 +124,8 @@ pub async fn build(
     requested: &Environment,
     cancel: Arc<AtomicBool>,
 ) -> Result<LocalBuild, PreparationError> {
-    let started_at = enrichment_core::clock::now_rfc3339();
+    let started_at = enrichment_core::native_time::ObservationTime::now()
+        .map_err(|error| PreparationError::Policy(error.to_string()))?;
     let containment_identity = runner
         .containment_identity()
         .map_err(|e| PreparationError::from_runner(&e))?;
@@ -135,11 +136,12 @@ pub async fn build(
     std::fs::create_dir_all(capsules).map_err(|e| e.to_string())?;
     let root = capsules.join(format!("rustdoc-{}", uuid::Uuid::new_v4().simple()));
     let storage = super::budget::Preparation::acquire(
-        &runner.cache,
+        &runner.ownership,
         &root,
         runner.limits.scratch_bytes(),
         budget_mib.saturating_mul(1024 * 1024),
     )
+    .await
     .map_err(|e| PreparationError::Policy(e.to_string()))?;
     std::fs::create_dir(&root).map_err(|e| e.to_string())?;
     let scratch = Scratch(root.clone(), runner.clone());
@@ -303,7 +305,8 @@ pub async fn build(
         lock,
         environment,
         started_at,
-        finished_at: enrichment_core::clock::now_rfc3339(),
+        finished_at: enrichment_core::native_time::ObservationTime::now()
+            .map_err(|error| PreparationError::Policy(error.to_string()))?,
         image_id: image.into(),
         containment_identity,
     })

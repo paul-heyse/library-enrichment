@@ -1,6 +1,3 @@
-pub use super::comparison_publication::{
-    decode as comparison_publications_from_batch, encode as comparison_publications,
-};
 // Catalog domains remain typed Arrow fields, including optional environment knowledge.
 
 use super::cells::{RowSet, batch, column, invalid, list, optional, text};
@@ -9,9 +6,12 @@ use arrow::{
     error::ArrowError,
     record_batch::RecordBatch,
 };
+use enrichment_core::native_union::NativeStruct;
 use enrichment_core::{
     evidence::Artifact,
-    evidence::catalog::{JobPublication, PublishedJobKind, SnapshotAttempt, SnapshotSelection},
+    evidence::catalog::{
+        ComparisonPublication, JobPublication, SnapshotAttempt, SnapshotSelection,
+    },
     identity::{
         Context, Ecosystem, Environment, EnvironmentResolution, Release, ReleaseKey, ReleaseLinks,
         ResearchMode,
@@ -19,118 +19,36 @@ use enrichment_core::{
 };
 use std::sync::Arc;
 
-/// # Errors
-/// Invalid job identity, terminal outcome or result closure prevents publication.
-pub fn job_publications(rows: &[JobPublication]) -> Result<RecordBatch, ArrowError> {
-    for row in rows {
-        row.validate().map_err(invalid)?;
-    }
-    batch(
-        "catalog_job_publications",
-        vec![
-            column(
-                "job_id",
-                text(rows.iter().map(|r| r.job_id.as_str())),
-                false,
-                "key:job",
-            ),
-            column(
-                "context_id",
-                text(rows.iter().map(|r| r.context_id.as_str())),
-                false,
-                "ref:context",
-            ),
-            column(
-                "snapshot_id",
-                text(rows.iter().map(|r| r.snapshot_id.as_str())),
-                false,
-                "ref:snapshot",
-            ),
-            column(
-                "kind",
-                text(rows.iter().map(|r| match r.kind {
-                    PublishedJobKind::Verify => "verify",
-                    PublishedJobKind::Inspect => "inspect",
-                    PublishedJobKind::Resolve => "resolve",
-                })),
-                false,
-                "vocabulary:published-job/1",
-            ),
-            column(
-                "state",
-                text(rows.iter().map(|r| match r.state {
-                    enrichment_core::wire::JobState::Succeeded => "succeeded",
-                    enrichment_core::wire::JobState::Partial => "partial",
-                    enrichment_core::wire::JobState::Failed => "failed",
-                    enrichment_core::wire::JobState::Cancelled => "cancelled",
-                    _ => "invalid",
-                })),
-                false,
-                "vocabulary:terminal-state/1",
-            ),
-            column(
-                "attempt_id",
-                text(rows.iter().map(|r| r.attempt_id.as_str())),
-                false,
-                "ref:attempt",
-            ),
-            column(
-                "delivery",
-                super::acquisitions::values(&rows.iter().map(|r| &r.delivery).collect::<Vec<_>>())?,
-                false,
-                "committed-job-delivery",
-            ),
-            column(
-                "result_artifact_ids",
-                list(rows.iter().map(|r| r.result_artifact_ids.as_slice())),
-                false,
-                "set:result-artifacts",
-            ),
-        ],
-    )
+macro_rules! publication_codec {
+    ($kind:ty, $encode:ident, $decode:ident) => {
+        pub fn $encode(rows: &[$kind]) -> Result<RecordBatch, ArrowError> {
+            for row in rows {
+                row.validate().map_err(invalid)?;
+            }
+            <$kind>::batch(rows)
+        }
+        pub fn $decode(batch: &RecordBatch) -> Result<Vec<$kind>, ArrowError> {
+            let rows = RowSet::batch(batch)?;
+            (0..batch.num_rows())
+                .map(|i| {
+                    let row = <$kind as NativeStruct>::decode(rows.row(i))?;
+                    row.validate().map_err(invalid)?;
+                    Ok(row)
+                })
+                .collect()
+        }
+    };
 }
-
-/// # Errors
-/// Unknown kinds, nonterminal states and invalid identity/closure are refused.
-pub fn job_publications_from_batch(batch: &RecordBatch) -> Result<Vec<JobPublication>, ArrowError> {
-    let rows = RowSet::batch(batch)?;
-    (0..batch.num_rows())
-        .map(|i| {
-            let r = rows.row(i);
-            let row = JobPublication {
-                job_id: r.text("job_id")?.into(),
-                context_id: r
-                    .text("context_id")?
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| invalid(format!("{e}")))?,
-                snapshot_id: r
-                    .text("snapshot_id")?
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| invalid(format!("{e}")))?,
-                kind: match r.text("kind")? {
-                    "verify" => PublishedJobKind::Verify,
-                    "inspect" => PublishedJobKind::Inspect,
-                    "resolve" => PublishedJobKind::Resolve,
-                    _ => return Err(invalid("unknown published job kind")),
-                },
-                state: match r.text("state")? {
-                    "succeeded" => enrichment_core::wire::JobState::Succeeded,
-                    "partial" => enrichment_core::wire::JobState::Partial,
-                    "failed" => enrichment_core::wire::JobState::Failed,
-                    "cancelled" => enrichment_core::wire::JobState::Cancelled,
-                    _ => return Err(invalid("nonterminal published job")),
-                },
-                attempt_id: r.text("attempt_id")?.into(),
-                result_artifact_ids: r.list("result_artifact_ids")?,
-                delivery: super::acquisitions::decode_one(r.structure("delivery")?)?,
-            };
-            row.validate().map_err(invalid)?;
-            Ok(row)
-        })
-        .collect()
-}
+publication_codec!(
+    JobPublication,
+    job_publications,
+    job_publications_from_batch
+);
+publication_codec!(
+    ComparisonPublication,
+    comparison_publications,
+    comparison_publications_from_batch
+);
 
 /// Decode only native-selected acquisition descriptors after filtering and deduplication.
 pub(crate) fn selected_artifacts(batch: &RecordBatch) -> Result<Vec<Artifact>, ArrowError> {

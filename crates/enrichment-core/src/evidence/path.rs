@@ -155,7 +155,8 @@ mod tests {
         assert_ne!(nested.id(), literal.id());
         assert_eq!(
             literal.id(),
-            "path_451b3acfb83be7f1b578e4f5af75e5c8a3c9ed81d749e7d340949b47d56a50b5"
+            // Independently framed with Python struct/hashlib for canonical epoch 8.
+            "path_aeb928c962136a9dd9d0f65c226f84c99b65e83bbfeda2d551e6e5d2f4e26f5f"
         );
         assert_eq!(nested.parent(), Some(area));
         assert_eq!(nested.ancestor_ids().len(), 3);

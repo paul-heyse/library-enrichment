@@ -4,77 +4,21 @@ use crate::{
     control::{ControlSnapshot, ControlStore, Table},
     runtime::QueryRuntime,
 };
-use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
-    record_batch::RecordBatch,
-};
+use arrow::datatypes::{Schema, SchemaRef};
 use datafusion::{
     error::{DataFusionError, Result},
     prelude::{col, lit},
 };
-use enrichment_core::evidence::{
-    Artifact,
-    arrow_model::{acquisitions, cells::RowSet},
-};
+use enrichment_core::evidence::arrow_model::cells::RowSet;
+use enrichment_core::evidence::{Artifact, arrow_model::acquisitions};
 use std::sync::Arc;
 
-fn text(name: &str) -> Field {
-    Field::new(name, DataType::Utf8, false)
-}
-fn number(name: &str) -> Field {
-    Field::new(name, DataType::UInt64, false)
-}
-fn list(name: &str, fields: Vec<Field>) -> Field {
-    Field::new(
-        name,
-        DataType::List(Arc::new(Field::new(
-            "item",
-            DataType::Struct(fields.into()),
-            false,
-        ))),
-        false,
-    )
-}
+use enrichment_core::{
+    native_union::NativeStruct,
+    operation::results::{ResultReference, ResultSection, RetainedResult},
+};
 pub(crate) fn schema() -> SchemaRef {
-    let DataType::Struct(artifact) = acquisitions::data_type() else {
-        unreachable!("artifact contract")
-    };
-    let artifact_field = |name: &str| {
-        artifact
-            .find(name)
-            .expect("artifact field")
-            .1
-            .as_ref()
-            .clone()
-    };
-    Arc::new(Schema::new(vec![
-        artifact_field("artifact_id").with_name("result_artifact_id"),
-        number("body_base"),
-        list(
-            "sections",
-            vec![text("name"), number("start"), number("end")],
-        ),
-        list(
-            "references",
-            vec![artifact_field("artifact_id"), artifact_field("media_type")],
-        ),
-    ]))
-}
-pub(crate) fn validate(batch: &RecordBatch) -> Result<()> {
-    let rows = RowSet::batch(batch)?;
-    for i in 0..batch.num_rows() {
-        let row = rows.row(i);
-        if !enrichment_core::evidence::is_artifact_id(row.text("result_artifact_id")?)
-            || row.number("body_base")? > 16 * 1024
-            || row.records("sections")?.len() > 128
-            || row.records("references")?.len() > 1024
-        {
-            return Err(DataFusionError::Execution(
-                "retained result record bound".into(),
-            ));
-        }
-    }
-    Ok(())
+    Arc::new(Schema::new(RetainedResult::fields()))
 }
 
 impl ControlStore {
@@ -85,6 +29,7 @@ impl ControlStore {
         blobs: &BlobStore,
         artifact: &Artifact,
     ) -> Result<()> {
+        self.require_write()?;
         let owned = blobs.clone();
         let descriptor = artifact.clone();
         let (index, base) = runtime
@@ -118,17 +63,34 @@ impl ControlStore {
                 Ok(())
             })
             .await??;
-        let row = serde_json::json!({
-            "result_artifact_id": artifact.artifact_id,
-            "body_base": base,
-            "sections": index.sections.iter().map(|(name, window)| serde_json::json!({
-                "name": name, "start": window.start, "end": window.end,
-            })).collect::<Vec<_>>(),
-            "references": index.references.iter().map(|reference| serde_json::json!({
-                "artifact_id": reference.receipt.artifact_id, "media_type": reference.receipt.media_type,
-            })).collect::<Vec<_>>(),
-        });
-        let batch = crate::control_jobs::encode(schema(), &[row])?;
+        let record = RetainedResult {
+            result_artifact_id: artifact.artifact_id.clone(),
+            body_base: base,
+            version: crate::result_relations::retain(
+                &self.delta_namespace(),
+                &artifact.artifact_id,
+                &index.record,
+            )
+            .await?,
+            sections: index
+                .sections
+                .iter()
+                .map(|(name, window)| ResultSection {
+                    name: name.clone(),
+                    start: window.start,
+                    end: window.end,
+                })
+                .collect(),
+            references: index
+                .references
+                .iter()
+                .map(|reference| ResultReference {
+                    artifact_id: reference.receipt.artifact_id.clone(),
+                    media_type: reference.receipt.media_type.clone(),
+                })
+                .collect(),
+        };
+        let batch = RetainedResult::batch(&[record])?;
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(runtime).await?;
@@ -177,6 +139,33 @@ impl ControlStore {
 }
 
 impl ControlSnapshot {
+    /// The immutable result identity selects one typed recovery header in the captured catalog.
+    pub async fn retained_result(
+        &self,
+        runtime: &QueryRuntime,
+        id: &str,
+    ) -> Result<RetainedResult> {
+        let session = self.session(runtime).await?;
+        let selected = session
+            .table("state.records.retained_results")
+            .await?
+            .filter(col("result_artifact_id").eq(lit(id)))?;
+        runtime
+            .records::<RetainedResult>(selected, 1)
+            .await?
+            .pop()
+            .ok_or_else(|| {
+                DataFusionError::Execution("result has no native retained declaration".into())
+            })
+    }
+    /// Reconstruct the complete native result from its captured purpose-specific Delta version.
+    pub async fn result_record(
+        &self,
+        declared: &RetainedResult,
+    ) -> Result<enrichment_core::operation::results::ResultRecord> {
+        crate::result_relations::read(&self.delta, &declared.result_artifact_id, &declared.version)
+            .await
+    }
     /// Native recursive closure, with explicit cycle/depth/cardinality/byte refusal. Selection
     /// uses this captured catalog; the byte driver only verifies the resulting finite inventory.
     pub async fn result_dependencies(
@@ -295,7 +284,10 @@ mod tests {
                     enrichment_core::evidence::ArtifactKind::Other,
                     "text/plain",
                     "fixture:child",
-                    "2026-09-16T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-16T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .unwrap()
@@ -310,9 +302,7 @@ mod tests {
             receipt: child.clone(),
             description: "dependency".into(),
         }];
-        answer
-            .data
-            .insert("text".into(), serde_json::json!("exact retained text"));
+        answer.summary = "exact retained text".into();
         let (result, _) = crate::result::store(&blobs, &answer, crate::result::JOB_URI).unwrap();
         catalog
             .retain_result(&runtime, &blobs, &result)

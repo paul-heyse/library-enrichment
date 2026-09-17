@@ -79,7 +79,7 @@ def describe(
     base = (
         (root / "config/service.workstation.toml").read_text()
         if resources == "workstation"
-        else 'config_version = "1.0"\n\n[policy]\nenabled_profiles = ["static"]\n'
+        else '[policy]\nenabled_profiles = ["static"]\n'
     )
     config_text = base + f"\n[producers.python]\nworker_python = {json.dumps(str(python))}\n"
     identities = {}

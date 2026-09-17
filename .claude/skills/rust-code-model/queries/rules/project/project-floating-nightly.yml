@@ -1,0 +1,18 @@
+id: project-floating-nightly
+language: bash
+severity: hint
+message: "A bare toolchain override selects whatever nightly is installed today."
+note: |
+  Everything reached through the compiler here is unstable and unversioned: MIR, THIR, the
+  dataflow framework, and rustdoc's JSON format. An undated override therefore pins nothing, and
+  the failure it produces is the quiet kind -- the same command emits a different format version,
+  or a different MIR shape, a month later.
+
+  Use a dated toolchain. The rustdoc format version alone moved 57 to 61 across five releases;
+  `content/index/version-oracles.tsv` carries the reading that tells you which one you have.
+metadata:
+  record: capability-gap
+  capability: versions
+rule:
+  kind: command
+  regex: '(^|\s)\+nightly(\s|$)'

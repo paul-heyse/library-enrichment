@@ -36,8 +36,7 @@ def test_large_diagnostic_preserves_bounded_error_and_native_recovery() -> None:
 def test_failed_job_without_an_artifact_preserves_its_inline_recovery() -> None:
     result = json.loads((ROOT / "tests/fixtures/wire/error.fixture.json").read_text())
     terminal = {
-        "outcome": "error",
-        "error": result["error"],
+        "outcome": {"status": "error", "error": result["error"]},
         "delivery": result["delivery"],
     }
     result |= {"status": "ok", "error": None, "data": {"job_id": "job_fixture", "result": terminal}}
@@ -45,5 +44,5 @@ def test_failed_job_without_an_artifact_preserves_its_inline_recovery() -> None:
         preview = presentation.error_preview(result, compact=compact)
         assert preview["job_id"] == "job_fixture"
         assert preview["code"] == "POLICY_DENIED"
-        assert preview["next_action"] == terminal["error"]["next_action"]
+        assert preview["next_action"] == terminal["outcome"]["error"]["next_action"]
         assert "read" not in preview

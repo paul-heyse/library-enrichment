@@ -1,0 +1,565 @@
+{
+  "module": "regex_automata::meta::regex",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.meta.regex.md",
+  "items": [
+    {
+      "path": "regex_automata::meta::regex::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for configuring and constructing a `Regex`.",
+      "doc": "api/regex_automata.meta.regex.md#builder",
+      "aliases": [
+        "regex_automata::meta::Builder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` from a single pattern string."
+        },
+        {
+          "name": "build_from_hir",
+          "signature": "fn build_from_hir(&self, hir: &Hir) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` directly from an `Hir` expression."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` from many pattern strings."
+        },
+        {
+          "name": "build_many_from_hir",
+          "signature": "fn build_many_from_hir<H: Borrow<Hir>>(&self, hirs: &[H]) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` directly from many `Hir` expressions."
+        },
+        {
+          "name": "configure",
+          "signature": "fn configure(&mut self, config: Config) -> &mut Builder",
+          "summary": "Configure the behavior of a `Regex`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Creates a new builder for configuring and constructing a [`Regex`]."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Configure the syntax options when parsing a pattern string while building a `Regex`."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::Cache",
+      "name": "Cache",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Cache",
+      "summary": "Represents mutable scratch space used by regex engines during a search.",
+      "doc": "api/regex_automata.meta.regex.md#cache",
+      "aliases": [
+        "regex_automata::meta::Cache"
+      ],
+      "methods": [
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the heap memory usage, in bytes, of this cache."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(re: &Regex) -> Cache",
+          "summary": "Creates a new `Cache` for use with this regex."
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self, re: &Regex)",
+          "summary": "Reset this cache such that it can be used for searching with the given `Regex` (and only that `Regex`)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::CapturesMatches",
+      "name": "CapturesMatches",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct CapturesMatches<'r, 'h>",
+      "summary": "An iterator over all non-overlapping leftmost matches with their capturing groups.",
+      "doc": "api/regex_automata.meta.regex.md#capturesmatches",
+      "aliases": [
+        "regex_automata::meta::CapturesMatches"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "input",
+          "signature": "fn input<'s>(&'s self) -> &'s Input<'h>",
+          "summary": "Returns the current `Input` associated with this iterator."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Captures>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "regex",
+          "signature": "fn regex(&self) -> &'r Regex",
+          "summary": "Returns the `Regex` value that created this iterator."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Config",
+      "summary": "An object describing the configuration of a `Regex`.",
+      "doc": "api/regex_automata.meta.regex.md#config",
+      "aliases": [
+        "regex_automata::meta::Config"
+      ],
+      "methods": [
+        {
+          "name": "auto_prefilter",
+          "signature": "fn auto_prefilter(self, yes: bool) -> Config",
+          "summary": "Toggles whether automatic prefilter support is enabled."
+        },
+        {
+          "name": "backtrack",
+          "signature": "fn backtrack(self, yes: bool) -> Config",
+          "summary": "Toggle whether a bounded backtracking regex engine should be available for use by the meta regex engine."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(self, yes: bool) -> Config",
+          "summary": "Whether to attempt to shrink the size of the alphabet for the regex pattern or not. When enabled, the alphabet is shrunk into a set of equivalence classes, where every byte in the same equivalence class cannot discriminate between a match…"
+        },
+        {
+          "name": "dfa",
+          "signature": "fn dfa(self, yes: bool) -> Config",
+          "summary": "Toggle whether a fully compiled DFA should be available for use by the meta regex engine."
+        },
+        {
+          "name": "dfa_size_limit",
+          "signature": "fn dfa_size_limit(self, limit: Option<usize>) -> Config",
+          "summary": "Sets the size limit, in bytes, for heap memory used for a fully compiled DFA."
+        },
+        {
+          "name": "dfa_state_limit",
+          "signature": "fn dfa_state_limit(self, limit: Option<usize>) -> Config",
+          "summary": "Sets a limit on the total number of NFA states, beyond which, a full DFA is not attempted to be compiled."
+        },
+        {
+          "name": "get_auto_prefilter",
+          "signature": "fn get_auto_prefilter(&self) -> bool",
+          "summary": "Returns whether automatic prefilters are enabled, as set by [`Config::auto_prefilter`]."
+        },
+        {
+          "name": "get_backtrack",
+          "signature": "fn get_backtrack(&self) -> bool",
+          "summary": "Returns whether the bounded backtracking regex engine may be used, as set by [`Config::backtrack`]."
+        },
+        {
+          "name": "get_byte_classes",
+          "signature": "fn get_byte_classes(&self) -> bool",
+          "summary": "Returns whether byte classes are enabled, as set by [`Config::byte_classes`]."
+        },
+        {
+          "name": "get_dfa",
+          "signature": "fn get_dfa(&self) -> bool",
+          "summary": "Returns whether the DFA regex engine may be used, as set by [`Config::dfa`]."
+        },
+        {
+          "name": "get_dfa_size_limit",
+          "signature": "fn get_dfa_size_limit(&self) -> Option<usize>",
+          "summary": "Returns DFA size limit, as set by [`Config::dfa_size_limit`]."
+        },
+        {
+          "name": "get_dfa_state_limit",
+          "signature": "fn get_dfa_state_limit(&self) -> Option<usize>",
+          "summary": "Returns DFA size limit in terms of the number of states in the NFA, as set by [`Config::dfa_state_limit`]."
+        },
+        {
+          "name": "get_hybrid",
+          "signature": "fn get_hybrid(&self) -> bool",
+          "summary": "Returns whether the hybrid NFA/DFA regex engine may be used, as set by [`Config::hybrid`]."
+        },
+        {
+          "name": "get_hybrid_cache_capacity",
+          "signature": "fn get_hybrid_cache_capacity(&self) -> usize",
+          "summary": "Returns hybrid NFA/DFA cache capacity, as set by [`Config::hybrid_cache_capacity`]."
+        },
+        {
+          "name": "get_line_terminator",
+          "signature": "fn get_line_terminator(&self) -> u8",
+          "summary": "Returns the line terminator for this configuration, as set by [`Config::line_terminator`]."
+        },
+        {
+          "name": "get_match_kind",
+          "signature": "fn get_match_kind(&self) -> MatchKind",
+          "summary": "Returns the match kind on this configuration, as set by [`Config::match_kind`]."
+        },
+        {
+          "name": "get_nfa_size_limit",
+          "signature": "fn get_nfa_size_limit(&self) -> Option<usize>",
+          "summary": "Returns NFA size limit, as set by [`Config::nfa_size_limit`]."
+        },
+        {
+          "name": "get_onepass",
+          "signature": "fn get_onepass(&self) -> bool",
+          "summary": "Returns whether the one-pass DFA regex engine may be used, as set by [`Config::onepass`]."
+        },
+        {
+          "name": "get_onepass_size_limit",
+          "signature": "fn get_onepass_size_limit(&self) -> Option<usize>",
+          "summary": "Returns one-pass DFA size limit, as set by [`Config::onepass_size_limit`]."
+        },
+        {
+          "name": "get_prefilter",
+          "signature": "fn get_prefilter(&self) -> Option<&Prefilter>",
+          "summary": "Returns a manually set prefilter, if one was set by [`Config::prefilter`]."
+        },
+        {
+          "name": "get_utf8_empty",
+          "signature": "fn get_utf8_empty(&self) -> bool",
+          "summary": "Returns whether empty matches must fall on valid UTF-8 boundaries, as set by [`Config::utf8_empty`]."
+        },
+        {
+          "name": "get_which_captures",
+          "signature": "fn get_which_captures(&self) -> WhichCaptures",
+          "summary": "Returns the capture configuration, as set by [`Config::which_captures`]."
+        },
+        {
+          "name": "hybrid",
+          "signature": "fn hybrid(self, yes: bool) -> Config",
+          "summary": "Toggle whether the hybrid NFA/DFA (also known as the \"lazy DFA\") should be available for use by the meta regex engine."
+        },
+        {
+          "name": "hybrid_cache_capacity",
+          "signature": "fn hybrid_cache_capacity(self, limit: usize) -> Config",
+          "summary": "Set the cache capacity, in bytes, for the lazy DFA."
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(self, byte: u8) -> Config",
+          "summary": "Set the line terminator to be used by the `^` and `$` anchors in multi-line mode."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(self, kind: MatchKind) -> Config",
+          "summary": "Set the match semantics for a `Regex`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Create a new configuration object for a `Regex`."
+        },
+        {
+          "name": "nfa_size_limit",
+          "signature": "fn nfa_size_limit(self, limit: Option<usize>) -> Config",
+          "summary": "Sets the size limit, in bytes, to enforce on the construction of every NFA build by the meta regex engine."
+        },
+        {
+          "name": "onepass",
+          "signature": "fn onepass(self, yes: bool) -> Config",
+          "summary": "Toggle whether a one-pass DFA should be available for use by the meta regex engine."
+        },
+        {
+          "name": "onepass_size_limit",
+          "signature": "fn onepass_size_limit(self, limit: Option<usize>) -> Config",
+          "summary": "Sets the size limit, in bytes, for the one-pass DFA."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(self, pre: Option<Prefilter>) -> Config",
+          "summary": "Overrides and sets the prefilter to use inside a `Regex`."
+        },
+        {
+          "name": "utf8_empty",
+          "signature": "fn utf8_empty(self, yes: bool) -> Config",
+          "summary": "Toggles whether empty matches are permitted to occur between the code units of a UTF-8 encoded codepoint."
+        },
+        {
+          "name": "which_captures",
+          "signature": "fn which_captures(self, which_captures: WhichCaptures) -> Config",
+          "summary": "Configures what kinds of groups are compiled as \"capturing\" in the underlying regex engine."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::FindMatches",
+      "name": "FindMatches",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct FindMatches<'r, 'h>",
+      "summary": "An iterator over all non-overlapping matches.",
+      "doc": "api/regex_automata.meta.regex.md#findmatches",
+      "aliases": [
+        "regex_automata::meta::FindMatches"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "input",
+          "signature": "fn input<'s>(&'s self) -> &'s Input<'h>",
+          "summary": "Returns the current `Input` associated with this iterator."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "regex",
+          "signature": "fn regex(&self) -> &'r Regex",
+          "summary": "Returns the `Regex` value that created this iterator."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::Regex",
+      "name": "Regex",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Regex",
+      "summary": "A regex matcher that works by composing several other regex matchers automatically.",
+      "doc": "api/regex_automata.meta.regex.md#regex",
+      "aliases": [
+        "regex_automata::meta::Regex"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Return a builder for configuring the construction of a `Regex`."
+        },
+        {
+          "name": "captures",
+          "signature": "fn captures<'h, I: Into<Input<'h>>>(&self, input: I, caps: &mut Captures)",
+          "summary": "Executes a leftmost forward search and writes the spans of capturing groups that participated in a match into the provided [`Captures`] value. If no match was found, then [`Captures::is_match`] is guaranteed to return `false`."
+        },
+        {
+          "name": "captures_iter",
+          "signature": "fn captures_iter<'r, 'h, I: Into<Input<'h>>>(&'r self, input: I) -> CapturesMatches<'r, 'h>",
+          "summary": "Returns an iterator over all non-overlapping `Captures` values. If no match exists, then the iterator yields no elements."
+        },
+        {
+          "name": "captures_len",
+          "signature": "fn captures_len(&self) -> usize",
+          "summary": "Returns the total number of capturing groups."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "Return a default configuration for a `Regex`."
+        },
+        {
+          "name": "create_cache",
+          "signature": "fn create_cache(&self) -> Cache",
+          "summary": "Creates a new cache for use with lower level search APIs like [`Regex::search_with`]."
+        },
+        {
+          "name": "create_captures",
+          "signature": "fn create_captures(&self) -> Captures",
+          "summary": "Creates a new object for recording capture group offsets. This is used in search APIs like [`Regex::captures`] and [`Regex::search_captures`]."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<'h, I: Into<Input<'h>>>(&self, input: I) -> Option<Match>",
+          "summary": "Executes a leftmost search and returns the first match that is found, if one exists."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'r, 'h, I: Into<Input<'h>>>(&'r self, input: I) -> FindMatches<'r, 'h>",
+          "summary": "Returns an iterator over all non-overlapping leftmost matches in the given haystack. If no match exists, then the iterator yields no elements."
+        },
+        {
+          "name": "get_config",
+          "signature": "fn get_config(&self) -> &Config",
+          "summary": "Returns the configuration object used to build this `Regex`."
+        },
+        {
+          "name": "group_info",
+          "signature": "fn group_info(&self) -> &GroupInfo",
+          "summary": "Return information about the capture groups in this `Regex`."
+        },
+        {
+          "name": "is_accelerated",
+          "signature": "fn is_accelerated(&self) -> bool",
+          "summary": "Returns true if this regex has a high chance of being \"accelerated.\""
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match<'h, I: Into<Input<'h>>>(&self, input: I) -> bool",
+          "summary": "Returns true if and only if this regex matches the given haystack."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Return the total approximate heap memory, in bytes, used by this `Regex`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` from a single pattern string using the default configuration."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<Regex, BuildError>",
+          "summary": "Builds a `Regex` from many pattern strings using the default configuration."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns in this regex."
+        },
+        {
+          "name": "search",
+          "signature": "fn search(&self, input: &Input<'_>) -> Option<Match>",
+          "summary": "Returns the start and end offset of the leftmost match. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "search_captures",
+          "signature": "fn search_captures(&self, input: &Input<'_>, caps: &mut Captures)",
+          "summary": "Executes a leftmost forward search and writes the spans of capturing groups that participated in a match into the provided [`Captures`] value. If no match was found, then [`Captures::is_match`] is guaranteed to return `false`."
+        },
+        {
+          "name": "search_captures_with",
+          "signature": "fn search_captures_with(&self, cache: &mut Cache, input: &Input<'_>, caps: &mut Captures)",
+          "summary": "This is like [`Regex::search_captures`], but requires the caller to explicitly pass a [`Cache`]."
+        },
+        {
+          "name": "search_half",
+          "signature": "fn search_half(&self, input: &Input<'_>) -> Option<HalfMatch>",
+          "summary": "Returns the end offset of the leftmost match. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "search_half_with",
+          "signature": "fn search_half_with(&self, cache: &mut Cache, input: &Input<'_>) -> Option<HalfMatch>",
+          "summary": "This is like [`Regex::search_half`], but requires the caller to explicitly pass a [`Cache`]."
+        },
+        {
+          "name": "search_slots",
+          "signature": "fn search_slots(&self, input: &Input<'_>, slots: &mut [Option<NonMaxUsize>]) -> Option<PatternID>",
+          "summary": "Executes a leftmost forward search and writes the spans of capturing groups that participated in a match into the provided `slots`, and returns the matching pattern ID. The contents of the slots for patterns other than the matching pattern…"
+        },
+        {
+          "name": "search_slots_with",
+          "signature": "fn search_slots_with(&self, cache: &mut Cache, input: &Input<'_>, slots: &mut [Option<NonMaxUsize>]) -> Option<PatternID>",
+          "summary": "This is like [`Regex::search_slots`], but requires the caller to explicitly pass a [`Cache`]."
+        },
+        {
+          "name": "search_with",
+          "signature": "fn search_with(&self, cache: &mut Cache, input: &Input<'_>) -> Option<Match>",
+          "summary": "This is like [`Regex::search`], but requires the caller to explicitly pass a [`Cache`]."
+        },
+        {
+          "name": "split",
+          "signature": "fn split<'r, 'h, I: Into<Input<'h>>>(&'r self, input: I) -> Split<'r, 'h>",
+          "summary": "Returns an iterator of spans of the haystack given, delimited by a match of the regex. Namely, each element of the iterator corresponds to a part of the haystack that *isn't* matched by the regular expression."
+        },
+        {
+          "name": "splitn",
+          "signature": "fn splitn<'r, 'h, I: Into<Input<'h>>>(&'r self, input: I, limit: usize) -> SplitN<'r, 'h>",
+          "summary": "Returns an iterator of at most `limit` spans of the haystack given, delimited by a match of the regex. (A `limit` of `0` will return no spans.) Namely, each element of the iterator corresponds to a part of the haystack that *isn't* matched…"
+        },
+        {
+          "name": "static_captures_len",
+          "signature": "fn static_captures_len(&self) -> Option<usize>",
+          "summary": "Returns the total number of capturing groups that appear in every possible match."
+        },
+        {
+          "name": "which_overlapping_matches",
+          "signature": "fn which_overlapping_matches(&self, input: &Input<'_>, patset: &mut PatternSet)",
+          "summary": "Writes the set of patterns that match anywhere in the given search configuration to `patset`. If multiple patterns match at the same position and this `Regex` was configured with [`MatchKind::All`] semantics, then all matching patterns are…"
+        },
+        {
+          "name": "which_overlapping_matches_with",
+          "signature": "fn which_overlapping_matches_with(&self, cache: &mut Cache, input: &Input<'_>, patset: &mut PatternSet)",
+          "summary": "This is like [`Regex::which_overlapping_matches`], but requires the caller to explicitly pass a [`Cache`]."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::Split",
+      "name": "Split",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Split<'r, 'h>",
+      "summary": "Yields all substrings delimited by a regular expression match.",
+      "doc": "api/regex_automata.meta.regex.md#split",
+      "aliases": [
+        "regex_automata::meta::Split"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "input",
+          "signature": "fn input<'s>(&'s self) -> &'s Input<'h>",
+          "summary": "Returns the current `Input` associated with this iterator."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Span>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::meta::regex::SplitN",
+      "name": "SplitN",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct SplitN<'r, 'h>",
+      "summary": "Yields at most `N` spans delimited by a regular expression match.",
+      "doc": "api/regex_automata.meta.regex.md#splitn",
+      "aliases": [
+        "regex_automata::meta::SplitN"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "input",
+          "signature": "fn input<'s>(&'s self) -> &'s Input<'h>",
+          "summary": "Returns the current `Input` associated with this iterator."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Span>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    }
+  ]
+}

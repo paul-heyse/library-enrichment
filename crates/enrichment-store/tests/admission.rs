@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arrow::record_batch::RecordBatch;
 use enrichment_core::evidence::{
-    Symbol, SymbolKind,
+    SymbolHeader, SymbolKind,
     path::PublicPath,
     relational::{Definition, PublicBinding},
 };
@@ -16,7 +16,12 @@ use enrichment_store::{
 
 fn definitions() -> Vec<Definition> {
     vec![Definition {
-        definition_id: Symbol::definition_id_for("p", "p::inner::f", SymbolKind::Function, None),
+        definition_id: SymbolHeader::definition_id_for(
+            "p",
+            "p::inner::f",
+            SymbolKind::Function,
+            None,
+        ),
         kind: SymbolKind::Function,
         definition_path: "p::inner::f".into(),
         defined_in_package: "p".into(),
@@ -35,7 +40,7 @@ fn symbols() -> Vec<PublicBinding> {
                 SymbolKind::Function,
                 None,
             ),
-            definition_id: Symbol::definition_id_for(
+            definition_id: SymbolHeader::definition_id_for(
                 "p",
                 "p::inner::f",
                 SymbolKind::Function,

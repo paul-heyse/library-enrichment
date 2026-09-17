@@ -1,0 +1,254 @@
+{
+  "module": "ast_grep_core::source",
+  "crate": "ast-grep-core",
+  "api": "api/ast_grep_core.source.md",
+  "items": [
+    {
+      "path": "ast_grep_core::source::Edit",
+      "name": "Edit",
+      "kind": "struct",
+      "crate": "ast-grep-core",
+      "signature": "struct Edit<S: Content>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "position",
+        "deleted_length",
+        "inserted_text"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ast_grep_core::source::Content",
+      "name": "Content",
+      "kind": "trait",
+      "crate": "ast-grep-core",
+      "signature": "trait Content: Sized",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::replacer::Content"
+      ],
+      "implementors": [
+        "alloc::string::String"
+      ],
+      "required_methods": [
+        "decode_str",
+        "encode_bytes",
+        "get_char_column",
+        "get_range"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "decode_str",
+          "signature": "fn decode_str(src: &str) -> Cow<'_, [Self::Underlying]>",
+          "summary": "Used for string replacement. We need this for indentation and deindentation."
+        },
+        {
+          "name": "encode_bytes",
+          "signature": "fn encode_bytes(bytes: &[Self::Underlying]) -> Cow<'_, str>",
+          "summary": "Used for string replacement. We need this for transformation."
+        },
+        {
+          "name": "get_char_column",
+          "signature": "fn get_char_column(&self, column: usize, offset: usize) -> usize",
+          "summary": "Get the character column at the given position"
+        },
+        {
+          "name": "get_range",
+          "signature": "fn get_range(&self, range: Range<usize>) -> &[Self::Underlying]"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::source::Doc",
+      "name": "Doc",
+      "kind": "trait",
+      "crate": "ast-grep-core",
+      "signature": "trait Doc: Clone + 'static",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ast_grep_core::Doc"
+      ],
+      "implementors": [
+        "ast_grep_core::tree_sitter::StrDoc"
+      ],
+      "required_methods": [
+        "do_edit",
+        "get_lang",
+        "get_node_text",
+        "get_source",
+        "root_node"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "do_edit",
+          "signature": "fn do_edit(&mut self, edit: &Edit<Self::Source>) -> Result<(), String>"
+        },
+        {
+          "name": "get_lang",
+          "signature": "fn get_lang(&self) -> &Self::Lang"
+        },
+        {
+          "name": "get_node_text",
+          "signature": "fn get_node_text<'a>(&'a self, node: &Self::Node<'a>) -> Cow<'a, str>"
+        },
+        {
+          "name": "get_source",
+          "signature": "fn get_source(&self) -> &Self::Source"
+        },
+        {
+          "name": "root_node",
+          "signature": "fn root_node(&self) -> Self::Node<'_>"
+        }
+      ]
+    },
+    {
+      "path": "ast_grep_core::source::SgNode",
+      "name": "SgNode",
+      "kind": "trait",
+      "crate": "ast-grep-core",
+      "signature": "trait SgNode<'r>: Clone",
+      "summary": "NOTE: Some method names are the same as tree-sitter's methods. Fully Qualified Syntax may needed https://stackoverflow.com/a/44445976/2198656",
+      "doc": "api/ast_grep_core.source.md#sgnode",
+      "implementors": [
+        "tree_sitter::Node"
+      ],
+      "required_methods": [
+        "child_by_field_id",
+        "children",
+        "end_pos",
+        "field",
+        "field_children",
+        "kind",
+        "kind_id",
+        "node_id",
+        "parent",
+        "range",
+        "start_pos"
+      ],
+      "provided_methods": [
+        "ancestors",
+        "child",
+        "dfs",
+        "is_error",
+        "is_extra",
+        "is_leaf",
+        "is_missing",
+        "is_named",
+        "is_named_leaf",
+        "named_children",
+        "next",
+        "next_all",
+        "prev",
+        "prev_all"
+      ],
+      "methods": [
+        {
+          "name": "ancestors",
+          "signature": "fn ancestors(&self, _root: Self) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "child",
+          "signature": "fn child(&self, nth: usize) -> Option<Self>"
+        },
+        {
+          "name": "child_by_field_id",
+          "signature": "fn child_by_field_id(&self, field_id: u16) -> Option<Self>"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> impl ExactSizeIterator<Item = Self>"
+        },
+        {
+          "name": "dfs",
+          "signature": "fn dfs(&self) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "end_pos",
+          "signature": "fn end_pos(&self) -> Position"
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self, name: &str) -> Option<Self>"
+        },
+        {
+          "name": "field_children",
+          "signature": "fn field_children(&self, field_id: Option<u16>) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "is_error",
+          "signature": "fn is_error(&self) -> bool"
+        },
+        {
+          "name": "is_extra",
+          "signature": "fn is_extra(&self) -> bool"
+        },
+        {
+          "name": "is_leaf",
+          "signature": "fn is_leaf(&self) -> bool"
+        },
+        {
+          "name": "is_missing",
+          "signature": "fn is_missing(&self) -> bool"
+        },
+        {
+          "name": "is_named",
+          "signature": "fn is_named(&self) -> bool"
+        },
+        {
+          "name": "is_named_leaf",
+          "signature": "fn is_named_leaf(&self) -> bool",
+          "summary": "N.B. it is different from is_named && is_leaf if a node has no named children."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> Cow<'_, str>"
+        },
+        {
+          "name": "kind_id",
+          "signature": "fn kind_id(&self) -> u16"
+        },
+        {
+          "name": "named_children",
+          "signature": "fn named_children(&self) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&self) -> Option<Self>"
+        },
+        {
+          "name": "next_all",
+          "signature": "fn next_all(&self) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "node_id",
+          "signature": "fn node_id(&self) -> usize"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<Self>"
+        },
+        {
+          "name": "prev",
+          "signature": "fn prev(&self) -> Option<Self>"
+        },
+        {
+          "name": "prev_all",
+          "signature": "fn prev_all(&self) -> impl Iterator<Item = Self>"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> std::ops::Range<usize>"
+        },
+        {
+          "name": "start_pos",
+          "signature": "fn start_pos(&self) -> Position"
+        }
+      ]
+    }
+  ]
+}

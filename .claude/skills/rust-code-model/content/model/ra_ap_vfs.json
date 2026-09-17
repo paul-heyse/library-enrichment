@@ -1,0 +1,179 @@
+{
+  "module": "ra_ap_vfs",
+  "crate": "ra_ap_vfs",
+  "api": "api/ra_ap_vfs.md",
+  "items": [
+    {
+      "path": "ra_ap_vfs::Change",
+      "name": "Change",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum Change",
+      "summary": "Kind of [file change](ChangedFile).",
+      "doc": "api/ra_ap_vfs.md#change",
+      "variants": [
+        "Create",
+        "Modify",
+        "Delete"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::ChangeKind",
+      "name": "ChangeKind",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum ChangeKind",
+      "summary": "Kind of [file change](ChangedFile).",
+      "doc": "api/ra_ap_vfs.md#changekind",
+      "variants": [
+        "Create",
+        "Modify",
+        "Delete"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::FileExcluded",
+      "name": "FileExcluded",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum FileExcluded",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Yes",
+        "No"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::FileState",
+      "name": "FileState",
+      "kind": "enum",
+      "crate": "ra_ap_vfs",
+      "signature": "enum FileState",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Exists",
+        "Deleted",
+        "Excluded"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ra_ap_vfs::ChangedFile",
+      "name": "ChangedFile",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct ChangedFile",
+      "summary": "Changed file in the [`Vfs`].",
+      "doc": "api/ra_ap_vfs.md#changedfile",
+      "fields": [
+        "file_id",
+        "change"
+      ],
+      "methods": [
+        {
+          "name": "exists",
+          "signature": "fn exists(&self) -> bool",
+          "summary": "Returns `true` if the change is not [`Delete`](ChangeKind::Delete)."
+        },
+        {
+          "name": "is_created",
+          "signature": "fn is_created(&self) -> bool",
+          "summary": "Returns `true` if the change is [`Create`](ChangeKind::Create)."
+        },
+        {
+          "name": "is_created_or_deleted",
+          "signature": "fn is_created_or_deleted(&self) -> bool",
+          "summary": "Returns `true` if the change is [`Create`](ChangeKind::Create) or [`Delete`](Change::Delete)."
+        },
+        {
+          "name": "is_modified",
+          "signature": "fn is_modified(&self) -> bool",
+          "summary": "Returns `true` if the change is [`Modify`](ChangeKind::Modify)."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> ChangeKind"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::FileId",
+      "name": "FileId",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct FileId",
+      "summary": "Handle to a file in [`Vfs`]",
+      "doc": "api/ra_ap_vfs.md#fileid",
+      "aliases": [
+        "ra_ap_base_db::FileId",
+        "ra_ap_ide::FileId",
+        "ra_ap_span::FileId"
+      ],
+      "implements": [
+        "core::convert::From",
+        "nohash_hasher::IsEnabled"
+      ],
+      "methods": [
+        {
+          "name": "from_raw",
+          "signature": "const fn from_raw(raw: u32) -> FileId"
+        },
+        {
+          "name": "index",
+          "signature": "const fn index(self) -> u32"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_vfs::Vfs",
+      "name": "Vfs",
+      "kind": "struct",
+      "crate": "ra_ap_vfs",
+      "signature": "struct Vfs",
+      "summary": "Storage for all file changes and the file id to path mapping.",
+      "doc": "api/ra_ap_vfs.md#vfs",
+      "methods": [
+        {
+          "name": "exists",
+          "signature": "fn exists(&self, file_id: FileId) -> bool",
+          "summary": "Provides a panic-less way to verify file_id validity."
+        },
+        {
+          "name": "file_id",
+          "signature": "fn file_id(&self, path: &VfsPath) -> Option<(FileId, FileExcluded)>",
+          "summary": "Id of the given path if it exists in the `Vfs` and is not deleted."
+        },
+        {
+          "name": "file_path",
+          "signature": "fn file_path(&self, file_id: FileId) -> &VfsPath",
+          "summary": "File path corresponding to the given `file_id`."
+        },
+        {
+          "name": "insert_excluded_file",
+          "signature": "fn insert_excluded_file(&mut self, path: VfsPath)",
+          "summary": "We cannot ignore excluded files, because this will lead to errors when the client requests semantic information for them, so we instead mark them specially."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (FileId, &VfsPath)> + '_",
+          "summary": "Returns an iterator over the stored ids and their corresponding paths."
+        },
+        {
+          "name": "set_file_contents",
+          "signature": "fn set_file_contents(&mut self, path: VfsPath, contents: Option<Vec<u8>>) -> bool",
+          "summary": "Update the `path` with the given `contents`. `None` means the file was deleted."
+        },
+        {
+          "name": "take_changes",
+          "signature": "fn take_changes(&mut self) -> IndexMap<FileId, ChangedFile, BuildHasherDefault<FxHasher>>",
+          "summary": "Drains and returns all the changes in the `Vfs`."
+        }
+      ]
+    }
+  ]
+}

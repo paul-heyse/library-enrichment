@@ -1,0 +1,190 @@
+{
+  "module": "grep_pcre2::matcher",
+  "crate": "grep-pcre2",
+  "api": "api/grep_pcre2.matcher.md",
+  "items": [
+    {
+      "path": "grep_pcre2::matcher::RegexCaptures",
+      "name": "RegexCaptures",
+      "kind": "struct",
+      "crate": "grep-pcre2",
+      "signature": "struct RegexCaptures",
+      "summary": "Represents the match offsets of each capturing group in a match.",
+      "doc": "api/grep_pcre2.matcher.md#regexcaptures",
+      "aliases": [
+        "grep_pcre2::RegexCaptures"
+      ],
+      "implements": [
+        "grep_matcher::Captures"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<Match>",
+          "via_trait": "grep_matcher::Captures"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "grep_matcher::Captures"
+        }
+      ]
+    },
+    {
+      "path": "grep_pcre2::matcher::RegexMatcher",
+      "name": "RegexMatcher",
+      "kind": "struct",
+      "crate": "grep-pcre2",
+      "signature": "struct RegexMatcher",
+      "summary": "An implementation of the `Matcher` trait using PCRE2.",
+      "doc": "api/grep_pcre2.matcher.md#regexmatcher",
+      "aliases": [
+        "grep_pcre2::RegexMatcher"
+      ],
+      "implements": [
+        "grep_matcher::Matcher"
+      ],
+      "methods": [
+        {
+          "name": "capture_count",
+          "signature": "fn capture_count(&self) -> usize",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "capture_index",
+          "signature": "fn capture_index(&self, name: &str) -> Option<usize>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "captures_at",
+          "signature": "fn captures_at(&self, haystack: &[u8], at: usize, caps: &mut RegexCaptures) -> Result<bool, Error>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "find_at",
+          "signature": "fn find_at(&self, haystack: &[u8], at: usize) -> Result<Option<Match>, Error>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<RegexMatcher, Error>",
+          "summary": "Create a new matcher from the given pattern using the default configuration."
+        },
+        {
+          "name": "new_captures",
+          "signature": "fn new_captures(&self) -> Result<RegexCaptures, Error>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "try_find_iter",
+          "signature": "fn try_find_iter<F, E>(&self, haystack: &[u8], matched: F) -> Result<Result<(), E>, Error> where F: FnMut(Match) -> Result<bool, E>",
+          "via_trait": "grep_matcher::Matcher"
+        }
+      ]
+    },
+    {
+      "path": "grep_pcre2::matcher::RegexMatcherBuilder",
+      "name": "RegexMatcherBuilder",
+      "kind": "struct",
+      "crate": "grep-pcre2",
+      "signature": "struct RegexMatcherBuilder",
+      "summary": "A builder for configuring the compilation of a PCRE2 regex.",
+      "doc": "api/grep_pcre2.matcher.md#regexmatcherbuilder",
+      "aliases": [
+        "grep_pcre2::RegexMatcherBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<RegexMatcher, Error>",
+          "summary": "Compile the given pattern into a PCRE matcher using the current configuration."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<RegexMatcher, Error>",
+          "summary": "Compile all of the given patterns into a single regex that matches when at least one of the patterns matches."
+        },
+        {
+          "name": "case_smart",
+          "signature": "fn case_smart(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether to enable \"smart case\" or not."
+        },
+        {
+          "name": "caseless",
+          "signature": "fn caseless(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enables case insensitive matching."
+        },
+        {
+          "name": "crlf",
+          "signature": "fn crlf(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable matching of CRLF as a line terminator."
+        },
+        {
+          "name": "disable_utf_check",
+          "signature": "fn disable_utf_check(&mut self) -> &mut RegexMatcherBuilder",
+          "summary": "This is now deprecated and is a no-op."
+        },
+        {
+          "name": "dotall",
+          "signature": "fn dotall(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enables \"dot all\" matching."
+        },
+        {
+          "name": "extended",
+          "signature": "fn extended(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable \"extended\" mode in the pattern, where whitespace is ignored."
+        },
+        {
+          "name": "fixed_strings",
+          "signature": "fn fixed_strings(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether the patterns should be treated as literal strings or not. When this is active, all characters, including ones that would normally be special regex meta characters, are matched literally."
+        },
+        {
+          "name": "jit",
+          "signature": "fn jit(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable PCRE2's JIT and return an error if it's not available."
+        },
+        {
+          "name": "jit_if_available",
+          "signature": "fn jit_if_available(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable PCRE2's JIT if it's available."
+        },
+        {
+          "name": "max_jit_stack_size",
+          "signature": "fn max_jit_stack_size(&mut self, bytes: Option<usize>) -> &mut RegexMatcherBuilder",
+          "summary": "Set the maximum size of PCRE2's JIT stack, in bytes. If the JIT is not enabled, then this has no effect."
+        },
+        {
+          "name": "multi_line",
+          "signature": "fn multi_line(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable multiline matching mode."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> RegexMatcherBuilder",
+          "summary": "Create a new matcher builder with a default configuration."
+        },
+        {
+          "name": "ucp",
+          "signature": "fn ucp(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable Unicode matching mode."
+        },
+        {
+          "name": "utf",
+          "signature": "fn utf(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Enable UTF matching mode."
+        },
+        {
+          "name": "whole_line",
+          "signature": "fn whole_line(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether each pattern should match the entire line or not. This is equivalent to surrounding the pattern with `(?m:^)` and `(?m:$)`."
+        },
+        {
+          "name": "word",
+          "signature": "fn word(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Require that all matches occur on word boundaries."
+        }
+      ]
+    }
+  ]
+}

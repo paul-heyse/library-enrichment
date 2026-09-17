@@ -1,0 +1,325 @@
+# `ra_ap_syntax::ast`
+
+Crate `ra_ap_syntax` · 4 public items · structured records in [`model/ra_ap_syntax.ast.json`](../model/ra_ap_syntax.ast.json)
+
+## AstChildren
+
+`struct` · `ra_ap_syntax::ast::AstChildren`
+
+```rust
+struct AstChildren<N>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Clone, Debug
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<N>
+```
+
+An iterator over `SyntaxNode` children of a particular AST type.
+
+---
+
+## AstNode
+
+`trait` · `ra_ap_syntax::ast::AstNode`
+
+Also reachable as `ra_ap_syntax::AstNode`
+
+```rust
+trait AstNode
+```
+
+**Implementors** (206)
+
+- `either::Either`
+- `ra_ap_hir::FieldSource`
+- `ra_ap_hir::diagnostics::SpanAst`
+- `ra_ap_syntax::ast::expr_ext::CallableExpr`
+- `ra_ap_syntax::ast::expr_ext::ElseBranch`
+- `ra_ap_syntax::ast::generated::nodes::Abi`
+- `ra_ap_syntax::ast::generated::nodes::Adt`
+- `ra_ap_syntax::ast::generated::nodes::AnyAttr`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasArgList`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasAttrs`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasGenericArgs`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasGenericParams`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasLoopBody`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasModuleItem`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasName`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasTypeBounds`
+- `ra_ap_syntax::ast::generated::nodes::AnyHasVisibility`
+- `ra_ap_syntax::ast::generated::nodes::ArgList`
+- `ra_ap_syntax::ast::generated::nodes::ArrayExpr`
+- `ra_ap_syntax::ast::generated::nodes::ArrayType`
+- `ra_ap_syntax::ast::generated::nodes::AsmClobberAbi`
+- `ra_ap_syntax::ast::generated::nodes::AsmConst`
+- `ra_ap_syntax::ast::generated::nodes::AsmDirSpec`
+- `ra_ap_syntax::ast::generated::nodes::AsmExpr`
+- `ra_ap_syntax::ast::generated::nodes::AsmLabel`
+- `ra_ap_syntax::ast::generated::nodes::AsmOperand`
+- `ra_ap_syntax::ast::generated::nodes::AsmOperandExpr`
+- `ra_ap_syntax::ast::generated::nodes::AsmOperandNamed`
+- `ra_ap_syntax::ast::generated::nodes::AsmOption`
+- `ra_ap_syntax::ast::generated::nodes::AsmOptions`
+- `ra_ap_syntax::ast::generated::nodes::AsmPiece`
+- `ra_ap_syntax::ast::generated::nodes::AsmRegOperand`
+- `ra_ap_syntax::ast::generated::nodes::AsmRegSpec`
+- `ra_ap_syntax::ast::generated::nodes::AsmSym`
+- `ra_ap_syntax::ast::generated::nodes::AssocItem`
+- `ra_ap_syntax::ast::generated::nodes::AssocItemList`
+- `ra_ap_syntax::ast::generated::nodes::AssocTypeArg`
+- `ra_ap_syntax::ast::generated::nodes::Attr`
+- `ra_ap_syntax::ast::generated::nodes::AwaitExpr`
+- `ra_ap_syntax::ast::generated::nodes::BecomeExpr`
+- `ra_ap_syntax::ast::generated::nodes::BinExpr`
+- `ra_ap_syntax::ast::generated::nodes::BlockExpr`
+- `ra_ap_syntax::ast::generated::nodes::BoxPat`
+- `ra_ap_syntax::ast::generated::nodes::BreakExpr`
+- `ra_ap_syntax::ast::generated::nodes::CallExpr`
+- `ra_ap_syntax::ast::generated::nodes::CastExpr`
+- `ra_ap_syntax::ast::generated::nodes::CfgAtom`
+- `ra_ap_syntax::ast::generated::nodes::CfgAttrMeta`
+- `ra_ap_syntax::ast::generated::nodes::CfgComposite`
+- `ra_ap_syntax::ast::generated::nodes::CfgMeta`
+- `ra_ap_syntax::ast::generated::nodes::CfgPredicate`
+- `ra_ap_syntax::ast::generated::nodes::ClosureExpr`
+- `ra_ap_syntax::ast::generated::nodes::Const`
+- `ra_ap_syntax::ast::generated::nodes::ConstArg`
+- `ra_ap_syntax::ast::generated::nodes::ConstBlockPat`
+- `ra_ap_syntax::ast::generated::nodes::ConstParam`
+- `ra_ap_syntax::ast::generated::nodes::ContinueExpr`
+- `ra_ap_syntax::ast::generated::nodes::DerefPat`
+- `ra_ap_syntax::ast::generated::nodes::DocComment`
+- `ra_ap_syntax::ast::generated::nodes::DynTraitType`
+- `ra_ap_syntax::ast::generated::nodes::Enum`
+- `ra_ap_syntax::ast::generated::nodes::Expr`
+- `ra_ap_syntax::ast::generated::nodes::ExprStmt`
+- `ra_ap_syntax::ast::generated::nodes::ExternBlock`
+- `ra_ap_syntax::ast::generated::nodes::ExternCrate`
+- `ra_ap_syntax::ast::generated::nodes::ExternItem`
+- `ra_ap_syntax::ast::generated::nodes::ExternItemList`
+- `ra_ap_syntax::ast::generated::nodes::FieldExpr`
+- `ra_ap_syntax::ast::generated::nodes::FieldList`
+- `ra_ap_syntax::ast::generated::nodes::Fn`
+- `ra_ap_syntax::ast::generated::nodes::FnPtrType`
+- `ra_ap_syntax::ast::generated::nodes::ForBinder`
+- `ra_ap_syntax::ast::generated::nodes::ForExpr`
+- `ra_ap_syntax::ast::generated::nodes::ForType`
+- `ra_ap_syntax::ast::generated::nodes::FormatArgsArg`
+- `ra_ap_syntax::ast::generated::nodes::FormatArgsExpr`
+- `ra_ap_syntax::ast::generated::nodes::GenericArg`
+- `ra_ap_syntax::ast::generated::nodes::GenericArgList`
+- `ra_ap_syntax::ast::generated::nodes::GenericParam`
+- `ra_ap_syntax::ast::generated::nodes::GenericParamList`
+- `ra_ap_syntax::ast::generated::nodes::IdentPat`
+- `ra_ap_syntax::ast::generated::nodes::IfExpr`
+- `ra_ap_syntax::ast::generated::nodes::Impl`
+- `ra_ap_syntax::ast::generated::nodes::ImplRestriction`
+- `ra_ap_syntax::ast::generated::nodes::ImplTraitType`
+- `ra_ap_syntax::ast::generated::nodes::IncludeBytesExpr`
+- `ra_ap_syntax::ast::generated::nodes::IndexExpr`
+- `ra_ap_syntax::ast::generated::nodes::InferType`
+- `ra_ap_syntax::ast::generated::nodes::Item`
+- `ra_ap_syntax::ast::generated::nodes::ItemList`
+- `ra_ap_syntax::ast::generated::nodes::KeyValueMeta`
+- `ra_ap_syntax::ast::generated::nodes::Label`
+- `ra_ap_syntax::ast::generated::nodes::LetElse`
+- `ra_ap_syntax::ast::generated::nodes::LetExpr`
+- `ra_ap_syntax::ast::generated::nodes::LetStmt`
+- `ra_ap_syntax::ast::generated::nodes::Lifetime`
+- `ra_ap_syntax::ast::generated::nodes::LifetimeArg`
+- `ra_ap_syntax::ast::generated::nodes::LifetimeParam`
+- `ra_ap_syntax::ast::generated::nodes::Literal`
+- `ra_ap_syntax::ast::generated::nodes::LiteralPat`
+- `ra_ap_syntax::ast::generated::nodes::LoopExpr`
+- `ra_ap_syntax::ast::generated::nodes::MacroCall`
+- `ra_ap_syntax::ast::generated::nodes::MacroDef`
+- `ra_ap_syntax::ast::generated::nodes::MacroExpr`
+- `ra_ap_syntax::ast::generated::nodes::MacroItems`
+- `ra_ap_syntax::ast::generated::nodes::MacroPat`
+- `ra_ap_syntax::ast::generated::nodes::MacroRules`
+- `ra_ap_syntax::ast::generated::nodes::MacroStmts`
+- `ra_ap_syntax::ast::generated::nodes::MacroType`
+- `ra_ap_syntax::ast::generated::nodes::MatchArm`
+- `ra_ap_syntax::ast::generated::nodes::MatchArmList`
+- `ra_ap_syntax::ast::generated::nodes::MatchExpr`
+- `ra_ap_syntax::ast::generated::nodes::MatchGuard`
+- `ra_ap_syntax::ast::generated::nodes::Meta`
+- `ra_ap_syntax::ast::generated::nodes::MethodCallExpr`
+- `ra_ap_syntax::ast::generated::nodes::Module`
+- `ra_ap_syntax::ast::generated::nodes::MutRestriction`
+- `ra_ap_syntax::ast::generated::nodes::Name`
+- `ra_ap_syntax::ast::generated::nodes::NameRef`
+- `ra_ap_syntax::ast::generated::nodes::NeverType`
+- `ra_ap_syntax::ast::generated::nodes::NotNull`
+- `ra_ap_syntax::ast::generated::nodes::OffsetOfExpr`
+- `ra_ap_syntax::ast::generated::nodes::OrPat`
+- `ra_ap_syntax::ast::generated::nodes::Param`
+- `ra_ap_syntax::ast::generated::nodes::ParamList`
+- `ra_ap_syntax::ast::generated::nodes::ParenExpr`
+- `ra_ap_syntax::ast::generated::nodes::ParenPat`
+- `ra_ap_syntax::ast::generated::nodes::ParenType`
+- `ra_ap_syntax::ast::generated::nodes::ParenthesizedArgList`
+- `ra_ap_syntax::ast::generated::nodes::Pat`
+- `ra_ap_syntax::ast::generated::nodes::Path`
+- `ra_ap_syntax::ast::generated::nodes::PathExpr`
+- `ra_ap_syntax::ast::generated::nodes::PathMeta`
+- `ra_ap_syntax::ast::generated::nodes::PathPat`
+- `ra_ap_syntax::ast::generated::nodes::PathSegment`
+- `ra_ap_syntax::ast::generated::nodes::PathType`
+- `ra_ap_syntax::ast::generated::nodes::PatternType`
+- `ra_ap_syntax::ast::generated::nodes::PrefixExpr`
+- `ra_ap_syntax::ast::generated::nodes::PtrType`
+- `ra_ap_syntax::ast::generated::nodes::RangeExpr`
+- `ra_ap_syntax::ast::generated::nodes::RangePat`
+- `ra_ap_syntax::ast::generated::nodes::RecordExpr`
+- `ra_ap_syntax::ast::generated::nodes::RecordExprField`
+- `ra_ap_syntax::ast::generated::nodes::RecordExprFieldList`
+- `ra_ap_syntax::ast::generated::nodes::RecordField`
+- `ra_ap_syntax::ast::generated::nodes::RecordFieldList`
+- `ra_ap_syntax::ast::generated::nodes::RecordPat`
+- `ra_ap_syntax::ast::generated::nodes::RecordPatField`
+- `ra_ap_syntax::ast::generated::nodes::RecordPatFieldList`
+- `ra_ap_syntax::ast::generated::nodes::RefExpr`
+- `ra_ap_syntax::ast::generated::nodes::RefPat`
+- `ra_ap_syntax::ast::generated::nodes::RefType`
+- `ra_ap_syntax::ast::generated::nodes::Rename`
+- `ra_ap_syntax::ast::generated::nodes::RestPat`
+- `ra_ap_syntax::ast::generated::nodes::RetType`
+- `ra_ap_syntax::ast::generated::nodes::ReturnExpr`
+- `ra_ap_syntax::ast::generated::nodes::ReturnTypeSyntax`
+- `ra_ap_syntax::ast::generated::nodes::SelfParam`
+- `ra_ap_syntax::ast::generated::nodes::SlicePat`
+- `ra_ap_syntax::ast::generated::nodes::SliceType`
+- `ra_ap_syntax::ast::generated::nodes::SourceFile`
+- `ra_ap_syntax::ast::generated::nodes::Static`
+- `ra_ap_syntax::ast::generated::nodes::Stmt`
+- `ra_ap_syntax::ast::generated::nodes::StmtList`
+- `ra_ap_syntax::ast::generated::nodes::Struct`
+- `ra_ap_syntax::ast::generated::nodes::TokenTree`
+- `ra_ap_syntax::ast::generated::nodes::TokenTreeMeta`
+- `ra_ap_syntax::ast::generated::nodes::Trait`
+- `ra_ap_syntax::ast::generated::nodes::TryBlockModifier`
+- `ra_ap_syntax::ast::generated::nodes::TryExpr`
+- `ra_ap_syntax::ast::generated::nodes::TupleExpr`
+- `ra_ap_syntax::ast::generated::nodes::TupleField`
+- `ra_ap_syntax::ast::generated::nodes::TupleFieldList`
+- `ra_ap_syntax::ast::generated::nodes::TuplePat`
+- `ra_ap_syntax::ast::generated::nodes::TupleStructPat`
+- `ra_ap_syntax::ast::generated::nodes::TupleType`
+- `ra_ap_syntax::ast::generated::nodes::Type`
+- `ra_ap_syntax::ast::generated::nodes::TypeAlias`
+- `ra_ap_syntax::ast::generated::nodes::TypeAnchor`
+- `ra_ap_syntax::ast::generated::nodes::TypeArg`
+- `ra_ap_syntax::ast::generated::nodes::TypeBound`
+- `ra_ap_syntax::ast::generated::nodes::TypeBoundList`
+- `ra_ap_syntax::ast::generated::nodes::TypeParam`
+- `ra_ap_syntax::ast::generated::nodes::UnderscoreExpr`
+- `ra_ap_syntax::ast::generated::nodes::Union`
+- `ra_ap_syntax::ast::generated::nodes::UnsafeMeta`
+- `ra_ap_syntax::ast::generated::nodes::Use`
+- `ra_ap_syntax::ast::generated::nodes::UseBoundGenericArg`
+- `ra_ap_syntax::ast::generated::nodes::UseBoundGenericArgs`
+- `ra_ap_syntax::ast::generated::nodes::UseTree`
+- `ra_ap_syntax::ast::generated::nodes::UseTreeList`
+- `ra_ap_syntax::ast::generated::nodes::Variant`
+- `ra_ap_syntax::ast::generated::nodes::VariantDef`
+- `ra_ap_syntax::ast::generated::nodes::VariantList`
+- `ra_ap_syntax::ast::generated::nodes::Visibility`
+- `ra_ap_syntax::ast::generated::nodes::VisibilityInner`
+- `ra_ap_syntax::ast::generated::nodes::WhereClause`
+- `ra_ap_syntax::ast::generated::nodes::WherePred`
+- `ra_ap_syntax::ast::generated::nodes::WhileExpr`
+- `ra_ap_syntax::ast::generated::nodes::WildcardPat`
+- `ra_ap_syntax::ast::generated::nodes::YeetExpr`
+- `ra_ap_syntax::ast::generated::nodes::YieldExpr`
+- `ra_ap_syntax::ast::node_ext::Macro`
+- `ra_ap_syntax::ast::node_ext::NameLike`
+- `ra_ap_syntax::ast::node_ext::NameOrNameRef`
+- `ra_ap_syntax::ast::node_ext::TypeOrConstParam`
+
+**Methods** (5)
+
+```rust
+fn can_cast(kind: SyntaxKind) -> bool where Self: Sized
+fn cast(syntax: SyntaxNode) -> Option<Self> where Self: Sized
+fn clone_subtree(&self) -> Self where Self: Sized
+fn kind() -> SyntaxKind where Self: Sized
+fn syntax(&self) -> &SyntaxNode
+```
+
+The main trait to go from untyped `SyntaxNode`  to a typed ast. The
+conversion itself has zero runtime cost: ast and syntax nodes have exactly
+the same representation: a pointer to the tree root and a pointer to the
+node itself.
+
+---
+
+## AstToken
+
+`trait` · `ra_ap_syntax::ast::AstToken`
+
+Also reachable as `ra_ap_syntax::AstToken`
+
+```rust
+trait AstToken
+```
+
+**Implementors** (12)
+
+- `ra_ap_syntax::ast::generated::tokens::Byte`
+- `ra_ap_syntax::ast::generated::tokens::ByteString`
+- `ra_ap_syntax::ast::generated::tokens::CString`
+- `ra_ap_syntax::ast::generated::tokens::Char`
+- `ra_ap_syntax::ast::generated::tokens::Comment`
+- `ra_ap_syntax::ast::generated::tokens::FloatNumber`
+- `ra_ap_syntax::ast::generated::tokens::Ident`
+- `ra_ap_syntax::ast::generated::tokens::IntNumber`
+- `ra_ap_syntax::ast::generated::tokens::String`
+- `ra_ap_syntax::ast::generated::tokens::Whitespace`
+- `ra_ap_syntax::ast::token_ext::AnyComment`
+- `ra_ap_syntax::ast::token_ext::AnyString`
+
+**Methods** (4)
+
+```rust
+fn can_cast(token: SyntaxKind) -> bool where Self: Sized
+fn cast(syntax: SyntaxToken) -> Option<Self> where Self: Sized
+fn syntax(&self) -> &SyntaxToken
+fn text(&self) -> &str
+```
+
+Like `AstNode`, but wraps tokens rather than interior nodes.
+
+---
+
+## RangeItem
+
+`trait` · `ra_ap_syntax::ast::RangeItem`
+
+```rust
+trait RangeItem
+```
+
+**Implementors** (2)
+
+- `ra_ap_syntax::ast::generated::nodes::RangeExpr`
+- `ra_ap_syntax::ast::generated::nodes::RangePat`
+
+**Methods** (4)
+
+```rust
+fn end(&self) -> Option<Self::Bound>
+fn op_kind(&self) -> Option<RangeOp>
+fn op_token(&self) -> Option<SyntaxToken>
+fn start(&self) -> Option<Self::Bound>
+```
+
+Trait to describe operations common to both `RangeExpr` and `RangePat`.
+
+---

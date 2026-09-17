@@ -1,0 +1,346 @@
+{
+  "module": "regex_syntax::hir::literal",
+  "crate": "regex-syntax",
+  "api": "api/regex_syntax.hir.literal.md",
+  "items": [
+    {
+      "path": "regex_syntax::hir::literal::ExtractKind",
+      "name": "ExtractKind",
+      "kind": "enum",
+      "crate": "regex-syntax",
+      "signature": "enum ExtractKind",
+      "summary": "The kind of literals to extract from an [`Hir`] expression.",
+      "doc": "api/regex_syntax.hir.literal.md#extractkind",
+      "variants": [
+        "Prefix",
+        "Suffix"
+      ],
+      "methods": [
+        {
+          "name": "is_prefix",
+          "signature": "fn is_prefix(&self) -> bool",
+          "summary": "Returns true if this kind is the `Prefix` variant."
+        },
+        {
+          "name": "is_suffix",
+          "signature": "fn is_suffix(&self) -> bool",
+          "summary": "Returns true if this kind is the `Suffix` variant."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::literal::rank",
+      "name": "rank",
+      "kind": "function",
+      "crate": "regex-syntax",
+      "signature": "fn rank(byte: u8) -> u8",
+      "summary": "Returns the \"rank\" of the given byte.",
+      "doc": "api/regex_syntax.hir.literal.md#rank"
+    },
+    {
+      "path": "regex_syntax::hir::literal::Extractor",
+      "name": "Extractor",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Extractor",
+      "summary": "Extracts prefix or suffix literal sequences from [`Hir`] expressions.",
+      "doc": "api/regex_syntax.hir.literal.md#extractor",
+      "methods": [
+        {
+          "name": "extract",
+          "signature": "fn extract(&self, hir: &Hir) -> Seq",
+          "summary": "Execute the extractor and return a sequence of literals."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&mut self, kind: ExtractKind) -> &mut Extractor",
+          "summary": "Set the kind of literal sequence to extract from an [`Hir`] expression."
+        },
+        {
+          "name": "limit_class",
+          "signature": "fn limit_class(&mut self, limit: usize) -> &mut Extractor",
+          "summary": "Configure a limit on the length of the sequence that is permitted for a character class. If a character class exceeds this limit, then the sequence returned for it is infinite."
+        },
+        {
+          "name": "limit_literal_len",
+          "signature": "fn limit_literal_len(&mut self, limit: usize) -> &mut Extractor",
+          "summary": "Configure a limit on the maximum length of any literal in a sequence."
+        },
+        {
+          "name": "limit_repeat",
+          "signature": "fn limit_repeat(&mut self, limit: usize) -> &mut Extractor",
+          "summary": "Configure a limit on the total number of repetitions that is permitted before literal extraction is stopped."
+        },
+        {
+          "name": "limit_total",
+          "signature": "fn limit_total(&mut self, limit: usize) -> &mut Extractor",
+          "summary": "Configure a limit on the total number of literals that will be returned."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Extractor",
+          "summary": "Create a new extractor with a default configuration."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::literal::Literal",
+      "name": "Literal",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Literal",
+      "summary": "A single literal extracted from an [`Hir`] expression.",
+      "doc": "api/regex_syntax.hir.literal.md#literal",
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "summary": "Returns the bytes in this literal."
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[u8]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "exact",
+          "signature": "fn exact<B: Into<Vec<u8>>>(bytes: B) -> Literal",
+          "summary": "Returns a new exact literal containing the bytes given."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, lit: &Literal)",
+          "summary": "Extend this literal with the literal given."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(byte: u8) -> Literal",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "inexact",
+          "signature": "fn inexact<B: Into<Vec<u8>>>(bytes: B) -> Literal",
+          "summary": "Returns a new inexact literal containing the bytes given."
+        },
+        {
+          "name": "into_bytes",
+          "signature": "fn into_bytes(self) -> Vec<u8>",
+          "summary": "Yields ownership of the bytes inside this literal."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this literal has zero bytes."
+        },
+        {
+          "name": "is_exact",
+          "signature": "fn is_exact(&self) -> bool",
+          "summary": "Returns true if and only if this literal is exact."
+        },
+        {
+          "name": "keep_first_bytes",
+          "signature": "fn keep_first_bytes(&mut self, len: usize)",
+          "summary": "Trims this literal such that only the first `len` bytes remain. If this literal has fewer than `len` bytes, then it remains unchanged. Otherwise, the literal is marked as inexact."
+        },
+        {
+          "name": "keep_last_bytes",
+          "signature": "fn keep_last_bytes(&mut self, len: usize)",
+          "summary": "Trims this literal such that only the last `len` bytes remain. If this literal has fewer than `len` bytes, then it remains unchanged. Otherwise, the literal is marked as inexact."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the length of this literal in bytes."
+        },
+        {
+          "name": "make_inexact",
+          "signature": "fn make_inexact(&mut self)",
+          "summary": "Marks this literal as inexact."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&mut self)",
+          "summary": "Reverse the bytes in this literal."
+        }
+      ]
+    },
+    {
+      "path": "regex_syntax::hir::literal::Seq",
+      "name": "Seq",
+      "kind": "struct",
+      "crate": "regex-syntax",
+      "signature": "struct Seq",
+      "summary": "A sequence of literals.",
+      "doc": "api/regex_syntax.hir.literal.md#seq",
+      "implements": [
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "cross_forward",
+          "signature": "fn cross_forward(&mut self, other: &mut Seq)",
+          "summary": "Modify this sequence to contain the cross product between it and the sequence given."
+        },
+        {
+          "name": "cross_reverse",
+          "signature": "fn cross_reverse(&mut self, other: &mut Seq)",
+          "summary": "Modify this sequence to contain the cross product between it and the sequence given, where the sequences are treated as suffixes instead of prefixes. Namely, the sequence `other` is *prepended* to `self` (as opposed to `other` being *appen…"
+        },
+        {
+          "name": "dedup",
+          "signature": "fn dedup(&mut self)",
+          "summary": "Deduplicate adjacent equivalent literals in this sequence."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Seq",
+          "summary": "Returns an empty sequence."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = Literal>>(it: T) -> Seq",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "infinite",
+          "signature": "fn infinite() -> Seq",
+          "summary": "Returns a sequence of literals without a finite size and may contain any literal."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if and only if this sequence is finite and empty."
+        },
+        {
+          "name": "is_exact",
+          "signature": "fn is_exact(&self) -> bool",
+          "summary": "Returns true if and only if all literals in this sequence are exact."
+        },
+        {
+          "name": "is_finite",
+          "signature": "fn is_finite(&self) -> bool",
+          "summary": "Returns true if this sequence is finite."
+        },
+        {
+          "name": "is_inexact",
+          "signature": "fn is_inexact(&self) -> bool",
+          "summary": "Returns true if and only if all literals in this sequence are inexact."
+        },
+        {
+          "name": "keep_first_bytes",
+          "signature": "fn keep_first_bytes(&mut self, len: usize)",
+          "summary": "Trims all literals in this seq such that only the first `len` bytes remain. If a literal has less than or equal to `len` bytes, then it remains unchanged. Otherwise, it is trimmed and made inexact."
+        },
+        {
+          "name": "keep_last_bytes",
+          "signature": "fn keep_last_bytes(&mut self, len: usize)",
+          "summary": "Trims all literals in this seq such that only the last `len` bytes remain. If a literal has less than or equal to `len` bytes, then it remains unchanged. Otherwise, it is trimmed and made inexact."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> Option<usize>",
+          "summary": "Returns the number of literals in this sequence if the sequence is finite. If the sequence is infinite, then `None` is returned."
+        },
+        {
+          "name": "literals",
+          "signature": "fn literals(&self) -> Option<&[Literal]>",
+          "summary": "If this is a finite sequence, return its members as a slice of literals."
+        },
+        {
+          "name": "longest_common_prefix",
+          "signature": "fn longest_common_prefix(&self) -> Option<&[u8]>",
+          "summary": "Returns the longest common prefix from this seq."
+        },
+        {
+          "name": "longest_common_suffix",
+          "signature": "fn longest_common_suffix(&self) -> Option<&[u8]>",
+          "summary": "Returns the longest common suffix from this seq."
+        },
+        {
+          "name": "make_inexact",
+          "signature": "fn make_inexact(&mut self)",
+          "summary": "Make all of the literals in this sequence inexact."
+        },
+        {
+          "name": "make_infinite",
+          "signature": "fn make_infinite(&mut self)",
+          "summary": "Converts this sequence to an infinite sequence."
+        },
+        {
+          "name": "max_cross_len",
+          "signature": "fn max_cross_len(&self, other: &Seq) -> Option<usize>",
+          "summary": "Return the maximum length of the sequence that would result from the cross product of `self` with `other`. If either set is infinite, then this returns `None`."
+        },
+        {
+          "name": "max_literal_len",
+          "signature": "fn max_literal_len(&self) -> Option<usize>",
+          "summary": "Returns the length of the longest literal in this sequence."
+        },
+        {
+          "name": "max_union_len",
+          "signature": "fn max_union_len(&self, other: &Seq) -> Option<usize>",
+          "summary": "Return the maximum length of the sequence that would result from unioning `self` with `other`. If either set is infinite, then this returns `None`."
+        },
+        {
+          "name": "min_literal_len",
+          "signature": "fn min_literal_len(&self) -> Option<usize>",
+          "summary": "Returns the length of the shortest literal in this sequence."
+        },
+        {
+          "name": "minimize_by_preference",
+          "signature": "fn minimize_by_preference(&mut self)",
+          "summary": "Shrinks this seq to its minimal size while respecting the preference order of its literals."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I, B>(it: I) -> Seq where I: IntoIterator<Item = B>, B: AsRef<[u8]>",
+          "summary": "Returns a sequence of exact literals from the given byte strings."
+        },
+        {
+          "name": "optimize_for_prefix_by_preference",
+          "signature": "fn optimize_for_prefix_by_preference(&mut self)",
+          "summary": "Optimizes this seq while treating its literals as prefixes and respecting the preference order of its literals."
+        },
+        {
+          "name": "optimize_for_suffix_by_preference",
+          "signature": "fn optimize_for_suffix_by_preference(&mut self)",
+          "summary": "Optimizes this seq while treating its literals as suffixes and respecting the preference order of its literals."
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, lit: Literal)",
+          "summary": "Push a literal to the end of this sequence."
+        },
+        {
+          "name": "reverse_literals",
+          "signature": "fn reverse_literals(&mut self)",
+          "summary": "Reverses all of the literals in this sequence."
+        },
+        {
+          "name": "singleton",
+          "signature": "fn singleton(lit: Literal) -> Seq",
+          "summary": "Returns a sequence containing a single literal."
+        },
+        {
+          "name": "sort",
+          "signature": "fn sort(&mut self)",
+          "summary": "Sorts this sequence of literals lexicographically."
+        },
+        {
+          "name": "union",
+          "signature": "fn union(&mut self, other: &mut Seq)",
+          "summary": "Unions the `other` sequence into this one."
+        },
+        {
+          "name": "union_into_empty",
+          "signature": "fn union_into_empty(&mut self, other: &mut Seq)",
+          "summary": "Unions the `other` sequence into this one by splice the `other` sequence at the position of the first zero-length literal."
+        }
+      ]
+    }
+  ]
+}

@@ -197,14 +197,14 @@ def test_terminal_result_and_page_keep_native_cross_field_constraints() -> None:
     fixture = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
     terminal = {
         key: fixture[key]
-        for key in ("summary", "context_id", "snapshot_id", "coverage", "delivery", "error")
+        for key in ("summary", "context_id", "snapshot_id", "coverage", "delivery")
     }
-    terminal["outcome"] = "ok"
+    terminal["outcome"] = {"status": "ok"}
     result_schema = {"$defs": schema["$defs"], "$ref": "#/$defs/JobResult"}
     validator = Draft202012Validator(result_schema)
     validator.validate(terminal)
     for outcome in ("pending", "error", None):
-        assert list(validator.iter_errors(terminal | {"outcome": outcome}))
+        assert list(validator.iter_errors(terminal | {"outcome": {"status": outcome}}))
     del terminal["outcome"]
     assert list(validator.iter_errors(terminal))
     search = presentation.output_schema("search_evidence")

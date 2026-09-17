@@ -15,7 +15,6 @@
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use enrichment_core::clock;
 use enrichment_core::policy::{FetchPolicy, PolicyViolation};
 use enrichment_core::wire::ErrorCode;
 
@@ -153,7 +152,7 @@ impl Fetcher {
         install_crypto_provider();
         let policy = FetchPolicy::from_config(config);
         let policy_id = enrichment_core::native_key::Key::OperationPolicy
-            .value(config)
+            .record(config)
             .map_err(|e| FetchError::Client(e.to_string()))?;
         let cache = enrichment_store::http_cache::HttpCache::new(
             data_root,
@@ -411,7 +410,8 @@ impl Fetcher {
             etag,
             last_modified,
             final_url,
-            retrieved_at: clock::now_rfc3339(),
+            retrieved_at: enrichment_core::native_time::AcquisitionTime::now()
+                .map_err(|error| self.cache_error(url, error))?,
         };
         if status == 304 {
             fetched = self

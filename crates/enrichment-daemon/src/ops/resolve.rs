@@ -17,7 +17,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::common;
 
-use enrichment_core::clock;
 use enrichment_core::config::Config;
 use enrichment_core::evidence::{
     Artifact, ArtifactKind, EvidenceKind, FragmentKind, Gap, GapReason, ObservedConfiguration,
@@ -250,7 +249,7 @@ pub(super) async fn render_retained(
         snapshot_id: snapshot_id.to_string(),
         normalizer_version: manifest.normalizer_version.clone(),
         counts: manifest.counts.clone(),
-        published_at: manifest.published_at.clone(),
+        published_at: manifest.published_at,
     };
     let data = ResolveData {
         release: release.clone(),
@@ -341,12 +340,16 @@ pub(super) async fn replay_selected(
     exact.name = selected.key.package.clone();
     exact.version = Some(selected.key.version.clone());
     let mut replay = replay_recorded(service, &exact, &selected.key.version).await?;
-    replay.freshness.registry_checked_at = Some(clock::now_rfc3339());
+    replay.freshness.registry_checked_at =
+        Some(match enrichment_core::native_time::AcquisitionTime::now() {
+            Ok(time) => time,
+            Err(error) => return Some(super::common::operation_error(&error, "acquisition_clock")),
+        });
     replay.freshness.latest_verified = upstream.is_some();
     if let Some(upstream) = upstream {
-        replay
-            .data
-            .insert("upstream".into(), serde_json::json!(upstream));
+        if let enrichment_core::wire::data::ToolData::ResolveLibrary(data) = &mut replay.data {
+            data.upstream = Some(upstream.clone());
+        }
     }
     replay.coverage.limitations.pop();
     replay.coverage.limitations.push("The mutable registry selection was revalidated; unchanged exact artifact and environment reuse retained evidence without running extraction again.".into());
@@ -384,14 +387,23 @@ pub(super) async fn replay_selected(
             observed_configuration: parent.observed_configuration.clone(),
             producer_items: parent.producer_items,
         };
-        acquisition.run(
+        let observed_at = match enrichment_core::native_time::ObservationTime::now() {
+            Ok(value) => value,
+            Err(error) => return Some(super::common::operation_error(&error, "producer_clock")),
+        };
+        if let Err(error) = acquisition.run(
             "registry-selection",
             "1",
             acquisition.semantic_inputs(),
-            clock::now_rfc3339(),
+            observed_at,
             RunOutcome::Succeeded,
             Vec::new(),
-        );
+        ) {
+            return Some(super::common::operation_error(
+                &std::io::Error::other(error),
+                "producer_clock",
+            ));
+        }
         acquisition.delivery_template = Some(replay.clone());
         let manifest = match super::publication::publish(
             service,
@@ -524,8 +536,10 @@ impl<'a> Acquisition<'a> {
             if std::str::from_utf8(&bytes).is_err() {
                 return Ok::<_, std::io::Error>(None);
             }
+            let retrieved_at = enrichment_core::native_time::AcquisitionTime::now()
+                .map_err(std::io::Error::other)?;
             let stored = blobs.put(&bytes, |_| {
-                Artifact::describe(&bytes, kind, media, &source, &clock::now_rfc3339())
+                Artifact::describe(&bytes, kind, media, &source, retrieved_at)
             })?;
             Ok(Some(stored.acquired))
         })
@@ -560,7 +574,7 @@ impl<'a> Acquisition<'a> {
                 kind,
                 media_type,
                 source,
-                &fetched.retrieved_at,
+                fetched.retrieved_at,
             );
             artifact.final_url = (fetched.final_url != source).then(|| fetched.final_url.clone());
             artifact.etag = fetched.etag.clone();
@@ -583,9 +597,10 @@ impl<'a> Acquisition<'a> {
         compression: Option<&str>,
     ) -> std::io::Result<Artifact> {
         self.check_cancelled()?;
-        let now = clock::now_rfc3339();
+        let now =
+            enrichment_core::native_time::AcquisitionTime::now().map_err(std::io::Error::other)?;
         let stored = self.service.blobs.put(bytes, |_| {
-            let mut artifact = Artifact::describe(bytes, kind, media_type, source, &now);
+            let mut artifact = Artifact::describe(bytes, kind, media_type, source, now);
             artifact.compression = compression.map(str::to_owned);
             artifact
         })?;
@@ -597,10 +612,10 @@ impl<'a> Acquisition<'a> {
         producer: &str,
         version: &str,
         inputs: BTreeMap<String, String>,
-        started_at: String,
+        started_at: enrichment_core::native_time::ObservationTime,
         outcome: RunOutcome,
         gaps: Vec<Gap>,
-    ) {
+    ) -> Result<(), String> {
         self.runs.push(ProducerRun {
             attempt_id: uuid::Uuid::new_v4().to_string(),
             producer: producer.to_owned(),
@@ -620,45 +635,52 @@ impl<'a> Acquisition<'a> {
             inputs,
             profile: ExecutionProfile::Static,
             started_at,
-            finished_at: clock::now_rfc3339(),
+            finished_at: enrichment_core::native_time::ObservationTime::now()
+                .map_err(|error| error.to_string())?,
             outcome,
             gaps: gaps.clone(),
             log: None,
         });
         self.gaps.extend(gaps);
+        Ok(())
     }
 
     fn evidence(
         &mut self,
-        subject: &str,
+        label: &str,
         artifact: &Artifact,
-        locator: serde_json::Value,
-        producer: &str,
-        producer_version: &str,
+        locator: enrichment_core::evidence::relational::Locator,
         excerpt: &str,
-    ) {
-        let excerpt = truncate(excerpt, self.config.limits.excerpt_characters);
-        let evidence_id = format!(
-            "ev_{}",
-            &enrichment_core::canonical::digest_hex(&serde_json::json!({
-                "artifact": artifact.artifact_id, "subject": subject, "locator": locator
-            }))[..16]
-        );
-        self.evidence.push(Evidence {
-            evidence_id,
-            evidence_class: EvidenceClass::Declared,
-            subject: subject.to_owned(),
+    ) -> std::io::Result<()> {
+        use enrichment_core::evidence::relational::{FactSource, SubjectRef};
+        let run = self
+            .runs
+            .last()
+            .ok_or_else(|| std::io::Error::other("citation requires the completed producer run"))?;
+        let source = FactSource {
+            producer_binding_id: run.semantic_binding_id(),
+            extractor: run.producer.clone(),
+            extractor_version: run.producer_version.clone(),
             artifact_id: artifact.artifact_id.clone(),
-            source_uri: artifact.source_uri.clone(),
-            locator: locator
-                .as_object()
-                .expect("acquisition locator is an object")
-                .clone(),
+            source_uri: Some(artifact.source_uri.clone()),
             source_version_match: SourceVersionMatch::Exact,
-            producer: producer.to_owned(),
-            producer_version: producer_version.to_owned(),
-            excerpt,
-        });
+            locator,
+            evidence_class: EvidenceClass::Declared,
+        };
+        self.evidence.push(
+            Evidence::new(
+                artifact.artifact_id.clone(),
+                SubjectRef::Document {
+                    artifact_id: artifact.artifact_id.clone(),
+                    heading: label.to_owned(),
+                },
+                label.to_owned(),
+                source,
+                truncate(excerpt, self.config.limits.excerpt_characters),
+            )
+            .map_err(std::io::Error::other)?,
+        );
+        Ok(())
     }
 
     /// The producer that would supply the missing API, and what it would take to run it.
@@ -670,7 +692,7 @@ impl<'a> Acquisition<'a> {
         let enabled = ExecutionProfile::Build.is_enabled(self.config);
         PlannedFallback {
             producer: rustdoc::LOCAL_PRODUCER.to_owned(),
-            profile: ExecutionProfile::Build.to_string(),
+            profile: ExecutionProfile::Build,
             enabled,
             next_action: if enabled {
                 "Resolve again with allow_local_build to compile this crate's documentation on \
@@ -696,8 +718,8 @@ fn truncate(text: &str, max_chars: usize) -> String {
     out
 }
 
-fn to_object(data: &ResolveData) -> enrichment_core::wire::JsonObject {
-    super::common::to_object(data)
+fn to_object(data: &ResolveData) -> enrichment_core::wire::data::ToolData {
+    super::common::payload(data)
 }
 
 fn fetch_error(err: &FetchError, what: &str) -> Envelope {
@@ -735,7 +757,7 @@ async fn local_rustdoc(
         detail,
         planned_fallback: Some(PlannedFallback {
             producer: rustdoc::LOCAL_PRODUCER.to_owned(),
-            profile: ExecutionProfile::Build.to_string(),
+            profile: ExecutionProfile::Build,
             enabled: ExecutionProfile::Build.is_enabled(&service.config),
             next_action: "Enable the `build` profile, run `just execution-images --apply` and \
                           `just execution-qualify --apply`, then resolve again with \
@@ -783,6 +805,7 @@ async fn local_rustdoc(
         &service.config.execution,
         &service.paths.cache_root,
         std::sync::Arc::clone(&service.execution),
+        service.ownership.clone(),
     )
     .map_err(|e| gap(GapReason::PolicyDenied, e.to_string()))?
     .using_lease(lease);
@@ -838,7 +861,10 @@ pub(super) async fn acquire(
     let rust = &service.config.producers.rust;
 
     // 1. Registry index: the spellings crates.io treats as one namespace, in order.
-    let started = clock::now_rfc3339();
+    let started = match enrichment_core::native_time::ObservationTime::now() {
+        Ok(time) => time,
+        Err(error) => return super::common::operation_error(&error, "producer_clock"),
+    };
     let mut index: Option<(String, Fetched, Vec<arrow::record_batch::RecordBatch>)> = None;
     let variants = registry::name_variants(&request.name);
     for candidate in &variants {
@@ -907,7 +933,7 @@ pub(super) async fn acquire(
             false,
         );
     };
-    let registry_checked_at = index_fetched.retrieved_at.clone();
+    let registry_checked_at = index_fetched.retrieved_at;
 
     // 2. Select the exact version -- never an upgrade -- and note the newest separately.
     let native_index =
@@ -940,14 +966,6 @@ pub(super) async fn acquire(
         Err(err) => return common::operation_error(&err, "acquisition_storage"),
     };
     let excerpt = serde_json::to_string(&selected).expect("registry selection serializes");
-    acq.evidence(
-        &format!("{}@{}", selected.name, selected.vers),
-        &index_artifact,
-        serde_json::json!({ "kind": "index_line", "line": line_no }),
-        cratesio::PRODUCER,
-        cratesio::VERSION,
-        &excerpt,
-    );
     acq.indexed.insert(EvidenceKind::RegistryMetadata);
 
     let mut release = Release::new(ReleaseKey {
@@ -1000,17 +1018,31 @@ pub(super) async fn acquire(
     }
     let mut registry_inputs = BTreeMap::new();
     registry_inputs.insert("index".to_owned(), index_artifact.sha256.clone());
-    acq.run(
+    if let Err(error) = acq.run(
         cratesio::PRODUCER,
         cratesio::VERSION,
         registry_inputs,
         started,
         RunOutcome::Succeeded,
         Vec::new(),
-    );
+    ) {
+        return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
+    }
+
+    if let Err(error) = acq.evidence(
+        &format!("{}@{}", selected.name, selected.vers),
+        &index_artifact,
+        enrichment_core::evidence::relational::Locator::RegistryLine { line: line_no },
+        &excerpt,
+    ) {
+        return common::operation_error(&error, "citation_identity");
+    }
 
     // 4. The crate tarball, verified against the index checksum and extracted under policy.
-    let started = clock::now_rfc3339();
+    let started = match enrichment_core::native_time::ObservationTime::now() {
+        Ok(time) => time,
+        Err(error) => return super::common::operation_error(&error, "producer_clock"),
+    };
     let mut extracted: Option<Extracted> = None;
     let mut tarball_gaps = Vec::new();
     let mut tarball_inputs = BTreeMap::new();
@@ -1055,18 +1087,9 @@ pub(super) async fn acquire(
                                         )
                                         .ok();
                                     if let Some(manifest_artifact) = &manifest_artifact {
-                                        let rendered = serde_json::to_string(&facts.docs_rs)
-                                            .expect("documentation configuration serializes");
-                                        acq.evidence(
-                                            "documentation_build_config",
-                                            manifest_artifact,
-                                            serde_json::json!({
-                                                "kind": "toml_table", "path": "Cargo.toml",
-                                                "table": "package.metadata.docs.rs"
-                                            }),
-                                            cratesio::TARBALL_PRODUCER,
-                                            cratesio::VERSION,
-                                            &rendered,
+                                        tarball_inputs.insert(
+                                            "manifest".into(),
+                                            manifest_artifact.sha256.clone(),
                                         );
                                     }
                                     release.lib_name = facts.lib_name.clone();
@@ -1126,17 +1149,40 @@ pub(super) async fn acquire(
     } else {
         RunOutcome::Failed
     };
-    acq.run(
+    if let Err(error) = acq.run(
         cratesio::TARBALL_PRODUCER,
         cratesio::VERSION,
         tarball_inputs,
         started,
         tarball_outcome,
         tarball_gaps,
-    );
+    ) {
+        return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
+    }
+
+    if let Some(extracted) = &extracted
+        && let Some(artifact) = &extracted.manifest_artifact
+    {
+        let rendered = serde_json::to_string(&extracted.facts.docs_rs)
+            .expect("documentation configuration serializes");
+        if let Err(error) = acq.evidence(
+            "documentation_build_config",
+            artifact,
+            enrichment_core::evidence::relational::Locator::ManifestTable {
+                file: "Cargo.toml".into(),
+                table: "package.metadata.docs.rs".into(),
+            },
+            &rendered,
+        ) {
+            return common::operation_error(&error, "citation_identity");
+        }
+    }
 
     // 5. Hosted rustdoc JSON, for the default docs.rs target of this release.
-    let started = clock::now_rfc3339();
+    let started = match enrichment_core::native_time::ObservationTime::now() {
+        Ok(time) => time,
+        Err(error) => return super::common::operation_error(&error, "producer_clock"),
+    };
     let observed_target = extracted
         .as_ref()
         .map(|e| e.facts.docs_rs.default_target.clone())
@@ -1271,14 +1317,16 @@ pub(super) async fn acquire(
     } else {
         RunOutcome::Failed
     };
-    acq.run(
+    if let Err(error) = acq.run(
         docsrs::PRODUCER,
         docsrs::VERSION,
         json_inputs.clone(),
         started,
         json_outcome,
         json_gaps,
-    );
+    ) {
+        return super::common::operation_error(&std::io::Error::other(error), "producer_clock");
+    }
 
     // 5b. The §4.4 fallback. Hosted JSON came first and could not be used; the caller asked for
     // a local build, and policy allows one. A dated nightly compiles the crate in a capsule.
@@ -1367,8 +1415,8 @@ pub(super) async fn acquire(
                                 ("crate_tarball".into(), selected.cksum.clone()),
                             ]),
                             profile: ExecutionProfile::Build,
-                            started_at: built.started_at.clone(),
-                            finished_at: built.finished_at.clone(),
+                            started_at: built.started_at,
+                            finished_at: built.finished_at,
                             outcome: RunOutcome::Succeeded,
                             gaps: Vec::new(),
                             log: Some(receipt.artifact_id),
@@ -1508,7 +1556,10 @@ pub(super) async fn acquire(
 
     // 7. Normalize the hosted JSON and publish an immutable snapshot (§8.2). Only the daemon
     // publishes, and only after every table has been re-read and counted.
-    let started = clock::now_rfc3339();
+    let started = match enrichment_core::native_time::ObservationTime::now() {
+        Ok(time) => time,
+        Err(error) => return super::common::operation_error(&error, "producer_clock"),
+    };
     let mut snapshot_summary: Option<SnapshotSummary> = None;
     match json_inputs.get("rustdoc_json").cloned() {
         Some(json_sha) => {
@@ -1528,14 +1579,19 @@ pub(super) async fn acquire(
                 Err(gap) => {
                     let mut inputs = BTreeMap::new();
                     inputs.insert("rustdoc_json".to_owned(), json_sha);
-                    acq.run(
+                    if let Err(error) = acq.run(
                         rustdoc::PRODUCER,
                         rustdoc::NORMALIZER_VERSION,
                         inputs,
                         started,
                         RunOutcome::Failed,
                         vec![gap],
-                    );
+                    ) {
+                        return super::common::operation_error(
+                            &std::io::Error::other(error),
+                            "producer_clock",
+                        );
+                    }
                 }
             }
         }
@@ -1639,7 +1695,8 @@ async fn normalize_and_publish(
         detail,
         planned_fallback: None,
     };
-    let normalization_started = clock::now_rfc3339();
+    let normalization_started = enrichment_core::native_time::ObservationTime::now()
+        .map_err(|error| gap(GapReason::ExtractionFailed, error.to_string()))?;
     enrichment_store::native_effect::authorize()
         .await
         .map_err(|e| gap(GapReason::PolicyDenied, e.to_string()))?;
@@ -1867,7 +1924,8 @@ async fn normalize_and_publish(
         normalization_started,
         RunOutcome::Succeeded,
         Vec::new(),
-    );
+    )
+    .map_err(|error| gap(GapReason::ExtractionFailed, error))?;
     let details = request.extracted.and_then(|e| {
         e.manifest_artifact
             .as_ref()
@@ -2019,14 +2077,16 @@ mod provenance_tests {
         )
         .expect("service");
         let mut acquisition = Acquisition::new(&service);
-        acquisition.run(
-            "python-static",
-            "1",
-            BTreeMap::new(),
-            clock::now_rfc3339(),
-            RunOutcome::Succeeded,
-            Vec::new(),
-        );
+        acquisition
+            .run(
+                "python-static",
+                "1",
+                BTreeMap::new(),
+                enrichment_core::native_time::ObservationTime::now().unwrap(),
+                RunOutcome::Succeeded,
+                Vec::new(),
+            )
+            .unwrap();
         acquisition.runs[0].config_digest.clone()
     }
     #[test]

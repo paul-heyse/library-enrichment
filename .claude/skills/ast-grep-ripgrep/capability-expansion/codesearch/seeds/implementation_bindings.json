@@ -1,0 +1,160 @@
+{
+  "_comment": [
+    "The join between the two halves of the system: a capability mechanism, and the Rust code that",
+    "implements it. PLAN-V2 section 3.8 calls catalog.surface_binding 'the entire answer to how the",
+    "capability catalog and the Rust program model meet'. Both halves mint keys in one grammar",
+    "(section 1.2), so it is an ordinary join rather than a bridge -- but nothing SHIPPED states the",
+    "relationship, so these rows are authored.",
+    "",
+    "Nothing in the index links a flag to a crate. `bindings.tsv` is ast-grep's napi/pyo3 language",
+    "bindings, not a crosswalk, and its `role` column is uniformly `item`. A derived link -- joining",
+    "on crate-name similarity, rg to grep-*, sg to ast-grep-* -- was considered and rejected: it",
+    "would cover many rows while asserting a relationship nothing measured, which is exactly the",
+    "plausible-looking link this catalog exists to refuse.",
+    "",
+    "GRANULARITY FOLLOWS THE EVIDENCE, and so does the lattice placement.",
+    "",
+    "Package-level rows are `recorded` at `exact` precision because the skill's own",
+    "topics/embedding.md states the architecture in so many words: 'ripgrep's search pipeline is",
+    "grep-matcher (the matcher interface), grep-regex and grep-pcre2 (the two engines),",
+    "grep-searcher (the line-oriented reader), grep-printer (output), with ignore and globset",
+    "supplying the file-set machinery'. `recorded` is the right rung: it is the skill's word for it,",
+    "not a probe.",
+    "",
+    "Definition-level rows are `inexact` and `not-probed`. Naming a specific builder goes one step",
+    "beyond what any shipped page says; the type's name and role make it near-certain and near-",
+    "certain is what `inexact` means. Upgrading one to `confirmed` needs a probe that runs the flag",
+    "and observes that type being constructed -- none exists, so none is claimed.",
+    "",
+    "A binding naming a key the catalog does not hold is a BUILD ERROR, exactly as an unbound",
+    "capability or an unresolvable assertion citation is."
+  ],
+  "bindings": [
+    {
+      "mechanism": "mech:rg/cli/--pcre2",
+      "object": "pkg:crates.io/grep-pcre2@0.1.10",
+      "object_kind": "package",
+      "role": "implemented_by",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "topics/embedding.md: grep-regex and grep-pcre2 are 'the two engines'. PROVENANCE.json tools.ripgrep_features records '+pcre2', so the measured binary has it compiled in."
+    },
+    {
+      "mechanism": "mech:rg/cli/--pcre2",
+      "object": "def:grep-pcre2#grep_pcre2::matcher::RegexMatcherBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "The crate exposes exactly one matcher builder, so -P must reach it. Inferred from the type's name and the crate's five-item public surface, not observed."
+    },
+    {
+      "mechanism": "mech:rg/cli/--json",
+      "object": "pkg:crates.io/grep-printer@0.3.1",
+      "object_kind": "package",
+      "role": "implemented_by",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "topics/embedding.md names grep-printer as 'output'. --json selects an output format."
+    },
+    {
+      "mechanism": "mech:rg/cli/--json",
+      "object": "def:grep-printer#grep_printer::json::JSONBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "grep_printer::json is the only JSON module in the indexed surface; JSONBuilder is its constructor. Inferred from naming."
+    },
+    {
+      "mechanism": "mech:rg/cli/--replace",
+      "object": "pkg:crates.io/grep-printer@0.3.1",
+      "object_kind": "package",
+      "role": "implemented_by",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "Replacement is applied to printed output, never to a file -- absent:rg/in-place file rewriting records that ripgrep never modifies one. So it belongs to the printer, which topics/embedding.md names as 'output'."
+    },
+    {
+      "mechanism": "mech:rg/cli/--glob",
+      "object": "pkg:crates.io/globset@0.4.19",
+      "object_kind": "package",
+      "role": "implemented_by",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "topics/embedding.md: ignore and globset supply 'the file-set machinery'. A glob is globset's subject."
+    },
+    {
+      "mechanism": "mech:rg/cli/--glob",
+      "object": "def:globset#globset::glob::GlobBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "GlobBuilder is globset's single-pattern constructor. Inferred from naming."
+    },
+    {
+      "mechanism": "mech:rg/cli/--iglob",
+      "object": "def:globset#globset::glob::GlobBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "The case-insensitive form is the same builder with a flag set, not a second type -- which is why two mechanisms bind to one definition and the binding table allows it."
+    },
+    {
+      "mechanism": "mech:rg/cli/--type",
+      "object": "pkg:crates.io/ignore@0.4.29",
+      "object_kind": "package",
+      "role": "implemented_by",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "topics/embedding.md names ignore as file-set machinery, at 0.4.29 specifically -- 'not the newer release on crates.io -- because that is the code whose behaviour the probes observed'."
+    },
+    {
+      "mechanism": "mech:rg/cli/--type",
+      "object": "def:ignore#ignore::types::TypesBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "ignore::types is the file-type module and TypesBuilder its constructor. Inferred from naming."
+    },
+    {
+      "mechanism": "mech:rg/cli/--type-add",
+      "object": "def:ignore#ignore::types::TypesBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "Adding a type definition is a builder call on the same type the --type selector reads."
+    },
+    {
+      "mechanism": "mech:rg/cli/--no-ignore",
+      "object": "pkg:crates.io/ignore@0.4.29",
+      "object_kind": "package",
+      "role": "configured_through",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "Not implemented_by: the flag does not add behaviour, it turns off filtering the ignore crate would otherwise apply. Probes P022 and P024 confirm that filtering is on by default, which is what makes the flag meaningful."
+    },
+    {
+      "mechanism": "mech:rg/cli/--hidden",
+      "object": "pkg:crates.io/ignore@0.4.29",
+      "object_kind": "package",
+      "role": "configured_through",
+      "precision": "exact",
+      "observed": "recorded",
+      "evidence_note": "Same shape as --no-ignore: a switch on the file-set machinery's default, confirmed skipping hidden files by P024."
+    },
+    {
+      "mechanism": "mech:sg/cli/run/--pattern",
+      "object": "def:ast-grep-core#ast_grep_core::matcher::pattern::PatternBuilder",
+      "object_kind": "definition",
+      "role": "implemented_by",
+      "precision": "inexact",
+      "observed": "not-probed",
+      "evidence_note": "ast_grep_core::matcher::pattern holds Pattern, PatternBuilder and PatternError; a CLI pattern string must be parsed into one. Inferred from the module's shape."
+    }
+  ]
+}

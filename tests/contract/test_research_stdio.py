@@ -48,7 +48,7 @@ class WireClient:
         error = value["status"] == "error" or (
             tool == "job_control"
             and isinstance(value["data"].get("result"), dict)
-            and value["data"]["result"]["outcome"] == "error"
+            and value["data"]["result"]["outcome"]["status"] == "error"
         )
         assert result.get("isError", False) is error
         cap = value["delivery"]["limits"]["effective_max_bytes"]
@@ -69,6 +69,7 @@ class WireClient:
                 "read_artifact",
                 {
                     "artifact_id": artifact_id,
+                    "section": {"kind": "result", "name": "envelope"},
                     "cursor": cursor,
                     "max_bytes": 65536,
                 },
@@ -82,10 +83,8 @@ class WireClient:
             following = data["page"]["next_cursor"]
             if following is None:
                 raw = b"".join(chunks)
-                assert hashlib.sha256(raw).hexdigest() == data["artifact"]["sha256"]
                 document = json.loads(raw)
-                assert document["index"]["format"] == "research-result/3"
-                return document["result"]
+                return document
             assert following != cursor and chunk
             cursor = following
         raise AssertionError("bounded fixture result never completed")

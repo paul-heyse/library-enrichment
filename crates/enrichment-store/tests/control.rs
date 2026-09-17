@@ -51,7 +51,10 @@ fn candidate(name: &str, revision: &str) -> (ControlBatch, Context, SnapshotId) 
         counts: Default::default(),
         indexed: vec![],
         missing: vec![],
-        published_at: "2026-09-15T00:00:00Z".into(),
+        published_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-15T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
     };
     let delta = ControlBatch {
         search_projections: vec![],

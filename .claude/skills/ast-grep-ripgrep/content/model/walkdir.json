@@ -1,0 +1,152 @@
+{
+  "module": "walkdir",
+  "crate": "walkdir",
+  "api": "api/walkdir.md",
+  "items": [
+    {
+      "path": "walkdir::FilterEntry",
+      "name": "FilterEntry",
+      "kind": "struct",
+      "crate": "walkdir",
+      "signature": "struct FilterEntry<I, P>",
+      "summary": "A recursive directory iterator that skips entries.",
+      "doc": "api/walkdir.md#filterentry",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "filter_entry",
+          "signature": "fn filter_entry(self, predicate: P) -> FilterEntry<Self, P>",
+          "summary": "Yields only entries which satisfy the given predicate and skips descending into directories that do not satisfy the given predicate."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<DirEntry>>",
+          "via_trait": "core::iter::traits::iterator::Iterator",
+          "summary": "Advances the iterator and returns the next value."
+        },
+        {
+          "name": "skip_current_dir",
+          "signature": "fn skip_current_dir(&mut self)",
+          "summary": "Skips the current directory."
+        }
+      ]
+    },
+    {
+      "path": "walkdir::IntoIter",
+      "name": "IntoIter",
+      "kind": "struct",
+      "crate": "walkdir",
+      "signature": "struct IntoIter",
+      "summary": "An iterator for recursively descending into a directory.",
+      "doc": "api/walkdir.md#intoiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "filter_entry",
+          "signature": "fn filter_entry<P>(self, predicate: P) -> FilterEntry<Self, P> where P: FnMut(&DirEntry) -> bool",
+          "summary": "Yields only entries which satisfy the given predicate and skips descending into directories that do not satisfy the given predicate."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<DirEntry>>",
+          "via_trait": "core::iter::traits::iterator::Iterator",
+          "summary": "Advances the iterator and returns the next value."
+        },
+        {
+          "name": "skip_current_dir",
+          "signature": "fn skip_current_dir(&mut self)",
+          "summary": "Skips the current directory."
+        }
+      ]
+    },
+    {
+      "path": "walkdir::WalkDir",
+      "name": "WalkDir",
+      "kind": "struct",
+      "crate": "walkdir",
+      "signature": "struct WalkDir",
+      "summary": "A builder to create an iterator for recursively walking a directory.",
+      "doc": "api/walkdir.md#walkdir",
+      "implements": [
+        "core::iter::traits::collect::IntoIterator"
+      ],
+      "methods": [
+        {
+          "name": "contents_first",
+          "signature": "fn contents_first(self, yes: bool) -> Self",
+          "summary": "Yield a directory's contents before the directory itself. By default, this is disabled."
+        },
+        {
+          "name": "follow_links",
+          "signature": "fn follow_links(self, yes: bool) -> Self",
+          "summary": "Follow symbolic links. By default, this is disabled."
+        },
+        {
+          "name": "follow_root_links",
+          "signature": "fn follow_root_links(self, yes: bool) -> Self",
+          "summary": "Follow symbolic links if these are the root of the traversal. By default, this is enabled."
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "max_depth",
+          "signature": "fn max_depth(self, depth: usize) -> Self",
+          "summary": "Set the maximum depth of entries yield by the iterator."
+        },
+        {
+          "name": "max_open",
+          "signature": "fn max_open(self, n: usize) -> Self",
+          "summary": "Set the maximum number of simultaneously open file descriptors used by the iterator."
+        },
+        {
+          "name": "min_depth",
+          "signature": "fn min_depth(self, depth: usize) -> Self",
+          "summary": "Set the minimum depth of entries yielded by the iterator."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P: AsRef<Path>>(root: P) -> Self",
+          "summary": "Create a builder for a recursive directory iterator starting at the file path `root`. If `root` is a directory, then it is the first item yielded by the iterator. If `root` is a file, then it is the first and only item yielded by the itera…"
+        },
+        {
+          "name": "same_file_system",
+          "signature": "fn same_file_system(self, yes: bool) -> Self",
+          "summary": "Do not cross file system boundaries."
+        },
+        {
+          "name": "sort_by",
+          "signature": "fn sort_by<F>(self, cmp: F) -> Self where F: FnMut(&DirEntry, &DirEntry) -> Ordering + Send + Sync + 'static",
+          "summary": "Set a function for sorting directory entries with a comparator function."
+        },
+        {
+          "name": "sort_by_file_name",
+          "signature": "fn sort_by_file_name(self) -> Self",
+          "summary": "Sort directory entries by file name, to ensure a deterministic order."
+        },
+        {
+          "name": "sort_by_key",
+          "signature": "fn sort_by_key<K, F>(self, cmp: F) -> Self where F: FnMut(&DirEntry) -> K + Send + Sync + 'static, K: Ord",
+          "summary": "Set a function for sorting directory entries with a key extraction function."
+        }
+      ]
+    },
+    {
+      "path": "walkdir::Result",
+      "name": "Result",
+      "kind": "type_alias",
+      "crate": "walkdir",
+      "signature": "type Result<T> = ::std::result::Result<T, Error>",
+      "summary": "A result type for walkdir operations.",
+      "doc": "api/walkdir.md#result"
+    }
+  ]
+}

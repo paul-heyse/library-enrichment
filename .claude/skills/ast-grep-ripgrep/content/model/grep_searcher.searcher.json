@@ -1,0 +1,286 @@
+{
+  "module": "grep_searcher::searcher",
+  "crate": "grep-searcher",
+  "api": "api/grep_searcher.searcher.md",
+  "items": [
+    {
+      "path": "grep_searcher::searcher::ConfigError",
+      "name": "ConfigError",
+      "kind": "enum",
+      "crate": "grep-searcher",
+      "signature": "enum ConfigError",
+      "summary": "An error that can occur when building a searcher.",
+      "doc": "api/grep_searcher.searcher.md#configerror",
+      "aliases": [
+        "grep_searcher::ConfigError"
+      ],
+      "variants": [
+        "SearchUnavailable",
+        "MismatchedLineTerminators",
+        "UnknownEncoding"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::searcher::BinaryDetection",
+      "name": "BinaryDetection",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct BinaryDetection",
+      "summary": "The behavior of binary detection while searching.",
+      "doc": "api/grep_searcher.searcher.md#binarydetection",
+      "aliases": [
+        "grep_searcher::BinaryDetection"
+      ],
+      "methods": [
+        {
+          "name": "convert",
+          "signature": "fn convert(binary_byte: u8) -> BinaryDetection",
+          "summary": "Binary detection is performed by looking for the given byte, and replacing it with the line terminator configured on the searcher. (If the searcher is configured to use `CRLF` as the line terminator, then this byte is replaced by just `LF`…"
+        },
+        {
+          "name": "convert_byte",
+          "signature": "fn convert_byte(&self) -> Option<u8>",
+          "summary": "If this binary detection uses the \"convert\" strategy, then this returns the byte that will be replaced by the line terminator. In any other case, this returns `None`."
+        },
+        {
+          "name": "none",
+          "signature": "fn none() -> BinaryDetection",
+          "summary": "No binary detection is performed. Data reported by the searcher may contain arbitrary bytes."
+        },
+        {
+          "name": "quit",
+          "signature": "fn quit(binary_byte: u8) -> BinaryDetection",
+          "summary": "Binary detection is performed by looking for the given byte."
+        },
+        {
+          "name": "quit_byte",
+          "signature": "fn quit_byte(&self) -> Option<u8>",
+          "summary": "If this binary detection uses the \"quit\" strategy, then this returns the byte that will cause a search to quit. In any other case, this returns `None`."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::searcher::Encoding",
+      "name": "Encoding",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct Encoding",
+      "summary": "An encoding to use when searching.",
+      "doc": "api/grep_searcher.searcher.md#encoding",
+      "aliases": [
+        "grep_searcher::Encoding"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(label: &str) -> Result<Encoding, ConfigError>",
+          "summary": "Create a new encoding for the specified label."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::searcher::Searcher",
+      "name": "Searcher",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct Searcher",
+      "summary": "A searcher executes searches over a haystack and writes results to a caller provided sink.",
+      "doc": "api/grep_searcher.searcher.md#searcher",
+      "aliases": [
+        "grep_searcher::Searcher"
+      ],
+      "methods": [
+        {
+          "name": "after_context",
+          "signature": "fn after_context(&self) -> usize",
+          "summary": "Returns the number of \"after\" context lines to report. When context reporting is not enabled, this returns `0`."
+        },
+        {
+          "name": "before_context",
+          "signature": "fn before_context(&self) -> usize",
+          "summary": "Returns the number of \"before\" context lines to report. When context reporting is not enabled, this returns `0`."
+        },
+        {
+          "name": "binary_detection",
+          "signature": "fn binary_detection(&self) -> &BinaryDetection",
+          "summary": "Returns the type of binary detection configured on this searcher."
+        },
+        {
+          "name": "invert_match",
+          "signature": "fn invert_match(&self) -> bool",
+          "summary": "Returns true if and only if this searcher is configured to invert its search results. That is, matching lines are lines that do **not** match the searcher's matcher."
+        },
+        {
+          "name": "line_number",
+          "signature": "fn line_number(&self) -> bool",
+          "summary": "Returns true if and only if this searcher is configured to count line numbers."
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(&self) -> LineTerminator",
+          "summary": "Returns the line terminator used by this searcher."
+        },
+        {
+          "name": "max_matches",
+          "signature": "fn max_matches(&self) -> Option<u64>",
+          "summary": "Returns the maximum number of matches emitted by this searcher, if such a limit was set."
+        },
+        {
+          "name": "multi_line",
+          "signature": "fn multi_line(&self) -> bool",
+          "summary": "Returns true if and only if this searcher is configured to perform multi line search."
+        },
+        {
+          "name": "multi_line_with_matcher",
+          "signature": "fn multi_line_with_matcher<M: Matcher>(&self, matcher: M) -> bool",
+          "summary": "Returns true if and only if this searcher will choose a multi-line strategy given the provided matcher."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Searcher",
+          "summary": "Create a new searcher with a default configuration."
+        },
+        {
+          "name": "passthru",
+          "signature": "fn passthru(&self) -> bool",
+          "summary": "Returns true if and only if the searcher has \"passthru\" mode enabled."
+        },
+        {
+          "name": "search_file",
+          "signature": "fn search_file<M, S>(&mut self, matcher: M, file: &File, write_to: S) -> Result<(), S::Error> where M: Matcher, S: Sink",
+          "summary": "Execute a search over a file and write the results to the given sink."
+        },
+        {
+          "name": "search_path",
+          "signature": "fn search_path<P, M, S>(&mut self, matcher: M, path: P, write_to: S) -> Result<(), S::Error> where P: AsRef<Path>, M: Matcher, S: Sink",
+          "summary": "Execute a search over the file with the given path and write the results to the given sink."
+        },
+        {
+          "name": "search_reader",
+          "signature": "fn search_reader<M, R, S>(&mut self, matcher: M, read_from: R, write_to: S) -> Result<(), S::Error> where M: Matcher, R: io::Read, S: Sink",
+          "summary": "Execute a search over any implementation of `std::io::Read` and write the results to the given sink."
+        },
+        {
+          "name": "search_slice",
+          "signature": "fn search_slice<M, S>(&mut self, matcher: M, slice: &[u8], write_to: S) -> Result<(), S::Error> where M: Matcher, S: Sink",
+          "summary": "Execute a search over the given slice and write the results to the given sink."
+        },
+        {
+          "name": "set_binary_detection",
+          "signature": "fn set_binary_detection(&mut self, detection: BinaryDetection)",
+          "summary": "Set the binary detection method used on this searcher."
+        },
+        {
+          "name": "stop_on_nonmatch",
+          "signature": "fn stop_on_nonmatch(&self) -> bool",
+          "summary": "Returns true if and only if this searcher is configured to stop when it finds a non-matching line after a matching one."
+        }
+      ]
+    },
+    {
+      "path": "grep_searcher::searcher::SearcherBuilder",
+      "name": "SearcherBuilder",
+      "kind": "struct",
+      "crate": "grep-searcher",
+      "signature": "struct SearcherBuilder",
+      "summary": "A builder for configuring a searcher.",
+      "doc": "api/grep_searcher.searcher.md#searcherbuilder",
+      "aliases": [
+        "grep_searcher::SearcherBuilder"
+      ],
+      "methods": [
+        {
+          "name": "after_context",
+          "signature": "fn after_context(&mut self, line_count: usize) -> &mut SearcherBuilder",
+          "summary": "Whether to include a fixed number of lines after every match."
+        },
+        {
+          "name": "before_context",
+          "signature": "fn before_context(&mut self, line_count: usize) -> &mut SearcherBuilder",
+          "summary": "Whether to include a fixed number of lines before every match."
+        },
+        {
+          "name": "binary_detection",
+          "signature": "fn binary_detection(&mut self, detection: BinaryDetection) -> &mut SearcherBuilder",
+          "summary": "Set the binary detection strategy."
+        },
+        {
+          "name": "bom_sniffing",
+          "signature": "fn bom_sniffing(&mut self, yes: bool) -> &mut SearcherBuilder",
+          "summary": "Enable automatic transcoding based on BOM sniffing."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Searcher",
+          "summary": "Build a searcher with the given matcher."
+        },
+        {
+          "name": "encoding",
+          "signature": "fn encoding(&mut self, encoding: Option<Encoding>) -> &mut SearcherBuilder",
+          "summary": "Set the encoding used to read the source data before searching."
+        },
+        {
+          "name": "heap_limit",
+          "signature": "fn heap_limit(&mut self, bytes: Option<usize>) -> &mut SearcherBuilder",
+          "summary": "Set an approximate limit on the amount of heap space used by a searcher."
+        },
+        {
+          "name": "invert_match",
+          "signature": "fn invert_match(&mut self, yes: bool) -> &mut SearcherBuilder",
+          "summary": "Whether to invert matching, whereby lines that don't match are reported instead of reporting lines that do match."
+        },
+        {
+          "name": "line_number",
+          "signature": "fn line_number(&mut self, yes: bool) -> &mut SearcherBuilder",
+          "summary": "Whether to count and include line numbers with matching lines."
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(&mut self, line_term: LineTerminator) -> &mut SearcherBuilder",
+          "summary": "Set the line terminator that is used by the searcher."
+        },
+        {
+          "name": "max_matches",
+          "signature": "fn max_matches(&mut self, limit: Option<u64>) -> &mut SearcherBuilder",
+          "summary": "Sets the maximum number of matches that should be emitted by this searcher."
+        },
+        {
+          "name": "memory_map",
+          "signature": "fn memory_map(&mut self, strategy: MmapChoice) -> &mut SearcherBuilder",
+          "summary": "Set the strategy to employ use of memory maps."
+        },
+        {
+          "name": "multi_line",
+          "signature": "fn multi_line(&mut self, yes: bool) -> &mut SearcherBuilder",
+          "summary": "Whether to enable multi line search or not."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> SearcherBuilder",
+          "summary": "Create a new searcher builder with a default configuration."
+        },
+        {
+          "name": "passthru",
+          "signature": "fn passthru(&mut self, yes: bool) -> &mut SearcherBuilder",
+          "summary": "Whether to enable the \"passthru\" feature or not."
+        },
+        {
+          "name": "stop_on_nonmatch",
+          "signature": "fn stop_on_nonmatch(&mut self, stop_on_nonmatch: bool) -> &mut SearcherBuilder",
+          "summary": "Stop searching a file when a non-matching line is found after a matching line."
+        }
+      ]
+    }
+  ]
+}

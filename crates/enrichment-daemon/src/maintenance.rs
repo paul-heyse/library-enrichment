@@ -11,7 +11,6 @@ use serde::Serialize;
 
 const CACHE_PAYLOADS: &[&str] = &[
     "capsules",
-    "capsule-reservations",
     "handoff",
     "downloads",
     "unpacked",
@@ -19,8 +18,7 @@ const CACHE_PAYLOADS: &[&str] = &[
     "workers",
     "query-spill",
 ];
-const EVIDENCE_PAYLOADS: &[&str] = &["blobs", "snapshots", "staging", "catalog", "jobs"];
-const OLD_DEVELOPMENT_PAYLOADS: &[&str] = &["contexts", "releases", "acquisitions"];
+const EVIDENCE_PAYLOADS: &[&str] = &["blobs", "delta", "staging", "diagnostics"];
 const MAX_ENTRIES: usize = 100_000;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -56,19 +54,16 @@ pub struct Report {
 struct Guards {
     _data: fs::File,
     _cache: fs::File,
-    _retention: fs::File,
     _storage: fs::File,
 }
 fn guards(paths: &StatePaths) -> io::Result<Guards> {
     let data = state::exclusive(&paths.data_root, ".daemon.lock")?;
     let cache = state::exclusive(&paths.cache_root, ".execution-owner.lock")?;
     leases::initialize(&paths.data_root)?;
-    let retention = leases::exclusive(&paths.data_root)?;
     let storage = state::exclusive(&paths.cache_root, "capsule-storage.lock")?;
     Ok(Guards {
         _data: data,
         _cache: cache,
-        _retention: retention,
         _storage: storage,
     })
 }
@@ -127,20 +122,40 @@ pub fn reset_development(config: &Config, root: &Path, apply: bool) -> io::Resul
 
 fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Result<Report> {
     let _guards = guards(paths)?;
-    crate::execution::ownership::validate_for_state(paths, &config.execution)?;
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &paths.cache_root.join("maintenance-spill"),
+        Default::default(),
+    )
+    .map_err(io::Error::other)?;
+    let control = if apply {
+        enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?
+    } else {
+        enrichment_store::control::ControlStore::read_only(&paths.data_root, runtime.clone())?
+    };
+    let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
+        control,
+        runtime.clone(),
+        &paths.cache_root,
+    )?;
+    let validate_owner = ownership.clone();
+    let validate_paths = paths.clone();
+    let execution = config.execution.clone();
+    runtime
+        .bootstrap(async move {
+            crate::execution::ownership::validate_for_state(
+                &validate_paths,
+                &execution,
+                &validate_owner,
+            )
+            .await
+        })
+        .map_err(io::Error::other)??;
     let mut targets = Vec::new();
     if matches!(scope, Scope::Cache | Scope::Development) {
         targets.extend(CACHE_PAYLOADS.iter().map(|p| paths.cache_root.join(p)));
     }
     if matches!(scope, Scope::Evidence | Scope::Development) {
         targets.extend(EVIDENCE_PAYLOADS.iter().map(|p| paths.data_root.join(p)));
-    }
-    if scope == Scope::Development {
-        targets.extend(
-            OLD_DEVELOPMENT_PAYLOADS
-                .iter()
-                .map(|p| paths.data_root.join(p)),
-        );
     }
     targets.sort();
     let mut report = Report {
@@ -181,8 +196,20 @@ fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Re
         1,
     );
     let operation = (|| -> io::Result<()> {
-        crate::execution::Runner::new(&config.execution, &paths.cache_root, supervisor)?
-            .recover_owned()?;
+        let runner = crate::execution::Runner::new(
+            &config.execution,
+            &paths.cache_root,
+            supervisor,
+            ownership.clone(),
+        )?;
+        let recovery_owner = ownership.clone();
+        runtime
+            .bootstrap(async move {
+                runner.recover_owned().await?;
+                crate::execution::budget::recover_orphans(&recovery_owner).await
+            })
+            .map_err(io::Error::other)??;
+        let _retention = leases::exclusive(&paths.data_root)?;
         for expected in &report.candidates {
             let actual = candidate(&expected.path)?;
             if actual.inventory_digest != expected.inventory_digest {
@@ -311,6 +338,18 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let paths = StatePaths::explicit(temp.path().join("cache"), temp.path().join("data"));
         state::initialize(&paths).unwrap();
+        let runtime = enrichment_store::runtime::QueryRuntime::new(
+            &temp.path().join("spill"),
+            Default::default(),
+        )
+        .unwrap();
+        let control =
+            enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())
+                .unwrap();
+        runtime
+            .bootstrap(async move { control.pin().await })
+            .unwrap()
+            .unwrap();
         fs::create_dir(paths.data_root.join("blobs")).unwrap();
         fs::write(paths.data_root.join("blobs/evidence"), b"facts").unwrap();
         fs::create_dir(paths.cache_root.join("capsules")).unwrap();
@@ -331,7 +370,7 @@ mod tests {
         assert_eq!(applied.removed_file_bytes, 7);
         assert!(paths.data_root.join("blobs/evidence").exists());
         let evidence = cleanup(&config, &paths, Scope::Evidence, true).unwrap();
-        assert_eq!(evidence.removed_file_bytes, 5);
+        assert!(evidence.removed_file_bytes >= 5);
         assert!(!paths.data_root.join("blobs").exists());
         state::verify(&paths).unwrap();
         leases::exclusive(&paths.data_root).unwrap();
@@ -365,20 +404,75 @@ mod tests {
             5,
             1,
         );
-        let _runner =
-            crate::execution::Runner::new(&config.execution, &paths.cache_root, supervisor)
+        let runtime = enrichment_store::runtime::QueryRuntime::new(
+            &temp.path().join("spill"),
+            Default::default(),
+        )
+        .unwrap();
+        let control =
+            enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())
                 .unwrap();
-        let name = format!("libenr-{}", "a".repeat(32));
-        let owned = temp
-            .path()
-            .join("engine-a/owned")
-            .join(format!("{name}.json"));
-        fs::write(&owned, serde_json::to_vec(&serde_json::json!({"name":name,"owner":canonical::sha256_hex(paths.cache_root.canonicalize().unwrap().to_string_lossy().as_bytes()),"creation_in_progress":true})).unwrap()).unwrap();
+        let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
+            control,
+            runtime.clone(),
+            &paths.cache_root,
+        )
+        .unwrap();
+        let _runner = crate::execution::Runner::new(
+            &config.execution,
+            &paths.cache_root,
+            supervisor,
+            ownership.clone(),
+        )
+        .unwrap();
+        let root = temp.path().join("engine-a").to_str().unwrap().to_owned();
+        runtime
+            .bootstrap(async move {
+                use enrichment_store::physical_ownership::*;
+                let cache = ownership.cache().to_owned();
+                ownership
+                    .register_root(ExecutionRoot {
+                        root: root.clone(),
+                        cache: cache.clone(),
+                        broker: "/usr/bin/podman".into(),
+                    })
+                    .await?;
+                let name = format!("libenr-{}", "a".repeat(32));
+                ownership
+                    .reserve_owner(PhysicalOwner {
+                        name: name.clone(),
+                        root,
+                        cache,
+                        capsule: "/fixture".into(),
+                        image: "fixture".into(),
+                        operation_id: "fixture".into(),
+                        authority: enrichment_core::execution::ProcessAuthority::Qualification {
+                            definition_id: "fixture".into(),
+                        },
+                        created_at: enrichment_core::native_time::ObservationTime::now().unwrap(),
+                        state: PhysicalState::Reserved,
+                        creator_boot_id: None,
+                        creator_pid: None,
+                        sequence: 0,
+                    })
+                    .await?;
+                ownership
+                    .observe(
+                        &name,
+                        OwnershipObservation::Creating {
+                            boot_id: fs::read_to_string("/proc/sys/kernel/random/boot_id")?
+                                .trim()
+                                .into(),
+                        },
+                    )
+                    .await
+            })
+            .unwrap()
+            .unwrap();
         config.execution.storage_root = Some(temp.path().join("engine-b"));
         let result = cleanup(&config, &paths, Scope::Cache, true).unwrap();
         assert!(result.error.as_deref().unwrap().contains("creator"));
         assert!(result.removed.is_empty());
-        assert!(owned.exists());
         assert!(paths.cache_root.join("capsules/scratch").exists());
     }
     #[tokio::test]

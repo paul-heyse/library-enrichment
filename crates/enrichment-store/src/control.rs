@@ -124,10 +124,13 @@ pub enum Table {
     SearchProjections,
     ArtifactReceipts,
     RetainedResults,
+    ExecutionRoots,
+    PhysicalOwners,
+    StorageReservations,
 }
 
 impl Table {
-    pub(crate) const ALL: [Self; 15] = [
+    pub(crate) const ALL: [Self; 18] = [
         Self::Releases,
         Self::Environments,
         Self::Contexts,
@@ -143,6 +146,9 @@ impl Table {
         Self::SearchProjections,
         Self::ArtifactReceipts,
         Self::RetainedResults,
+        Self::ExecutionRoots,
+        Self::PhysicalOwners,
+        Self::StorageReservations,
     ];
     pub(crate) fn name(self) -> &'static str {
         match self {
@@ -161,6 +167,9 @@ impl Table {
             Self::SearchProjections => "search_projections",
             Self::ArtifactReceipts => "artifact_receipts",
             Self::RetainedResults => "retained_results",
+            Self::ExecutionRoots => "execution_roots",
+            Self::PhysicalOwners => "physical_owners",
+            Self::StorageReservations => "storage_reservations",
         }
     }
     pub(crate) fn reference(self) -> datafusion::common::TableReference {
@@ -182,6 +191,9 @@ impl Table {
             Self::SearchProjections => "projection_id",
             Self::ArtifactReceipts => "receipt_id",
             Self::RetainedResults => "result_artifact_id",
+            Self::ExecutionRoots => "root",
+            Self::PhysicalOwners => "name",
+            Self::StorageReservations => "reservation_id",
         }
     }
     pub(crate) fn schema(self) -> Result<SchemaRef> {
@@ -201,6 +213,9 @@ impl Table {
             Self::SearchProjections => return Ok(crate::search_projection::schema()),
             Self::ArtifactReceipts => return Ok(crate::artifact_catalog::schema()),
             Self::RetainedResults => return Ok(crate::result_catalog::schema()),
+            Self::ExecutionRoots | Self::PhysicalOwners | Self::StorageReservations => {
+                return Ok(crate::physical_ownership::schema(self));
+            }
         }
         .schema())
     }
@@ -210,9 +225,10 @@ impl Table {
             Self::ArtifactReceipts => {
                 crate::artifact_catalog::decode(batch)?;
             }
-            Self::RetainedResults => {
-                crate::result_catalog::validate(batch)?;
-            }
+            Self::RetainedResults
+            | Self::ExecutionRoots
+            | Self::PhysicalOwners
+            | Self::StorageReservations => {}
             Self::SearchProjections => {
                 crate::search_projection::decode(batch)?;
             }
@@ -289,6 +305,7 @@ pub enum CommitOutcome {
 /// One exact Delta snapshot and its native read views.
 #[derive(Clone)]
 pub struct ControlSnapshot {
+    pub(crate) delta: DeltaStore,
     version: u64,
     identity: String,
     control: Arc<dyn TableProvider>,
@@ -422,10 +439,6 @@ impl ControlSnapshot {
                 Table::ArtifactReceipts,
                 "SELECT * FROM state.records.artifact_receipts WHERE artifact.artifact_id IN (SELECT id FROM export_artifacts)",
             ),
-            (
-                Table::RetainedResults,
-                "SELECT * FROM state.records.retained_results WHERE result_artifact_id IN (SELECT id FROM export_results)",
-            ),
         ];
         let rebound = crate::native_catalog::batch(
             &session,
@@ -445,9 +458,32 @@ impl ControlSnapshot {
             input = input.union(pack_plan(table, session.sql(sql).await?)?)?;
         }
         let target = ControlStore::open(data_root, runtime.clone())?;
-        if target.pin().await?.generation() != 0 {
-            return Err(invalid("export catalog destination is not empty"));
+        let destination = target.pin().await?;
+        // Creating a table and installing its CHECK feature can use separate Delta versions.
+        // Emptiness is a native row property, never a guess from the log's version number.
+        runtime
+            .require_empty(
+                runtime
+                    .session()
+                    .read_table(Arc::clone(&destination.control))?
+                    .select(vec![lit("nonempty_export_destination").alias("witness")])?
+                    .limit(0, Some(1))?,
+                "empty_export_destination",
+                "export",
+            )
+            .await?;
+        let retained = session.sql("SELECT * FROM state.records.retained_results WHERE result_artifact_id IN (SELECT id FROM export_results)").await?;
+        let mut retained = runtime
+            .records::<enrichment_core::operation::results::RetainedResult>(retained, 1024)
+            .await?;
+        for result in &mut retained {
+            let record = self.result_record(result).await?;
+            result.version =
+                crate::result_relations::retain(&target.delta, &result.result_artifact_id, &record)
+                    .await?;
         }
+        let retained = session.read_batch(<enrichment_core::operation::results::RetainedResult as enrichment_core::native_union::NativeStruct>::batch(&retained)?)?;
+        input = input.union(pack_plan(Table::RetainedResults, retained)?)?;
         // Materialize the selected native DAG once. Admission over the provider then reuses
         // the same immutable candidate rather than expanding recursive source plans for every
         // record family. An interrupted candidate remains unselected for native maintenance.
@@ -463,12 +499,25 @@ impl ControlSnapshot {
         let input = runtime
             .session()
             .read_table(target.delta.provider(&stage, &target.contract).await?)?;
-        let candidate = target.candidate(0, input.clone(), None);
+        let candidate = target.candidate(destination.generation() + 1, input.clone(), None);
         target.validate(&candidate).await?;
         let table = target.load().await?;
+        if table.version() != Some(destination.generation()) {
+            return Err(invalid(
+                "export destination changed during candidate construction",
+            ));
+        }
         target
             .delta
-            .append(table, &target.contract, input, vec![])
+            .append(
+                table,
+                &target.contract,
+                input,
+                vec![Transaction::new(
+                    "export",
+                    i64::try_from(destination.generation() + 1).map_err(external)?,
+                )],
+            )
             .await?;
         std::fs::remove_dir_all(data_root.join("delta").join(stage_name))?;
         Ok(())
@@ -548,6 +597,8 @@ impl ControlSnapshot {
                             | Table::Claims
                             | Table::Interests
                             | Table::SearchProjections
+                            | Table::PhysicalOwners
+                            | Table::StorageReservations
                     ) {
                         use datafusion::logical_expr::ExprFunctionExt;
                         let order = if table == Table::Selections {
@@ -572,7 +623,34 @@ impl ControlSnapshot {
                                     .collect::<Vec<_>>(),
                             )?;
                     } else {
-                        frame = frame.distinct()?;
+                        // Hash the declared native values once. DISTINCT over every nested
+                        // column allocates one wide row encoder per admission branch, even for
+                        // mostly NULL control variants. The digest preserves semantic equality;
+                        // key uniqueness below still refuses two different values for one key.
+                        use datafusion::logical_expr::ExprFunctionExt;
+                        let fields = table.schema()?.fields().clone();
+                        let digest = datafusion::functions::crypto::expr_fn::sha256(
+                            enrichment_core::native_identity::canonical_bytes(
+                                format!("control-record/1/{}", table.name()),
+                                fields.clone(),
+                            )
+                            .call(fields.iter().map(|field| col(field.name())).collect()),
+                        );
+                        let rank = datafusion::functions_window::expr_fn::row_number()
+                            .partition_by(vec![col("native_record_digest")])
+                            .order_by(vec![col(table.key()).sort(true, false)])
+                            .build()?
+                            .alias("native_record_position");
+                        frame = frame
+                            .with_column("native_record_digest", digest)?
+                            .window(vec![rank])?
+                            .filter(col("native_record_position").eq(lit(1u64)))?
+                            .select(
+                                fields
+                                    .iter()
+                                    .map(|field| col(field.name()))
+                                    .collect::<Vec<_>>(),
+                            )?;
                     }
                     if table == Table::JobTransitions {
                         use datafusion::{
@@ -956,6 +1034,12 @@ pub struct ControlStore {
     initialization: Arc<tokio::sync::Mutex<()>>,
 }
 impl ControlStore {
+    pub(crate) fn require_write(&self) -> Result<()> {
+        if self.read_only {
+            return Err(invalid("control catalog is read-only"));
+        }
+        Ok(())
+    }
     pub(crate) fn delta_namespace(&self) -> DeltaStore {
         self.delta.clone()
     }
@@ -1001,7 +1085,6 @@ impl ControlStore {
                         false,
                         &[
                             ("record_payload", tag_rule()),
-                            ("command_arguments", command_rule()),
                             ("cleanup_observation", "claims IS NULL OR claims.cleanup_state <> 'settled' OR (claims.cleanup_observer IS NOT NULL AND claims.cleanup_confirmed_at IS NOT NULL)".into()),
                         ],
                     )
@@ -1035,6 +1118,7 @@ impl ControlStore {
             .ok_or_else(|| invalid("unloaded control table"))?;
         let snapshot = table.snapshot().map_err(external)?;
         Ok(Arc::new(ControlSnapshot {
+            delta: self.delta.clone(),
             version,
             identity: format!("{}:{version}", snapshot.metadata().id()),
             control: self.delta.provider(table, &self.contract).await?,
@@ -1050,6 +1134,7 @@ impl ControlStore {
         lease: Option<Arc<File>>,
     ) -> ControlSnapshot {
         ControlSnapshot {
+            delta: self.delta.clone(),
             version,
             identity: format!("candidate:{version}"),
             control: frame.into_view(),
@@ -1147,7 +1232,7 @@ impl ControlStore {
                 .as_ref()
                 .ok_or_else(|| invalid("publication requires a captured native claim"))?;
             let session = base.session(&self.runtime).await?;
-            let eligible=session.sql("SELECT c.job_id FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND c.lease_expires_at>now() AND t.state='running'").await?.with_param_values(vec![datafusion::common::ScalarValue::from(job),datafusion::common::ScalarValue::from(witness.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(witness.fence))])?;
+            let eligible=session.sql("SELECT c.job_id FROM state.records.claims c JOIN state.records.job_transitions t ON c.job_id=t.job_id WHERE c.job_id=$1 AND c.owner=$2 AND c.fence=$3 AND c.cleanup_state='owned' AND clock_instant(c.lease_expires_at)>now() AND t.state='running'").await?.with_param_values(vec![datafusion::common::ScalarValue::from(job),datafusion::common::ScalarValue::from(witness.owner.as_str()),datafusion::common::ScalarValue::UInt64(Some(witness.fence))])?;
             if self.runtime.execute(eligible).await?.rows != 1 {
                 return Err(invalid(
                     "publication owner is stale, cancelled, or terminal",
@@ -1305,6 +1390,7 @@ impl ControlStore {
     }
     async fn validate(&self, pin: &ControlSnapshot) -> Result<()> {
         let session = pin.bind(&self.runtime, true).await?;
+        let mut invariants = crate::invariants::Invariants::default();
         for table in Table::ALL {
             use crate::native_catalog::RelationContract;
             for (rule, violations) in enrichment_core::evidence::arrow_model::checks::violations(
@@ -1318,68 +1404,49 @@ impl ControlStore {
                 table.schema()?.as_ref(),
                 table.key(),
             )? {
-                self.runtime
-                    .require_empty(violations, &rule, table.name())
-                    .await?;
+                invariants.push(violations, &rule, table.name())?;
             }
             let duplicates = table.duplicate_keys(&session, table.reference()).await?;
-            if self
-                .runtime
-                .execute(duplicates)
-                .await
-                .map_err(|e| e.context(format!("{}.unique", table.name())))?
-                .rows
-                != 0
-            {
-                return Err(invalid(&format!(
-                    "conflicting catalog records: {}.unique",
-                    table.name()
-                )));
-            }
+            invariants.push(duplicates, "unique", table.name())?;
         }
         for table in Table::ALL {
             use crate::native_catalog::RelationContract;
             for rule in table.references() {
-                self.runtime
-                    .require_empty(
-                        rule.violations(&session, table.reference(), table.key())
-                            .await?,
-                        rule.id,
-                        "catalog_admission",
-                    )
-                    .await?;
+                invariants.push(
+                    rule.violations(&session, table.reference(), table.key())
+                        .await?,
+                    rule.id,
+                    "catalog_admission",
+                )?;
             }
         }
-        crate::attempt_plan::validate_references(
-            &self.runtime,
+        crate::attempt_plan::reference_rules(
+            &mut invariants,
             &session,
             "state.records.attempts",
             "association_id",
         )
         .await?;
         let attempts = session.table("state.records.attempts").await?;
-        self.runtime
-            .require_empty(
-                attempts
-                    .filter(
-                        col("association_id")
-                            .not_eq(enrichment_core::native_key::Key::SnapshotAttempt.expression()),
-                    )?
-                    .select(vec![col("association_id")])?,
-                "attempt_association_identity",
-                "catalog_admission",
-            )
-            .await?;
+        invariants.push(
+            attempts
+                .filter(
+                    col("association_id")
+                        .not_eq(enrichment_core::native_key::Key::SnapshotAttempt.expression()),
+                )?
+                .select(vec![col("association_id")])?,
+            "attempt_association_identity",
+            "catalog_admission",
+        )?;
+        crate::search_projection::admission_rules(&mut invariants, &session).await?;
         for rule in CONDITIONAL_RULES {
-            self.runtime
-                .require_empty(
-                    rule.violations(&session).await?,
-                    rule.id,
-                    "catalog_admission",
-                )
-                .await?;
+            invariants.push(
+                rule.violations(&session).await?,
+                rule.id,
+                "catalog_admission",
+            )?;
         }
-        Ok(())
+        self.runtime.admit(invariants).await
     }
 }
 async fn current(
@@ -1472,12 +1539,6 @@ fn tag_rule() -> String {
         })
         .collect::<Vec<_>>()
         .join(" OR ")
-}
-fn command_rule() -> String {
-    let count = ["verify", "inspect", "resolve", "compare"]
-        .map(|kind| format!("CASE WHEN commands.arguments.{kind} IS NULL THEN 0 ELSE 1 END"))
-        .join(" + ");
-    format!("record_kind <> 'commands' OR ({count}) = 1")
 }
 // Mechanical Arrow encoding of the finite control-record union. Decisions and admission
 // remain native plans; payloads retain their typed fields, not opaque serialized rows.
@@ -1637,7 +1698,7 @@ fn control_input(
 }
 
 fn concurrent_creation(error: &DataFusionError) -> bool {
-    matches!(error, DataFusionError::External(inner) if matches!(inner.downcast_ref::<deltalake::DeltaTableError>(), Some(deltalake::DeltaTableError::VersionAlreadyExists(_))))
+    matches!(error.find_root(), DataFusionError::External(inner) if matches!(inner.downcast_ref::<deltalake::DeltaTableError>(), Some(deltalake::DeltaTableError::VersionAlreadyExists(_))))
 }
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Plan(message.into())

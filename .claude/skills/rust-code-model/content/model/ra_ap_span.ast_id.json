@@ -1,0 +1,191 @@
+{
+  "module": "ra_ap_span::ast_id",
+  "crate": "ra_ap_span",
+  "api": "api/ra_ap_span.ast_id.md",
+  "items": [
+    {
+      "path": "ra_ap_span::ast_id::FIXUP_ERASED_FILE_AST_ID_MARKER",
+      "name": "FIXUP_ERASED_FILE_AST_ID_MARKER",
+      "kind": "constant",
+      "crate": "ra_ap_span",
+      "signature": "const FIXUP_ERASED_FILE_AST_ID_MARKER: ErasedFileAstId = _",
+      "summary": "ErasedFileAstId used as the span for syntax node fixups. Any Span containing this file id is to be considered fake. Do not modify this, it is used by the proc-macro server.",
+      "doc": "api/ra_ap_span.ast_id.md#fixup_erased_file_ast_id_marker",
+      "aliases": [
+        "ra_ap_span::FIXUP_ERASED_FILE_AST_ID_MARKER"
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::NO_DOWNMAP_ERASED_FILE_AST_ID_MARKER",
+      "name": "NO_DOWNMAP_ERASED_FILE_AST_ID_MARKER",
+      "kind": "constant",
+      "crate": "ra_ap_span",
+      "signature": "const NO_DOWNMAP_ERASED_FILE_AST_ID_MARKER: ErasedFileAstId = _",
+      "summary": "[`ErasedFileAstId`] used as the span for syntax nodes that should not be mapped down to macro expansion. Any `Span` containing this file id is to be considered fake.",
+      "doc": "api/ra_ap_span.ast_id.md#no_downmap_erased_file_ast_id_marker",
+      "aliases": [
+        "ra_ap_span::NO_DOWNMAP_ERASED_FILE_AST_ID_MARKER"
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::ROOT_ERASED_FILE_AST_ID",
+      "name": "ROOT_ERASED_FILE_AST_ID",
+      "kind": "constant",
+      "crate": "ra_ap_span",
+      "signature": "const ROOT_ERASED_FILE_AST_ID: ErasedFileAstId = _",
+      "summary": "The root ast id always points to the encompassing file, using this in spans is discouraged as any range relative to it will be effectively absolute, ruining the entire point of anchored relative text ranges.",
+      "doc": "api/ra_ap_span.ast_id.md#root_erased_file_ast_id",
+      "aliases": [
+        "ra_ap_span::ROOT_ERASED_FILE_AST_ID"
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::AstIdMap",
+      "name": "AstIdMap",
+      "kind": "struct",
+      "crate": "ra_ap_span",
+      "signature": "struct AstIdMap",
+      "summary": "Maps items' `SyntaxNode`s to `ErasedFileAstId`s and back.",
+      "doc": "api/ra_ap_span.ast_id.md#astidmap",
+      "aliases": [
+        "ra_ap_span::AstIdMap"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "ast_id",
+          "signature": "fn ast_id<N: AstIdNode>(&self, item: &N) -> FileAstId<N>"
+        },
+        {
+          "name": "ast_id_for_block",
+          "signature": "fn ast_id_for_block(&self, block: &ast::BlockExpr) -> Option<FileAstId<ast::BlockExpr>>",
+          "summary": "Blocks may not be allocated (if they have no items), so they have a different API."
+        },
+        {
+          "name": "ast_id_for_ptr",
+          "signature": "fn ast_id_for_ptr<N: AstIdNode>(&self, ptr: AstPtr<N>) -> FileAstId<N>"
+        },
+        {
+          "name": "ast_id_for_ptr_for_block",
+          "signature": "fn ast_id_for_ptr_for_block(&self, ptr: AstPtr<ast::BlockExpr>) -> Option<FileAstId<ast::BlockExpr>>",
+          "summary": "Blocks may not be allocated (if they have no items), so they have a different API."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "from_source",
+          "signature": "fn from_source(node: &SyntaxNode) -> AstIdMap"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<N: AstNode>(&self, id: FileAstId<N>) -> AstPtr<N>"
+        },
+        {
+          "name": "get_erased",
+          "signature": "fn get_erased(&self, id: ErasedFileAstId) -> SyntaxNodePtr"
+        },
+        {
+          "name": "root",
+          "signature": "fn root(&self) -> SyntaxNodePtr",
+          "summary": "The root node."
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::ErasedFileAstId",
+      "name": "ErasedFileAstId",
+      "kind": "struct",
+      "crate": "ra_ap_span",
+      "signature": "struct ErasedFileAstId",
+      "summary": "This is a type erased FileAstId.",
+      "doc": "api/ra_ap_span.ast_id.md#erasedfileastid",
+      "aliases": [
+        "ra_ap_span::ErasedFileAstId"
+      ],
+      "methods": [
+        {
+          "name": "from_raw",
+          "signature": "const fn from_raw(v: u32) -> Self"
+        },
+        {
+          "name": "into_raw",
+          "signature": "fn into_raw(self) -> u32"
+        },
+        {
+          "name": "is_root",
+          "signature": "fn is_root(self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::FileAstId",
+      "name": "FileAstId",
+      "kind": "struct",
+      "crate": "ra_ap_span",
+      "signature": "struct FileAstId<N>",
+      "summary": "`AstId` points to an AST node in a specific file.",
+      "doc": "api/ra_ap_span.ast_id.md#fileastid",
+      "aliases": [
+        "ra_ap_span::FileAstId"
+      ],
+      "methods": [
+        {
+          "name": "downcast_unchecked",
+          "signature": "fn downcast_unchecked<M: AstIdNode + Into<N>>(self) -> FileAstId<M>"
+        },
+        {
+          "name": "erase",
+          "signature": "fn erase(self) -> ErasedFileAstId"
+        },
+        {
+          "name": "upcast",
+          "signature": "fn upcast<M: AstIdNode>(self) -> FileAstId<M> where N: Into<M>"
+        }
+      ]
+    },
+    {
+      "path": "ra_ap_span::ast_id::AstIdNode",
+      "name": "AstIdNode",
+      "kind": "trait",
+      "crate": "ra_ap_span",
+      "signature": "trait AstIdNode: AstNode",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ra_ap_span::AstIdNode"
+      ],
+      "implementors": [
+        "ra_ap_syntax::ast::generated::nodes::Adt",
+        "ra_ap_syntax::ast::generated::nodes::AnyHasGenericParams",
+        "ra_ap_syntax::ast::generated::nodes::AsmExpr",
+        "ra_ap_syntax::ast::generated::nodes::AssocItem",
+        "ra_ap_syntax::ast::generated::nodes::Const",
+        "ra_ap_syntax::ast::generated::nodes::Enum",
+        "ra_ap_syntax::ast::generated::nodes::ExternBlock",
+        "ra_ap_syntax::ast::generated::nodes::ExternCrate",
+        "ra_ap_syntax::ast::generated::nodes::Fn",
+        "ra_ap_syntax::ast::generated::nodes::Impl",
+        "ra_ap_syntax::ast::generated::nodes::Item",
+        "ra_ap_syntax::ast::generated::nodes::MacroCall",
+        "ra_ap_syntax::ast::generated::nodes::MacroDef",
+        "ra_ap_syntax::ast::generated::nodes::MacroRules",
+        "ra_ap_syntax::ast::generated::nodes::Module",
+        "ra_ap_syntax::ast::generated::nodes::Static",
+        "ra_ap_syntax::ast::generated::nodes::Struct",
+        "ra_ap_syntax::ast::generated::nodes::Trait",
+        "ra_ap_syntax::ast::generated::nodes::TypeAlias",
+        "ra_ap_syntax::ast::generated::nodes::Union",
+        "ra_ap_syntax::ast::generated::nodes::Use",
+        "ra_ap_syntax::ast::generated::nodes::Variant",
+        "ra_ap_syntax::ast::node_ext::Macro"
+      ],
+      "required_methods": [],
+      "provided_methods": []
+    }
+  ]
+}

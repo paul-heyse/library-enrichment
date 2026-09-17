@@ -3,194 +3,83 @@
 //!
 //! Identities are content-derived and package-qualified (§3.1): a symbol is named by its
 //! canonical public path, a definition by the path it is defined at. Rustdoc's item IDs are
-//! kept only as `producer_local_id`, never as cross-release identity.
+//! kept in their qualified locators, never as cross-release identity.
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::wire::EvidenceClass;
-
-/// What kind of item a symbol is.
-///
-/// The values are, in order: `module`, `struct`, `union`, `enum`, `variant`, `struct_field`,
-/// `trait`, `trait_alias`, `type_alias`, `function`, `method`, `constant`, `static`, `macro`,
-/// `proc_macro`, `assoc_type`, `assoc_const`, `primitive`, `extern_crate`, `import`.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum SymbolKind {
-    Module,
-    Struct,
-    Class,
-    Attribute,
-    Union,
-    Enum,
-    Variant,
-    StructField,
-    Trait,
-    TraitAlias,
-    TypeAlias,
-    Function,
-    Method,
-    Constant,
-    Static,
-    Macro,
-    ProcMacro,
-    AssocType,
-    AssocConst,
-    Primitive,
-    ExternCrate,
-    ExternType,
-    Import,
-}
-
-impl SymbolKind {
-    /// The wire spelling.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Module => "module",
-            Self::Struct => "struct",
-            Self::Class => "class",
-            Self::Attribute => "attribute",
-            Self::Union => "union",
-            Self::Enum => "enum",
-            Self::Variant => "variant",
-            Self::StructField => "struct_field",
-            Self::Trait => "trait",
-            Self::TraitAlias => "trait_alias",
-            Self::TypeAlias => "type_alias",
-            Self::Function => "function",
-            Self::Method => "method",
-            Self::Constant => "constant",
-            Self::Static => "static",
-            Self::Macro => "macro",
-            Self::ProcMacro => "proc_macro",
-            Self::AssocType => "assoc_type",
-            Self::AssocConst => "assoc_const",
-            Self::Primitive => "primitive",
-            Self::ExternCrate => "extern_crate",
-            Self::ExternType => "extern_type",
-            Self::Import => "import",
-        }
+crate::native_vocabulary! {
+    /// Declaration kind, shared by native fields, admission and generated wire enums.
+    #[derive(Hash, PartialOrd, Ord)]
+    #[schemars(inline)]
+    pub enum SymbolKind {
+        Module = "module",
+        Struct = "struct",
+        Class = "class",
+        Attribute = "attribute",
+        Union = "union",
+        Enum = "enum",
+        Variant = "variant",
+        StructField = "struct_field",
+        Trait = "trait",
+        TraitAlias = "trait_alias",
+        TypeAlias = "type_alias",
+        Function = "function",
+        Method = "method",
+        Constant = "constant",
+        Static = "static",
+        Macro = "macro",
+        ProcMacro = "proc_macro",
+        AssocType = "assoc_type",
+        AssocConst = "assoc_const",
+        Primitive = "primitive",
+        ExternCrate = "extern_crate",
+        ExternType = "extern_type",
+        Import = "import",
     }
-
-    /// Parse the wire spelling.
-    #[must_use]
-    pub fn parse(text: &str) -> Option<Self> {
-        [
-            Self::Module,
-            Self::Struct,
-            Self::Class,
-            Self::Attribute,
-            Self::Union,
-            Self::Enum,
-            Self::Variant,
-            Self::StructField,
-            Self::Trait,
-            Self::TraitAlias,
-            Self::TypeAlias,
-            Self::Function,
-            Self::Method,
-            Self::Constant,
-            Self::Static,
-            Self::Macro,
-            Self::ProcMacro,
-            Self::AssocType,
-            Self::AssocConst,
-            Self::Primitive,
-            Self::ExternCrate,
-            Self::ExternType,
-            Self::Import,
-        ]
-        .into_iter()
-        .find(|k| k.as_str() == text)
+}
+crate::native_struct! {
+    /// A deprecation notice exactly as the producer recorded it.
+    pub struct Deprecated {
+        since: Option<String> => crate::native_union::Rule::Text,
+        note: Option<String> => crate::native_union::Rule::Text,
     }
 }
 
-/// A deprecation notice as the producer recorded it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Deprecated {
-    /// The `since` value, if given.
-    pub since: Option<String>,
-    /// The note, if given.
-    pub note: Option<String>,
-}
-
-/// One public symbol at one public path (§6.1).
-///
-/// A re-export is a symbol whose `path` differs from its `definition_path`; both share one
-/// `definition_id`, which is how an overview counts capabilities once (gate R07).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Symbol {
-    /// Identity of this public path: hash of crate, path, kind and (for trait-impl members)
-    /// the trait.
-    pub symbol_id: String,
-    /// Identity of the definition this path names.
-    pub definition_id: String,
-    /// Canonical public path, e.g. `enr_fixture::inner::Widget`.
-    pub path: String,
-    /// The last path segment.
-    pub name: String,
-    /// What kind of item this is.
-    pub kind: SymbolKind,
-    /// The containing path, when any.
-    pub parent_path: Option<String>,
-    /// Rendered signature, when the producer rendered one.
-    pub signature: Option<String>,
-    /// First paragraph of the documentation, bounded.
-    pub doc_summary: Option<String>,
-    /// Full documentation text.
-    pub docs: Option<String>,
-    /// Deprecation, when marked.
-    pub deprecated: Option<Deprecated>,
-    /// Source file as the producer recorded it.
-    pub span_file: Option<String>,
-    /// 1-based source line as the producer recorded it.
-    pub span_line: Option<u32>,
-    /// Whether this path is a re-export of a definition elsewhere.
-    pub is_reexport: bool,
-    /// The path the item is defined at.
-    pub definition_path: String,
-    /// The crate the definition belongs to.
-    pub defined_in_crate: String,
-    /// The producer's own item identifier -- local, never a cross-release identity.
-    pub producer_local_id: u32,
-    /// Trait or declaration qualifier included in symbol/definition identity.
-    pub qualifier: Option<String>,
-    /// `cfg`-shaped attribute strings the producer preserved, as declared hints only. Never
-    /// a feature predicate: items compiled out are absent, not annotated (§4.3).
-    pub cfg_hints: Vec<String>,
-}
-
-impl Symbol {
-    /// Derive a symbol identity.
-    #[must_use]
-    pub fn symbol_id_for(
-        crate_name: &str,
-        path: &str,
-        kind: SymbolKind,
-        qualifier: Option<&str>,
-    ) -> String {
-        #[derive(Serialize)]
-        struct KeyInput<'a> {
-            package: &'a str,
-            path: &'a str,
-            kind: SymbolKind,
-            qualifier: Option<&'a str>,
-        }
-        crate::native_key::Key::ProducerSymbol
-            .value(&KeyInput {
-                package: crate_name,
-                path,
-                kind,
-                qualifier,
-            })
-            .expect("declared native declaration identity")
+crate::native_struct! {
+    /// Public binding identity. Observed signatures, documentation and source coordinates
+    /// remain in independently qualified observations, never synthesized into this header.
+    pub struct SymbolHeader {
+        symbol_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::Symbol),
+        definition_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::Definition),
+        path: String => crate::native_union::Rule::NonEmpty,
+        name: String => crate::native_union::Rule::NonEmpty,
+        kind: SymbolKind => crate::native_union::Rule::Text,
+        parent_path: Option<String> => crate::native_union::Rule::Text,
+        is_reexport: bool => crate::native_union::Rule::Text,
+        definition_path: String => crate::native_union::Rule::NonEmpty,
+        defined_in_package: String => crate::native_union::Rule::NonEmpty,
+        qualifier: Option<String> => crate::native_union::Rule::Text,
     }
+}
 
+crate::native_struct! {
+    /// Complete native consensus over qualified API observations for ancillary projections.
+    pub struct AncillaryFacts {
+        cfg_hints: Option<Vec<String>> => crate::native_union::Rule::Sequence,
+        locator: Option<crate::evidence::relational::Locator> => crate::native_union::Rule::Text,
+        cfg_alternatives: u64 => crate::native_union::Rule::Text,
+        locator_alternatives: u64 => crate::native_union::Rule::Text,
+    }
+}
+
+crate::native_struct! {
+    pub struct DefinitionIdentity {
+        package: String => crate::native_union::Rule::NonEmpty,
+        path: String => crate::native_union::Rule::NonEmpty,
+        kind: SymbolKind => crate::native_union::Rule::Text,
+        qualifier: Option<String> => crate::native_union::Rule::Text,
+    }
+}
+
+impl SymbolHeader {
     /// Derive a definition identity.
     #[must_use]
     pub fn definition_id_for(
@@ -199,121 +88,42 @@ impl Symbol {
         kind: SymbolKind,
         qualifier: Option<&str>,
     ) -> String {
-        #[derive(Serialize)]
-        struct KeyInput<'a> {
-            package: &'a str,
-            path: &'a str,
-            kind: SymbolKind,
-            qualifier: Option<&'a str>,
-        }
         crate::native_key::Key::Definition
-            .value(&KeyInput {
-                package: crate_name,
-                path: definition_path,
+            .record(&DefinitionIdentity {
+                package: crate_name.into(),
+                path: definition_path.into(),
                 kind,
-                qualifier,
+                qualifier: qualifier.map(str::to_owned),
             })
             .expect("declared native declaration identity")
     }
 }
 
+crate::native_vocabulary! {
 /// Typed relations between symbols (§6.1).
 ///
 /// The values are, in order: `reexports`, `implements`, `member_of`, `documents`, `returns`,
 /// `accepts`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Hash)]
 #[schemars(inline)]
 pub enum RelationKind {
-    Reexports,
-    Implements,
-    Inherits,
-    MemberOf,
-    Documents,
-    Returns,
-    Accepts,
+    Reexports = "reexports", Implements = "implements", Inherits = "inherits",
+    MemberOf = "member_of", Documents = "documents", Returns = "returns", Accepts = "accepts",
+}
 }
 
-impl RelationKind {
-    /// The wire spelling.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Reexports => "reexports",
-            Self::Implements => "implements",
-            Self::Inherits => "inherits",
-            Self::MemberOf => "member_of",
-            Self::Documents => "documents",
-            Self::Returns => "returns",
-            Self::Accepts => "accepts",
-        }
+crate::native_vocabulary! {
+    /// What kind of text a fragment is.
+    #[derive(Hash)]
+    #[schemars(inline)]
+    pub enum FragmentKind {
+        ApiSignature = "api_signature", DocText = "doc_text",
+        FeatureDefinition = "feature_definition", ReadmeSection = "readme_section",
+        ChangelogSection = "changelog_section", Example = "example", SourceExcerpt = "source_excerpt"
     }
-
-    /// Parse the wire spelling.
-    #[must_use]
-    pub fn parse(text: &str) -> Option<Self> {
-        [
-            Self::Reexports,
-            Self::Implements,
-            Self::Inherits,
-            Self::MemberOf,
-            Self::Documents,
-            Self::Returns,
-            Self::Accepts,
-        ]
-        .into_iter()
-        .find(|k| k.as_str() == text)
-    }
-}
-
-/// What kind of text a fragment is.
-///
-/// The values are, in order: `api_signature`, `doc_text`, `feature_definition`,
-/// `readme_section`, `changelog_section`, `example`, `source_excerpt`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum FragmentKind {
-    ApiSignature,
-    DocText,
-    FeatureDefinition,
-    ReadmeSection,
-    ChangelogSection,
-    Example,
-    SourceExcerpt,
 }
 
 impl FragmentKind {
-    /// The wire spelling.
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::ApiSignature => "api_signature",
-            Self::DocText => "doc_text",
-            Self::FeatureDefinition => "feature_definition",
-            Self::ReadmeSection => "readme_section",
-            Self::ChangelogSection => "changelog_section",
-            Self::Example => "example",
-            Self::SourceExcerpt => "source_excerpt",
-        }
-    }
-
-    /// Parse the wire spelling.
-    #[must_use]
-    pub fn parse(text: &str) -> Option<Self> {
-        [
-            Self::ApiSignature,
-            Self::DocText,
-            Self::FeatureDefinition,
-            Self::ReadmeSection,
-            Self::ChangelogSection,
-            Self::Example,
-            Self::SourceExcerpt,
-        ]
-        .into_iter()
-        .find(|k| k.as_str() == text)
-    }
-
     /// The `search_evidence` kind family this fragment belongs to.
     #[must_use]
     pub fn family(self) -> &'static str {
@@ -329,172 +139,70 @@ impl FragmentKind {
     }
 }
 
-/// A bounded extract with its locator and epistemic class (§6.1).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct EvidenceFragment {
-    /// Content-derived identity.
-    pub fragment_id: String,
-    /// What kind of text this is.
-    pub kind: FragmentKind,
-    /// What it is about: a symbol path, a feature name, a heading.
-    pub subject: String,
-    /// The artifact it was read from.
-    pub artifact_id: String,
-    /// Position within the artifact, as a JSON object.
-    pub locator: serde_json::Map<String, serde_json::Value>,
-    /// The text.
-    pub text: String,
-    /// Which epistemic class it belongs to.
-    pub evidence_class: EvidenceClass,
-    /// Which producer emitted it.
-    pub producer: String,
-    /// The producer's exact version.
-    pub producer_version: String,
-    /// Source-specific version match, overriding the release default for mutable docs.
-    #[serde(default)]
-    pub source_version_match: Option<crate::wire::SourceVersionMatch>,
-    /// This fragment's acquisition locator, not the blob's first retrieval locator.
-    #[serde(default)]
-    pub source_uri: Option<String>,
-}
-
+crate::native_struct! {
 /// The configuration a documentation build was observed under (§4.3).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ObservedConfiguration {
     /// Features the docs build enabled, as the manifest declared them.
-    pub features: Vec<String>,
+    features: Vec<String> => crate::native_union::Rule::Set,
     /// Whether all features were enabled.
-    pub all_features: bool,
+    all_features: bool => crate::native_union::Rule::Text,
     /// Whether default features were disabled.
-    pub no_default_features: bool,
+    no_default_features: bool => crate::native_union::Rule::Text,
     /// The target the JSON itself declares.
-    pub target: String,
+    target: String => crate::native_union::Rule::Text,
     /// The rustdoc JSON format version.
-    pub format_version: u32,
+    format_version: u32 => crate::native_union::Rule::Text,
     /// Where the configuration was read from.
-    pub source: String,
+    source: String => crate::native_union::Rule::Text,
+}
 }
 
+crate::native_struct! {
 /// What a caller declared about its own environment, for comparison.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Default)]
 pub struct RequestedConfiguration {
-    /// Features the project enables, when declared.
-    pub features: Option<Vec<String>>,
-    /// Whether default features are enabled, when declared.
-    pub default_features: Option<bool>,
-    /// The project's target, when declared.
-    pub target: Option<String>,
+    features: Option<Vec<String>> => crate::native_union::Rule::Set,
+    default_features: Option<bool> => crate::native_union::Rule::Text,
+    target: Option<String> => crate::native_union::Rule::Text,
+}
 }
 
-/// Availability is several separate states, never one boolean (§4.3).
-///
-/// The values are, in order: `documented_available`, `project_availability_unverified`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+crate::native_vocabulary! {
+/// Documentation presence and verified project availability are distinct claims.
 #[schemars(inline)]
 pub enum AvailabilityStatus {
-    DocumentedAvailable,
-    ProjectAvailabilityUnverified,
+    DocumentedAvailable = "documented_available",
+    ProjectAvailabilityUnverified = "project_availability_unverified",
+}
 }
 
-/// What can and cannot be said about a symbol's availability to a project.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+crate::native_struct! {
+/// Native availability selection; Rust only decodes the admitted result.
 pub struct Availability {
-    /// The strongest honest claim.
-    pub status: AvailabilityStatus,
-    /// The documented build's configuration.
-    pub observed_configuration: ObservedConfiguration,
-    /// The caller's declared configuration.
-    pub requested_configuration: RequestedConfiguration,
-    /// Why the status is what it is, in prose.
-    pub notes: Vec<String>,
+    status: AvailabilityStatus => crate::native_union::Rule::Text,
+    observed_configuration: ObservedConfiguration => crate::native_union::Rule::Text,
+    requested_configuration: RequestedConfiguration => crate::native_union::Rule::Text,
+    notes: Vec<String> => crate::native_union::Rule::Sequence,
+}
 }
 
-impl Availability {
-    /// Compare an observed documentation build with a declared project configuration.
-    ///
-    /// Presence in the documented build establishes `documented_available`. It never
-    /// establishes project availability: a target difference, a feature difference, or an
-    /// undeclared environment each leave the project claim unverified, and no per-symbol
-    /// feature predicate is invented from documentation annotations.
-    #[must_use]
-    pub fn assess(
-        observed: ObservedConfiguration,
-        requested: RequestedConfiguration,
-        cfg_hints: &[String],
-    ) -> Self {
-        let mut notes = Vec::new();
-        if let Some(target) = &requested.target
-            && target != &observed.target
-        {
-            notes.push(format!(
-                "The documentation was built for {}; the project targets {target}. Target-gated \
-                 items may differ.",
-                observed.target
-            ));
-        }
-        if observed.all_features {
-            notes.push(
-                "The documentation build enabled all features; a project with a narrower \
-                 feature set may not have every documented item."
-                    .to_owned(),
-            );
-        }
-        if let Some(features) = &requested.features {
-            let extra: Vec<&String> = observed
-                .features
-                .iter()
-                .filter(|f| !features.contains(f))
-                .collect();
-            if !extra.is_empty() {
-                notes.push(format!(
-                    "The documentation build enabled features the project does not: {}.",
-                    extra
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ));
-            }
-        }
-        if requested.features.is_none() && requested.target.is_none() {
-            notes.push(
-                "No project environment was declared, so availability in the project is \
-                 unverified."
-                    .to_owned(),
-            );
-        }
-        if !cfg_hints.is_empty() {
-            notes.push(format!(
-                "The item carries declared cfg hints ({}); these are documentation \
-                 annotations, not a verified feature predicate.",
-                cfg_hints.join("; ")
-            ));
-        }
-        Self {
-            status: AvailabilityStatus::ProjectAvailabilityUnverified,
-            observed_configuration: observed,
-            requested_configuration: requested,
-            notes,
-        }
-    }
-}
-
+crate::native_struct! {
 /// Counts an overview and a manifest report.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Default)]
 pub struct SnapshotCounts {
     /// Public paths.
-    pub symbols: u64,
+    symbols: u64 => crate::native_union::Rule::Text,
     /// Distinct definitions.
-    pub definitions: u64,
+    definitions: u64 => crate::native_union::Rule::Text,
     /// Paths that re-export a definition reachable elsewhere.
-    pub reexports: u64,
+    reexports: u64 => crate::native_union::Rule::Text,
     /// Re-exports whose target is outside this crate.
-    pub unresolved_reexports: u64,
+    unresolved_reexports: u64 => crate::native_union::Rule::Text,
     /// Typed edges.
-    pub relationships: u64,
+    relationships: u64 => crate::native_union::Rule::Text,
     /// Fragments.
-    pub fragments: u64,
+    fragments: u64 => crate::native_union::Rule::Text,
     /// Items the producer saw in total, including those not surfaced as symbols.
-    pub producer_items: u64,
+    producer_items: u64 => crate::native_union::Rule::Text,
+}
 }

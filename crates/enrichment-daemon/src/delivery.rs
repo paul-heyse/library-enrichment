@@ -1,9 +1,9 @@
 //! One bounded encoding and immutable overflow contract for replies and durable journals.
-use crate::{envelope, ops::common};
+use crate::envelope;
 use enrichment_core::{
     canonical,
     evidence::Artifact,
-    wire::{DeliveryDescriptor, DeliveryLimits, Envelope, RecoveryAction},
+    wire::{DeliveryDescriptor, Envelope, RecoveryAction},
 };
 use enrichment_store::BlobStore;
 use std::io;
@@ -11,11 +11,7 @@ use std::io;
 pub(crate) const MAX_RESULT_BYTES: usize = 32 * 1024 * 1024;
 pub(crate) const JOURNAL_BYTES: usize = 1024 * 1024;
 
-#[derive(Debug, thiserror::Error)]
-#[error("delivery requires at least {minimum} encoded bytes")]
-pub(crate) struct MinimumBudget {
-    pub minimum: usize,
-}
+pub(crate) use enrichment_store::result_delivery::MinimumBudget;
 
 /// The minimum-budget response is itself a complete, bounded error. Its short mandatory
 /// fields avoid repeating an arbitrarily large failed result or its explanatory text.
@@ -105,7 +101,7 @@ pub(crate) async fn encode(
             let owned = blobs.clone();
             let input = result.clone();
             let output = runtime
-                .blocking(move || store_result(&owned, &input, "service:bounded-result/3"))
+                .blocking(move || store_result(&owned, &input, "service:bounded-result/4"))
                 .await
                 .map_err(io::Error::other)??;
             catalog
@@ -114,7 +110,16 @@ pub(crate) async fn encode(
                 .map_err(io::Error::other)?;
             output
         };
-    overflow(&artifact, &index, result, bytes, inline)
+    enrichment_store::result_delivery::retained(
+        runtime,
+        index.record.header.clone(),
+        &artifact,
+        &index,
+        inline,
+        requested,
+        result.request_id,
+    )
+    .await
 }
 
 fn store_result(
@@ -125,193 +130,77 @@ fn store_result(
     enrichment_store::result::store(blobs, result, uri)
 }
 
-fn overflow(
-    artifact: &Artifact,
-    index: &enrichment_store::result::Index,
-    result: Envelope,
-    bytes: usize,
-    inline: usize,
-) -> io::Result<Envelope> {
-    let id = artifact.artifact_id.clone();
-    use enrichment_core::wire::research::ResultSectionName;
-    let sections = [
-        ResultSectionName::Coverage,
-        ResultSectionName::Signature,
-        ResultSectionName::Changes,
-        ResultSectionName::Aspects,
-        ResultSectionName::Data,
-    ]
-    .into_iter()
-    .filter(|name| index.sections.contains_key(name.as_str()))
-    .collect();
-    let mut bounded = result;
-    bounded.data.clear();
-    bounded.evidence.clear();
-    let requested = match &bounded.delivery {
-        DeliveryDescriptor::Inline { limits } | DeliveryDescriptor::Artifact { limits, .. } => {
-            limits.requested_max_bytes
-        }
-    };
-    bounded.delivery = DeliveryDescriptor::retained(
-        id,
-        sections,
-        DeliveryLimits {
-            requested_max_bytes: requested,
-            effective_max_bytes: Some(inline),
-        },
-    );
-    let _ = bytes;
-    bounded.artifacts = common::handle_for(
-        artifact,
-        "Indexed complete result; request identity is a fixed retained placeholder".into(),
-    )
-    .into_iter()
-    .collect();
-    if size(&bounded, MAX_RESULT_BYTES)? > inline {
-        bounded.artifacts.clear();
-    }
-    if size(&bounded, MAX_RESULT_BYTES)? > inline && !bounded.coverage.limitations.is_empty() {
-        bounded.coverage.limitations.clear();
-        bounded.coverage.details = Some(RecoveryAction::ReadArtifact {
-            artifact_id: artifact.artifact_id.clone(),
-            section: Some(enrichment_core::wire::research::ArtifactSection::Result {
-                name: enrichment_core::wire::research::ResultSectionName::Coverage,
-            }),
-            cursor: None,
-        });
-    }
-    let minimum = size(&bounded, MAX_RESULT_BYTES)?;
-    if minimum > inline {
-        return Err(io::Error::new(
-            io::ErrorKind::OutOfMemory,
-            MinimumBudget { minimum },
-        ));
-    }
-    Ok(bounded)
-}
-
-pub(crate) fn prepare_comparison(
+pub(crate) async fn prepare_comparison(
     blobs: &BlobStore,
+    runtime: &enrichment_store::runtime::QueryRuntime,
     result: Envelope,
 ) -> io::Result<(Artifact, Envelope)> {
-    let bytes = size(&result, MAX_RESULT_BYTES)?;
-    let (artifact, index) = store_result(blobs, &result, enrichment_store::result::JOB_URI)?;
-    let bounded = overflow(&artifact, &index, result, bytes, JOURNAL_BYTES)?;
+    size(&result, MAX_RESULT_BYTES)?;
+    let request_id = result.request_id.clone();
+    let owned = blobs.clone();
+    let (artifact, index) = runtime
+        .blocking(move || store_result(&owned, &result, enrichment_store::result::JOB_URI))
+        .await
+        .map_err(io::Error::other)??;
+    let bounded = enrichment_store::result_delivery::retained(
+        runtime,
+        index.record.header.clone(),
+        &artifact,
+        &index,
+        JOURNAL_BYTES,
+        None,
+        request_id,
+    )
+    .await?;
     Ok((artifact, bounded))
-}
-
-/// A prepared journal envelope is selected by the same final candidate identity as the
-/// catalog commit. Rebase replaces this bounded slot; reading it after commit performs no I/O.
-pub(crate) struct DeliverySlot(std::sync::Arc<std::sync::Mutex<Option<Envelope>>>);
-impl DeliverySlot {
-    pub fn get(&self, snapshot: &str) -> io::Result<Envelope> {
-        self.0
-            .lock()
-            .map_err(|_| io::Error::other("delivery slot poisoned"))?
-            .as_ref()
-            .filter(|result| result.snapshot_id.as_deref() == Some(snapshot))
-            .cloned()
-            .ok_or_else(|| io::Error::other("prepared delivery does not match committed candidate"))
-    }
-}
-pub(crate) fn prepare_job(
-    blobs: BlobStore,
-    render: impl Fn(
-        &enrichment_core::evidence::snapshot::EvidenceManifest,
-        &enrichment_core::wire::Coverage,
-    ) -> io::Result<Envelope>
-    + Send
-    + Sync
-    + 'static,
-) -> (
-    enrichment_store::repository::JobDeliveryFactory,
-    DeliverySlot,
-) {
-    let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
-    let output = std::sync::Arc::clone(&slot);
-    let factory: enrichment_store::repository::JobDeliveryFactory =
-        std::sync::Arc::new(move |manifest, coverage| {
-            let result = render(manifest, coverage)?;
-            let bytes = size(&result, MAX_RESULT_BYTES)?;
-            let (artifact, index) =
-                store_result(&blobs, &result, enrichment_store::result::JOB_URI)?;
-            let bounded = overflow(&artifact, &index, result, bytes, JOURNAL_BYTES)?;
-            *output
-                .lock()
-                .map_err(|_| io::Error::other("delivery slot poisoned"))? = Some(bounded);
-            Ok(artifact)
-        });
-    (factory, DeliverySlot(slot))
 }
 
 /// Recover only already admitted bytes. Large replies use a descriptor directly, so recovery
 /// cannot require a fresh artifact write. The caller validates publication and evidence closure.
-pub(crate) fn recover_job(
+pub(crate) async fn recover_job(
     blobs: &BlobStore,
+    runtime: &enrichment_store::runtime::QueryRuntime,
+    catalog: &enrichment_store::control::ControlSnapshot,
     publication: &enrichment_core::evidence::catalog::JobPublication,
 ) -> io::Result<Envelope> {
-    recover_result(blobs, &publication.delivery)
+    recover_result(blobs, runtime, catalog, &publication.delivery).await
 }
 
-pub(crate) fn recover_result(blobs: &BlobStore, artifact: &Artifact) -> io::Result<Envelope> {
-    let (index, mut fields) = blobs.read_result_sections(
-        artifact,
-        &[
-            "status",
-            "job",
-            "error",
-            "summary",
-            "context_id",
-            "snapshot_id",
-            "coverage",
-            "freshness",
-        ],
-        MAX_RESULT_BYTES as u64,
-    )?;
-    fn field<T: serde::de::DeserializeOwned>(
-        fields: &mut std::collections::BTreeMap<String, serde_json::Value>,
-        name: &str,
-    ) -> io::Result<T> {
-        serde_json::from_value(
-            fields
-                .remove(name)
-                .ok_or_else(|| io::Error::other("missing recovery field"))?,
-        )
-        .map_err(Into::into)
+pub(crate) async fn recover_result(
+    blobs: &BlobStore,
+    runtime: &enrichment_store::runtime::QueryRuntime,
+    catalog: &enrichment_store::control::ControlSnapshot,
+    artifact: &Artifact,
+) -> io::Result<Envelope> {
+    let declared = catalog
+        .retained_result(runtime, &artifact.artifact_id)
+        .await
+        .map_err(io::Error::other)?;
+    let owned = blobs.clone();
+    let descriptor = artifact.clone();
+    let (index, _) = runtime
+        .blocking(move || owned.read_result_sections(&descriptor, &[], MAX_RESULT_BYTES as u64))
+        .await
+        .map_err(io::Error::other)??;
+    let record = catalog
+        .result_record(&declared)
+        .await
+        .map_err(io::Error::other)?;
+    if index.record != record {
+        return Err(io::Error::other(
+            "retained native record differs from immutable result",
+        ));
     }
-    let status = field(&mut fields, "status")?;
-    let job = field(&mut fields, "job")?;
-    let error = field(&mut fields, "error")?;
-    use enrichment_core::wire::{Outcome, Status};
-    let outcome = match (status, job, error) {
-        (Status::Ok, job, None) => Outcome::Ok { job },
-        (Status::Partial, job, None) => Outcome::Partial { job },
-        (Status::Pending, Some(job), None) => Outcome::Pending { job },
-        (Status::Error, job, Some(error)) => Outcome::Error { job, error },
-        _ => return Err(io::Error::other("invalid committed research outcome")),
-    };
-    let result = Envelope::new(
-        enrichment_core::wire::EnvelopeBody {
-            request_id: envelope::new_request_id(),
-            summary: field(&mut fields, "summary")?,
-            context_id: field(&mut fields, "context_id")?,
-            snapshot_id: field(&mut fields, "snapshot_id")?,
-            data: enrichment_core::wire::JsonObject::new(),
-            coverage: field(&mut fields, "coverage")?,
-            freshness: field(&mut fields, "freshness")?,
-            evidence: Vec::new(),
-            artifacts: Vec::new(),
-            delivery: DeliveryDescriptor::default(),
-        },
-        outcome,
-    );
-    overflow(
+    enrichment_store::result_delivery::retained(
+        runtime,
+        record.header,
         artifact,
         &index,
-        result,
-        artifact.size_bytes as usize,
         JOURNAL_BYTES,
+        None,
+        envelope::new_request_id(),
     )
+    .await
 }
 
 #[cfg(test)]
@@ -332,11 +221,7 @@ mod tests {
             enrichment_store::control::ControlStore::open(dir.path(), runtime.clone()).unwrap();
         let mut result = envelope::ok(
             "retained comparison",
-            common::to_object(&serde_json::json!({
-                "changes": [{"before": "é😀\\\"\n".repeat(2000), "after": "changed"}],
-                "observations": [{"payload": {"signature": "pub fn selected()"}}],
-                "aspect_outcomes": [],
-            })),
+            envelope::fixture_payload(&"é😀\\\"\n".repeat(2000)),
             enrichment_core::wire::Coverage {
                 details: None,
                 assessments: Vec::new(),
@@ -348,7 +233,7 @@ mod tests {
         )
         .into_partial();
         let coverage = result.coverage.clone();
-        let expected_changes = result.data["changes"].clone();
+        let expected_data = serde_json::to_value(&result.data).unwrap();
         result.delivery.set_limits(Some(8192), 8192);
         let reply = encode(&blobs, &catalog, &runtime, result, 8192, Some(8192))
             .await
@@ -367,7 +252,7 @@ mod tests {
         assert!(
             sections
                 .iter()
-                .any(|s| s.name == enrichment_core::wire::research::ResultSectionName::Changes)
+                .any(|s| s.name == enrichment_core::wire::research::ResultSectionName::Data)
         );
         let artifact = catalog
             .pin()
@@ -384,11 +269,11 @@ mod tests {
             &mut file,
             &index,
             base,
-            "changes",
+            "data",
             MAX_RESULT_BYTES as u64,
         )
         .unwrap();
-        assert_eq!(actual, expected_changes);
+        assert_eq!(actual, expected_data);
         let actual: enrichment_core::wire::Coverage =
             enrichment_store::result::read_section(&mut file, &index, base, "coverage", 8192)
                 .unwrap();
@@ -396,10 +281,10 @@ mod tests {
         let admitted = blobs.read_delivery(&artifact, "req_admitted").unwrap();
         assert_eq!(admitted.status(), reply.status());
         assert_eq!(admitted.coverage, reply.coverage);
-        assert_eq!(admitted.data["changes"], expected_changes);
+        assert_eq!(serde_json::to_value(admitted.data).unwrap(), expected_data);
     }
-    #[test]
-    fn overflow_delivery_recovers_from_read_only_bytes_without_regeneration() {
+    #[tokio::test]
+    async fn overflow_delivery_recovers_from_read_only_bytes_without_regeneration() {
         let dir = tempfile::tempdir().unwrap();
         let blobs = BlobStore::open(dir.path()).unwrap();
         let context =
@@ -410,7 +295,7 @@ mod tests {
                 .unwrap();
         let mut answer = envelope::ok(
             "complete result",
-            common::to_object(&serde_json::json!({"text":"🌎\"\n".repeat(180_000)})),
+            envelope::fixture_payload(&"🌎\"\n".repeat(180_000)),
             enrichment_core::wire::Coverage {
                 details: None,
                 assessments: Vec::new(),
@@ -435,11 +320,24 @@ mod tests {
             result_artifact_ids: vec![artifact.artifact_id.clone()],
             delivery: artifact.clone(),
         };
-        // A reconstruction path calling put/capture would need this directory and fail or
-        // recreate it. Recovery reads the admitted document through the verified JSON stream.
+        let runtime = enrichment_store::runtime::QueryRuntime::new(
+            &dir.path().join("spill"),
+            Default::default(),
+        )
+        .unwrap();
+        let catalog =
+            enrichment_store::control::ControlStore::open(dir.path(), runtime.clone()).unwrap();
+        catalog
+            .retain_result(&runtime, &blobs, &artifact)
+            .await
+            .unwrap();
+        let pin = catalog.pin().await.unwrap();
+        // Enrollment and byte verification precede read-only recovery.
         std::fs::remove_dir(blobs.root().join(".staging")).unwrap();
         let readonly = BlobStore::read_only(dir.path()).unwrap();
-        let reply = recover_job(&readonly, &publication).unwrap();
+        let reply = recover_job(&readonly, &runtime, &pin, &publication)
+            .await
+            .unwrap();
         assert_eq!(
             serde_json::to_value(&reply.delivery).unwrap()["artifact_id"],
             artifact.artifact_id
@@ -448,13 +346,8 @@ mod tests {
         assert_eq!(reply.snapshot_id, answer.snapshot_id);
         assert!(size(&reply, JOURNAL_BYTES).is_ok());
         assert!(!blobs.root().join(".staging").exists());
-        let decoded: serde_json::Value = readonly
-            .read_json(&artifact, MAX_RESULT_BYTES as u64)
-            .unwrap();
-        assert_eq!(
-            decoded["result"]["data"],
-            serde_json::to_value(answer.data).unwrap()
-        );
+        let decoded = readonly.read_delivery(&artifact, "req_readonly").unwrap();
+        assert_eq!(decoded.data, answer.data);
     }
 
     #[tokio::test]
@@ -474,9 +367,7 @@ mod tests {
             "read evidence",
             false,
         );
-        answer
-            .data
-            .insert("text".into(), serde_json::json!("🌎\n\"\\".repeat(1000)));
+        answer.data = envelope::fixture_payload(&"🌎\n\"\\".repeat(1000));
         let size_bytes = size(&answer, MAX_RESULT_BYTES).unwrap();
         assert!(size(&answer, size_bytes - 1).is_err());
         assert_eq!(
@@ -509,9 +400,10 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
-        let decoded: serde_json::Value =
-            serde_json::from_slice(&blobs.read(&artifact.sha256).unwrap()).unwrap();
-        assert_eq!(decoded["result"]["data"]["text"], "🌎\n\"\\".repeat(1000));
-        assert_eq!(decoded["result"]["request_id"], "req_retained");
+        let decoded = blobs.read_delivery(&artifact, "req_check").unwrap();
+        assert_eq!(
+            decoded.data,
+            envelope::fixture_payload(&"🌎\n\"\\".repeat(1000))
+        );
     }
 }

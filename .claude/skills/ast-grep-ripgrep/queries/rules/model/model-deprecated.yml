@@ -1,0 +1,25 @@
+id: model-deprecated
+language: json
+severity: hint
+message: This item is deprecated at the pinned version.
+note: |
+  Deprecated code still compiles, so nothing forces a correction, and a model trained before the
+  deprecation keeps emitting it. Matching the records directly is the cheapest way to find out
+  before writing the call rather than after.
+
+  Run it over `content/model` to list every deprecated item in the indexed crates.
+metadata:
+  record: library-fact
+  capability: deprecation
+utils:
+  inside-record:
+    inside:
+      kind: object
+      stopBy: end
+rule:
+  kind: pair
+  all:
+    - has:
+        field: key
+        regex: '^"deprecated"$'
+    - matches: inside-record

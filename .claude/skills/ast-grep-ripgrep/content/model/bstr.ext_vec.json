@@ -1,0 +1,285 @@
+{
+  "module": "bstr::ext_vec",
+  "crate": "bstr",
+  "api": "api/bstr.ext_vec.md",
+  "items": [
+    {
+      "path": "bstr::ext_vec::concat",
+      "name": "concat",
+      "kind": "function",
+      "crate": "bstr",
+      "signature": "fn concat<T, I>(elements: I) -> alloc::vec::Vec<u8> where T: AsRef<[u8]>, I: IntoIterator<Item = T>",
+      "summary": "Concatenate the elements given by the iterator together into a single `Vec<u8>`.",
+      "doc": "api/bstr.ext_vec.md#concat",
+      "aliases": [
+        "bstr::concat"
+      ]
+    },
+    {
+      "path": "bstr::ext_vec::join",
+      "name": "join",
+      "kind": "function",
+      "crate": "bstr",
+      "signature": "fn join<B, T, I>(separator: B, elements: I) -> alloc::vec::Vec<u8> where B: AsRef<[u8]>, T: AsRef<[u8]>, I: IntoIterator<Item = T>",
+      "summary": "Join the elements given by the iterator with the given separator into a single `Vec<u8>`.",
+      "doc": "api/bstr.ext_vec.md#join",
+      "aliases": [
+        "bstr::join"
+      ]
+    },
+    {
+      "path": "bstr::ext_vec::DrainBytes",
+      "name": "DrainBytes",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct DrainBytes<'a>",
+      "summary": "A draining byte oriented iterator for `Vec<u8>`.",
+      "doc": "api/bstr.ext_vec.md#drainbytes",
+      "aliases": [
+        "bstr::DrainBytes"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<u8>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<u8>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_vec::FromUtf8Error",
+      "name": "FromUtf8Error",
+      "kind": "struct",
+      "crate": "bstr",
+      "signature": "struct FromUtf8Error",
+      "summary": "An error that may occur when converting a `Vec<u8>` to a `String`.",
+      "doc": "api/bstr.ext_vec.md#fromutf8error",
+      "aliases": [
+        "bstr::FromUtf8Error"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "summary": "Return the original bytes as a slice that failed to convert to a `String`."
+        },
+        {
+          "name": "description",
+          "signature": "fn description(&self) -> &str",
+          "via_trait": "core::error::Error"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "into_vec",
+          "signature": "fn into_vec(self) -> Vec<u8>",
+          "summary": "Consume this error and return the original byte string that failed to convert to a `String`."
+        },
+        {
+          "name": "utf8_error",
+          "signature": "fn utf8_error(&self) -> &Utf8Error",
+          "summary": "Return the underlying UTF-8 error that occurred. This error provides information on the nature and location of the invalid UTF-8 detected."
+        }
+      ]
+    },
+    {
+      "path": "bstr::ext_vec::ByteVec",
+      "name": "ByteVec",
+      "kind": "trait",
+      "crate": "bstr",
+      "signature": "trait ByteVec: private::Sealed",
+      "summary": "A trait that extends `Vec<u8>` with string oriented methods.",
+      "doc": "api/bstr.ext_vec.md#bytevec",
+      "aliases": [
+        "bstr::ByteVec"
+      ],
+      "implementors": [
+        "alloc::vec::Vec"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "as_bstring",
+        "as_bstring_mut",
+        "drain_bytes",
+        "from_os_str_lossy",
+        "from_os_string",
+        "from_path_buf",
+        "from_path_lossy",
+        "from_slice",
+        "insert_char",
+        "insert_str",
+        "into_os_string",
+        "into_os_string_lossy",
+        "into_path_buf",
+        "into_path_buf_lossy",
+        "into_string",
+        "into_string_lossy",
+        "into_string_unchecked",
+        "pop_byte",
+        "pop_char",
+        "push_byte",
+        "push_char",
+        "push_str",
+        "remove_char",
+        "replace_range",
+        "to_bstring",
+        "unescape_bytes"
+      ],
+      "methods": [
+        {
+          "name": "as_bstring",
+          "signature": "fn as_bstring(&self) -> &BString",
+          "summary": "Convert a `&Vec<u8>` to a `&BString`, without copying."
+        },
+        {
+          "name": "as_bstring_mut",
+          "signature": "fn as_bstring_mut(&mut self) -> &mut BString",
+          "summary": "Convert a `&mut Vec<u8>` to a `&mut BString`, without copying."
+        },
+        {
+          "name": "drain_bytes",
+          "signature": "fn drain_bytes<R>(&mut self, range: R) -> DrainBytes<'_> where R: ops::RangeBounds<usize>",
+          "summary": "Creates a draining iterator that removes the specified range in this `Vec<u8>` and yields each of the removed bytes."
+        },
+        {
+          "name": "from_os_str_lossy",
+          "signature": "fn from_os_str_lossy(os_str: &OsStr) -> Cow<'_, [u8]>",
+          "summary": "Lossily create a new byte string from an OS string slice."
+        },
+        {
+          "name": "from_os_string",
+          "signature": "fn from_os_string(os_str: OsString) -> Result<Vec<u8>, OsString>",
+          "summary": "Create a new byte string from an owned OS string."
+        },
+        {
+          "name": "from_path_buf",
+          "signature": "fn from_path_buf(path: PathBuf) -> Result<Vec<u8>, PathBuf>",
+          "summary": "Create a new byte string from an owned file path."
+        },
+        {
+          "name": "from_path_lossy",
+          "signature": "fn from_path_lossy(path: &Path) -> Cow<'_, [u8]>",
+          "summary": "Lossily create a new byte string from a file path."
+        },
+        {
+          "name": "from_slice",
+          "signature": "fn from_slice<B: AsRef<[u8]>>(bytes: B) -> Vec<u8>",
+          "summary": "Create a new owned byte string from the given byte slice."
+        },
+        {
+          "name": "insert_char",
+          "signature": "fn insert_char(&mut self, at: usize, ch: char)",
+          "summary": "Inserts the given codepoint into this `Vec<u8>` at a particular byte position."
+        },
+        {
+          "name": "insert_str",
+          "signature": "fn insert_str<B: AsRef<[u8]>>(&mut self, at: usize, bytes: B)",
+          "summary": "Inserts the given byte string into this byte string at a particular byte position."
+        },
+        {
+          "name": "into_os_string",
+          "signature": "fn into_os_string(self) -> Result<OsString, FromUtf8Error> where Self: Sized",
+          "summary": "Converts this byte string into an OS string, in place."
+        },
+        {
+          "name": "into_os_string_lossy",
+          "signature": "fn into_os_string_lossy(self) -> OsString where Self: Sized",
+          "summary": "Lossily converts this byte string into an OS string, in place."
+        },
+        {
+          "name": "into_path_buf",
+          "signature": "fn into_path_buf(self) -> Result<PathBuf, FromUtf8Error> where Self: Sized",
+          "summary": "Converts this byte string into an owned file path, in place."
+        },
+        {
+          "name": "into_path_buf_lossy",
+          "signature": "fn into_path_buf_lossy(self) -> PathBuf where Self: Sized",
+          "summary": "Lossily converts this byte string into an owned file path, in place."
+        },
+        {
+          "name": "into_string",
+          "signature": "fn into_string(self) -> Result<String, FromUtf8Error> where Self: Sized",
+          "summary": "Converts a `Vec<u8>` into a `String` if and only if this byte string is valid UTF-8."
+        },
+        {
+          "name": "into_string_lossy",
+          "signature": "fn into_string_lossy(self) -> String where Self: Sized",
+          "summary": "Lossily converts a `Vec<u8>` into a `String`. If this byte string contains invalid UTF-8, then the invalid bytes are replaced with the Unicode replacement codepoint."
+        },
+        {
+          "name": "into_string_unchecked",
+          "signature": "unsafe fn into_string_unchecked(self) -> String where Self: Sized",
+          "summary": "Unsafely convert this byte string into a `String`, without checking for valid UTF-8."
+        },
+        {
+          "name": "pop_byte",
+          "signature": "fn pop_byte(&mut self) -> Option<u8>",
+          "summary": "Removes the last byte from this `Vec<u8>` and returns it."
+        },
+        {
+          "name": "pop_char",
+          "signature": "fn pop_char(&mut self) -> Option<char>",
+          "summary": "Removes the last codepoint from this `Vec<u8>` and returns it."
+        },
+        {
+          "name": "push_byte",
+          "signature": "fn push_byte(&mut self, byte: u8)",
+          "summary": "Appends the given byte to the end of this byte string."
+        },
+        {
+          "name": "push_char",
+          "signature": "fn push_char(&mut self, ch: char)",
+          "summary": "Appends the given `char` to the end of this byte string."
+        },
+        {
+          "name": "push_str",
+          "signature": "fn push_str<B: AsRef<[u8]>>(&mut self, bytes: B)",
+          "summary": "Appends the given slice to the end of this byte string. This accepts any type that be converted to a `&[u8]`. This includes, but is not limited to, `&str`, `&BStr`, and of course, `&[u8]` itself."
+        },
+        {
+          "name": "remove_char",
+          "signature": "fn remove_char(&mut self, at: usize) -> char",
+          "summary": "Removes a `char` from this `Vec<u8>` at the given byte position and returns it."
+        },
+        {
+          "name": "replace_range",
+          "signature": "fn replace_range<R, B>(&mut self, range: R, replace_with: B) where R: ops::RangeBounds<usize>, B: AsRef<[u8]>",
+          "summary": "Removes the specified range in this byte string and replaces it with the given bytes. The given bytes do not need to have the same length as the range provided."
+        },
+        {
+          "name": "to_bstring",
+          "signature": "fn to_bstring(self) -> BString where Self: Sized",
+          "summary": "Convert this type to a `BString`."
+        },
+        {
+          "name": "unescape_bytes",
+          "signature": "fn unescape_bytes<S: AsRef<str>>(escaped: S) -> Vec<u8>",
+          "summary": "Unescapes the given string into its raw bytes."
+        }
+      ]
+    }
+  ]
+}

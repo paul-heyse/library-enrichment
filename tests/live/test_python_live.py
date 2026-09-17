@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.live, daemon.requires_daemon_binary]
 async def test_real_python_distribution_cold_then_offline(tmp_path):
     config = tmp_path / "service.toml"
     config.write_text(
-        'config_version = "1.0"\n[policy]\nenabled_profiles = ["static"]\n'
+        '[policy]\nenabled_profiles = ["static"]\n'
         f'[producers.python]\nworker_python = "{sys.executable}"\n'
     )
     env = daemon.daemon_env(tmp_path / "state", config)

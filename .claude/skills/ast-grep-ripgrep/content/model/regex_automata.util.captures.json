@@ -1,0 +1,315 @@
+{
+  "module": "regex_automata::util::captures",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.util.captures.md",
+  "items": [
+    {
+      "path": "regex_automata::util::captures::Captures",
+      "name": "Captures",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Captures",
+      "summary": "The span offsets of capturing groups after a match has been found.",
+      "doc": "api/regex_automata.util.captures.md#captures",
+      "methods": [
+        {
+          "name": "all",
+          "signature": "fn all(group_info: GroupInfo) -> Captures",
+          "summary": "Create new storage for the offsets of all matching capturing groups."
+        },
+        {
+          "name": "clear",
+          "signature": "fn clear(&mut self)",
+          "summary": "Clear this `Captures` value."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty(group_info: GroupInfo) -> Captures",
+          "summary": "Create new storage for only tracking which pattern matched. No offsets are stored at all."
+        },
+        {
+          "name": "extract",
+          "signature": "fn extract<'h, const N: usize>(&self, haystack: &'h str) -> (&'h str, [&'h str; N])",
+          "summary": "This is a convenience routine for extracting the substrings corresponding to matching capture groups in the given `haystack`. The `haystack` should be the same substring used to find the match spans in this `Captures` value."
+        },
+        {
+          "name": "extract_bytes",
+          "signature": "fn extract_bytes<'h, const N: usize>(&self, haystack: &'h [u8]) -> (&'h [u8], [&'h [u8]; N])",
+          "summary": "This is a convenience routine for extracting the substrings corresponding to matching capture groups in the given `haystack`. The `haystack` should be the same substring used to find the match spans in this `Captures` value."
+        },
+        {
+          "name": "get_group",
+          "signature": "fn get_group(&self, index: usize) -> Option<Span>",
+          "summary": "Returns the span of a capturing group match corresponding to the group index given, only if both the overall pattern matched and the capturing group participated in that match."
+        },
+        {
+          "name": "get_group_by_name",
+          "signature": "fn get_group_by_name(&self, name: &str) -> Option<Span>",
+          "summary": "Returns the span of a capturing group match corresponding to the group name given, only if both the overall pattern matched and the capturing group participated in that match."
+        },
+        {
+          "name": "get_match",
+          "signature": "fn get_match(&self) -> Option<Match>",
+          "summary": "Returns the pattern ID and the span of the match, if one occurred."
+        },
+        {
+          "name": "group_info",
+          "signature": "fn group_info(&self) -> &GroupInfo",
+          "summary": "Returns a reference to the underlying group info on which these captures are based."
+        },
+        {
+          "name": "group_len",
+          "signature": "fn group_len(&self) -> usize",
+          "summary": "Return the total number of capturing groups for the matching pattern."
+        },
+        {
+          "name": "interpolate_bytes",
+          "signature": "fn interpolate_bytes(&self, haystack: &[u8], replacement: &[u8]) -> Vec<u8>",
+          "summary": "Interpolates the capture references in `replacement` with the corresponding substrings in `haystack` matched by each reference. The interpolated byte string is returned."
+        },
+        {
+          "name": "interpolate_bytes_into",
+          "signature": "fn interpolate_bytes_into(&self, haystack: &[u8], replacement: &[u8], dst: &mut Vec<u8>)",
+          "summary": "Interpolates the capture references in `replacement` with the corresponding substrings in `haystack` matched by each reference. The interpolated byte string is written to `dst`."
+        },
+        {
+          "name": "interpolate_string",
+          "signature": "fn interpolate_string(&self, haystack: &str, replacement: &str) -> String",
+          "summary": "Interpolates the capture references in `replacement` with the corresponding substrings in `haystack` matched by each reference. The interpolated string is returned."
+        },
+        {
+          "name": "interpolate_string_into",
+          "signature": "fn interpolate_string_into(&self, haystack: &str, replacement: &str, dst: &mut String)",
+          "summary": "Interpolates the capture references in `replacement` with the corresponding substrings in `haystack` matched by each reference. The interpolated string is written to `dst`."
+        },
+        {
+          "name": "is_match",
+          "signature": "fn is_match(&self) -> bool",
+          "summary": "Returns true if and only if this capturing group represents a match."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> CapturesPatternIter<'_>",
+          "summary": "Returns an iterator of possible spans for every capturing group in the matching pattern."
+        },
+        {
+          "name": "matches",
+          "signature": "fn matches(group_info: GroupInfo) -> Captures",
+          "summary": "Create new storage for only the full match spans of a pattern. This does not include any capturing group offsets."
+        },
+        {
+          "name": "pattern",
+          "signature": "fn pattern(&self) -> Option<PatternID>",
+          "summary": "Returns the identifier of the pattern that matched when this capturing group represents a match. If no match was found, then this always returns `None`."
+        },
+        {
+          "name": "set_pattern",
+          "signature": "fn set_pattern(&mut self, pid: Option<PatternID>)",
+          "summary": "Set the pattern on this `Captures` value."
+        },
+        {
+          "name": "slots",
+          "signature": "fn slots(&self) -> &[Option<NonMaxUsize>]",
+          "summary": "Returns the underlying slots, where each slot stores a single offset."
+        },
+        {
+          "name": "slots_mut",
+          "signature": "fn slots_mut(&mut self) -> &mut [Option<NonMaxUsize>]",
+          "summary": "Returns the underlying slots as a mutable slice, where each slot stores a single offset."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::captures::CapturesPatternIter",
+      "name": "CapturesPatternIter",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct CapturesPatternIter<'a>",
+      "summary": "An iterator over all capturing groups in a `Captures` value.",
+      "doc": "api/regex_automata.util.captures.md#capturespatterniter",
+      "implements": [
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Option<Span>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::captures::GroupInfo",
+      "name": "GroupInfo",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct GroupInfo",
+      "summary": "Represents information about capturing groups in a compiled regex.",
+      "doc": "api/regex_automata.util.captures.md#groupinfo",
+      "methods": [
+        {
+          "name": "all_group_len",
+          "signature": "fn all_group_len(&self) -> usize",
+          "summary": "Return the total number of capture groups across all patterns."
+        },
+        {
+          "name": "all_names",
+          "signature": "fn all_names(&self) -> GroupInfoAllNames<'_>",
+          "summary": "Return an iterator of all capture groups for all patterns supported by this `GroupInfo`. Each item yielded is a triple of the group's pattern ID, index in the pattern and the group's name, if present."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> GroupInfo",
+          "summary": "This creates an empty `GroupInfo`."
+        },
+        {
+          "name": "explicit_slot_len",
+          "signature": "fn explicit_slot_len(&self) -> usize",
+          "summary": "Returns the total number of slots for explicit capturing groups."
+        },
+        {
+          "name": "group_len",
+          "signature": "fn group_len(&self, pid: PatternID) -> usize",
+          "summary": "Return the number of capture groups in a pattern."
+        },
+        {
+          "name": "implicit_slot_len",
+          "signature": "fn implicit_slot_len(&self) -> usize",
+          "summary": "Returns the total number of slots for implicit capturing groups."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the memory usage, in bytes, of this `GroupInfo`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<P, G, N>(pattern_groups: P) -> Result<GroupInfo, GroupInfoError> where P: IntoIterator<Item = G>, G: IntoIterator<Item = Option<N>>, N: AsRef<str>",
+          "summary": "Creates a new group info from a sequence of patterns, where each sequence of patterns yields a sequence of possible group names. The index of each pattern in the sequence corresponds to its `PatternID`, and the index of each group in each…"
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns in this `GroupInfo`."
+        },
+        {
+          "name": "pattern_names",
+          "signature": "fn pattern_names(&self, pid: PatternID) -> GroupInfoPatternNames<'_>",
+          "summary": "Return an iterator of all capture groups and their names (if present) for a particular pattern."
+        },
+        {
+          "name": "slot",
+          "signature": "fn slot(&self, pid: PatternID, group_index: usize) -> Option<usize>",
+          "summary": "Returns the starting slot corresponding to the given capturing group for the given pattern. The ending slot is always one more than the value returned."
+        },
+        {
+          "name": "slot_len",
+          "signature": "fn slot_len(&self) -> usize",
+          "summary": "Returns the total number of slots in this `GroupInfo` across all patterns."
+        },
+        {
+          "name": "slots",
+          "signature": "fn slots(&self, pid: PatternID, group_index: usize) -> Option<(usize, usize)>",
+          "summary": "Returns the starting and ending slot corresponding to the given capturing group for the given pattern. The ending slot is always one more than the starting slot returned."
+        },
+        {
+          "name": "to_index",
+          "signature": "fn to_index(&self, pid: PatternID, name: &str) -> Option<usize>",
+          "summary": "Return the capture group index corresponding to the given name in the given pattern. If no such capture group name exists in the given pattern, then this returns `None`."
+        },
+        {
+          "name": "to_name",
+          "signature": "fn to_name(&self, pid: PatternID, group_index: usize) -> Option<&str>",
+          "summary": "Return the capture name for the given index and given pattern. If the corresponding group does not have a name, then this returns `None`."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::captures::GroupInfoAllNames",
+      "name": "GroupInfoAllNames",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct GroupInfoAllNames<'a>",
+      "summary": "An iterator over capturing groups and their names for a `GroupInfo`.",
+      "doc": "api/regex_automata.util.captures.md#groupinfoallnames",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<(PatternID, usize, Option<&'a str>)>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::captures::GroupInfoError",
+      "name": "GroupInfoError",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct GroupInfoError",
+      "summary": "An error that may occur when building a `GroupInfo`.",
+      "doc": "api/regex_automata.util.captures.md#groupinfoerror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> Option<&dyn std::error::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::util::captures::GroupInfoPatternNames",
+      "name": "GroupInfoPatternNames",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct GroupInfoPatternNames<'a>",
+      "summary": "An iterator over capturing groups and their names for a specific pattern.",
+      "doc": "api/regex_automata.util.captures.md#groupinfopatternnames",
+      "implements": [
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Option<&'a str>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    }
+  ]
+}

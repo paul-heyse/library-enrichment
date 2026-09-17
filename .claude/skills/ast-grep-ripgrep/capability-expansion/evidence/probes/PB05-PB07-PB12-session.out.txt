@@ -1,0 +1,33 @@
+PB05/PB07/PB12 — how far does one SessionState reach into Delta operations?
+
+== PB05 · do MergeBuilder predicates see session UDFs? ==
+
+  a CONTROL plain predicate, session WITH udf      OK
+  b UDF in merge predicate, session WITH udf       OK
+  c CONTROL UDF in predicate, session WITHOUT udf  ERR: Generic DeltaTable error: External error: Generic DeltaTable error: Error during planning: Invalid function 'is_valid_offset'.
+  d UDF in when_matched_update predicate           OK
+  e UDF predicate + RequireSessionState            OK
+
+== PB07 · can a CHECK constraint reference a UDF, and survive to write time? ==
+
+  a CONTROL plain constraint `off >= 0`            OK
+  b UDF constraint, session WITH udf (add)         OK
+  c write by a session WITHOUT the udf             ERR: Generic DeltaTable error: External error: Generic DeltaTable error: Error during planning: Invalid function 'is_valid_offset'.
+  d CONTROL write by a session WITH the udf        OK
+
+thread 'tokio-rt-worker' (4171067) panicked at /home/paul/.cargo/git/checkouts/delta-rs-dcb716bfdc369320/58f07cd/crates/core/src/delta_datafusion/expr.rs:237:9:
+not implemented
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+  e constraint with a subquery on another table    PANIC (process would have aborted)
+
+== PB12 · what does a table expose about its own constraints? ==
+
+  plain `off >= 0`
+      delta.constraints.off_nonneg = "off >= 0"
+      stored as: SQL TEXT. DataFusion `Constraints` holds PrimaryKey/Unique over
+      column indices only — an arbitrary CHECK has no slot in that type.
+  UDF `is_valid_offset(off)`
+      delta.constraints.off_valid = "is_valid_offset(off)"
+      stored as: SQL TEXT. DataFusion `Constraints` holds PrimaryKey/Unique over
+      column indices only — an arbitrary CHECK has no slot in that type.
+

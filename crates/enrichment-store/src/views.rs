@@ -45,13 +45,17 @@ pub(crate) async fn build(
                     tables.clone(),
                 )) as std::sync::Arc<dyn datafusion::catalog::CatalogProvider>,
             )]))?;
-            tables.insert(name.to_owned(), session.sql(&sql).await?.into_view());
+            tables.insert(
+                name.to_owned(),
+                enrichment_core::native_schema::outer_join_projection(session.sql(&sql).await?)?
+                    .into_view(),
+            );
         }
     }
     for (name, sql) in [
         (
             "symbol_headers",
-            "SELECT s.*, d.kind, d.definition_path, d.defined_in_package FROM snapshot.evidence.symbols s JOIN snapshot.evidence.definitions d ON s.definition_id = d.definition_id",
+            "SELECT s.*, d.kind, d.definition_path, d.defined_in_package, CASE WHEN array_length(s.components)>1 THEN array_to_string(array_slice(s.components, 1, CAST(array_length(s.components) AS BIGINT)-1), CASE s.ecosystem WHEN 'rust' THEN '::' ELSE '.' END) ELSE NULL END AS parent_path FROM snapshot.evidence.symbols s JOIN snapshot.evidence.definitions d ON s.definition_id = d.definition_id",
         ),
         (
             "definition_paths",
@@ -114,26 +118,26 @@ pub(crate) async fn build(
                 CASE f.subject.kind
                     WHEN 'symbol' THEN s.path
                     WHEN 'definition' THEN d.definition_path
-                    WHEN 'feature' THEN f.subject.feature
-                    WHEN 'document' THEN f.subject.heading
-                    WHEN 'example' THEN f.subject.path
-                    WHEN 'library' THEN f.subject.release_id
+                    WHEN 'feature' THEN f.subject.feature.name
+                    WHEN 'document' THEN f.subject.document.heading
+                    WHEN 'example' THEN f.subject.example.path
+                    WHEN 'library' THEN f.subject.library.release_id
                 END AS label,
                 s.path_id, s.components, s.ecosystem, coalesce(s.definition_id, d.definition_id) AS definition_id, s.symbol_id
             FROM snapshot.evidence.fragments f
-            LEFT JOIN snapshot.evidence.symbols s ON f.subject.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
-            LEFT JOIN snapshot.evidence.definitions d ON f.subject.definition_id = d.definition_id AND f.subject.kind = 'definition'
+            LEFT JOIN snapshot.evidence.symbols s ON f.subject.symbol.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
+            LEFT JOIN snapshot.evidence.definitions d ON f.subject.definition.definition_id = d.definition_id AND f.subject.kind = 'definition'
         ",
         ),
         (
             "fragment_paths",
             r"
             SELECT f.fragment_id, s.symbol_id, s.definition_id, s.components, s.ecosystem
-            FROM snapshot.evidence.fragments f JOIN snapshot.evidence.symbols s ON f.subject.symbol_id = s.symbol_id
+            FROM snapshot.evidence.fragments f JOIN snapshot.evidence.symbols s ON f.subject.symbol.symbol_id = s.symbol_id
             WHERE f.subject.kind = 'symbol'
             UNION ALL
             SELECT f.fragment_id, s.symbol_id, s.definition_id, s.components, s.ecosystem
-            FROM snapshot.evidence.fragments f JOIN snapshot.evidence.symbols s ON f.subject.definition_id = s.definition_id
+            FROM snapshot.evidence.fragments f JOIN snapshot.evidence.symbols s ON f.subject.definition.definition_id = s.definition_id
             WHERE f.subject.kind = 'definition'
         ",
         ),
@@ -175,7 +179,11 @@ pub(crate) async fn build(
                 tables.clone(),
             )) as std::sync::Arc<dyn datafusion::catalog::CatalogProvider>,
         )]))?;
-        tables.insert(name.to_owned(), session.sql(sql).await?.into_view());
+        tables.insert(
+            name.to_owned(),
+            enrichment_core::native_schema::outer_join_projection(session.sql(sql).await?)?
+                .into_view(),
+        );
     }
     Ok(tables)
 }
@@ -210,8 +218,8 @@ pub fn ecosystem(value: Ecosystem) -> Expr {
 // Admission validates the tagged subject's inactive fields are NULL. The two key joins
 // are therefore exclusive without a redundant tag FilterExec that blocks nested projection.
 fn binding_sql(base: &str) -> String {
-    format!("SELECT o.*, s.symbol_id AS binding_id FROM snapshot.evidence.{base} o JOIN snapshot.evidence.symbols s ON o.subject.symbol_id = s.symbol_id
-        UNION ALL SELECT o.*, s.symbol_id AS binding_id FROM snapshot.evidence.{base} o JOIN snapshot.evidence.symbols s ON o.subject.definition_id = s.definition_id")
+    format!("SELECT o.*, s.symbol_id AS binding_id FROM snapshot.evidence.{base} o JOIN snapshot.evidence.symbols s ON o.subject.symbol.symbol_id = s.symbol_id
+        UNION ALL SELECT o.*, s.symbol_id AS binding_id FROM snapshot.evidence.{base} o JOIN snapshot.evidence.symbols s ON o.subject.definition.definition_id = s.definition_id")
 }
 fn surface_sql(bound: &str, full: bool) -> String {
     let aliases = if full {

@@ -1,0 +1,22 @@
+id: project-ast-grep-json-space
+language: bash
+severity: hint
+message: ast-grep's --json style needs `=`; with a space the style is consumed as a path.
+note: |
+  `ast-grep run -p X --json stream src/` does not fail. `stream` is taken as a positional path
+  argument, so ast-grep searches a file that almost certainly does not exist, prints pretty JSON
+  for whatever remains, and exits successfully. Nothing in the output says the style was ignored.
+
+  Write `--json=stream`. Probe A010 records both halves, because this is a silent failure rather
+  than a loud one -- the kind that survives review.
+
+  The rule is anchored on a `command` node first and refined by regex second, so a mention of
+  `--json stream` inside a comment or a heredoc is not a match.
+metadata:
+  record: capability-gap
+  capability: machine-output
+rule:
+  kind: command
+  all:
+    - regex: '^ast-grep\b'
+    - regex: '--json\s+(stream|compact|pretty)\b'

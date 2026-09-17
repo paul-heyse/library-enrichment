@@ -5,73 +5,56 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Normalization identity, independent of the frozen response envelope version.
-pub const VERSION: &str = "python-native-5";
+pub const VERSION: &str = "python-native-6";
 /// Canonical table version after adding independent Python observations.
 pub const TABLE_VERSION: &str = crate::SNAPSHOT_SCHEMA_VERSION;
 
-/// A source or stub annotation is not a runtime observation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ObservationOrigin {
-    Source,
-    Stub,
+crate::native_vocabulary! {
+    /// A source or stub annotation is not a runtime observation.
+    pub enum ObservationOrigin { Source = "source", Stub = "stub" }
 }
 
-/// Independent publicness signals. Unknown author/export signals stay absent.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Publicness {
-    /// Membership in a statically resolved __all__, when known.
-    pub exported: Option<bool>,
-    /// Underscore naming convention, not a privacy verdict.
-    pub underscore: bool,
-    /// This is a reexport declaration.
-    pub reexport: bool,
-    /// A docstring exists; absence does not prove private API.
-    pub docstring: bool,
-    /// Literal __all__ entries.
-    pub declared_exports: Vec<String>,
-    /// Export expressions not statically reduced to literals.
-    pub unresolved_exports: Vec<String>,
+use crate::evidence::declarations::{PythonBase, PythonCallable, PythonOverload};
+use crate::native_union::{Rule, Unit};
+
+crate::native_struct! {
+    /// Independent signals; no one signal is a publicness verdict.
+    #[derive(Default)]
+    pub struct Publicness {
+        exported: Option<bool> => Rule::Text,
+        underscore: bool => Rule::Text,
+        reexport: bool => Rule::Text,
+        docstring: bool => Rule::Text,
+        declared_exports: Vec<String> => Rule::Set,
+        unresolved_exports: Vec<String> => Rule::Set,
+    }
+}
+crate::native_struct! {
+    /// One independently scoped declaration emitted by the static Griffe worker.
+    pub struct Observation {
+        path: String => Rule::NonEmpty,
+        kind: String => Rule::Vocabulary(["module", "class", "function", "attribute", "alias"].into_iter().map(String::from).collect()),
+        origin: ObservationOrigin => Rule::Vocabulary(ObservationOrigin::VALUES.iter().map(|v| (*v).into()).collect()),
+        file: String => Rule::MemberPath,
+        line: Option<u32> => Rule::Coordinate(Unit::LineOneBased),
+        signature: Option<String> => Rule::Text,
+        callable: Option<PythonCallable> => Rule::Text,
+        overload_ordinal: Option<u32> => Rule::Coordinate(Unit::Ordinal),
+        overloads: Vec<PythonOverload> => Rule::Sequence,
+        docs: Option<String> => Rule::Text,
+        alias_target: Option<String> => Rule::Text,
+        bases: Vec<PythonBase> => Rule::Sequence,
+        publicness: Publicness => Rule::Text,
+    }
 }
 
-/// One independent declaration emitted by Griffe.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct Observation {
-    /// Qualified Python path.
-    pub path: String,
-    /// Module, class, function or attribute.
-    pub kind: String,
-    /// Source versus stub provenance.
-    pub origin: ObservationOrigin,
-    /// Relative archive path, never an arbitrary local path.
-    pub file: String,
-    /// First declaration line.
-    pub line: Option<u32>,
-    /// Rendered signature or annotation.
-    pub signature: Option<String>,
-    /// Every declared overload, including stub-only overload groups.
-    pub overloads: Vec<String>,
-    /// Full bounded docstring.
-    pub docs: Option<String>,
-    /// Alias target even if unresolved.
-    pub alias_target: Option<String>,
-    /// Declared base expressions, not resolved inheritance claims.
-    pub bases: Vec<String>,
-    /// Signals remain separate.
-    pub publicness: Publicness,
-}
-
-/// One source file selected by Rust for the static worker.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct WorkerFile {
-    /// Archive-relative file path.
-    pub file: String,
-    /// Qualified module import path.
-    pub module: String,
-    /// Whether it is .py or .pyi.
-    pub origin: ObservationOrigin,
+crate::native_struct! {
+    /// One source file selected by Rust for the static worker.
+    pub struct WorkerFile {
+        file: String => crate::native_union::Rule::MemberPath,
+        module: String => crate::native_union::Rule::NonEmpty,
+        origin: ObservationOrigin => crate::native_union::Rule::Vocabulary(ObservationOrigin::VALUES.iter().map(|value| (*value).into()).collect()),
+    }
 }
 
 /// A static extraction request, generated into Python boundary DTOs.
@@ -92,36 +75,24 @@ pub struct WorkerRequest {
     pub max_cpu_seconds: u64,
 }
 
-/// Static distribution identity and inventory.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Distribution {
-    /// Selected immutable artifact filename.
-    pub filename: String,
-    /// Selected artifact digest.
-    pub sha256: String,
-    /// Observed built-metadata Name header, distinct from source/import identity; null if absent.
-    pub name: Option<String>,
-    /// Observed built-metadata Version header; null when no header was produced.
-    pub version: Option<String>,
-    /// Import roots derived from archive layout.
-    pub import_roots: Vec<String>,
-    /// Source and stub file mappings.
-    pub files: Vec<WorkerFile>,
-    /// Native extension paths unavailable to static AST extraction.
-    pub native_files: Vec<String>,
-    /// py.typed marker paths (including partial stub markers).
-    pub typed_markers: Vec<String>,
-    /// Selected METADATA/PKG-INFO fields, preserving repeated headers.
-    pub metadata: BTreeMap<String, Vec<String>>,
-    /// Raw entry-point declarations; nothing is imported.
-    pub entry_points: Option<String>,
-    /// Exact worker output artifact when extraction ran.
-    pub worker_artifact_id: Option<String>,
-    /// Archive-relative source root, empty for wheels.
-    pub source_root: String,
-    /// Documentation navigation, separately versioned from distribution facts.
-    #[serde(default)]
-    pub inventory: Vec<inventory::Entry>,
+crate::native_struct! {
+    /// Static distribution identity and inventory.
+    #[derive(Default)]
+    pub struct Distribution {
+        filename: String => crate::native_union::Rule::MemberPath,
+        sha256: String => crate::native_union::Rule::Text,
+        name: Option<String> => crate::native_union::Rule::Text,
+        version: Option<String> => crate::native_union::Rule::Text,
+        import_roots: Vec<String> => crate::native_union::Rule::Set,
+        files: Vec<WorkerFile> => crate::native_union::Rule::Set,
+        native_files: Vec<String> => crate::native_union::Rule::Set,
+        typed_markers: Vec<String> => crate::native_union::Rule::Set,
+        metadata: BTreeMap<String, Vec<String>> => crate::native_union::Rule::Map,
+        entry_points: Option<String> => crate::native_union::Rule::Text,
+        worker_artifact_id: Option<String> => crate::native_union::Rule::Reference(crate::native_union::Domain::Artifact),
+        source_root: String => crate::native_union::Rule::Text,
+        inventory: Vec<inventory::Entry> => crate::native_union::Rule::Sequence,
+    }
 }
 
 /// PyPI artifact metadata. Additional registry fields remain in the raw artifact.

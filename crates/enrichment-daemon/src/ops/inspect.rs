@@ -7,9 +7,7 @@
 //! the extracted crate archive, confined to it. LSP depth is a later phase and is named as
 //! such rather than silently degraded.
 
-use enrichment_core::evidence::{
-    ArtifactKind, Availability, EvidenceKind, FragmentKind, RequestedConfiguration, Symbol,
-};
+use enrichment_core::evidence::{ArtifactKind, EvidenceKind, FragmentKind, SymbolHeader};
 use enrichment_core::producer::source;
 use enrichment_core::request::InspectRequest;
 use enrichment_core::search::row_page::RowCursor;
@@ -213,7 +211,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 "`{wanted}` is ambiguous: {} definitions match.",
                 definitions.len()
             ),
-            data: common::to_object(&data),
+            data: common::payload(&data),
             coverage: match opened.reader.assess(&[EvidenceKind::PublicApi], None,
                 format!("candidate definitions for `{wanted}`")).await {
                 Ok(mut coverage) => {
@@ -237,7 +235,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             .cmp(&b.is_reexport)
             .then_with(|| a.path.cmp(&b.path))
     });
-    let mut selected: Symbol = matches[0].clone();
+    let selected: SymbolHeader = matches[0].clone();
     let also_at = match opened
         .reader
         .aliases_for(&selected.definition_id, &selected.path)
@@ -390,12 +388,12 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                             docs_truncated = page.has_more;
                         }
                         for (fragment, text_complete) in page.items {
-                            evidence.push(evidence_from_fragment(
-                                service,
-                                &fragment,
-                                source_version_match,
-                                excerpt_chars,
-                            ));
+                            match evidence_from_fragment(&fragment, excerpt_chars) {
+                                Ok(citation) => evidence.push(citation),
+                                Err(error) => {
+                                    return common::operation_error(&error, "citation_identity");
+                                }
+                            }
                             let complete = (!text_complete).then(|| {
                                 let mut full_aspect = aspect.clone();
                                 full_aspect.max_characters = None;
@@ -408,11 +406,11 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                                     manifest.snapshot_id.as_str(), &full_digest, key.clone(),
                                 ).expect("bounded admitted fragment identity serializes"));
                                 enrichment_core::wire::RecoveryAction::CallTool {
-                                    tool: "inspect_symbol".into(), arguments: common::to_object(&serde_json::json!({
-                                        "context_id": opened.context.context_id, "snapshot_id": manifest.snapshot_id,
-                                        "symbol_path": selected.path, "definition_id": selected.definition_id,
-                                        "selection": {"mode":"explicit", "aspects":[full_aspect]},
-                                        "max_bytes": request.max_bytes, "execution": execution,
+                                    request: Box::new(enrichment_core::request::ResearchRequest::Inspect(InspectRequest {
+                                        context_id: opened.context.context_id.to_string(), snapshot_id: Some(manifest.snapshot_id.to_string()),
+                                        symbol_path: selected.path.clone(), definition_id: Some(selected.definition_id.clone()),
+                                        selection: enrichment_core::wire::ResearchSelection::Explicit { aspects: vec![full_aspect] },
+                                        max_bytes: request.max_bytes, execution,
                                     })),
                                 }
                             });
@@ -463,115 +461,60 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         }
         outcomes.push(outcome);
     }
-    // The source and availability projections may need a locator even without a signature page.
-    // This is one explicit ancillary observation, never a complete-alternatives claim.
-    let ancillary;
-    let mut header_complete = outcomes
-        .iter()
-        .find(|o| o.aspect == InspectionAspect::Signature)
-        .and_then(|o| o.page.as_ref())
-        .is_some_and(|page| !page.has_more);
-    let header_observations = if observations.is_empty() && (want("source") || want("availability"))
-    {
-        ancillary = match opened
-            .reader
-            .observation_page(&selected.symbol_id, false, 32, None)
-            .await
-        {
-            Ok(page) => {
-                header_complete = !page.has_more;
-                page.items
-            }
+    let ancillary = if want("source") || want("availability") {
+        match opened.reader.ancillary_facts(&selected.symbol_id).await {
+            Ok(facts) => Some(facts),
             Err(error) => {
                 for aspect in [InspectionAspect::Source, InspectionAspect::Availability] {
-                    fail_aspect(&mut outcomes, aspect, &error);
+                    if want(aspect.as_str()) {
+                        fail_aspect(&mut outcomes, aspect, &error);
+                    }
                 }
-                Vec::new()
+                None
             }
-        };
-        &ancillary
+        }
     } else {
-        &observations
+        None
     };
-    if let Some(first) = header_observations.first().filter(|_| header_complete) {
-        if header_observations
-            .iter()
-            .all(|o| o.payload.doc_summary == first.payload.doc_summary)
-        {
-            selected.doc_summary = first.payload.doc_summary.clone();
-        }
-        if header_observations
-            .iter()
-            .all(|o| o.payload.deprecated == first.payload.deprecated)
-        {
-            selected.deprecated = first.payload.deprecated.clone();
-        }
-        if header_observations
-            .iter()
-            .all(|o| o.payload.cfg_hints == first.payload.cfg_hints)
-        {
-            selected.cfg_hints = first.payload.cfg_hints.clone();
-        } else {
-            limitations.push("Qualified observations disagree on cfg hints; read the independent signature observations.".into());
-        }
-        if header_observations
-            .iter()
-            .all(|o| o.source.locator == first.source.locator)
-        {
-            match &first.source.locator {
-                enrichment_core::evidence::relational::Locator::RustdocItem {
-                    reported_file,
-                    reported_line,
-                    item,
-                } => {
-                    selected.span_file = reported_file.clone();
-                    selected.span_line = *reported_line;
-                    selected.producer_local_id = *item;
-                }
-                enrichment_core::evidence::relational::Locator::PythonDeclaration {
-                    file,
-                    line,
-                    ..
-                } => {
-                    selected.span_file = Some(file.clone());
-                    selected.span_line = *line;
-                }
-                _ => {}
-            }
-        }
-    }
-    let signatures: std::collections::BTreeSet<_> = observations
-        .iter()
-        .filter_map(|o| o.payload.signature.clone())
-        .collect();
-    if signatures.len() == 1
-        && outcomes
-            .iter()
-            .find(|o| o.aspect == InspectionAspect::Signature)
-            .and_then(|o| o.page.as_ref())
-            .is_some_and(|page| !page.has_more)
+    if ancillary
+        .as_ref()
+        .is_some_and(|facts| facts.cfg_alternatives > 1)
     {
-        selected.signature = signatures.first().cloned();
+        limitations.push("Qualified observations disagree on cfg hints; read the independent signature observations.".into());
+    }
+    if ancillary
+        .as_ref()
+        .is_some_and(|facts| facts.locator_alternatives > 1)
+    {
+        limitations.push("Qualified observations have different source coordinates; no single source window was selected.".into());
     }
     let symbol = selected.clone();
     let mut availability = None;
     if want("availability") {
-        let requested = RequestedConfiguration {
-            features: (opened.environment.features_known
-                || !opened.environment.features.is_empty())
-            .then(|| opened.environment.features.clone()),
-            default_features: opened.environment.default_features,
-            target: opened.environment.target.clone(),
-        };
-        availability = manifest
-            .observed_configuration
-            .clone()
-            .map(|observed| Availability::assess(observed, requested, &selected.cfg_hints));
+        match enrichment_store::availability::select(
+            opened.reader.runtime(),
+            manifest.observed_configuration.as_ref(),
+            &opened.environment,
+            ancillary
+                .as_ref()
+                .and_then(|facts| facts.cfg_hints.as_deref()),
+        )
+        .await
+        {
+            Ok(selected) => availability = selected,
+            Err(error) => fail_aspect(&mut outcomes, InspectionAspect::Availability, &error.into()),
+        }
     }
 
     let mut source_excerpt = None;
     if want("source") {
-        match source_for(service, &opened, &selected).await {
+        match source_for(
+            service,
+            &opened,
+            ancillary.as_ref().and_then(|facts| facts.locator.as_ref()),
+        )
+        .await
+        {
             Ok(Some(excerpt)) => source_excerpt = Some(excerpt),
             Err(error) => fail_aspect(&mut outcomes, InspectionAspect::Source, &error),
             Ok(None) => {
@@ -742,22 +685,8 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         producer_runs: Vec::new(),
     };
     let research = Research {
-        summary: format!(
-            "{} `{}`{}{}",
-            selected.kind.as_str(),
-            selected.path,
-            selected
-                .deprecated
-                .as_ref()
-                .map(|_| " (deprecated)")
-                .unwrap_or(""),
-            selected
-                .doc_summary
-                .as_deref()
-                .map(|d| format!(": {d}"))
-                .unwrap_or_default()
-        ),
-        data: common::to_object(&data),
+        summary: format!("{} `{}`", selected.kind.as_str(), selected.path),
+        data: common::payload(&data),
         coverage,
         freshness,
         context_id,
@@ -823,9 +752,22 @@ fn aspect_page<T>(
 async fn source_for(
     service: &Service,
     opened: &common::Opened,
-    symbol: &Symbol,
+    locator: Option<&enrichment_core::evidence::relational::Locator>,
 ) -> Result<Option<source::SourceExcerpt>, enrichment_store::QueryError> {
-    let (Some(file), Some(line)) = (symbol.span_file.as_deref(), symbol.span_line) else {
+    use enrichment_core::evidence::relational::Locator;
+    let Some((file, line)) = locator.and_then(|locator| match locator {
+        Locator::RustdocItem {
+            reported_file: Some(file),
+            reported_line: Some(line),
+            ..
+        }
+        | Locator::PythonDeclaration {
+            file,
+            line: Some(line),
+            ..
+        } => Some((file.as_str(), *line)),
+        _ => None,
+    }) else {
         return Ok(None);
     };
     let line = line as usize;

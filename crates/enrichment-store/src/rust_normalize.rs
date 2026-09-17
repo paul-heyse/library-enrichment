@@ -13,7 +13,7 @@ use datafusion::{
 };
 use enrichment_core::{
     evidence::{
-        arrow_model::expressions::{child, null, record},
+        arrow_model::expressions::{child, null, record, variant, variants as union_variants},
         ingest::IngestContext,
         relational::FactSource,
     },
@@ -333,11 +333,11 @@ impl RustFacts {
 
 fn source_expr(source: &FactSource) -> Result<Expr> {
     let kind = field_type(Relation::ApiObservations, "source")?;
-    let locator = record(
+    let locator = variant(
         &child(&kind, "locator")?,
+        "rustdoc_item",
         &[
-            ("kind", lit("rustdoc_item")),
-            ("rustdoc_id", col("id")),
+            ("item", col("id")),
             ("reported_file", col("file")),
             ("reported_line", col("line")),
         ],
@@ -403,7 +403,7 @@ impl RustFacts {
                 false,
             ))),
         ));
-        let observed = self.session.sql("SELECT v.*,i.file,i.line,i.docs,i.deprecated,i.deprecated_since,i.deprecated_note,i.attrs FROM rust_identified v JOIN rust_items i ON v.id=i.id").await?
+        let observed = self.session.sql("SELECT v.*,i.file,i.line,i.docs,i.deprecated,i.deprecated_since,i.deprecated_note,i.attrs,i.rust FROM rust_identified v JOIN rust_items i ON v.id=i.id").await?
             .with_column("cfg_hints",datafusion::functions_nested::expr_fn::array_filter(col("attrs"),
                 datafusion::logical_expr::expr_fn::lambda(vec!["attr"],datafusion::functions::string::expr_fn::contains(attr,lit("cfg")))))?;
         self.session
@@ -411,34 +411,21 @@ impl RustFacts {
         // item/parent IDs are candidate associations, not alias occurrence IDs. A unique
         // binding is symbol-scoped; several bindings of one definition are definition-scoped.
         // Other renderings remain library fragments with a diagnostic, never invented APIs.
-        self.view("rust_render_observed",r#"SELECT a.*,i.file,i.line FROM rust_render_associations a LEFT JOIN rust_items i ON a.id=i.id"#).await?;
-        let symbol_subject = record(
+        self.view("rust_render_observed",r#"SELECT a.*,i.file,i.line,i.rust FROM rust_render_associations a LEFT JOIN rust_items i ON a.id=i.id"#).await?;
+        let symbol_subject = variant(
             &field_type(Relation::ApiObservations, "subject")?,
-            &[("kind", lit("symbol")), ("symbol_id", col("symbol_id"))],
+            "symbol",
+            &[("symbol_id", col("symbol_id"))],
         )?;
-        let rendered_subject = record(
+        let rendered_subject = union_variants(
             &field_type(Relation::Fragments, "subject")?,
+            when(col("bindings").eq(lit(1_u64)), lit("symbol"))
+                .when(col("definitions").eq(lit(1_u64)), lit("definition"))
+                .otherwise(lit("library"))?,
             &[
-                (
-                    "kind",
-                    when(col("bindings").eq(lit(1_u64)), lit("symbol"))
-                        .when(col("definitions").eq(lit(1_u64)), lit("definition"))
-                        .otherwise(lit("library"))?,
-                ),
-                ("symbol_id", col("symbol_id")),
-                (
-                    "definition_id",
-                    when(col("bindings").not_eq(lit(1_u64)), col("definition_id"))
-                        .otherwise(null(&DataType::Utf8)?)?,
-                ),
-                (
-                    "release_id",
-                    when(
-                        col("definitions").not_eq(lit(1_u64)),
-                        lit(&context.release_id),
-                    )
-                    .otherwise(null(&DataType::Utf8)?)?,
-                ),
+                ("symbol", vec![("symbol_id", col("symbol_id"))]),
+                ("definition", vec![("definition_id", col("definition_id"))]),
+                ("library", vec![("release_id", lit(&context.release_id))]),
             ],
         )?;
         let payload_type = field_type(Relation::ApiObservations, "payload")?;
@@ -467,6 +454,7 @@ impl RustFacts {
                 ),
                 ("deprecated", deprecated),
                 ("cfg_hints", col("cfg_hints")),
+                ("rust", col("rust")),
             ],
         )?;
         let raw = self.session.table("rust_observed").await?.select(vec![
@@ -491,6 +479,7 @@ impl RustFacts {
                     &[
                         ("declared_kind", col("kind")),
                         ("signature", col("text")),
+                        ("rust", col("rust")),
                         (
                             "cfg_hints",
                             datafusion::functions_nested::expr_fn::make_array(vec![]),
@@ -584,19 +573,29 @@ impl RustFacts {
             .table("rust_relationship_facts")
             .await?
             .select(vec![
-                record(
+                variant(
                     &field_type(Relation::Relationships, "subject")?,
-                    &[("kind", lit("symbol")), ("symbol_id", col("symbol_id"))],
+                    "symbol",
+                    &[("symbol_id", col("symbol_id"))],
                 )?
                 .alias("subject"),
-                record(
+                union_variants(
                     &field_type(Relation::Relationships, "target")?,
+                    col("target_kind"),
                     &[
-                        ("kind", col("target_kind")),
-                        ("symbol_id", col("target_symbol")),
-                        ("definition_id", col("target_definition")),
-                        ("package", col("target_package")),
-                        ("path", col("target_path")),
+                        ("symbol", vec![("symbol_id", col("target_symbol"))]),
+                        (
+                            "definition",
+                            vec![("definition_id", col("target_definition"))],
+                        ),
+                        (
+                            "external",
+                            vec![
+                                ("package", col("target_package")),
+                                ("path", col("target_path")),
+                            ],
+                        ),
+                        ("unresolved", vec![("path", col("target_path"))]),
                     ],
                 )?
                 .alias("target"),
@@ -638,7 +637,10 @@ mod tests {
                     ArtifactKind::RustdocJson,
                     "application/json",
                     "https://docs.rs/enr-fixture/0.2.0/rustdoc.json",
-                    "2026-09-16T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-16T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .unwrap()

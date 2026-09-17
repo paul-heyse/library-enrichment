@@ -6,7 +6,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use enrichment_core::canonical;
-use enrichment_core::evidence::{Artifact, ArtifactKind, artifact_id_for};
+use enrichment_core::evidence::{Artifact, artifact_id_for};
 
 /// One blob store rooted at `<data_root>/blobs`.
 #[derive(Debug, Clone)]
@@ -262,10 +262,14 @@ impl BlobStore {
         artifact: &Artifact,
         request_id: &str,
     ) -> io::Result<enrichment_core::wire::Envelope> {
-        let document: crate::result::Document<enrichment_core::wire::Envelope> =
-            self.read_json(artifact, crate::result::MAX_BYTES)?;
-        document.index.validate_result(&document.result)?;
-        let mut result = document.result;
+        let (index, mut sections) =
+            self.read_result_sections(artifact, &["envelope"], crate::result::MAX_BYTES)?;
+        let mut result: enrichment_core::wire::Envelope = serde_json::from_value(
+            sections
+                .remove("envelope")
+                .ok_or_else(|| io::Error::other("missing native envelope section"))?,
+        )?;
+        index.validate_result(&result)?;
         result.request_id = request_id.to_owned().try_into().map_err(io::Error::other)?;
         Ok(result)
     }
@@ -346,23 +350,10 @@ impl BlobStore {
     }
 }
 
-/// Describe bytes about to be stored, for callers that have no HTTP provenance to add.
-#[must_use]
-pub fn describe_local(
-    bytes: &[u8],
-    kind: ArtifactKind,
-    media_type: &str,
-    source_uri: &str,
-    retrieved_at: &str,
-) -> Artifact {
-    let mut artifact = Artifact::describe(bytes, kind, media_type, source_uri, retrieved_at);
-    artifact.artifact_id = artifact_id_for(&artifact.sha256);
-    artifact
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use enrichment_core::evidence::ArtifactKind;
 
     fn store() -> (tempfile::TempDir, BlobStore) {
         let dir = tempfile::tempdir().expect("temp dir");
@@ -400,7 +391,10 @@ mod tests {
                     ArtifactKind::Other,
                     "application/json",
                     "fixture:json",
-                    "2026-09-14T00:00:00Z",
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        "2026-09-14T00:00:00.000000Z".to_owned(),
+                    )
+                    .unwrap(),
                 )
             })
             .unwrap();
@@ -426,7 +420,18 @@ mod tests {
         let (_dir, store) = store();
         let bytes = b"# demo\n\nUnchanged between 1.0.0 and 1.0.1.\n";
         let describe_from = |uri: &'static str, at: &'static str| {
-            move |_: &str| Artifact::describe(bytes, ArtifactKind::Readme, "text/markdown", uri, at)
+            move |_: &str| {
+                Artifact::describe(
+                    bytes,
+                    ArtifactKind::Readme,
+                    "text/markdown",
+                    uri,
+                    enrichment_core::native_time::AcquisitionTime::try_from(
+                        at.replace("Z", ".000000Z"),
+                    )
+                    .unwrap(),
+                )
+            }
         };
 
         let first = store
@@ -460,7 +465,10 @@ mod tests {
             second.acquired.source_uri,
             "https://crates.io/demo/1.0.1#README.md"
         );
-        assert_eq!(second.acquired.retrieved_at, "2026-09-14T00:00:00Z");
+        assert_eq!(
+            String::from(second.acquired.retrieved_at),
+            "2026-09-14T00:00:00.000000Z"
+        );
     }
 
     #[test]
@@ -468,7 +476,13 @@ mod tests {
         let (_dir, store) = store();
         let stored = store
             .put(b"hello", |_| {
-                Artifact::describe(b"hello", ArtifactKind::Other, "text/plain", "x://y", "t")
+                Artifact::describe(
+                    b"hello",
+                    ArtifactKind::Other,
+                    "text/plain",
+                    "x://y",
+                    enrichment_core::native_time::AcquisitionTime::from_micros(1).unwrap(),
+                )
             })
             .expect("put");
         assert!(stored.newly_written);
@@ -492,7 +506,7 @@ mod tests {
                     ArtifactKind::Readme,
                     "text/markdown",
                     "x://first",
-                    "t1",
+                    enrichment_core::native_time::AcquisitionTime::from_micros(1).unwrap(),
                 )
             })
             .expect("first");
@@ -503,7 +517,7 @@ mod tests {
                     ArtifactKind::Readme,
                     "text/markdown",
                     "x://second",
-                    "t2",
+                    enrichment_core::native_time::AcquisitionTime::from_micros(2).unwrap(),
                 )
             })
             .expect("second");

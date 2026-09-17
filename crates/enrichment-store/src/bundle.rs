@@ -42,7 +42,7 @@ struct Description {
     snapshot_id: SnapshotId,
     source_control: String,
     control: String,
-    exported_at: String,
+    exported_at: enrichment_core::native_time::ObservationTime,
 }
 
 fn error(error: impl std::fmt::Display) -> io::Error {
@@ -283,7 +283,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         snapshot_id: snapshot.clone(),
         source_control: catalog.identity().into(),
         control: target_control.identity().into(),
-        exported_at: enrichment_core::clock::now_rfc3339(),
+        exported_at: enrichment_core::native_time::ObservationTime::now().map_err(error)?,
     };
     fs::write(root.join(BUNDLE), serde_json::to_vec_pretty(&description)?)?;
     let files = inventory(&root)?;

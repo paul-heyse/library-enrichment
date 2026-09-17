@@ -98,7 +98,7 @@ pub(crate) async fn assess(
     let mut params = vec![crate::projection::subject_scalar(&subject)?];
     let compatibility = if symbol_id.is_some() {
         params.push(ScalarValue::from(manifest.release_id.as_str()));
-        "OR (c.subject.kind = 'library' AND c.subject.release_id = $2)"
+        "OR (c.subject.kind = 'library' AND c.subject.library.release_id = $2)"
     } else {
         ""
     };

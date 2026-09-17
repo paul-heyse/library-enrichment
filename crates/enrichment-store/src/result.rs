@@ -1,4 +1,4 @@
-//! One immutable JSON result with a bounded leading section index (research-result/3).
+//! One current retained format: an Arrow IPC index/outcome followed by bounded JSON sections.
 //!
 //! Index ranges are relative to the result object. Large values are serialized from borrowed
 //! JSON, never copied into a second complete document. A section read parses only the index.
@@ -7,51 +7,38 @@ use crate::BlobStore;
 use enrichment_core::{
     canonical,
     evidence::{Artifact, ArtifactKind, artifact_id_for},
+    native_union::{Cell, NativeStruct, Rule},
+    operation::results::ResultRecord,
     wire::Envelope,
 };
-use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
-    io::{self, BufRead, Read, Seek, Write},
+    io::{self, Read, Seek, Write},
 };
 
 pub const MAX_BYTES: u64 = 32 * 1024 * 1024;
-const INDEX_BYTES: u64 = 16 * 1024;
-pub const JOB_URI: &str = "service:job-delivery/3";
+const INDEX_BYTES: u64 = MAX_BYTES;
+const MAGIC: &[u8; 8] = b"LERES004";
+pub use enrichment_core::operation::results::{JOB_URI, MEDIA_TYPE};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-enum Format {
-    #[serde(rename = "research-result/3")]
-    V3,
+enrichment_core::native_struct! {
+ #[derive(Copy)]
+ pub struct Window {
+    start: u64 => Rule::Coordinate(enrichment_core::native_union::Unit::ByteOffset),
+    end: u64 => Rule::RangeEnd { unit: enrichment_core::native_union::Unit::ByteOffset, start: "start".into() },
+ }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Window {
-    pub start: u64,
-    pub end: u64,
+enrichment_core::native_struct! {
+ pub struct Index {
+    body_bytes: u64 => Rule::UnsignedRange { min: 1, max: MAX_BYTES },
+    codec_revision: String => Rule::NonEmpty,
+    record: ResultRecord => Rule::Text,
+    sections: BTreeMap<String, Window> => Rule::Map,
+    references: Vec<Reference> => Rule::SequenceBounds { min: 0, max: 1024 },
+ }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Index {
-    body_bytes: u64,
-    format: Format,
-    pub sections: BTreeMap<String, Window>,
-    pub references: Vec<Reference>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Reference {
-    pub receipt: Artifact,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Document<T> {
-    pub index: Index,
-    pub result: T,
+enrichment_core::native_struct! {
+ pub struct Reference { receipt: Artifact => Rule::Text }
 }
 
 struct Recorder<W> {
@@ -61,14 +48,15 @@ struct Recorder<W> {
 impl<W: Write> Write for Recorder<W> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         crate::runtime::charge_artifact(0).map_err(io::Error::other)?;
-        self.writer.write_all(bytes)?;
-        self.bytes = self
+        let next = self
             .bytes
             .checked_add(bytes.len() as u64)
             .filter(|n| *n <= MAX_BYTES)
             .ok_or_else(|| {
                 io::Error::new(io::ErrorKind::OutOfMemory, "result body exceeds byte bound")
             })?;
+        self.writer.write_all(bytes)?;
+        self.bytes = next;
         Ok(bytes.len())
     }
     fn flush(&mut self) -> io::Result<()> {
@@ -76,10 +64,10 @@ impl<W: Write> Write for Recorder<W> {
     }
 }
 
-fn member<W: Write>(
+fn member<W: Write, T: Cell>(
     writer: &mut Recorder<W>,
     name: &str,
-    value: &impl Serialize,
+    value: &T,
     sections: &mut BTreeMap<String, Window>,
 ) -> io::Result<()> {
     if writer.bytes > 1 {
@@ -88,11 +76,14 @@ fn member<W: Write>(
     serde_json::to_writer(&mut *writer, name)?;
     writer.write_all(b":")?;
     let start = writer.bytes;
-    // Metadata is bounded independently of the large data payload. Canonical field ordering
-    // is independent of serde_json/preserve_order feature unification.
-    serde_json::to_writer(
+    let field = std::sync::Arc::new(enrichment_core::native_union::field::<T>(name, Rule::Text));
+    let array = T::encode(&[Some(value)]).map_err(io::Error::other)?;
+    enrichment_core::native_json::write_value(
         &mut *writer,
-        &canonical::BorrowedValue(&serde_json::to_value(value)?),
+        MAX_BYTES as usize,
+        &field,
+        array.as_ref(),
+        0,
     )?;
     sections.insert(
         name.into(),
@@ -114,29 +105,37 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
     out.write_all(b",\"data\":")?;
     let start = out.bytes;
     out.write_all(b"{")?;
-    let mut values: Vec<_> = result.data.iter().collect();
-    values.sort_by_key(|(key, _)| *key);
-    for (i, (key, value)) in values.into_iter().enumerate() {
+    let (payload_field, payload) = result.data.selected_payload().map_err(io::Error::other)?;
+    let arrow::datatypes::DataType::Struct(fields) = payload_field.data_type() else {
+        return Err(io::Error::other("tool result requires a native record"));
+    };
+    let payload = payload
+        .as_any()
+        .downcast_ref::<arrow::array::StructArray>()
+        .ok_or_else(|| io::Error::other("tool result record representation"))?;
+    for (i, field) in fields.iter().enumerate() {
         if i != 0 {
             out.write_all(b",")?;
         }
-        serde_json::to_writer(&mut out, key)?;
+        serde_json::to_writer(&mut out, field.name())?;
         out.write_all(b":")?;
         let start = out.bytes;
-        serde_json::to_writer(&mut out, &canonical::BorrowedValue(value))?;
+        enrichment_core::native_json::write_value(
+            &mut out,
+            MAX_BYTES as usize,
+            field,
+            payload.column(i).as_ref(),
+            0,
+        )?;
         let window = Window {
             start,
             end: out.bytes,
         };
-        sections.insert(format!("data.{key}"), window);
-        let alias = match key.as_str() {
-            "observations" => Some("signature"),
-            "changes" => Some("changes"),
-            "aspect_outcomes" => Some("aspects"),
-            _ => None,
-        };
-        if let Some(alias) = alias {
-            sections.insert(alias.into(), window);
+        sections.insert(format!("data.{}", field.name()), window);
+        if let Some(section) = field.metadata().get("enrichment.section") {
+            if sections.insert(section.clone(), window).is_some() {
+                return Err(io::Error::other("duplicate declared result section"));
+            }
         }
     }
     out.write_all(b"}")?;
@@ -148,15 +147,20 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
         },
     );
     member(&mut out, "delivery", &result.delivery, &mut sections)?;
-    member(&mut out, "error", &result.error(), &mut sections)?;
+    member(&mut out, "error", &result.error().cloned(), &mut sections)?;
     member(&mut out, "evidence", &result.evidence, &mut sections)?;
     member(&mut out, "freshness", &result.freshness, &mut sections)?;
-    member(&mut out, "job", &result.job(), &mut sections)?;
-    member(&mut out, "request_id", &"req_retained", &mut sections)?;
+    member(&mut out, "job", &result.job().cloned(), &mut sections)?;
+    member(
+        &mut out,
+        "request_id",
+        &"req_retained".to_owned(),
+        &mut sections,
+    )?;
     member(
         &mut out,
         "schema_version",
-        &enrichment_core::SCHEMA_VERSION,
+        &enrichment_core::SCHEMA_VERSION.to_owned(),
         &mut sections,
     )?;
     member(&mut out, "snapshot_id", &result.snapshot_id, &mut sections)?;
@@ -164,9 +168,17 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
     member(&mut out, "summary", &result.summary, &mut sections)?;
     out.write_all(b"}")?;
     out.flush()?;
+    sections.insert(
+        "envelope".into(),
+        Window {
+            start: 0,
+            end: out.bytes,
+        },
+    );
     Ok(Index {
         body_bytes: out.bytes,
-        format: Format::V3,
+        codec_revision: enrichment_core::native_json::REVISION.into(),
+        record: ResultRecord::from_envelope(result).map_err(io::Error::other)?,
         sections,
         references: result
             .artifacts
@@ -183,15 +195,22 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
 /// Invalid index size, capacity or writes leave no successful result descriptor.
 pub fn store(blobs: &BlobStore, result: &Envelope, uri: &str) -> io::Result<(Artifact, Index)> {
     let index = body(io::sink(), result)?;
-    let mut prefix = b"{\"index\":".to_vec();
-    serde_json::to_writer(&mut prefix, &index)?;
-    prefix.extend_from_slice(b",\"result\":\n");
-    if prefix.len() as u64 > INDEX_BYTES {
-        return Err(io::Error::other("result index exceeds bound"));
+    let mut metadata = Vec::new();
+    let batch = Index::batch(std::slice::from_ref(&index)).map_err(io::Error::other)?;
+    {
+        let bounded =
+            enrichment_core::native_json::BoundedWriter::new(&mut metadata, INDEX_BYTES as usize);
+        let mut writer =
+            arrow::ipc::writer::StreamWriter::try_new(bounded, batch.schema().as_ref())
+                .map_err(io::Error::other)?;
+        writer.write(&batch).map_err(io::Error::other)?;
+        writer.finish().map_err(io::Error::other)?;
     }
+    let mut prefix = MAGIC.to_vec();
+    prefix.extend_from_slice(&(metadata.len() as u64).to_le_bytes());
     let encoded = index
         .body_bytes
-        .checked_add(prefix.len() as u64 + 1)
+        .checked_add(prefix.len() as u64 + metadata.len() as u64)
         .filter(|bytes| *bytes <= MAX_BYTES)
         .ok_or_else(|| {
             io::Error::new(
@@ -200,25 +219,28 @@ pub fn store(blobs: &BlobStore, result: &Envelope, uri: &str) -> io::Result<(Art
             )
         })?;
     crate::runtime::charge_artifact(encoded as usize).map_err(io::Error::other)?;
+    let retrieved_at =
+        enrichment_core::native_time::AcquisitionTime::now().map_err(io::Error::other)?;
     let artifact = blobs.put_stream(
         MAX_BYTES,
         |writer| {
             writer.write_all(&prefix)?;
+            writer.write_all(&metadata)?;
             if body(&mut *writer, result)? != index {
                 return Err(io::Error::other(
                     "result changed between indexing and writing",
                 ));
             }
-            writer.write_all(b"}")
+            Ok(())
         },
         |digest, bytes| Artifact {
             artifact_id: artifact_id_for(digest),
             sha256: digest.into(),
             size_bytes: bytes,
             kind: ArtifactKind::Other,
-            media_type: "application/json".into(),
+            media_type: MEDIA_TYPE.into(),
             source_uri: uri.into(),
-            retrieved_at: enrichment_core::clock::now_rfc3339(),
+            retrieved_at,
             final_url: None,
             etag: None,
             last_modified: None,
@@ -240,32 +262,59 @@ impl Index {
     }
 }
 
-/// Read only the bounded first line and validate all relative ranges against the file length.
+/// Read the bounded native IPC index and validate all ranges against the file length.
 /// The caller captures/hash-checks the immutable file before using these positions.
 pub fn index(file: &mut (impl Read + Seek), total: u64) -> io::Result<(Index, u64)> {
-    file.rewind()?;
-    let mut prefix = Vec::new();
-    io::BufReader::new(file.take(INDEX_BYTES + 1)).read_until(b'\n', &mut prefix)?;
-    let base = prefix.len() as u64;
-    if base > INDEX_BYTES
-        || !prefix.ends_with(b",\"result\":\n")
-        || !prefix.starts_with(b"{\"index\":")
-    {
-        return Err(io::Error::other("invalid research-result/3 framing"));
+    if total > MAX_BYTES {
+        return Err(io::Error::other(
+            "native result exceeds complete byte bound",
+        ));
     }
-    let index: Index = serde_json::from_slice(&prefix[9..prefix.len() - 11])?;
-    if index
-        .body_bytes
-        .checked_add(base)
-        .and_then(|n| n.checked_add(1))
-        != Some(total)
+    file.rewind()?;
+    let mut framing = [0_u8; 16];
+    file.read_exact(&mut framing)?;
+    if &framing[..8] != MAGIC {
+        return Err(io::Error::other("invalid native result framing"));
+    }
+    let length = u64::from_le_bytes(framing[8..].try_into().expect("fixed length"));
+    let base = length
+        .checked_add(16)
+        .filter(|base| *base < total && *base <= INDEX_BYTES)
+        .ok_or_else(|| io::Error::other("native result index exceeds byte bound"))?;
+    let mut metadata = vec![0; length as usize];
+    file.read_exact(&mut metadata)?;
+    let mut reader = arrow::ipc::reader::StreamReader::try_new(io::Cursor::new(metadata), None)
+        .map_err(io::Error::other)?;
+    enrichment_core::native_schema::check_input(
+        reader.schema().as_ref(),
+        &arrow::datatypes::Schema::new(Index::fields()),
+    )
+    .map_err(io::Error::other)?;
+    let batch = reader
+        .next()
+        .transpose()
+        .map_err(io::Error::other)?
+        .ok_or_else(|| io::Error::other("missing native result metadata"))?;
+    if batch.num_rows() != 1 || reader.next().is_some() {
+        return Err(io::Error::other("native result metadata cardinality"));
+    }
+    let rows = enrichment_core::evidence::arrow_model::cells::RowSet::batch(&batch)
+        .map_err(io::Error::other)?;
+    let index = <Index as NativeStruct>::decode(rows.row(0)).map_err(io::Error::other)?;
+    if index.codec_revision != enrichment_core::native_json::REVISION
+        || index.body_bytes.checked_add(base) != Some(total)
         || index.sections.len() > 128
         || index
             .sections
             .iter()
             .any(|(name, w)| name.len() > 128 || w.start >= w.end || w.end > index.body_bytes)
+        || index.sections.get("envelope")
+            != Some(&Window {
+                start: 0,
+                end: index.body_bytes,
+            })
     {
-        return Err(io::Error::other("invalid research result section ranges"));
+        return Err(io::Error::other("invalid native result section contract"));
     }
     Ok((index, base))
 }

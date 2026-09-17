@@ -1,0 +1,68 @@
+{
+  "note": "Use-case seeds. Each topic gathers the questions from router.json that belong to one functional area, so an agent that knows what it wants to do -- rather than which library it wants -- has somewhere to land.",
+  "topics": [
+    {
+      "slug": "public-api-surface",
+      "title": "What a crate exposes",
+      "layers": ["rustdoc-json"],
+      "lead": "The shape of a public contract: what exists, how it is spelled, what it takes and returns, what it implements, and what is deprecated.",
+      "mental_model": "Rustdoc JSON is a model of *documentation*, not of code. It is the most normalized view of a crate's exposed API and it contains no function bodies whatsoever. Every question of the form 'what does this do' has to leave this layer immediately. Three different causes make an item absent -- not public, gated off by a feature, or in a private module -- and the document distinguishes none of them."
+    },
+    {
+      "slug": "names-and-types",
+      "title": "What a symbol means",
+      "layers": ["hir"],
+      "lead": "Resolution, inferred types, method resolution, trait and impl relationships, and the mapping between syntax and resolved entities.",
+      "mental_model": "This is the only layer that knows what a name refers to. Syntax has the spelling, MIR has the outcome, and neither can tell two items with the same name apart. The price is that it needs a loaded database: `Semantics` over a real crate graph, not a string. Its documentation coverage upstream is 12.84%, so the index here is largely bare signatures -- read `content/corpus/rust-analyzer/hir-lib.rs` when a signature is not enough."
+    },
+    {
+      "slug": "source-structure",
+      "title": "How code is written",
+      "layers": ["syntax"],
+      "lead": "Items, tokens, comments, whitespace, offsets, nesting, and code that does not compile.",
+      "mental_model": "A lossless concrete syntax tree: the source text can be reconstructed from it exactly. Two properties follow that no other layer has. Trivia survives, so this is the only place comments and formatting exist. And parsing never fails -- broken input yields a tree containing ERROR nodes rather than an error -- which makes it the only layer usable on code mid-edit. It resolves nothing and infers nothing."
+    },
+    {
+      "slug": "execution-and-control-flow",
+      "title": "What actually runs",
+      "layers": ["mir"],
+      "lead": "Basic blocks, terminators, locals, places, operands, rvalues, calls, branches and drops.",
+      "mental_model": "MIR is the source after every convenience has been removed: control flow is an explicit graph, types are explicit everywhere, nested expressions are gone, and drops the source never mentioned are written in. Reaching it costs a full compilation. Two cautions: 'the MIR' is ambiguous until you name a phase -- built, analysis and runtime differ -- and the textual view states in its own first line that it is for human consumers only."
+    },
+    {
+      "slug": "value-state",
+      "title": "How state evolves along a path",
+      "layers": ["dataflow"],
+      "lead": "Initialisation, liveness, borrows, moves, and custom forward or backward analyses.",
+      "mental_model": "MIR gives the graph; this gives facts that hold *at a point* after a fixpoint over it. The distinction matters: 'which edges exist' is MIR, 'is this local initialised on every path that reaches here' is dataflow. If you remember this API, check it: `AnalysisDomain` no longer exists as a separate trait and `GenKillAnalysis` was removed outright."
+    },
+    {
+      "slug": "project-context",
+      "title": "Packages, features and the crate graph",
+      "layers": ["cargo-metadata", "project-load"],
+      "lead": "Package identity, targets, workspace structure, dependency identities and renames, resolved graphs, declared features -- and how a real project becomes an analysis database.",
+      "mental_model": "Two layers that sound alike and are not. `cargo metadata` is a stable JSON description of the project and contains no code facts at all. `ra_ap_load-cargo` turns that project into something the semantic layers can query, and contributes no new category of fact -- its whole value is making the others operate on a real resolved crate instead of a loose file."
+    },
+    {
+      "slug": "macros",
+      "title": "Seeing through a macro",
+      "layers": ["syntax", "hir", "mir"],
+      "lead": "Where an invocation stops being an invocation, layer by layer.",
+      "mental_model": "Three layers give three correct and different answers. The syntax tree holds `MACRO_CALL` and never expands it. The semantic layer expands and resolves through it. The compiler will print the expansion directly with `-Zunpretty=expanded`, which is the quickest answer when the question is simply 'what does this become' -- though even that stops short of full desugaring."
+    },
+    {
+      "slug": "versions-and-drift",
+      "title": "Knowing what you are actually running",
+      "layers": ["cross-layer"],
+      "lead": "Which version each subject reports, what that reading covers, and where it misleads.",
+      "mental_model": "This is the failure mode these subjects share. Three of them answer a question adjacent to the one you asked: `rust-analyzer --version` reports a rustc release, not an ra_ap version; a toolchain's rustdoc format version says nothing about what docs.rs will serve; `cargo metadata` reports schema 1 while the envelope grows new keys. Ask the artifact in front of you, not the tool that might have produced it."
+    },
+    {
+      "slug": "driving-the-tools",
+      "title": "Running these from a script",
+      "layers": ["cross-layer"],
+      "lead": "Invocation shapes, exit codes and the failures that do not look like failures.",
+      "mental_model": "Every rust-analyzer subcommand is documented as carrying no stability guarantee, and they are not consistent with each other: `ssr` exits 1 on a refused rule while `parse` exits 0 on source it could not parse. `ssr` and `search` take no path and work on the current directory, so passing one makes the path be parsed as a rule and the error names the wrong cause."
+    }
+  ]
+}

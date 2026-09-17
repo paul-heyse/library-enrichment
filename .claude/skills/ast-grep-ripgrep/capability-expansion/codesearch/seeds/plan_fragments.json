@@ -1,0 +1,169 @@
+{
+  "_comment": [
+    "Plan fragments: one composable step each, typed by what it accepts and what it produces.",
+    "",
+    "Composition is a JOIN, not a planner. A may precede B exactly when A.produced_output equals",
+    "B.accepted_input and B's scope assumption is satisfied by A's coordinate preservation. The",
+    "proposal's warning -- do not feed only matching lines into a structural stage that requires",
+    "complete enclosing syntax -- is therefore enforced by the row not existing, rather than by",
+    "anyone remembering it.",
+    "",
+    "`recall` is the honest part, and the reason this is authored rather than derived.",
+    "`preserving` asserts final_match(x) implies prefilter_selects(x), a claim about behaviour",
+    "that no amount of inspecting input and output types can establish. So `preserving` requires",
+    "a CONFIRMED behaviour assertion -- one whose probe ran and whose control came out the other",
+    "way. A `recorded` assertion is the tool's own word for it and is not enough.",
+    "",
+    "Assertions are also cited BY heuristic fragments, as evidence of the limit. `rg --json` is",
+    "heuristic because P022 and P024 confirm that ignored and hidden files are skipped: the",
+    "probes establish the loss rather than excusing it.",
+    "",
+    "All three recall values carry real data here. `unknown` is not a placeholder -- it is what",
+    "`plan:sg-rewrite` honestly holds, because nobody has probed whether a rewrite applies to",
+    "every match it found.",
+    "",
+    "Grounded in topics/composing-the-two.md, which says the composition in words: 'ripgrep",
+    "narrows, ast-grep confirms', and warns that 'a count that differs between the two tools is",
+    "information, not a bug'."
+  ],
+  "fragments": [
+    {
+      "key": "plan:rg-narrow-by-literal",
+      "name": "rg -l LITERAL",
+      "accepted_input": "file_set",
+      "produced_output": "file_set",
+      "scope_assumption": "none",
+      "coordinate_preservation": "preserved",
+      "recall": "heuristic",
+      "ordering_requirement": "before",
+      "mechanisms": [
+        "mech:rg/cli/--files-with-matches"
+      ],
+      "unresolved_obligations": [
+        "The literal searched for must be implied by whatever pattern runs downstream. It is preserving for `helper($X)` narrowed on `helper`, and lossy for a pattern whose text never appears literally -- a bare metavariable, or a --kind selector. Nothing in the fragment's shape distinguishes the two, which is why this is heuristic."
+      ]
+    },
+    {
+      "key": "plan:rg-match-lines",
+      "name": "rg --json PATTERN",
+      "accepted_input": "file_set",
+      "produced_output": "line_set",
+      "scope_assumption": "none",
+      "coordinate_preservation": "preserved",
+      "recall": "heuristic",
+      "ordering_requirement": "none",
+      "mechanisms": [
+        "mech:rg/cli/--json"
+      ],
+      "assertions": [
+        "assert:rg/P022",
+        "assert:rg/P024"
+      ],
+      "unresolved_obligations": [
+        "Probes P022 and P024 confirm that .gitignore'd paths and hidden files are skipped by default, so this step does not see every file it was nominally given. It becomes preserving over an arbitrary file set only with --no-ignore, --hidden and --text. The assertions here are cited as evidence of the LIMIT, not of a preserving claim."
+      ]
+    },
+    {
+      "key": "plan:sg-match-structure",
+      "name": "ast-grep run -p PATTERN",
+      "accepted_input": "file_set",
+      "produced_output": "node_set",
+      "scope_assumption": "whole_file",
+      "coordinate_preservation": "preserved",
+      "recall": "preserving",
+      "ordering_requirement": "after",
+      "mechanisms": [
+        "mech:sg/cli/run/--pattern"
+      ],
+      "assertions": [
+        "assert:sg/A001",
+        "assert:sg/A013"
+      ],
+      "unresolved_obligations": [
+        "Preserving for the structural question, which is the one being asked. A013 confirms an occurrence inside a comment is not matched -- that is correct for `where is this called` and wrong for `where does this text appear`, so a caller asking the second question wants the lexical fragment instead."
+      ]
+    },
+    {
+      "key": "plan:sg-outline-regions",
+      "name": "ast-grep outline",
+      "accepted_input": "file_set",
+      "produced_output": "node_set",
+      "scope_assumption": "whole_file",
+      "coordinate_preservation": "preserved",
+      "recall": "preserving",
+      "ordering_requirement": "none",
+      "mechanisms": [
+        "mech:sg/cli/outline/--match"
+      ],
+      "assertions": [
+        "assert:sg/A008",
+        "assert:sg/A009"
+      ]
+    },
+    {
+      "key": "plan:sg-capture-metavariables",
+      "name": "ast-grep metavariable capture",
+      "accepted_input": "node_set",
+      "produced_output": "capture_set",
+      "scope_assumption": "complete_enclosing_syntax",
+      "coordinate_preservation": "preserved",
+      "recall": "preserving",
+      "ordering_requirement": "after",
+      "mechanisms": [
+        "mech:sg/rule/ruleObject.pattern"
+      ],
+      "assertions": [
+        "assert:sg/A002"
+      ]
+    },
+    {
+      "key": "plan:rg-inside-a-region",
+      "name": "rg within an outlined region",
+      "accepted_input": "node_set",
+      "produced_output": "line_set",
+      "scope_assumption": "none",
+      "coordinate_preservation": "remapped",
+      "recall": "heuristic",
+      "ordering_requirement": "after",
+      "mechanisms": [
+        "mech:rg/cli/--json"
+      ],
+      "unresolved_obligations": [
+        "Offsets are relative to the extracted region, so anything downstream needing original file coordinates must remap them. This is the reverse direction the topic page calls the one good use of structural-then-lexical: finding what outline cannot see, such as comments, string literals and configuration keys."
+      ]
+    },
+    {
+      "key": "plan:sg-rewrite",
+      "name": "ast-grep run -U --rewrite",
+      "accepted_input": "node_set",
+      "produced_output": "file_content",
+      "scope_assumption": "complete_enclosing_syntax",
+      "coordinate_preservation": "lost",
+      "recall": "unknown",
+      "ordering_requirement": "after",
+      "mechanisms": [
+        "mech:sg/cli/run/--rewrite"
+      ],
+      "unresolved_obligations": [
+        "No probe in this repository establishes whether a rewrite applies to every match it found, so recall is `unknown` rather than assumed. `unknown` is the bottom of the lattice and it is the correct value: nobody has looked.",
+        "Coordinates are lost because the file is rewritten, so nothing downstream may rely on a position established before this step."
+      ]
+    },
+    {
+      "key": "plan:rg-replace-output",
+      "name": "rg -r REPLACEMENT",
+      "accepted_input": "line_set",
+      "produced_output": "line_set",
+      "scope_assumption": "none",
+      "coordinate_preservation": "lost",
+      "recall": "heuristic",
+      "ordering_requirement": "after",
+      "mechanisms": [
+        "mech:rg/cli/--replace"
+      ],
+      "unresolved_obligations": [
+        "This rewrites printed output only; ripgrep never modifies a file. A caller expecting in-place rewriting is in negative space -- see `absent:rg/in-place file rewriting`, which names ast-grep -U as the alternative."
+      ]
+    }
+  ]
+}

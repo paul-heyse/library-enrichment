@@ -4,25 +4,10 @@ use super::relational::FactSource;
 use crate::producer::{docsrs::DocsRsMetadata, python::Distribution};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(
-    tag = "kind",
-    content = "value",
-    rename_all = "snake_case",
-    deny_unknown_fields
-)]
-pub enum ReleaseDetails {
-    RustDocs(DocsRsMetadata),
-    PythonDistribution(Distribution),
-}
-
-impl ReleaseDetails {
-    pub const KINDS: [&'static str; 2] = ["rust_docs", "python_distribution"];
-    pub fn kind(&self) -> &'static str {
-        match self {
-            Self::RustDocs(_) => Self::KINDS[0],
-            Self::PythonDistribution(_) => Self::KINDS[1],
-        }
+crate::native_payload! {
+    pub enum ReleaseDetails {
+        RustDocs(DocsRsMetadata) = "rust_docs",
+        PythonDistribution(Distribution) = "python_distribution",
     }
 }
 

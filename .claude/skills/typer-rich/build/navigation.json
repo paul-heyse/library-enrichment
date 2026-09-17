@@ -1,0 +1,140 @@
+{
+  "_comment": [
+    "Route probes: the documented route leads to this file, and the answer is actually in it.",
+    "",
+    "Distinct from `probes.json`, which executes the subjects. fastmcp overloads one name for",
+    "both concepts; ast-grep-ripgrep keeps them apart and that is the convention followed here.",
+    "These are deliberately brittle -- a route probe that keeps passing while its subject moves",
+    "is certifying a path that no longer leads anywhere.",
+    "",
+    "`reject` carries more weight in this repository than in fastmcp's, because the most",
+    "dangerous thing this index could do is present a private spelling as importable."
+  ],
+  "probes": [
+    {
+      "question": "Does the vendored Click survive the private module path it lives behind?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\._click\\.core\\.Context\\ttyper\\._click\\.core\\.Context\\tclass\\tclick\\t"
+    },
+    {
+      "question": "Is a vendored Click item that Typer re-exports shown under the Typer spelling?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\._click\\.utils\\.echo\\ttyper\\.echo\\t"
+    },
+    {
+      "question": "Is a not-importable item still given a way to be met?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\._click\\.core\\.Context\\t.*\\tno\\tsubclassed-via\\ttyper\\.Context \\(subclass\\)"
+    },
+    {
+      "question": "Are the six non-re-exported Click exceptions reachable through their ancestor?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\._click\\.exceptions\\.NoSuchOption\\t.*\\tsubtype-of\\ttyper\\.TyperException"
+    },
+    {
+      "question": "Is what an annotation BECOMES recorded, though no graph edge carries it?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\._click\\.types\\.IntRange\\t.*\\tdeclared\\ttyper\\.Option"
+    },
+    {
+      "question": "Is the preferred spelling for a Rich class the documented one, not an import site?",
+      "file": "index/symbols.tsv",
+      "expect": "^rich\\.table\\.Table\\trich\\.table\\.Table\\tclass\\trich\\t"
+    },
+    {
+      "question": "Is the TYPE_CHECKING-only spelling kept OUT of the preferred column?",
+      "file": "index/symbols.tsv",
+      "expect": "^rich\\.console\\.Console\\trich\\.console\\.Console\\t",
+      "reject": "^rich\\.console\\.Console\\trich\\.Console\\t"
+    },
+    {
+      "question": "Did the redundant-alias export signal find Typer's re-exports?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\.main\\.Typer\\ttyper\\.Typer\\t"
+    },
+    {
+      "question": "Is a name re-exported from an unindexed distribution still findable?",
+      "file": "index/symbols.tsv",
+      "expect": "^typer\\.get_terminal_size\\t"
+    },
+    {
+      "question": "Do Rich's two dunder-only protocols carry adjudicated verdicts?",
+      "file": "index/satisfies.tsv",
+      "expect": "\\trich\\.console\\.ConsoleRenderable\\tyes\\t"
+    },
+    {
+      "question": "Does RichCast carry verdicts too, not just ConsoleRenderable?",
+      "file": "index/satisfies.tsv",
+      "expect": "\\trich\\.console\\.RichCast\\tyes\\t"
+    },
+    {
+      "question": "Did anything fail to index without being recorded?",
+      "file": "PROVENANCE.json",
+      "expect": "\"not_indexed\": 0"
+    },
+    {
+      "question": "Are the excluded data modules absent from the symbol table entirely?",
+      "file": "index/symbols.tsv",
+      "expect": "^rich\\.cells\\.",
+      "reject": "^rich\\._unicode_data\\."
+    },
+    {
+      "question": "Does the emoji map stay out of the index as well?",
+      "file": "index/symbols.tsv",
+      "expect": "^rich\\.emoji\\.",
+      "reject": "^rich\\._emoji_codes\\."
+    },
+    {
+      "question": "Is the flagship markup deletion recorded as a confirmed observation?",
+      "file": "index/behaviors.tsv",
+      "expect": "^M001\\trich\\tmarkup-and-escaping\\tconfirmed\\t"
+    },
+    {
+      "question": "Is the 0.27.0 metavar form captured rather than described?",
+      "file": "probes/captures/T002.txt",
+      "expect": "name\\s+<str>"
+    },
+    {
+      "question": "Does the NO_COLOR capture show bold surviving and colour going?",
+      "file": "probes/captures/E001.ansi.txt",
+      "expect": "\\\\x1b\\[1mhi",
+      "reject": "\\\\x1b\\[1;31mhi"
+    },
+    {
+      "question": "Does the seam map mark the monkeypatch seam private rather than documented?",
+      "file": "seams/00-map.md",
+      "expect": "rich-utils-overrides.*`private`"
+    },
+    {
+      "question": "Does the facts catalog state the vendoring in the present tense?",
+      "file": "catalogs/breaking-changes.md",
+      "expect": "does not depend on the `click` distribution",
+      "reject": "0\\.26\\.0"
+    },
+    {
+      "question": "Does the vendored-Click catalog report the reachability split?",
+      "file": "catalogs/vendored-click.md",
+      "expect": "`subclassed-via` \\| [0-9]+"
+    },
+    {
+      "question": "Does the refusals catalog name animated rendering rather than omitting it?",
+      "file": "catalogs/refused.md",
+      "expect": "Progress`, `Live`, `Status`"
+    },
+    {
+      "question": "Does the topic map carry both width and colour as separate axes?",
+      "file": "topics/00-map.md",
+      "expect": "width-and-wrapping.md"
+    },
+    {
+      "question": "Is the environment-variable table ordered with NO_COLOR present?",
+      "file": "catalogs/env-vars.md",
+      "expect": "\\| `UNICODE_VERSION` \\|"
+    },
+    {
+      "question": "Does the overlap catalog cite a measured probe rather than reasoning?",
+      "file": "catalogs/same-job-different-answer.md",
+      "expect": "`O001`"
+    }
+  ]
+}

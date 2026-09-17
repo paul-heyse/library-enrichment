@@ -258,17 +258,18 @@ pub enum SelectionError {
     NoEligibleVersion,
 }
 
+crate::native_struct! {
 /// What the registry says about newer releases, kept separate from what was resolved.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct UpstreamCheck {
     /// Newest non-yanked, non-prerelease version.
-    pub newest_stable: Option<String>,
+    newest_stable: Option<String> => crate::native_union::Rule::Text,
     /// Newest non-yanked version of any kind.
-    pub newest_any: Option<String>,
+    newest_any: Option<String> => crate::native_union::Rule::Text,
     /// Whether the resolved version is the newest stable one.
-    pub resolved_is_newest_stable: bool,
+    resolved_is_newest_stable: bool => crate::native_union::Rule::Text,
     /// Number of published versions the index listed.
-    pub published_versions: usize,
+    published_versions: usize => crate::native_union::Rule::Text,
+}
 }
 
 #[cfg(test)]

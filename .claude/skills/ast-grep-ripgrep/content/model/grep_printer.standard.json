@@ -1,0 +1,252 @@
+{
+  "module": "grep_printer::standard",
+  "crate": "grep-printer",
+  "api": "api/grep_printer.standard.md",
+  "items": [
+    {
+      "path": "grep_printer::standard::Standard",
+      "name": "Standard",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct Standard<W>",
+      "summary": "The standard printer, which implements grep-like formatting, including color support.",
+      "doc": "api/grep_printer.standard.md#standard",
+      "aliases": [
+        "grep_printer::Standard"
+      ],
+      "methods": [
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Return a mutable reference to the underlying writer."
+        },
+        {
+          "name": "has_written",
+          "signature": "fn has_written(&self) -> bool",
+          "summary": "Returns true if and only if this printer has written at least one byte to the underlying writer during any of the previous searches."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Consume this printer and return back ownership of the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(wtr: W) -> Standard<W>",
+          "summary": "Return a standard printer with a default configuration that writes matches to the given writer."
+        },
+        {
+          "name": "new_no_color",
+          "signature": "fn new_no_color(wtr: W) -> Standard<NoColor<W>>",
+          "summary": "Return a standard printer with a default configuration that writes matches to the given writer."
+        },
+        {
+          "name": "sink",
+          "signature": "fn sink<'s, M: Matcher>(&'s mut self, matcher: M) -> StandardSink<'static, 's, M, W>",
+          "summary": "Return an implementation of `Sink` for the standard printer."
+        },
+        {
+          "name": "sink_with_path",
+          "signature": "fn sink_with_path<'p, 's, M, P>(&'s mut self, matcher: M, path: &'p P) -> StandardSink<'p, 's, M, W> where M: Matcher, P: ?Sized + AsRef<Path>",
+          "summary": "Return an implementation of `Sink` associated with a file path."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::standard::StandardBuilder",
+      "name": "StandardBuilder",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct StandardBuilder",
+      "summary": "A builder for the \"standard\" grep-like printer.",
+      "doc": "api/grep_printer.standard.md#standardbuilder",
+      "aliases": [
+        "grep_printer::StandardBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<W: WriteColor>(&self, wtr: W) -> Standard<W>",
+          "summary": "Build a printer using any implementation of `termcolor::WriteColor`."
+        },
+        {
+          "name": "build_no_color",
+          "signature": "fn build_no_color<W: io::Write>(&self, wtr: W) -> Standard<NoColor<W>>",
+          "summary": "Build a printer from any implementation of `io::Write` and never emit any colors, regardless of the user color specification settings."
+        },
+        {
+          "name": "byte_offset",
+          "signature": "fn byte_offset(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Print the absolute byte offset of the beginning of each line printed."
+        },
+        {
+          "name": "color_specs",
+          "signature": "fn color_specs(&mut self, specs: ColorSpecs) -> &mut StandardBuilder",
+          "summary": "Set the user color specifications to use for coloring in this printer."
+        },
+        {
+          "name": "column",
+          "signature": "fn column(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Print the column number of the first match in a line."
+        },
+        {
+          "name": "heading",
+          "signature": "fn heading(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Enable the use of \"headings\" in the printer."
+        },
+        {
+          "name": "hyperlink",
+          "signature": "fn hyperlink(&mut self, config: HyperlinkConfig) -> &mut StandardBuilder",
+          "summary": "Set the configuration to use for hyperlinks output by this printer."
+        },
+        {
+          "name": "max_columns",
+          "signature": "fn max_columns(&mut self, limit: Option<u64>) -> &mut StandardBuilder",
+          "summary": "Set the maximum number of columns allowed for each line printed. A single column is heuristically defined as a single byte."
+        },
+        {
+          "name": "max_columns_preview",
+          "signature": "fn max_columns_preview(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "When enabled, if a line is found to be over the configured maximum column limit (measured in terms of bytes), then a preview of the long line will be printed instead."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> StandardBuilder",
+          "summary": "Return a new builder for configuring the standard printer."
+        },
+        {
+          "name": "only_matching",
+          "signature": "fn only_matching(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Only print the specific matches instead of the entire line containing each match. Each match is printed on its own line. When multi line search is enabled, then matches spanning multiple lines are printed such that only the matching portio…"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "When enabled, if a path was given to the printer, then it is shown in the output (either as a heading or as a prefix to each matching line). When disabled, then no paths are ever included in the output even when a path is provided to the p…"
+        },
+        {
+          "name": "path_terminator",
+          "signature": "fn path_terminator(&mut self, terminator: Option<u8>) -> &mut StandardBuilder",
+          "summary": "Set the path terminator used."
+        },
+        {
+          "name": "per_match",
+          "signature": "fn per_match(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Print at least one line for every match."
+        },
+        {
+          "name": "per_match_one_line",
+          "signature": "fn per_match_one_line(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Print at most one line per match when `per_match` is enabled."
+        },
+        {
+          "name": "replacement",
+          "signature": "fn replacement(&mut self, replacement: Option<Vec<u8>>) -> &mut StandardBuilder",
+          "summary": "Set the bytes that will be used to replace each occurrence of a match found."
+        },
+        {
+          "name": "separator_context",
+          "signature": "fn separator_context(&mut self, sep: Option<Vec<u8>>) -> &mut StandardBuilder",
+          "summary": "Set the separator used between discontiguous runs of search context, but only when the searcher is configured to report contextual lines."
+        },
+        {
+          "name": "separator_field_context",
+          "signature": "fn separator_field_context(&mut self, sep: Vec<u8>) -> &mut StandardBuilder",
+          "summary": "Set the separator used between fields emitted for context lines."
+        },
+        {
+          "name": "separator_field_match",
+          "signature": "fn separator_field_match(&mut self, sep: Vec<u8>) -> &mut StandardBuilder",
+          "summary": "Set the separator used between fields emitted for matching lines."
+        },
+        {
+          "name": "separator_path",
+          "signature": "fn separator_path(&mut self, sep: Option<u8>) -> &mut StandardBuilder",
+          "summary": "Set the path separator used when printing file paths."
+        },
+        {
+          "name": "separator_search",
+          "signature": "fn separator_search(&mut self, sep: Option<Vec<u8>>) -> &mut StandardBuilder",
+          "summary": "Set the separator used between sets of search results."
+        },
+        {
+          "name": "stats",
+          "signature": "fn stats(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "Enable the gathering of various aggregate statistics."
+        },
+        {
+          "name": "trim_ascii",
+          "signature": "fn trim_ascii(&mut self, yes: bool) -> &mut StandardBuilder",
+          "summary": "When enabled, all lines will have prefix ASCII whitespace trimmed before being written."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::standard::StandardSink",
+      "name": "StandardSink",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct StandardSink<'p, 's, M: Matcher, W>",
+      "summary": "An implementation of `Sink` associated with a matcher and an optional file path for the standard printer.",
+      "doc": "api/grep_printer.standard.md#standardsink",
+      "aliases": [
+        "grep_printer::StandardSink"
+      ],
+      "implements": [
+        "grep_searcher::sink::Sink"
+      ],
+      "methods": [
+        {
+          "name": "begin",
+          "signature": "fn begin(&mut self, _searcher: &Searcher) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "binary_byte_offset",
+          "signature": "fn binary_byte_offset(&self) -> Option<u64>",
+          "summary": "If binary data was found in the previous search, this returns the offset at which the binary data was first detected."
+        },
+        {
+          "name": "binary_data",
+          "signature": "fn binary_data(&mut self, searcher: &Searcher, binary_byte_offset: u64) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "context",
+          "signature": "fn context(&mut self, searcher: &Searcher, ctx: &SinkContext<'_>) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "context_break",
+          "signature": "fn context_break(&mut self, searcher: &Searcher) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self, searcher: &Searcher, finish: &SinkFinish) -> Result<(), io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "has_match",
+          "signature": "fn has_match(&self) -> bool",
+          "summary": "Returns true if and only if this printer received a match in the previous search."
+        },
+        {
+          "name": "match_count",
+          "signature": "fn match_count(&self) -> u64",
+          "summary": "Return the total number of matches reported to this sink."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched(&mut self, searcher: &Searcher, mat: &SinkMatch<'_>) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "stats",
+          "signature": "fn stats(&self) -> Option<&Stats>",
+          "summary": "Return a reference to the stats produced by the printer for all searches executed on this sink."
+        }
+      ]
+    }
+  ]
+}

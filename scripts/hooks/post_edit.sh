@@ -18,14 +18,14 @@ while read -r p; do
 
   case "$f" in
     *.rs)
-      out=$(rustfmt --edition 2024 --check "$f" 2>&1) || note "rustfmt: ${rel} is not formatted. Run \`cargo fmt\`.
+      out=$(rustfmt --edition 2024 "$f" 2>&1) || note "rustfmt: ${rel} is not formatted. Run \`cargo fmt\`.
 ${out}" ;;
     *.py)
       if [ -x "$root/.venv/bin/ruff" ]; then RUFF="$root/.venv/bin/ruff"; else RUFF="$(command -v ruff || true)"; fi
       if [ -n "$RUFF" ]; then
         out=$("$RUFF" check "$f" 2>&1) || note "ruff: ${rel}
 ${out}"
-        out=$("$RUFF" format --check "$f" 2>&1) || note "ruff format: ${rel} is not formatted. Run \`uv run ruff format\`."
+        out=$("$RUFF" format "$f" 2>&1) || note "ruff format: ${rel} is not formatted. Run \`uv run ruff format\`."
       fi ;;
     *.json)
       out=$(python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$f" 2>&1) || note "invalid JSON: ${rel}

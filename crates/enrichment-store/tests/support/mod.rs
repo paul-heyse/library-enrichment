@@ -19,7 +19,10 @@ pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceRows
         ArtifactKind::RustdocJson,
         "application/json",
         "https://docs.rs/enr-fixture/0.1.0.json",
-        "2026-09-14T00:00:00Z",
+        enrichment_core::native_time::AcquisitionTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
     );
     producer_records::collect(
         payload,
@@ -34,13 +37,19 @@ pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceRows
                 attempt_id: "attempt-fixture".into(),
                 producer: "rustdoc-json".into(),
                 producer_version: "2".into(),
-                config_digest: "configuration".into(),
+                config_digest: enrichment_core::canonical::sha256_hex(b"configuration"),
                 inputs: [("rustdoc_json".into(), artifact.sha256.clone())]
                     .into_iter()
                     .collect(),
                 profile: ExecutionProfile::Static,
-                started_at: "2026-09-14T00:00:00Z".into(),
-                finished_at: "2026-09-14T00:00:01Z".into(),
+                started_at: enrichment_core::native_time::ObservationTime::try_from(
+                    "2026-09-14T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
+                finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                    "2026-09-14T00:00:01.000000Z".to_owned(),
+                )
+                .unwrap(),
                 outcome: RunOutcome::Succeeded,
                 gaps: vec![],
                 log: None,

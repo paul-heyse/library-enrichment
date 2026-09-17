@@ -154,7 +154,7 @@ pub(super) async fn publish(
         plans.insert(relation, other.union(native).map_err(|e| e.to_string())?);
     }
     match completion {
-        Some((stage, completion, delivery)) => {
+        Some((stage, completion)) => {
             let work = acq.work.ok_or("durable resolution owner disappeared")?;
             work.check().map_err(|e| e.to_string())?;
             service
@@ -162,14 +162,15 @@ pub(super) async fn publish(
                 .pin_resolution(&work.id, stage)
                 .await
                 .map_err(|e| e.to_string())?;
-            let manifest = service
+            let published = service
                 .repository
                 .publish_native(metadata, plans, attempts, None, Some(completion))
                 .await
                 .map_err(|e| e.to_string())?;
-            let result = delivery
-                .get(manifest.snapshot_id.as_str())
-                .map_err(|e| e.to_string())?;
+            let manifest = published.manifest;
+            let result = published
+                .result
+                .ok_or("committed publication lacks prepared native result")?;
             let state = match result.status() {
                 enrichment_core::wire::Status::Ok => enrichment_core::wire::JobState::Succeeded,
                 enrichment_core::wire::Status::Partial => enrichment_core::wire::JobState::Partial,
@@ -187,6 +188,7 @@ pub(super) async fn publish(
             .repository
             .publish_native(metadata, plans, attempts, None, None)
             .await
+            .map(|published| published.manifest)
             .map_err(|e| e.to_string()),
     }
 }

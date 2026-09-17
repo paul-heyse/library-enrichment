@@ -1,6 +1,43 @@
 {
   "$defs": {
+    "AdapterDaemonStatus": {
+      "additionalProperties": false,
+      "description": "Adapter-observed daemon availability; it establishes no library evidence.",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "available",
+        "detail"
+      ],
+      "type": "object"
+    },
+    "AdapterStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "available",
+        "tools"
+      ],
+      "type": "object"
+    },
     "Alternative": {
+      "additionalProperties": false,
       "description": "Each value retains its own qualified source, including a legitimate absent observation.",
       "properties": {
         "source": {
@@ -24,7 +61,7 @@
       "type": "object"
     },
     "AlternativeValue": {
-      "description": "Complete value delivery, independent of the alternative's fact provenance.",
+      "description": "A final encoded comparison cell or its exact immutable artifact.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -120,7 +157,7 @@
     },
     "ApiPayload": {
       "additionalProperties": false,
-      "description": "The semantic payload of an independently qualified API observation.",
+      "description": "An independent API observation; large documentation text lives in a sibling column.",
       "properties": {
         "cfg_hints": {
           "items": {
@@ -129,7 +166,7 @@
           "type": "array"
         },
         "declared_kind": {
-          "description": "What kind of item a symbol is.\n\nThe values are, in order: `module`, `struct`, `union`, `enum`, `variant`, `struct_field`,\n`trait`, `trait_alias`, `type_alias`, `function`, `method`, `constant`, `static`, `macro`,\n`proc_macro`, `assoc_type`, `assoc_const`, `primitive`, `extern_crate`, `import`.",
+          "description": "Declaration kind, shared by native fields, admission and generated wire enums.",
           "enum": [
             "module",
             "struct",
@@ -189,6 +226,16 @@
             }
           ]
         },
+        "rust": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RustDetails"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "signature": {
           "type": [
             "string",
@@ -200,14 +247,16 @@
         "declared_kind",
         "signature",
         "doc_summary",
-        "docs",
         "deprecated",
         "cfg_hints",
-        "python"
+        "python",
+        "rust",
+        "docs"
       ],
       "type": "object"
     },
     "Artifact": {
+      "additionalProperties": false,
       "description": "An immutable, content-addressed artifact (§6.1).\n\nThe digest identifies immutable bytes. Every acquisition keeps its own exact receipt,\nincluding source locator and retrieval time, in the native Delta catalog. Evidence resolves\nprovenance through its selected attempt; byte delivery resolves the complete digest.",
       "properties": {
         "artifact_id": {
@@ -262,8 +311,8 @@
           "type": "string"
         },
         "retrieved_at": {
-          "description": "When it was retrieved, RFC 3339. Provenance only; never part of any identity.",
-          "type": "string"
+          "$ref": "#/$defs/EventTime",
+          "description": "When it was retrieved, RFC 3339. Provenance only; never part of any identity."
         },
         "sha256": {
           "description": "Full SHA-256 of the stored bytes, lower-case hex.",
@@ -479,6 +528,45 @@
       ],
       "type": "object"
     },
+    "AspectSelection": {
+      "additionalProperties": false,
+      "description": "One aspect's page request. Cursors are bound to this selection and snapshot.",
+      "properties": {
+        "aspect": {
+          "$ref": "#/$defs/InspectionAspect"
+        },
+        "cursor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_characters": {
+          "default": null,
+          "description": "Requested text projection for documentation/examples. None requests complete text.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": 32,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "aspect",
+        "cursor",
+        "max_items",
+        "max_characters"
+      ],
+      "type": "object"
+    },
     "AspectState": {
       "description": "Explicit distinction between absent evidence and excluded presentation.",
       "enum": [
@@ -491,25 +579,23 @@
       "type": "string"
     },
     "Availability": {
-      "description": "What can and cannot be said about a symbol's availability to a project.",
+      "additionalProperties": false,
+      "description": "Native availability selection; Rust only decodes the admitted result.",
       "properties": {
         "notes": {
-          "description": "Why the status is what it is, in prose.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "observed_configuration": {
-          "$ref": "#/$defs/ObservedConfiguration",
-          "description": "The documented build's configuration."
+          "$ref": "#/$defs/ObservedConfiguration"
         },
         "requested_configuration": {
-          "$ref": "#/$defs/RequestedConfiguration",
-          "description": "The caller's declared configuration."
+          "$ref": "#/$defs/RequestedConfiguration"
         },
         "status": {
-          "description": "The strongest honest claim.",
+          "description": "Documentation presence and verified project availability are distinct claims.",
           "enum": [
             "documented_available",
             "project_availability_unverified"
@@ -526,6 +612,7 @@
       "type": "object"
     },
     "Change": {
+      "additionalProperties": false,
       "description": "A changed key with independently paged observational alternatives.",
       "properties": {
         "after": {
@@ -665,6 +752,133 @@
       ],
       "type": "object"
     },
+    "CompareRequest": {
+      "additionalProperties": false,
+      "description": "Compare a pinned snapshot pair, or explicitly acquire a version pair first.",
+      "properties": {
+        "after_context_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after_snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "alternative_cursor": {
+          "default": null,
+          "description": "Continue alternatives within one changed key, independently of the changed-key page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_context_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ecosystem": {
+          "default": null,
+          "description": "Which package ecosystem a release belongs to.\n\nThe values are, in order: `rust`, `python`. No variant carries a doc comment -- see the\nmodule docs in [`crate::wire`].",
+          "enum": [
+            "rust",
+            "python",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from_version": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "name": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scopes": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/Scope"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "to_version": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "alternative_cursor",
+        "before_context_id",
+        "after_context_id",
+        "before_snapshot_id",
+        "after_snapshot_id",
+        "ecosystem",
+        "name",
+        "from_version",
+        "to_version",
+        "scopes",
+        "cursor",
+        "max_items",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "ComparisonSide": {
       "additionalProperties": false,
       "description": "Identity of one side of an immutable comparison.",
@@ -695,6 +909,7 @@
       "type": "object"
     },
     "ComponentStatus": {
+      "additionalProperties": false,
       "description": "One producer or component and whether it is actually usable.",
       "properties": {
         "available": {
@@ -720,28 +935,244 @@
       "required": [
         "name",
         "available",
+        "version",
         "detail"
       ],
       "type": "object"
     },
     "ConfigurationDifference": {
-      "additionalProperties": false,
-      "description": "A changed environment/configuration field, separate from release changes.",
-      "properties": {
-        "after": true,
-        "before": true,
-        "field": {
-          "type": "string"
+      "description": "A typed environment/configuration difference, separate from release changes.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "before": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "field": {
+              "const": "toolchain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "before": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "field": {
+              "const": "target",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "before": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "field": {
+              "const": "features",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "type": "boolean"
+            },
+            "before": {
+              "type": "boolean"
+            },
+            "field": {
+              "const": "features_known",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "before": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "field": {
+              "const": "default_features",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "before": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "field": {
+              "const": "lock_digest",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "description": "How much of the environment is actually known (§3.1).\n\nThe values are, in order: `unspecified`, `declared`, `resolved`, `verified`. `declared` is\nwhat the caller said; `resolved` is what a resolver established; `verified` is what a real\nbuild or check observed.",
+              "enum": [
+                "unspecified",
+                "declared",
+                "resolved",
+                "verified"
+              ],
+              "type": "string"
+            },
+            "before": {
+              "description": "How much of the environment is actually known (§3.1).\n\nThe values are, in order: `unspecified`, `declared`, `resolved`, `verified`. `declared` is\nwhat the caller said; `resolved` is what a resolver established; `verified` is what a real\nbuild or check observed.",
+              "enum": [
+                "unspecified",
+                "declared",
+                "resolved",
+                "verified"
+              ],
+              "type": "string"
+            },
+            "field": {
+              "const": "resolution",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "after": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ObservedConfiguration"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "before": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ObservedConfiguration"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "field": {
+              "const": "observed_configuration",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field",
+            "before",
+            "after"
+          ],
+          "type": "object"
         }
-      },
-      "required": [
-        "field",
-        "before",
-        "after"
-      ],
-      "type": "object"
+      ]
     },
     "Context": {
+      "additionalProperties": false,
       "description": "A context record (§6.1): a release, an environment and a research mode.",
       "properties": {
         "context_id": {
@@ -895,8 +1326,8 @@
             "mode",
             "artifact_id",
             "sections",
-            "read",
-            "limits"
+            "limits",
+            "read"
           ],
           "type": "object"
         }
@@ -970,17 +1401,16 @@
       "type": "object"
     },
     "Deprecated": {
-      "description": "A deprecation notice as the producer recorded it.",
+      "additionalProperties": false,
+      "description": "A deprecation notice exactly as the producer recorded it.",
       "properties": {
         "note": {
-          "description": "The note, if given.",
           "type": [
             "string",
             "null"
           ]
         },
         "since": {
-          "description": "The `since` value, if given.",
           "type": [
             "string",
             "null"
@@ -1136,37 +1566,70 @@
       ],
       "type": "string"
     },
+    "DiscoverySelection": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/DiscoveryKind"
+        },
+        "max_characters": {
+          "default": null,
+          "description": "None requests the complete retained text; callers may request a bounded preview.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": 32,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "cursor",
+        "max_items",
+        "max_characters"
+      ],
+      "type": "object"
+    },
     "Distribution": {
+      "additionalProperties": false,
       "description": "Static distribution identity and inventory.",
       "properties": {
         "entry_points": {
-          "description": "Raw entry-point declarations; nothing is imported.",
           "type": [
             "string",
             "null"
           ]
         },
         "filename": {
-          "description": "Selected immutable artifact filename.",
           "type": "string"
         },
         "files": {
-          "description": "Source and stub file mappings.",
           "items": {
             "$ref": "#/$defs/WorkerFile"
           },
           "type": "array"
         },
         "import_roots": {
-          "description": "Import roots derived from archive layout.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "inventory": {
-          "default": [],
-          "description": "Documentation navigation, separately versioned from distribution facts.",
           "items": {
             "$ref": "#/$defs/Entry"
           },
@@ -1179,47 +1642,39 @@
             },
             "type": "array"
           },
-          "description": "Selected METADATA/PKG-INFO fields, preserving repeated headers.",
           "type": "object"
         },
         "name": {
-          "description": "Observed built-metadata Name header, distinct from source/import identity; null if absent.",
           "type": [
             "string",
             "null"
           ]
         },
         "native_files": {
-          "description": "Native extension paths unavailable to static AST extraction.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "sha256": {
-          "description": "Selected artifact digest.",
           "type": "string"
         },
         "source_root": {
-          "description": "Archive-relative source root, empty for wheels.",
           "type": "string"
         },
         "typed_markers": {
-          "description": "py.typed marker paths (including partial stub markers).",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "version": {
-          "description": "Observed built-metadata Version header; null when no header was produced.",
           "type": [
             "string",
             "null"
           ]
         },
         "worker_artifact_id": {
-          "description": "Exact worker output artifact when extraction ran.",
           "type": [
             "string",
             "null"
@@ -1244,61 +1699,53 @@
       "type": "object"
     },
     "DocsRsMetadata": {
+      "additionalProperties": false,
       "description": "The nine `[package.metadata.docs.rs]` keys, with docs.rs' documented defaults (§4.3).\n\nThis is the *observed* configuration of the hosted build -- evidence for that documented\nconfiguration, never the API enabled in a caller's project. `declared` says whether the\nmanifest carried the table at all, so a default is never mistaken for a maintainer choice.",
       "properties": {
         "additional_targets": {
-          "description": "Targets added to the default set.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "all_features": {
-          "description": "Whether all features were enabled.",
           "type": "boolean"
         },
         "cargo_args": {
-          "description": "Extra `cargo` arguments; these can change what compiles at all.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "declared": {
-          "description": "Whether the manifest declared the table.",
           "type": "boolean"
         },
         "default_target": {
-          "description": "The default target.",
           "type": "string"
         },
         "features": {
-          "description": "Features enabled for the docs build.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "no_default_features": {
-          "description": "Whether default features were disabled.",
           "type": "boolean"
         },
         "rustc_args": {
-          "description": "Extra `rustc` arguments; these can change what compiles at all.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "rustdoc_args": {
-          "description": "Extra `rustdoc` arguments.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "targets": {
-          "description": "Explicit target list, when set; `None` means docs.rs' tier-one default set.",
+          "description": "None means the provider's default target set; an empty list is an explicit selection.",
           "items": {
             "type": "string"
           },
@@ -1322,28 +1769,29 @@
       ],
       "type": "object"
     },
+    "EmptyData": {
+      "additionalProperties": false,
+      "description": "An explicit absence of inline tool data; never an untyped dictionary.",
+      "type": "object"
+    },
     "Entry": {
+      "additionalProperties": false,
       "description": "One inventory entry, including non-Python domains and exact inventory provenance.",
       "properties": {
         "display": {
-          "description": "Display label.",
           "type": "string"
         },
         "name": {
-          "description": "Object or label, including spaces.",
           "type": "string"
         },
         "priority": {
-          "description": "Upstream priority, not a confidence value.",
           "format": "int32",
           "type": "integer"
         },
         "role": {
-          "description": "Domain and role, e.g. py:class or std:label.",
           "type": "string"
         },
         "uri": {
-          "description": "Resolved document URI; core fetch policy must still approve it.",
           "type": "string"
         }
       },
@@ -1357,6 +1805,7 @@
       "type": "object"
     },
     "Environment": {
+      "additionalProperties": false,
       "description": "An environment record (§6.1).",
       "properties": {
         "default_features": {
@@ -1477,7 +1926,13 @@
       ],
       "type": "object"
     },
+    "EventTime": {
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$",
+      "type": "string",
+      "x-enrichment-wire-format": "utc-microseconds"
+    },
     "EvidenceCounters": {
+      "additionalProperties": false,
       "description": "What this process has answered, and how truthfully it could (§14.3, §6.2).\n\n`gaps` counts answers that declared at least one missing piece of coverage -- not answers\nthat failed. An `ok` result with a named gap is a correct answer to a bounded question, and\nthe count exists so an operator can see how often the service is working with partial\nevidence, which is a different question from how often it errors.",
       "properties": {
         "errors": {
@@ -1531,102 +1986,6 @@
         "errors",
         "gaps",
         "response_bytes"
-      ],
-      "type": "object"
-    },
-    "EvidenceFragment": {
-      "description": "A bounded extract with its locator and epistemic class (§6.1).",
-      "properties": {
-        "artifact_id": {
-          "description": "The artifact it was read from.",
-          "type": "string"
-        },
-        "evidence_class": {
-          "description": "Which epistemic class it belongs to.",
-          "enum": [
-            "declared",
-            "statically_extracted",
-            "compiler_derived",
-            "typechecker_observed",
-            "runtime_observed",
-            "agent_inferred"
-          ],
-          "type": "string"
-        },
-        "fragment_id": {
-          "description": "Content-derived identity.",
-          "type": "string"
-        },
-        "kind": {
-          "description": "What kind of text this is.",
-          "enum": [
-            "api_signature",
-            "doc_text",
-            "feature_definition",
-            "readme_section",
-            "changelog_section",
-            "example",
-            "source_excerpt"
-          ],
-          "type": "string"
-        },
-        "locator": {
-          "additionalProperties": true,
-          "description": "Position within the artifact, as a JSON object.",
-          "type": "object"
-        },
-        "producer": {
-          "description": "Which producer emitted it.",
-          "type": "string"
-        },
-        "producer_version": {
-          "description": "The producer's exact version.",
-          "type": "string"
-        },
-        "source_uri": {
-          "default": null,
-          "description": "This fragment's acquisition locator, not the blob's first retrieval locator.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "source_version_match": {
-          "default": null,
-          "description": "Source-specific version match, overriding the release default for mutable docs.",
-          "enum": [
-            "exact",
-            "compatible_claimed",
-            "mismatched",
-            "unknown",
-            null
-          ],
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "subject": {
-          "description": "What it is about: a symbol path, a feature name, a heading.",
-          "type": "string"
-        },
-        "text": {
-          "description": "The text.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "fragment_id",
-        "kind",
-        "subject",
-        "artifact_id",
-        "locator",
-        "text",
-        "evidence_class",
-        "producer",
-        "producer_version",
-        "source_version_match",
-        "source_uri"
       ],
       "type": "object"
     },
@@ -1694,7 +2053,7 @@
           "type": "array"
         },
         "published_at": {
-          "type": "string"
+          "$ref": "#/$defs/EventTime"
         },
         "schema_version": {
           "type": "string"
@@ -2016,7 +2375,7 @@
           "type": "string"
         },
         "extractor": {
-          "description": "Component within the producing job (for example public-api inside normalization).",
+          "description": "Component within the producing job, such as public-api inside normalization.",
           "type": "string"
         },
         "extractor_version": {
@@ -2058,6 +2417,7 @@
       "type": "object"
     },
     "FetchCounters": {
+      "additionalProperties": false,
       "description": "HTTP cache behaviour and transferred bytes (§14.3, §8.4).\n\nThe three cache outcomes are kept apart because they answer different questions. A `hit`\nopened no socket at all. A `revalidated` opened one and the server said `304`, so the bytes\nwere reused but freshness was actually re-established. A `miss` transferred a body. Folding\nthe middle case into either of the others would misreport both cost and freshness.\n\n**Read `hits` narrowly.** The service revalidates every stored `200` rather than serving it\nblind, so a reused *representation* shows up as `revalidated`, not as a hit. The only thing\nthat increments `hits` is the bounded negative cache — a recent `404`/`410` reused within\n`freshness.negative_cache_ttl_seconds`. `hits + revalidated` is the number an operator\nprobably means by \"the cache worked\"; `hits` alone is \"we did not even ask\".",
       "properties": {
         "failures": {
@@ -2116,7 +2476,7 @@
           "description": "A complete-text request for this selection when text was projected."
         },
         "fragment": {
-          "$ref": "#/$defs/EvidenceFragment"
+          "$ref": "#/$defs/TextFragment"
         },
         "text_complete": {
           "type": "boolean"
@@ -2130,14 +2490,14 @@
       "type": "object"
     },
     "Gap": {
+      "additionalProperties": false,
       "description": "One piece of expected evidence that is absent, with why and what would supply it.",
       "properties": {
         "detail": {
-          "description": "Human-readable detail, e.g. the format version that was refused.",
           "type": "string"
         },
         "kind": {
-          "description": "What is missing.",
+          "description": "The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
           "enum": [
             "registry_metadata",
             "crate_source",
@@ -2165,11 +2525,10 @@
             {
               "type": "null"
             }
-          ],
-          "description": "The producer and profile that would supply it, when one exists."
+          ]
         },
         "reason": {
-          "description": "Why.",
+          "description": "Why an expected kind of evidence is absent. Each reason is a distinct fact (§10): a\nnetwork failure, a missing upstream document, an unsupported format and a policy refusal\ncall for different next actions.\n\nThe values are, in order: `hosted_json_missing`, `hosted_json_unsupported`,\n`upstream_unavailable`, `policy_denied`, `extraction_failed`, `not_attempted`.",
           "enum": [
             "hosted_json_missing",
             "hosted_json_unsupported",
@@ -2190,6 +2549,7 @@
       "type": "object"
     },
     "Health": {
+      "additionalProperties": false,
       "description": "Queue, cache and operational health.",
       "properties": {
         "cache_ready": {
@@ -2257,6 +2617,7 @@
         "queued_jobs",
         "running_jobs",
         "cache_ready",
+        "data_root",
         "single_flight",
         "lsp",
         "fetch",
@@ -2435,7 +2796,7 @@
         "symbol": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Symbol"
+              "$ref": "#/$defs/SymbolHeader"
             },
             {
               "type": "null"
@@ -2463,6 +2824,77 @@
       ],
       "type": "object"
     },
+    "InspectRequest": {
+      "additionalProperties": false,
+      "description": "How much `inspect_symbol` retrieves.\n\nWhat `inspect_symbol` asks for.",
+      "properties": {
+        "context_id": {
+          "description": "The context from `resolve_library`.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "definition_id": {
+          "default": null,
+          "description": "Select one definition at this path, using an inspection candidate or search result.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "execution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InspectionOptions"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Retained execution selection and explicit execution intent (ADR-0026)."
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 1024,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "selection": {
+          "$ref": "#/$defs/ResearchSelection",
+          "default": {
+            "mode": "default"
+          },
+          "description": "One bounded preset or explicit independently paged aspects."
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symbol_path": {
+          "description": "A qualified path, or a bare name when unambiguous.",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "context_id",
+        "snapshot_id",
+        "symbol_path",
+        "definition_id",
+        "selection",
+        "max_bytes",
+        "execution"
+      ],
+      "type": "object"
+    },
     "InspectionAspect": {
       "description": "Closed independently selectable inspection aspects.",
       "enum": [
@@ -2487,7 +2919,7 @@
           "type": "string"
         },
         "kind": {
-          "description": "What kind of item a symbol is.\n\nThe values are, in order: `module`, `struct`, `union`, `enum`, `variant`, `struct_field`,\n`trait`, `trait_alias`, `type_alias`, `function`, `method`, `constant`, `static`, `macro`,\n`proc_macro`, `assoc_type`, `assoc_const`, `primitive`, `extern_crate`, `import`.",
+          "description": "Declaration kind, shared by native fields, admission and generated wire enums.",
           "enum": [
             "module",
             "struct",
@@ -2530,6 +2962,88 @@
         "definition_id",
         "kind",
         "qualifier"
+      ],
+      "type": "object"
+    },
+    "InspectionIntent": {
+      "description": "Reading retained evidence has no execution effects or qualification prerequisite.",
+      "enum": [
+        "retained",
+        "execute_on_miss",
+        "rerun"
+      ],
+      "type": "string"
+    },
+    "InspectionOptions": {
+      "additionalProperties": false,
+      "description": "A finite inspection request, never a shell command or arbitrary LSP method.",
+      "properties": {
+        "intent": {
+          "$ref": "#/$defs/InspectionIntent",
+          "default": "retained"
+        },
+        "methods": {
+          "default": [],
+          "description": "Empty selects hover, definition, references and diagnostics for semantic inspection.",
+          "items": {
+            "$ref": "#/$defs/SemanticMethod"
+          },
+          "type": "array"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Utf8Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Advanced override; zero-based UTF-8 byte position at a character boundary."
+        },
+        "profile": {
+          "default": null,
+          "description": "Required only for execution: build for semantics, runtime for runtime objects.",
+          "enum": [
+            "static",
+            "build",
+            "runtime",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeSelection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Explicit Python selection. Import and introspection hooks may execute in the runtime capsule."
+        },
+        "snippet": {
+          "default": null,
+          "description": "Omitted uses the selected symbol's generated consumer.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "intent",
+        "profile",
+        "snippet",
+        "position",
+        "methods",
+        "runtime"
       ],
       "type": "object"
     },
@@ -2595,47 +3109,58 @@
       ],
       "type": "object"
     },
+    "JobRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "default": "status",
+          "enum": [
+            "status",
+            "wait",
+            "cancel"
+          ],
+          "type": "string"
+        },
+        "interest_token": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "job_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 1024,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "wait_seconds": {
+          "default": 0,
+          "format": "uint64",
+          "maximum": 10,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "job_id",
+        "action",
+        "interest_token",
+        "wait_seconds",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "JobResult": {
       "additionalProperties": false,
-      "allOf": [
-        {
-          "properties": {
-            "outcome": {
-              "enum": [
-                "ok",
-                "partial",
-                "error"
-              ]
-            }
-          }
-        },
-        {
-          "else": {
-            "properties": {
-              "error": {
-                "type": "null"
-              }
-            }
-          },
-          "if": {
-            "properties": {
-              "outcome": {
-                "const": "error"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "error": {
-                "not": {
-                  "type": "null"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "description": "Compact terminal research outcome; the complete answer is directly retrievable.",
+      "description": "Compact terminal research result with a directly retrievable complete answer.",
       "properties": {
         "context_id": {
           "type": [
@@ -2649,25 +3174,8 @@
         "delivery": {
           "$ref": "#/$defs/DeliveryDescriptor"
         },
-        "error": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Error"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "outcome": {
-          "description": "The four result statuses (blueprint §7.2).\n\nThe values are, in order: `ok`, `partial`, `pending`, `error`. `ok` means successful within\nthe declared coverage, not complete knowledge; `partial` carries usable evidence *and* gaps.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-          "enum": [
-            "ok",
-            "partial",
-            "pending",
-            "error"
-          ],
-          "type": "string"
+          "$ref": "#/$defs/TerminalOutcome"
         },
         "snapshot_id": {
           "type": [
@@ -2685,13 +3193,28 @@
         "context_id",
         "snapshot_id",
         "coverage",
-        "delivery",
-        "error"
+        "delivery"
+      ],
+      "type": "object"
+    },
+    "LocalStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "$ref": "#/$defs/AdapterStatus"
+        },
+        "daemon": {
+          "$ref": "#/$defs/AdapterDaemonStatus"
+        }
+      },
+      "required": [
+        "daemon",
+        "adapter"
       ],
       "type": "object"
     },
     "Locator": {
-      "description": "Typed artifact coordinates. Open producer payloads have an explicit versioned boundary.",
+      "description": "Typed artifact coordinates. Only an explicit producer extension permits open JSON.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -2933,6 +3456,46 @@
             "file": {
               "type": "string"
             },
+            "kind": {
+              "const": "manifest_table",
+              "type": "string"
+            },
+            "table": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "file",
+            "table"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "registry_line",
+              "type": "string"
+            },
+            "line": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "line"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "type": "string"
+            },
             "heading": {
               "type": "string"
             },
@@ -3053,6 +3616,7 @@
       ]
     },
     "LspMetrics": {
+      "additionalProperties": false,
       "description": "Language-server starts, reuses and evictions in this daemon process (§9.2, gate C17).",
       "properties": {
         "evicted": {
@@ -3132,6 +3696,21 @@
         "control_version",
         "previous_snapshot_id",
         "publication_changes"
+      ],
+      "type": "object"
+    },
+    "ManifestRequest": {
+      "additionalProperties": false,
+      "description": "What the snapshot-manifest resource asks for.",
+      "properties": {
+        "snapshot_id": {
+          "description": "The snapshot to describe.",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id"
       ],
       "type": "object"
     },
@@ -3239,6 +3818,7 @@
       "type": "object"
     },
     "NativeQueryCounters": {
+      "additionalProperties": false,
       "description": "Process-scoped native query diagnostics; neither library coverage nor a peak-RSS claim.",
       "properties": {
         "admitted": {
@@ -3349,6 +3929,7 @@
       "type": "string"
     },
     "ObservedConfiguration": {
+      "additionalProperties": false,
       "description": "The configuration a documentation build was observed under (§4.3).",
       "properties": {
         "all_features": {
@@ -3547,6 +4128,73 @@
       ],
       "type": "object"
     },
+    "OverviewRequest": {
+      "additionalProperties": false,
+      "description": "What `library_overview` asks for.",
+      "properties": {
+        "area": {
+          "default": null,
+          "description": "Narrow to one module subtree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "context_id": {
+          "description": "The context from `resolve_library`.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "discovery": {
+          "default": null,
+          "description": "Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.",
+          "items": {
+            "$ref": "#/$defs/DiscoverySelection"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Advisory byte budget; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 1024,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "description": "Cap on child entries per namespace; the configured limit bounds it.",
+          "format": "uint",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "discovery",
+        "context_id",
+        "snapshot_id",
+        "area",
+        "max_items",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "Page": {
       "additionalProperties": false,
       "allOf": [
@@ -3613,22 +4261,24 @@
       "type": "object"
     },
     "PlannedFallback": {
-      "description": "A producer that could supply missing evidence, and whether policy currently allows it.",
+      "additionalProperties": false,
       "properties": {
         "enabled": {
-          "description": "Whether configuration currently enables that profile.",
           "type": "boolean"
         },
         "next_action": {
-          "description": "What a caller or operator would do to make it run.",
           "type": "string"
         },
         "producer": {
-          "description": "Producer name.",
           "type": "string"
         },
         "profile": {
-          "description": "The execution profile it needs.",
+          "description": "The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
+          "enum": [
+            "static",
+            "build",
+            "runtime"
+          ],
           "type": "string"
         }
       },
@@ -3641,7 +4291,7 @@
       "type": "object"
     },
     "ProcessAuthority": {
-      "description": "Raw bounded process observation, independent of what a probe establishes.",
+      "description": "Actual process authority, independent of the probe's semantic outcome.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -3698,6 +4348,7 @@
       ]
     },
     "ProcessObservation": {
+      "additionalProperties": false,
       "properties": {
         "authority": {
           "$ref": "#/$defs/ProcessAuthority"
@@ -3728,7 +4379,7 @@
           ]
         },
         "finished_at": {
-          "type": "string"
+          "$ref": "#/$defs/EventTime"
         },
         "image_id": {
           "type": "string"
@@ -3737,7 +4388,7 @@
           "type": "string"
         },
         "started_at": {
-          "type": "string"
+          "$ref": "#/$defs/EventTime"
         },
         "stderr": {
           "type": "string"
@@ -3762,22 +4413,18 @@
       "type": "object"
     },
     "ProducerRun": {
-      "description": "Provenance for one producer execution (§6.1).",
+      "additionalProperties": false,
       "properties": {
         "attempt_id": {
-          "description": "Unique execution-attempt identity, excluded from semantic content and reuse keys.",
           "type": "string"
         },
         "config_digest": {
-          "description": "Digest of the normalized options the run was configured with.",
           "type": "string"
         },
         "finished_at": {
-          "description": "RFC 3339 finish time. Provenance only.",
-          "type": "string"
+          "$ref": "#/$defs/EventTime"
         },
         "gaps": {
-          "description": "Evidence the run was expected to yield and did not, each with a reason.",
           "items": {
             "$ref": "#/$defs/Gap"
           },
@@ -3787,18 +4434,16 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Input artifact digests by role.",
           "type": "object"
         },
         "log": {
-          "description": "Bounded log text, when any was kept.",
           "type": [
             "string",
             "null"
           ]
         },
         "outcome": {
-          "description": "How it ended.",
+          "description": "How one producer run ended.\n\nThe values are, in order: `succeeded`, `partial`, `failed`, `skipped`.",
           "enum": [
             "succeeded",
             "partial",
@@ -3808,15 +4453,13 @@
           "type": "string"
         },
         "producer": {
-          "description": "Producer name.",
           "type": "string"
         },
         "producer_version": {
-          "description": "Exact producer version.",
           "type": "string"
         },
         "profile": {
-          "description": "The execution profile the run was performed under.",
+          "description": "The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
           "enum": [
             "static",
             "build",
@@ -3825,8 +4468,7 @@
           "type": "string"
         },
         "started_at": {
-          "description": "RFC 3339 start time. Provenance only.",
-          "type": "string"
+          "$ref": "#/$defs/EventTime"
         }
       },
       "required": [
@@ -3845,36 +4487,31 @@
       "type": "object"
     },
     "Publicness": {
-      "description": "Independent publicness signals. Unknown author/export signals stay absent.",
+      "additionalProperties": false,
+      "description": "Independent signals; no one signal is a publicness verdict.",
       "properties": {
         "declared_exports": {
-          "description": "Literal __all__ entries.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "docstring": {
-          "description": "A docstring exists; absence does not prove private API.",
           "type": "boolean"
         },
         "exported": {
-          "description": "Membership in a statically resolved __all__, when known.",
           "type": [
             "boolean",
             "null"
           ]
         },
         "reexport": {
-          "description": "This is a reexport declaration.",
           "type": "boolean"
         },
         "underscore": {
-          "description": "Underscore naming convention, not a privacy verdict.",
           "type": "boolean"
         },
         "unresolved_exports": {
-          "description": "Export expressions not statically reduced to literals.",
           "items": {
             "type": "string"
           },
@@ -3891,9 +4528,65 @@
       ],
       "type": "object"
     },
+    "PythonBase": {
+      "additionalProperties": false,
+      "properties": {
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rendering": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "rendering"
+      ],
+      "type": "object"
+    },
+    "PythonCallable": {
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parameters": {
+          "items": {
+            "$ref": "#/$defs/PythonParameter"
+          },
+          "type": "array"
+        },
+        "returns": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "parameters",
+        "returns",
+        "labels"
+      ],
+      "type": "object"
+    },
+    "PythonDefaultOrigin": {
+      "description": "Native interpretation of Griffe's reported value and parameter kind.",
+      "enum": [
+        "absent",
+        "declared",
+        "implicit_variadic"
+      ],
+      "type": "string"
+    },
     "PythonDetails": {
       "additionalProperties": false,
-      "description": "Python-specific structured declarations; common signature/docs fields are not duplicated.",
+      "description": "Python facts retain every declared overload and ordered base expression.",
       "properties": {
         "alias_target": {
           "type": [
@@ -3903,13 +4596,23 @@
         },
         "bases": {
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PythonBase"
           },
           "type": "array"
         },
+        "callable": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonCallable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "overloads": {
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/PythonOverload"
           },
           "type": "array"
         },
@@ -3918,6 +4621,7 @@
         }
       },
       "required": [
+        "callable",
         "overloads",
         "alias_target",
         "bases",
@@ -3925,28 +4629,157 @@
       ],
       "type": "object"
     },
+    "PythonOverload": {
+      "additionalProperties": false,
+      "properties": {
+        "callable": {
+          "$ref": "#/$defs/PythonCallable"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "signature": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "signature",
+        "callable"
+      ],
+      "type": "object"
+    },
+    "PythonParameter": {
+      "additionalProperties": false,
+      "properties": {
+        "annotation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "default_origin": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonDefaultOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PythonParameterKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reported_default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "ordinal",
+        "name",
+        "kind",
+        "annotation",
+        "reported_default",
+        "default_origin"
+      ],
+      "type": "object"
+    },
+    "PythonParameterKind": {
+      "enum": [
+        "positional-only",
+        "positional or keyword",
+        "variadic positional",
+        "keyword-only",
+        "variadic keyword"
+      ],
+      "type": "string"
+    },
+    "ReadArtifactRequest": {
+      "additionalProperties": false,
+      "description": "What `read_artifact` asks for.",
+      "properties": {
+        "artifact_id": {
+          "description": "A service-issued artifact handle.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "cursor": {
+          "default": null,
+          "description": "Continue a previous read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget for this slice; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 1024,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "section": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactSection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One typed result projection or Markdown heading, instead of the complete artifact."
+        }
+      },
+      "required": [
+        "artifact_id",
+        "section",
+        "cursor",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "RecoveryAction": {
-      "description": "An actionable follow-up, never an instruction to execute automatically.",
+      "description": "An actionable typed request; native recovery never carries an independently interpreted object.",
       "oneOf": [
         {
           "additionalProperties": false,
           "properties": {
-            "arguments": {
-              "additionalProperties": true,
-              "type": "object"
-            },
             "kind": {
               "const": "call_tool",
               "type": "string"
             },
-            "tool": {
-              "type": "string"
+            "request": {
+              "$ref": "#/$defs/ResearchRequest"
             }
           },
           "required": [
             "kind",
-            "tool",
-            "arguments"
+            "request"
           ],
           "type": "object"
         },
@@ -4135,6 +4968,7 @@
       "type": "object"
     },
     "Release": {
+      "additionalProperties": false,
       "description": "A release record (§6.1).\n\nPackage name, library target name and root module name are three different things for a\nRust crate (`serde-json` / `serde_json` / `serde_json`) and are stored separately.",
       "properties": {
         "artifact_digest": {
@@ -4231,6 +5065,7 @@
       "type": "object"
     },
     "ReleaseLinks": {
+      "additionalProperties": false,
       "description": "Links a registry publishes for a release.",
       "properties": {
         "documentation": {
@@ -4263,17 +5098,16 @@
       "type": "object"
     },
     "RequestedConfiguration": {
+      "additionalProperties": false,
       "description": "What a caller declared about its own environment, for comparison.",
       "properties": {
         "default_features": {
-          "description": "Whether default features are enabled, when declared.",
           "type": [
             "boolean",
             "null"
           ]
         },
         "features": {
-          "description": "Features the project enables, when declared.",
           "items": {
             "type": "string"
           },
@@ -4283,7 +5117,6 @@
           ]
         },
         "target": {
-          "description": "The project's target, when declared.",
           "type": [
             "string",
             "null"
@@ -4296,6 +5129,219 @@
         "target"
       ],
       "type": "object"
+    },
+    "ResearchRequest": {
+      "description": "Every operation shares its native field, wire and MCP binding declaration.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "resolve_library",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ResolveRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "library_overview",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/OverviewRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "search_evidence",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/SearchRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "inspect_symbol",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/InspectRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "compare_releases",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/CompareRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "verify_usage",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/VerifyRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "read_artifact",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ReadArtifactRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "job_control",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/JobRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "service_status",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/StatusRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "snapshot_manifest",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ManifestRequest"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ResearchSelection": {
+      "description": "One authoritative inspection scope; old depth/aspects arguments are not accepted.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "default",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "aspects": {
+              "items": {
+                "$ref": "#/$defs/AspectSelection"
+              },
+              "type": "array"
+            },
+            "mode": {
+              "const": "explicit",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mode",
+            "aspects"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "ResolveData": {
       "additionalProperties": false,
@@ -4411,26 +5457,179 @@
       ],
       "type": "object"
     },
+    "ResolveRequest": {
+      "additionalProperties": false,
+      "description": "What `resolve_library` asks for.",
+      "properties": {
+        "allow_local_build": {
+          "default": false,
+          "description": "Whether the caller accepts a local rustdoc build when hosted JSON is unusable.\n\nHosted docs.rs JSON comes first, always (§4.1). This opts into the §4.4 fallback, which\ncompiles third-party code on a dated nightly inside a capsule and can take minutes. It is\na request, not a grant: the `build` profile must also be enabled and its images qualified,\nor the answer is `POLICY_DENIED` with the setup action.",
+          "type": "boolean"
+        },
+        "allow_prerelease": {
+          "default": false,
+          "description": "Whether a prerelease may satisfy an unversioned request.",
+          "type": "boolean"
+        },
+        "allow_yanked": {
+          "default": false,
+          "description": "Whether a yanked release may be resolved.",
+          "type": "boolean"
+        },
+        "default_features": {
+          "default": null,
+          "description": "Whether the caller's project enables default features, when known.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ecosystem": {
+          "description": "Which ecosystem.",
+          "enum": [
+            "rust",
+            "python"
+          ],
+          "type": "string"
+        },
+        "extras": {
+          "default": null,
+          "description": "Explicit Python extras, distinct from Rust feature selection.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "features": {
+          "default": null,
+          "description": "Features the caller's project enables, when known.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "freshness": {
+          "default": "cache_ok",
+          "description": "Freshness policy for this call.",
+          "enum": [
+            "cache_ok",
+            "revalidate",
+            "offline"
+          ],
+          "type": "string"
+        },
+        "mode": {
+          "default": null,
+          "description": "Research mode; defaults to `project` when a version is given and `upstream` otherwise.",
+          "enum": [
+            "project",
+            "upstream",
+            "compare",
+            "revision",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Package name as the caller spelled it.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "package_subdir": {
+          "default": null,
+          "description": "Explicit package root within the repository; omitted means root.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "python_version": {
+          "default": null,
+          "description": "Exact analyzed Python interpreter version; never inferred from the worker.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repository": {
+          "default": null,
+          "description": "Canonical public GitHub repository URL for revision mode.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "default": null,
+          "description": "Full immutable commit SHA; exclusive with version.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "default": null,
+          "description": "The caller's target triple, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "default": null,
+          "description": "Exact version. Omitted only for an explicit upstream question.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "ecosystem",
+        "name",
+        "version",
+        "repository",
+        "revision",
+        "package_subdir",
+        "mode",
+        "features",
+        "default_features",
+        "target",
+        "python_version",
+        "extras",
+        "freshness",
+        "allow_prerelease",
+        "allow_yanked",
+        "allow_local_build"
+      ],
+      "type": "object"
+    },
     "ResultSection": {
       "additionalProperties": false,
       "description": "Named typed section of an immutable research result.",
       "properties": {
-        "artifact_id": {
-          "type": "string"
-        },
         "name": {
           "$ref": "#/$defs/ResultSectionName"
         }
       },
       "required": [
-        "name",
-        "artifact_id"
+        "name"
       ],
       "type": "object"
     },
     "ResultSectionName": {
       "description": "Stable directly readable projections in an indexed research result.",
       "enum": [
+        "envelope",
         "coverage",
         "signature",
         "changes",
@@ -4479,7 +5678,7 @@
           ]
         },
         "type_name": {
-          "description": "The actual Python type's qualified name; not a static SymbolKind claim.",
+          "description": "The actual Python type's qualified name, independent of static symbol kind.",
           "type": [
             "string",
             "null"
@@ -4498,7 +5697,408 @@
       ],
       "type": "object"
     },
+    "RuntimeSelection": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "module": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "attributes"
+      ],
+      "type": "object"
+    },
+    "RustAbi": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rust",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "c",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "cdecl",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "stdcall",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "fastcall",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "aapcs",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "win64",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sysv64",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "system",
+              "type": "string"
+            },
+            "unwind": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "unwind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "other",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RustBody": {
+      "description": "A body/value is distinct from a declaration without a supplied implementation.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "absent",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "present",
+              "type": "string"
+            },
+            "unstable_default_feature": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "unstable_default_feature"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RustCallable": {
+      "additionalProperties": false,
+      "properties": {
+        "abi": {
+          "$ref": "#/$defs/RustAbi"
+        },
+        "c_variadic": {
+          "type": "boolean"
+        },
+        "generics": {
+          "type": "string"
+        },
+        "is_async": {
+          "type": "boolean"
+        },
+        "is_const": {
+          "type": "boolean"
+        },
+        "is_unsafe": {
+          "type": "boolean"
+        },
+        "output": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parameters": {
+          "items": {
+            "$ref": "#/$defs/RustParameter"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "parameters",
+        "output",
+        "c_variadic",
+        "is_const",
+        "is_unsafe",
+        "is_async",
+        "abi",
+        "generics"
+      ],
+      "type": "object"
+    },
+    "RustDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RustBody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "callable": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RustCallable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "const_stability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RustStability"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RustStability"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stability",
+        "const_stability",
+        "body",
+        "callable"
+      ],
+      "type": "object"
+    },
+    "RustParameter": {
+      "additionalProperties": false,
+      "properties": {
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "type_rendering": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ordinal",
+        "pattern",
+        "type_rendering"
+      ],
+      "type": "object"
+    },
+    "RustStability": {
+      "additionalProperties": false,
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/RustStabilityLevel"
+        }
+      },
+      "required": [
+        "feature",
+        "level"
+      ],
+      "type": "object"
+    },
+    "RustStabilityLevel": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "stable",
+              "type": "string"
+            },
+            "since": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "since"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "unstable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "Sandbox": {
+      "additionalProperties": false,
       "description": "Execution-profile availability (blueprint §10).",
       "properties": {
         "admitted_images": {
@@ -4554,6 +6154,7 @@
       "type": "object"
     },
     "SchemaCompatibility": {
+      "additionalProperties": false,
       "description": "Wire schema compatibility.",
       "properties": {
         "accepts": {
@@ -4874,6 +6475,88 @@
       ],
       "type": "object"
     },
+    "SearchRequest": {
+      "additionalProperties": false,
+      "description": "What `search_evidence` asks for.",
+      "properties": {
+        "area": {
+          "default": null,
+          "description": "Restrict symbol/fragment subjects to this namespace subtree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "context_id": {
+          "description": "The context from `resolve_library`.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "cursor": {
+          "default": null,
+          "description": "Continue a previous page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kinds": {
+          "default": null,
+          "description": "Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget for the page; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 1024,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "description": "Page size; the configured limit bounds it.",
+          "format": "uint",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "query": {
+          "description": "The query.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "context_id",
+        "snapshot_id",
+        "query",
+        "kinds",
+        "area",
+        "cursor",
+        "max_items",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "SemanticMethod": {
       "enum": [
         "hover",
@@ -4955,6 +6638,7 @@
       "type": "object"
     },
     "SingleFlightCounts": {
+      "additionalProperties": false,
       "description": "Producer runs started and callers served by a shared run (§8.2, gate C04).",
       "properties": {
         "inflight": {
@@ -4991,6 +6675,7 @@
       "type": "object"
     },
     "SnapshotCounts": {
+      "additionalProperties": false,
       "description": "Counts an overview and a manifest report.",
       "properties": {
         "definitions": {
@@ -5132,8 +6817,8 @@
           "type": "string"
         },
         "published_at": {
-          "description": "Publication time.",
-          "type": "string"
+          "$ref": "#/$defs/EventTime",
+          "description": "Publication time."
         },
         "snapshot_id": {
           "description": "The snapshot identity.",
@@ -5149,6 +6834,7 @@
       "type": "object"
     },
     "SourceExcerpt": {
+      "additionalProperties": false,
       "description": "A bounded source excerpt starting at a recorded line; it does not identify the end of an item.",
       "properties": {
         "end_line": {
@@ -5196,6 +6882,7 @@
       "type": "string"
     },
     "StatusData": {
+      "additionalProperties": false,
       "description": "The `service_status` result (§7.1).",
       "properties": {
         "features": {
@@ -5241,6 +6928,22 @@
         "producers",
         "features",
         "health"
+      ],
+      "type": "object"
+    },
+    "StatusRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "component"
       ],
       "type": "object"
     },
@@ -5359,59 +7062,24 @@
         }
       ]
     },
-    "Symbol": {
-      "description": "One public symbol at one public path (§6.1).\n\nA re-export is a symbol whose `path` differs from its `definition_path`; both share one\n`definition_id`, which is how an overview counts capabilities once (gate R07).",
+    "SymbolHeader": {
+      "additionalProperties": false,
+      "description": "Public binding identity. Observed signatures, documentation and source coordinates\nremain in independently qualified observations, never synthesized into this header.",
       "properties": {
-        "cfg_hints": {
-          "description": "`cfg`-shaped attribute strings the producer preserved, as declared hints only. Never\na feature predicate: items compiled out are absent, not annotated (§4.3).",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "defined_in_crate": {
-          "description": "The crate the definition belongs to.",
+        "defined_in_package": {
           "type": "string"
         },
         "definition_id": {
-          "description": "Identity of the definition this path names.",
           "type": "string"
         },
         "definition_path": {
-          "description": "The path the item is defined at.",
           "type": "string"
         },
-        "deprecated": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Deprecated"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Deprecation, when marked."
-        },
-        "doc_summary": {
-          "description": "First paragraph of the documentation, bounded.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "docs": {
-          "description": "Full documentation text.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "is_reexport": {
-          "description": "Whether this path is a re-export of a definition elsewhere.",
           "type": "boolean"
         },
         "kind": {
-          "description": "What kind of item this is.",
+          "description": "Declaration kind, shared by native fields, admission and generated wire enums.",
           "enum": [
             "module",
             "struct",
@@ -5440,58 +7108,24 @@
           "type": "string"
         },
         "name": {
-          "description": "The last path segment.",
           "type": "string"
         },
         "parent_path": {
-          "description": "The containing path, when any.",
           "type": [
             "string",
             "null"
           ]
         },
         "path": {
-          "description": "Canonical public path, e.g. `enr_fixture::inner::Widget`.",
           "type": "string"
         },
-        "producer_local_id": {
-          "description": "The producer's own item identifier -- local, never a cross-release identity.",
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer"
-        },
         "qualifier": {
-          "description": "Trait or declaration qualifier included in symbol/definition identity.",
           "type": [
             "string",
-            "null"
-          ]
-        },
-        "signature": {
-          "description": "Rendered signature, when the producer rendered one.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "span_file": {
-          "description": "Source file as the producer recorded it.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "span_line": {
-          "description": "1-based source line as the producer recorded it.",
-          "format": "uint32",
-          "minimum": 0,
-          "type": [
-            "integer",
             "null"
           ]
         },
         "symbol_id": {
-          "description": "Identity of this public path: hash of crate, path, kind and (for trait-impl members)\nthe trait.",
           "type": "string"
         }
       },
@@ -5502,18 +7136,10 @@
         "name",
         "kind",
         "parent_path",
-        "signature",
-        "doc_summary",
-        "docs",
-        "deprecated",
-        "span_file",
-        "span_line",
         "is_reexport",
         "definition_path",
-        "defined_in_crate",
-        "producer_local_id",
-        "qualifier",
-        "cfg_hints"
+        "defined_in_package",
+        "qualifier"
       ],
       "type": "object"
     },
@@ -5597,7 +7223,99 @@
         }
       ]
     },
+    "TerminalOutcome": {
+      "description": "Only terminal states are representable; a failure always carries its typed diagnostic.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "ok",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "partial",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "error": {
+              "$ref": "#/$defs/Error"
+            },
+            "status": {
+              "const": "error",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "error"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "TextFragment": {
+      "additionalProperties": false,
+      "description": "Text evidence keeps its typed subject and exact acquisition qualification at every boundary.",
+      "properties": {
+        "display_subject": {
+          "type": "string"
+        },
+        "fragment_id": {
+          "type": "string"
+        },
+        "kind": {
+          "description": "What kind of text a fragment is.",
+          "enum": [
+            "api_signature",
+            "doc_text",
+            "feature_definition",
+            "readme_section",
+            "changelog_section",
+            "example",
+            "source_excerpt"
+          ],
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/FactSource"
+        },
+        "subject": {
+          "$ref": "#/$defs/SubjectRef"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fragment_id",
+        "kind",
+        "subject",
+        "display_subject",
+        "text",
+        "source"
+      ],
+      "type": "object"
+    },
     "UpstreamCheck": {
+      "additionalProperties": false,
       "description": "What the registry says about newer releases, kept separate from what was resolved.",
       "properties": {
         "newest_any": {
@@ -5717,6 +7435,7 @@
       "type": "object"
     },
     "VerificationCounters": {
+      "additionalProperties": false,
       "description": "How verification work finished (§9.3, §14.3).\n\n`unresolved` is its own outcome rather than a kind of failure: a probe the service could not\nrun -- an unqualified image, an unavailable profile -- says nothing about the code under\ntest, and counting it as a failure would overstate what was observed.",
       "properties": {
         "failed": {
@@ -5870,7 +7589,72 @@
       ],
       "type": "object"
     },
+    "VerifyRequest": {
+      "additionalProperties": false,
+      "description": "Exact consumer input, pinned to a snapshot before scheduling.",
+      "properties": {
+        "context_id": {
+          "type": "string"
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "mode": {
+          "default": "typecheck",
+          "enum": [
+            "compile",
+            "typecheck",
+            "runtime"
+          ],
+          "type": "string"
+        },
+        "profile": {
+          "default": "build",
+          "description": "The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
+          "enum": [
+            "static",
+            "build",
+            "runtime"
+          ],
+          "type": "string"
+        },
+        "snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snippet": {
+          "type": "string"
+        },
+        "test_intent": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "context_id",
+        "snapshot_id",
+        "snippet",
+        "mode",
+        "profile",
+        "test_intent",
+        "max_bytes"
+      ],
+      "type": "object"
+    },
     "Versions": {
+      "additionalProperties": false,
       "description": "Versions of the daemon and its toolchain.",
       "properties": {
         "daemon": {
@@ -5893,16 +7677,13 @@
       "description": "One source file selected by Rust for the static worker.",
       "properties": {
         "file": {
-          "description": "Archive-relative file path.",
           "type": "string"
         },
         "module": {
-          "description": "Qualified module import path.",
           "type": "string"
         },
         "origin": {
-          "$ref": "#/$defs/ObservationOrigin",
-          "description": "Whether it is .py or .pyi."
+          "$ref": "#/$defs/ObservationOrigin"
         }
       },
       "required": [
@@ -5915,870 +7696,44 @@
   },
   "$id": "https://library-enrichment.local/schemas/tool-data.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Every tool payload, for schema emission. Never sent on the wire as a union.",
-  "oneOf": [
+  "anyOf": [
     {
-      "additionalProperties": false,
-      "description": "Scoped consumer verification; original static evidence remains independently readable.",
-      "properties": {
-        "derived_context": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Context"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "derived_snapshot_id": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "environment": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Environment"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "evidence_class": {
-          "description": "The six epistemic classes (blueprint §6.2).\n\nThese are categories, not a confidence scale. An API signature can be `compiler_derived`\nwhile \"this replaces our orchestration layer\" is `agent_inferred`, and the two never merge.\n\nThe values are, in order: `declared`, `statically_extracted`, `compiler_derived`,\n`typechecker_observed`, `runtime_observed`, `agent_inferred`.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-          "enum": [
-            "declared",
-            "statically_extracted",
-            "compiler_derived",
-            "typechecker_observed",
-            "runtime_observed",
-            "agent_inferred"
-          ],
-          "type": "string"
-        },
-        "limitations": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "lock_artifact_id": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "mode": {
-          "enum": [
-            "compile",
-            "typecheck",
-            "runtime"
-          ],
-          "type": "string"
-        },
-        "observations": {
-          "items": {
-            "$ref": "#/$defs/ProcessObservation"
-          },
-          "type": "array"
-        },
-        "producer_runs": {
-          "items": {
-            "$ref": "#/$defs/ProducerRun"
-          },
-          "type": "array"
-        },
-        "profile": {
-          "description": "The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
-          "enum": [
-            "static",
-            "build",
-            "runtime"
-          ],
-          "type": "string"
-        },
-        "result_artifact_id": {
-          "type": "string"
-        },
-        "snippet_artifact_id": {
-          "type": "string"
-        },
-        "snippet_origin": {
-          "type": "string"
-        },
-        "source_context_id": {
-          "type": "string"
-        },
-        "source_snapshot_id": {
-          "type": "string"
-        },
-        "test_intent": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tool": {
-          "const": "verify_usage",
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool",
-        "evidence_class",
-        "producer_runs",
-        "source_context_id",
-        "source_snapshot_id",
-        "derived_context",
-        "derived_snapshot_id",
-        "environment",
-        "mode",
-        "profile",
-        "snippet_origin",
-        "test_intent",
-        "snippet_artifact_id",
-        "lock_artifact_id",
-        "result_artifact_id",
-        "observations",
-        "limitations"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/EmptyData"
     },
     {
-      "additionalProperties": false,
-      "properties": {
-        "active_interests": {
-          "format": "uint",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "interest_token": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "job_id": {
-          "type": "string"
-        },
-        "result": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/JobResult"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "stage": {
-          "type": "string"
-        },
-        "state": {
-          "description": "The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-          "enum": [
-            "queued",
-            "running",
-            "succeeded",
-            "partial",
-            "failed",
-            "cancel_requested",
-            "cancelled"
-          ],
-          "type": "string"
-        },
-        "submitted_at": {
-          "type": "string"
-        },
-        "tool": {
-          "const": "job_control",
-          "type": "string"
-        },
-        "updated_at": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool",
-        "job_id",
-        "state",
-        "stage",
-        "interest_token",
-        "active_interests",
-        "submitted_at",
-        "updated_at",
-        "result"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/LocalStatus"
     },
     {
-      "additionalProperties": false,
-      "description": "`compare_releases`.",
-      "properties": {
-        "after": {
-          "$ref": "#/$defs/ComparisonSide"
-        },
-        "api_complete": {
-          "type": "boolean"
-        },
-        "before": {
-          "$ref": "#/$defs/ComparisonSide"
-        },
-        "changes": {
-          "items": {
-            "$ref": "#/$defs/Change"
-          },
-          "type": "array"
-        },
-        "comparable": {
-          "type": "boolean"
-        },
-        "configuration_differences": {
-          "items": {
-            "$ref": "#/$defs/ConfigurationDifference"
-          },
-          "type": "array"
-        },
-        "confounders": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "offset": {
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "page": {
-          "$ref": "#/$defs/Page",
-          "description": "Bounded page over this payload, not over the whole research envelope."
-        },
-        "same_release": {
-          "type": "boolean"
-        },
-        "scopes": {
-          "items": {
-            "$ref": "#/$defs/Scope"
-          },
-          "type": "array"
-        },
-        "tool": {
-          "const": "compare_releases",
-          "type": "string"
-        },
-        "total_changes": {
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "tool",
-        "page",
-        "before",
-        "after",
-        "comparable",
-        "same_release",
-        "configuration_differences",
-        "confounders",
-        "scopes",
-        "api_complete",
-        "total_changes",
-        "changes",
-        "offset"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/VerificationData"
     },
     {
-      "additionalProperties": false,
-      "description": "`resolve_library`.",
-      "properties": {
-        "answered_from_cache": {
-          "description": "Whether this answer was replayed from a recorded resolution rather than fetched.",
-          "type": "boolean"
-        },
-        "artifacts": {
-          "description": "Every artifact this resolution stored or reused.",
-          "items": {
-            "$ref": "#/$defs/Artifact"
-          },
-          "type": "array"
-        },
-        "context": {
-          "$ref": "#/$defs/Context",
-          "description": "The context identity every later call takes."
-        },
-        "environment": {
-          "$ref": "#/$defs/Environment",
-          "description": "The environment the context binds, with its resolution status."
-        },
-        "gaps": {
-          "description": "Expected evidence that is absent, each with a reason and a planned fallback.",
-          "items": {
-            "$ref": "#/$defs/Gap"
-          },
-          "type": "array"
-        },
-        "hosted_rustdoc_json": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/HostedJsonReport"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Hosted rustdoc JSON availability."
-        },
-        "observed_configuration": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DocsRsMetadata"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The maintainer's docs.rs build configuration, read from the crate manifest."
-        },
-        "producer_runs": {
-          "description": "Provenance for each producer that ran.",
-          "items": {
-            "$ref": "#/$defs/ProducerRun"
-          },
-          "type": "array"
-        },
-        "python": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Distribution"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Distribution metadata and file inventory, only for Python."
-        },
-        "release": {
-          "$ref": "#/$defs/Release",
-          "description": "The release that was resolved. Its version is the one asked for, never an upgrade."
-        },
-        "snapshot": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SnapshotSummary"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The snapshot published from this resolution, when normalization succeeded."
-        },
-        "tool": {
-          "const": "resolve_library",
-          "type": "string"
-        },
-        "upstream": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/UpstreamCheck"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "What the registry said about newer releases, kept apart from the resolution."
-        }
-      },
-      "required": [
-        "tool",
-        "release",
-        "environment",
-        "context",
-        "upstream",
-        "observed_configuration",
-        "hosted_rustdoc_json",
-        "python",
-        "snapshot",
-        "artifacts",
-        "gaps",
-        "producer_runs",
-        "answered_from_cache"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/JobData"
     },
     {
-      "additionalProperties": false,
-      "description": "`library_overview`.",
-      "properties": {
-        "area": {
-          "description": "The subtree the overview was narrowed to, when any.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "crate_name": {
-          "description": "The crate's root module name.",
-          "type": "string"
-        },
-        "crate_version": {
-          "description": "The crate version the documentation declares.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "definitions_by_kind": {
-          "additionalProperties": {
-            "format": "uint64",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "description": "Distinct definitions by kind across the area.",
-          "type": "object"
-        },
-        "discovery": {
-          "description": "Library-level retained fragments, preserving independently sourced alternatives.",
-          "items": {
-            "$ref": "#/$defs/DiscoveryFacet"
-          },
-          "type": "array"
-        },
-        "namespaces": {
-          "description": "Namespaces, root first.",
-          "items": {
-            "$ref": "#/$defs/NamespaceFacet"
-          },
-          "type": "array"
-        },
-        "observed_configuration": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ObservedConfiguration"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The documentation build's configuration."
-        },
-        "reexports": {
-          "description": "Paths that re-export a definition reachable elsewhere.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "snapshot": {
-          "$ref": "#/$defs/SnapshotSummary",
-          "description": "The snapshot read."
-        },
-        "tool": {
-          "const": "library_overview",
-          "type": "string"
-        },
-        "truncated_namespaces": {
-          "description": "Namespaces beyond the returned set.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "unresolved_reexports": {
-          "description": "Re-exports whose target is outside this crate.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "tool",
-        "crate_name",
-        "crate_version",
-        "snapshot",
-        "observed_configuration",
-        "area",
-        "definitions_by_kind",
-        "namespaces",
-        "truncated_namespaces",
-        "discovery",
-        "reexports",
-        "unresolved_reexports"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/CompareData"
     },
     {
-      "additionalProperties": false,
-      "description": "`search_evidence`.",
-      "properties": {
-        "area": {
-          "default": null,
-          "description": "Namespace subtree that was searched, when requested.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "hits": {
-          "description": "The hits on this page.",
-          "items": {
-            "$ref": "#/$defs/SearchHit"
-          },
-          "type": "array"
-        },
-        "kinds": {
-          "description": "The evidence families searched.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "offset": {
-          "description": "Page offset.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "page": {
-          "$ref": "#/$defs/Page",
-          "description": "Bounded page over this payload, not over the whole research envelope."
-        },
-        "query": {
-          "description": "The query as asked.",
-          "type": "string"
-        },
-        "scoring": {
-          "description": "The scoring legend, in rank order.",
-          "items": {
-            "$ref": "#/$defs/ScoreFactor"
-          },
-          "type": "array"
-        },
-        "searched": {
-          "description": "Which sources were searched.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "tokens": {
-          "description": "The tokens it was split into.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "tool": {
-          "const": "search_evidence",
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool",
-        "page",
-        "query",
-        "tokens",
-        "kinds",
-        "area",
-        "hits",
-        "scoring",
-        "searched",
-        "offset"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/ResolveData"
     },
     {
-      "additionalProperties": false,
-      "description": "`inspect_symbol`.",
-      "properties": {
-        "also_at": {
-          "description": "Other public paths to the same definition.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "aspect_outcomes": {
-          "description": "Independent aspect states and continuations.",
-          "items": {
-            "$ref": "#/$defs/AspectOutcome"
-          },
-          "type": "array"
-        },
-        "aspects": {
-          "description": "The aspects actually returned.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "availability": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Availability"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "What can and cannot be said about availability."
-        },
-        "candidates": {
-          "description": "Distinct selectable definitions; public paths alone may collide across kinds.",
-          "items": {
-            "$ref": "#/$defs/InspectionCandidate"
-          },
-          "type": "array"
-        },
-        "children": {
-          "description": "Lexical direct children, independently paged; this does not establish typed membership.",
-          "items": {
-            "$ref": "#/$defs/InspectionCandidate"
-          },
-          "type": "array"
-        },
-        "docs_truncated": {
-          "description": "Whether `docs` was cut to fit.",
-          "type": "boolean"
-        },
-        "execution_observations": {
-          "description": "Retained execution facts selected natively by symbol/document and exact scope.",
-          "items": {
-            "$ref": "#/$defs/ExecutionObservation"
-          },
-          "type": "array"
-        },
-        "fragments": {
-          "description": "Fragments about the symbol, bounded.",
-          "items": {
-            "$ref": "#/$defs/FragmentProjection"
-          },
-          "type": "array"
-        },
-        "members": {
-          "description": "Bindings reached by qualified member_of relationships, independently paged.",
-          "items": {
-            "$ref": "#/$defs/InspectionCandidate"
-          },
-          "type": "array"
-        },
-        "observations": {
-          "description": "Qualified projections; complete immutable observations remain in the snapshot.",
-          "items": {
-            "$ref": "#/$defs/ApiObservationProjection"
-          },
-          "type": "array"
-        },
-        "producer_runs": {
-          "description": "Actual attempt attribution for an execution job result.",
-          "items": {
-            "$ref": "#/$defs/ProducerRun"
-          },
-          "type": "array"
-        },
-        "relationships": {
-          "description": "Typed edges touching the symbol.",
-          "items": {
-            "$ref": "#/$defs/RelationshipObservation"
-          },
-          "type": "array"
-        },
-        "source": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SourceExcerpt"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Source excerpt at `source` depth."
-        },
-        "symbol": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Symbol"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "The symbol, when one was selected. Its `docs` are bounded here."
-        },
-        "tool": {
-          "const": "inspect_symbol",
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool",
-        "children",
-        "members",
-        "aspect_outcomes",
-        "symbol",
-        "docs_truncated",
-        "also_at",
-        "candidates",
-        "aspects",
-        "availability",
-        "relationships",
-        "observations",
-        "fragments",
-        "source",
-        "execution_observations",
-        "producer_runs"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/OverviewData"
     },
     {
-      "additionalProperties": false,
-      "description": "`read_artifact`.",
-      "properties": {
-        "artifact": {
-          "$ref": "#/$defs/Artifact",
-          "description": "The artifact record."
-        },
-        "content": {
-          "description": "The slice.",
-          "type": "string"
-        },
-        "content_digest": {
-          "description": "SHA-256 of the slice bytes.",
-          "type": "string"
-        },
-        "encoding": {
-          "description": "How `content` is encoded.",
-          "enum": [
-            "utf8",
-            "base64"
-          ],
-          "type": "string"
-        },
-        "end": {
-          "description": "One past the last byte offset of the slice.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "page": {
-          "$ref": "#/$defs/Page",
-          "description": "Bounded page over this payload, not over the whole research envelope."
-        },
-        "remaining": {
-          "description": "Bytes after `end`.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "section": {
-          "description": "The section that was selected, when one was.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "start": {
-          "description": "First byte offset of the slice.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "tool": {
-          "const": "read_artifact",
-          "type": "string"
-        },
-        "total": {
-          "description": "Total artifact size.",
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        }
-      },
-      "required": [
-        "tool",
-        "page",
-        "artifact",
-        "encoding",
-        "start",
-        "end",
-        "total",
-        "content",
-        "content_digest",
-        "remaining",
-        "section"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/SearchData"
     },
     {
-      "additionalProperties": false,
-      "description": "The snapshot manifest resource.",
-      "properties": {
-        "control_version": {
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "is_current": {
-          "description": "Whether this snapshot is the context's current one.",
-          "type": "boolean"
-        },
-        "manifest": {
-          "$ref": "#/$defs/EvidenceManifest",
-          "description": "The immutable manifest as published."
-        },
-        "previous_snapshot_id": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "producer_runs": {
-          "description": "Operational attribution from the catalog generation pinned by this request.",
-          "items": {
-            "$ref": "#/$defs/ProducerRun"
-          },
-          "type": "array"
-        },
-        "publication_changes": {
-          "items": {
-            "$ref": "#/$defs/RelationChanges"
-          },
-          "type": "array"
-        },
-        "tool": {
-          "const": "snapshot_manifest",
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool",
-        "manifest",
-        "is_current",
-        "producer_runs",
-        "control_version",
-        "previous_snapshot_id",
-        "publication_changes"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/InspectData"
     },
     {
-      "$ref": "#/$defs/StatusData",
-      "description": "`service_status`.",
-      "properties": {
-        "tool": {
-          "const": "service_status",
-          "type": "string"
-        }
-      },
-      "required": [
-        "tool"
-      ],
-      "type": "object"
+      "$ref": "#/$defs/ArtifactSliceData"
+    },
+    {
+      "$ref": "#/$defs/ManifestData"
+    },
+    {
+      "$ref": "#/$defs/StatusData"
     }
   ],
+  "description": "Finite native tool payloads. The transport emits the selected record without its native tag.",
   "title": "LibraryEnrichmentToolData"
 }

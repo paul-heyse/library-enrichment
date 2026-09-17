@@ -1,23 +1,15 @@
 //! Exact retained-input inventories; unreadable or special files are errors, never zero bytes.
 use crate::canonical;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::io;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::Path;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-#[serde(deny_unknown_fields)]
-pub enum Entry {
-    Directory {
-        mode: u32,
-    },
-    File {
-        mode: u32,
-        bytes: u64,
-        sha256: String,
-    },
+crate::native_union! {
+    pub enum Entry {
+        Directory = "directory" { mode: u32 => crate::native_union::Rule::Text },
+        File = "file" { mode: u32 => crate::native_union::Rule::Text, bytes: u64 => crate::native_union::Rule::Text, sha256: String => crate::native_union::Rule::Sha256 },
+    }
 }
 
 pub type Inventory = BTreeMap<String, Entry>;

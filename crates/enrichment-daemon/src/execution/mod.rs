@@ -13,9 +13,11 @@ pub mod rustdoc;
 use cleanup::{ContainerGuard, Supervisor};
 use enrichment_core::{
     capsule_protocol::{self as protocol, Mode, Operation, OutputKind},
-    clock,
     config::Execution,
     execution::{ProcessEnd, ProcessObservation},
+};
+use enrichment_store::physical_ownership::{
+    ExecutionRoot, OwnershipObservation, OwnershipStore, PhysicalOwner, PhysicalState,
 };
 use std::io;
 use std::path::{Path, PathBuf};
@@ -53,7 +55,7 @@ pub struct ServedSession {
     /// Removes the container when this session is dropped.
     pub guard: ContainerGuard,
     /// When the container was created, RFC 3339.
-    pub started_at: String,
+    pub started_at: enrichment_core::native_time::ObservationTime,
     /// The image the server runs in, for the observation's provenance.
     pub image_id: String,
 }
@@ -78,7 +80,7 @@ impl ServedSession {
 pub struct Runner {
     root: PathBuf,
     cache: PathBuf,
-    owner: String,
+    ownership: OwnershipStore,
     limits: Execution,
     broker: PathBuf,
     supervisor: Arc<Supervisor>,
@@ -129,11 +131,10 @@ impl Dispatch {
     }
 }
 
-/// Local ownership lasts until container registration transfers the operation to cleanup.
+/// Mechanical container protocol file. Durable authority is the native PhysicalOwner record.
 struct OperationRecord {
     path: PathBuf,
     registered: bool,
-    ownership: Option<PathBuf>,
 }
 impl OperationRecord {
     fn write(root: &Path, name: &str, operation: &Operation) -> io::Result<Self> {
@@ -142,7 +143,6 @@ impl OperationRecord {
         let record = Self {
             path: directory.join(format!("{name}.json")),
             registered: false,
-            ownership: None,
         };
         enrichment_store::atomic::write_atomic(&record.path, &serde_json::to_vec(operation)?)?;
         Ok(record)
@@ -153,9 +153,6 @@ impl Drop for OperationRecord {
         if !self.registered {
             // No creator can have started before transfer. Remove this fresh ownership
             // obligation even when registration or an earlier durability barrier failed.
-            if let Some(path) = &self.ownership {
-                let _ = std::fs::remove_file(path);
-            }
             match std::fs::remove_file(&self.path) {
                 Ok(()) => {}
                 Err(error) if error.kind() == io::ErrorKind::NotFound => {}
@@ -166,7 +163,12 @@ impl Drop for OperationRecord {
 }
 
 impl Runner {
-    pub fn new(config: &Execution, cache: &Path, supervisor: Arc<Supervisor>) -> io::Result<Self> {
+    pub fn new(
+        config: &Execution,
+        cache: &Path,
+        supervisor: Arc<Supervisor>,
+        ownership: OwnershipStore,
+    ) -> io::Result<Self> {
         config.resources()?;
         let root = config
             .storage_root
@@ -191,18 +193,15 @@ impl Runner {
             }
         }
         let physical_root = root.canonicalize()?;
-        ownership::register(
-            cache,
-            &ownership::Root {
-                path: physical_root.clone(),
-                broker: config.broker(),
-            },
-        )?;
+        ownership::validate_root(cache, &physical_root, &config.broker())?;
+        if cache.canonicalize()?.to_str() != Some(ownership.cache()) {
+            return Err(io::Error::other(
+                "runner cache differs from native ownership scope",
+            ));
+        }
         Ok(Self {
             cache: cache.canonicalize()?,
-            owner: enrichment_core::canonical::sha256_hex(
-                cache.canonicalize()?.to_string_lossy().as_bytes(),
-            ),
+            ownership,
             root: physical_root,
             broker: config.broker(),
             limits: config.clone(),
@@ -252,6 +251,7 @@ impl Runner {
 
     /// Carry one execution lease across all preparation and execution stages.
     pub async fn admitted(mut self) -> io::Result<Self> {
+        self.register_root().await?;
         if self.lease.is_none() {
             self.lease = Some(self.supervisor.lease().await?);
         }
@@ -322,13 +322,22 @@ impl Runner {
     fn create_supervised(
         &self,
         mut command: Command,
-        ownership: PathBuf,
+        name: String,
         dispatch: Dispatch,
     ) -> tokio::task::JoinHandle<io::Result<std::process::Output>> {
         let runner = self.clone();
         tokio::spawn(async move {
-            let mut record: serde_json::Value =
-                serde_json::from_slice(&std::fs::read(&ownership)?)?;
+            let boot = boot_id()?;
+            runner
+                .ownership
+                .observe(
+                    &name,
+                    OwnershipObservation::Creating {
+                        boot_id: boot.clone(),
+                    },
+                )
+                .await
+                .map_err(io::Error::other)?;
             let created = match dispatch.check().await {
                 Ok(()) => command
                     .stdout(Stdio::piped())
@@ -339,32 +348,68 @@ impl Runner {
             let child = match created {
                 Ok(child) => child,
                 Err(error) => {
-                    // A failed spawn created no process. Record that certainty so ordinary
-                    // cleanup/recovery can remove this empty ownership obligation.
-                    record["creation_in_progress"] = serde_json::Value::Bool(false);
-                    enrichment_store::atomic::write_atomic(
-                        &ownership,
-                        &serde_json::to_vec(&record)?,
-                    )?;
-                    std::fs::File::open(&ownership)?.sync_all()?;
-                    std::fs::File::open(runner.root.join("owned"))?.sync_all()?;
+                    runner
+                        .ownership
+                        .observe(&name, OwnershipObservation::Settled { boot_id: boot })
+                        .await
+                        .map_err(io::Error::other)?;
                     return Err(error);
                 }
             };
-            record["creator_pid"] = serde_json::to_value(child.id())?;
-            record["creator_boot_id"] = serde_json::to_value(
-                std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim(),
-            )?;
-            enrichment_store::atomic::write_atomic(&ownership, &serde_json::to_vec(&record)?)?;
-            std::fs::File::open(&ownership)?.sync_all()?;
-            std::fs::File::open(runner.root.join("owned"))?.sync_all()?;
+            let pid = child
+                .id()
+                .ok_or_else(|| io::Error::other("creator has no observed process id"))?;
+            runner
+                .ownership
+                .observe(&name, OwnershipObservation::Creator { pid })
+                .await
+                .map_err(io::Error::other)?;
             let output = child.wait_with_output().await?;
-            record["creation_in_progress"] = serde_json::Value::Bool(false);
-            enrichment_store::atomic::write_atomic(&ownership, &serde_json::to_vec(&record)?)?;
-            std::fs::File::open(&ownership)?.sync_all()?;
-            std::fs::File::open(runner.root.join("owned"))?.sync_all()?;
+            runner
+                .ownership
+                .observe(&name, OwnershipObservation::Settled { boot_id: boot })
+                .await
+                .map_err(io::Error::other)?;
             Ok(output)
         })
+    }
+    async fn register_root(&self) -> io::Result<()> {
+        self.ownership
+            .register_root(ExecutionRoot {
+                root: path_text(&self.root)?,
+                cache: path_text(&self.cache)?,
+                broker: path_text(&self.broker)?,
+            })
+            .await
+            .map_err(io::Error::other)
+    }
+    async fn reserve_owner(
+        &self,
+        name: &str,
+        capsule: &Path,
+        image: &str,
+        operation: &Operation,
+        dispatch: &Dispatch,
+    ) -> io::Result<()> {
+        self.register_root().await?;
+        self.ownership
+            .reserve_owner(PhysicalOwner {
+                name: name.into(),
+                root: path_text(&self.root)?,
+                cache: path_text(&self.cache)?,
+                capsule: path_text(capsule)?,
+                image: image.into(),
+                operation_id: operation.id(),
+                authority: dispatch.observation(),
+                created_at: enrichment_core::native_time::ObservationTime::now()
+                    .map_err(io::Error::other)?,
+                state: PhysicalState::Reserved,
+                creator_boot_id: None,
+                creator_pid: None,
+                sequence: 0,
+            })
+            .await
+            .map_err(io::Error::other)
     }
 
     fn broker(&self) -> Command {
@@ -556,23 +601,17 @@ impl Runner {
         let operation = dispatch.operation(operation);
         let create_args = self.create_args(&name, image, &capsule, false, None, true)?;
         let mut operation_record = OperationRecord::write(&self.root, &name, &operation)?;
-        let started_at = clock::now_rfc3339();
-        let ownership = self.root.join("owned").join(format!("{name}.json"));
-        operation_record.ownership = Some(ownership.clone());
-        std::fs::create_dir_all(self.root.join("owned"))?;
-        let bytes = serde_json::to_vec(
-            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"operation_id":operation.id(),"authority":dispatch.observation(),"owner":self.owner,"kind":"lsp","creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
-        )?;
-        enrichment_store::atomic::write_atomic(&ownership, &bytes)?;
-        std::fs::File::open(&ownership)?.sync_all()?;
-        std::fs::File::open(self.root.join("owned"))?.sync_all()?;
+        let started_at =
+            enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
+        self.reserve_owner(&name, &capsule, image, &operation, &dispatch)
+            .await?;
         let mut guard =
             ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name.clone())?;
         operation_record.registered = true;
 
         let mut command = self.broker();
         command.args(create_args);
-        let creator = self.create_supervised(command, ownership, dispatch.clone());
+        let creator = self.create_supervised(command, name.clone(), dispatch.clone());
         let created = tokio::time::timeout(Duration::from_secs(15), creator).await;
         match created {
             Ok(Ok(Ok(output))) if output.status.success() => {}
@@ -734,14 +773,15 @@ impl Runner {
             .await?;
         let operation = dispatch.operation(operation);
         let reservation = budget::Reservation::acquire(
-            &self.cache,
+            &self.ownership,
             if operation.outputs.is_empty() {
                 0
             } else {
                 operation.data_bytes
             },
             self.limits.capsule_budget_mib.saturating_mul(1024 * 1024),
-        )?;
+        )
+        .await?;
         let until = tokio::time::Instant::now() + Duration::from_secs(deadline);
         let mut cmd = self.broker();
         cmd.args(self.create_args(
@@ -755,25 +795,14 @@ impl Runner {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
         let mut operation_record = OperationRecord::write(&self.root, &name, &operation)?;
-        let started_at = clock::now_rfc3339();
-        let ownership = self.root.join("owned").join(format!("{name}.json"));
-        operation_record.ownership = Some(ownership.clone());
-        std::fs::create_dir_all(self.root.join("owned"))?;
-        let bytes = serde_json::to_vec(
-            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"operation_id":operation.id(),"authority":dispatch.observation(),"owner":self.owner,"creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
-        )?;
-        enrichment_store::atomic::write_atomic(&ownership, &bytes)?;
-        std::fs::File::open(&ownership)?.sync_all()?;
-        std::fs::File::open(self.root.join("owned"))?.sync_all()?;
-        // Creation never starts the image. Finish creation before observing cancellation, so a
-        // successful removal cannot race with a launcher that has not created its container yet.
-        // Ownership is registered before the container exists, so a dropped future, a panic or
-        // a failed removal all leave someone holding the obligation. `kill_on_drop` reaps the
-        // Podman client; only removal reaps the container.
+        let started_at =
+            enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?;
+        self.reserve_owner(&name, &capsule, image, &operation, &dispatch)
+            .await?;
         let mut guard =
             ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name.clone())?;
         operation_record.registered = true;
-        let creator = self.create_supervised(cmd, ownership, dispatch.clone());
+        let creator = self.create_supervised(cmd, name.clone(), dispatch.clone());
         let created = tokio::time::timeout_at(
             until.min(tokio::time::Instant::now() + Duration::from_secs(15)),
             creator,
@@ -816,7 +845,8 @@ impl Runner {
                 image_id: image.into(),
                 command: args.to_vec(),
                 started_at,
-                finished_at: clock::now_rfc3339(),
+                finished_at: enrichment_core::native_time::ObservationTime::now()
+                    .map_err(std::io::Error::other)?,
                 exit_code: None,
                 end,
                 stdout: String::new(),
@@ -969,7 +999,8 @@ impl Runner {
             image_id: image.into(),
             command: args.to_vec(),
             started_at,
-            finished_at: clock::now_rfc3339(),
+            finished_at: enrichment_core::native_time::ObservationTime::now()
+                .map_err(std::io::Error::other)?,
             exit_code,
             end,
             stdout: String::from_utf8_lossy(&stdout).into_owned(),
@@ -979,14 +1010,17 @@ impl Runner {
     }
 
     async fn remove(&self, name: &str) -> io::Result<()> {
-        let path = self.root.join("owned").join(format!("{name}.json"));
-        if path.exists() {
-            let record: serde_json::Value = serde_json::from_slice(&std::fs::read(&path)?)?;
-            if record["creation_in_progress"] == true {
-                return Err(io::Error::other(
-                    "container creation is still in progress; absence cannot retire ownership yet",
-                ));
-            }
+        let boot = boot_id()?;
+        let owners = self
+            .ownership
+            .cleanup_candidates(Some(name), &boot)
+            .await
+            .map_err(io::Error::other)?;
+        let Some(owner) = owners.first() else {
+            return Ok(());
+        };
+        if Path::new(&owner.root) != self.root {
+            return Err(io::Error::other("cleanup runner root mismatch"));
         }
         let output = tokio::time::timeout(
             Duration::from_secs(15),
@@ -1016,10 +1050,10 @@ impl Runner {
         if status.code() != Some(1) {
             return Err(io::Error::other("container absence was not confirmed"));
         }
-        if path.exists() {
-            std::fs::remove_file(path)?;
-            std::fs::File::open(self.root.join("owned"))?.sync_all()?;
-        }
+        self.ownership
+            .observe(name, OwnershipObservation::Absent { boot_id: boot })
+            .await
+            .map_err(io::Error::other)?;
         let operation = self.root.join("operations").join(format!("{name}.json"));
         if operation.try_exists()? {
             std::fs::remove_file(operation)?;
@@ -1028,105 +1062,32 @@ impl Runner {
     }
 
     /// Reconcile durable ownership before interrupted job journals become terminal after restart.
-    pub fn recover_owned(&self) -> io::Result<()> {
-        for root in ownership::read(&self.cache)? {
-            let prior = Self {
-                root: root.path,
-                broker: root.broker,
+    pub async fn recover_owned(&self) -> io::Result<()> {
+        self.register_root().await?;
+        let boot = boot_id()?;
+        let roots = self.ownership.roots().await.map_err(io::Error::other)?;
+        let owners = self
+            .ownership
+            .cleanup_candidates(None, &boot)
+            .await
+            .map_err(io::Error::other)?;
+        for owner in owners {
+            let root = roots
+                .iter()
+                .find(|root| root.root == owner.root)
+                .ok_or_else(|| io::Error::other("native owner has no registered root"))?;
+            ownership::validate_root(&self.cache, Path::new(&root.root), Path::new(&root.broker))?;
+            Self {
+                root: root.root.clone().into(),
+                broker: root.broker.clone().into(),
                 ..self.clone()
-            };
-            prior.recover_root()?;
+            }
+            .remove(&owner.name)
+            .await?;
         }
         Ok(())
     }
-
-    fn recover_root(&self) -> io::Result<()> {
-        let owned = self.root.join("owned");
-        if !owned.exists() {
-            return Ok(());
-        }
-        for entry in std::fs::read_dir(&owned)? {
-            let path = entry?.path();
-            if path.extension().and_then(|s| s.to_str()) != Some("json") {
-                return Err(io::Error::other(
-                    "unknown container ownership child; inspect before recovery",
-                ));
-            }
-            let meta = std::fs::symlink_metadata(&path)?;
-            if !meta.is_file() || meta.len() > 1_048_576 {
-                return Err(io::Error::other("invalid container ownership record"));
-            }
-            let record: serde_json::Value = serde_json::from_slice(&std::fs::read(&path)?)?;
-            if !record["owner"].as_str().is_some_and(|owner| {
-                owner.len() == 64 && owner.bytes().all(|b| b.is_ascii_hexdigit())
-            }) {
-                return Err(io::Error::other("missing or invalid container owner"));
-            }
-            if record["owner"].as_str() != Some(self.owner.as_str()) {
-                continue;
-            }
-            if record["creation_in_progress"] == true
-                && record["creator_boot_id"].as_str().is_none_or(|previous| {
-                    std::fs::read_to_string("/proc/sys/kernel/random/boot_id")
-                        .map(|current| current.trim() == previous)
-                        .unwrap_or(true)
-                })
-            {
-                return Err(io::Error::other(
-                    "an interrupted container creator has not confirmed completion; inspect its owned record and creator PID. Automatic reconciliation requires a different boot, which proves the old creator and helpers cannot remain alive",
-                ));
-            }
-            let name = record["name"]
-                .as_str()
-                .ok_or_else(|| io::Error::other("malformed container ownership"))?;
-            if !name
-                .strip_prefix("libenr-")
-                .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-                || path.file_stem().and_then(|s| s.to_str()) != Some(name)
-            {
-                return Err(io::Error::other("invalid container ownership identity"));
-            }
-            let status = bounded_status(
-                self.broker()
-                    .args(["rm", "--force", "--ignore", "--time=0", name]),
-            )?;
-            if !status.success() {
-                return Err(io::Error::other(
-                    "cannot reconcile owned container; daemon refuses to start",
-                ));
-            }
-            let absent = bounded_status(self.broker().args(["container", "exists", name]))?;
-            if absent.code() != Some(1) {
-                return Err(io::Error::other(
-                    "owned container absence unconfirmed; daemon refuses to start",
-                ));
-            }
-            let operation = self.root.join("operations").join(format!("{name}.json"));
-            if operation.try_exists()? {
-                std::fs::remove_file(operation)?;
-            }
-            std::fs::remove_file(path)?;
-        }
-        std::fs::File::open(owned)?.sync_all()
-    }
 }
-fn bounded_status(command: &mut Command) -> io::Result<std::process::ExitStatus> {
-    command.stdout(Stdio::null()).stderr(Stdio::null());
-    let mut child = command.as_std_mut().spawn()?;
-    let deadline = std::time::Instant::now() + Duration::from_secs(15);
-    loop {
-        if let Some(status) = child.try_wait()? {
-            return Ok(status);
-        }
-        if std::time::Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(io::Error::other("container recovery deadline exceeded"));
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    }
-}
-
 async fn read_bounded(
     mut input: impl AsyncRead + Unpin,
     limit: usize,
@@ -1151,23 +1112,6 @@ async fn read_bounded(
 mod tests {
     use super::*;
 
-    #[test]
-    fn unknown_execution_ownership_children_prevent_recovery() {
-        let dir = tempfile::tempdir().unwrap();
-        let supervisor = Supervisor::new(Arc::new(tokio::sync::Semaphore::new(1)), 5, 1);
-        let runner = Runner::new(&Execution::default(), dir.path(), supervisor).unwrap();
-        let unknown = runner.root.join("owned/unknown");
-        std::fs::write(&unknown, b"preserve").unwrap();
-        assert!(
-            runner
-                .recover_owned()
-                .unwrap_err()
-                .to_string()
-                .contains("unknown")
-        );
-        assert_eq!(std::fs::read(unknown).unwrap(), b"preserve");
-    }
-
     #[tokio::test]
     async fn unclaimed_process_and_unstarted_registration_leave_no_operation_files() {
         let cache = tempfile::tempdir().unwrap();
@@ -1177,7 +1121,13 @@ mod tests {
             ..Execution::default()
         };
         let supervisor = Supervisor::new(Arc::new(tokio::sync::Semaphore::new(1)), 5, 1);
-        let runner = Runner::new(&config, cache.path(), supervisor).unwrap();
+        let runner = Runner::new(
+            &config,
+            cache.path(),
+            supervisor,
+            test_ownership(cache.path()),
+        )
+        .unwrap();
         for _ in 0..3 {
             let result = runner
                 .prepare_outputs(
@@ -1196,12 +1146,6 @@ mod tests {
             );
         }
         assert!(!runner.root.join("operations").exists());
-        assert_eq!(
-            std::fs::read_dir(runner.root.join("owned"))
-                .unwrap()
-                .count(),
-            0
-        );
         let operation = runner
             .operation(
                 "unused",
@@ -1212,12 +1156,8 @@ mod tests {
                 Default::default(),
             )
             .unwrap();
-        let mut record = OperationRecord::write(&runner.root, "unstarted", &operation).unwrap();
-        let owned = runner.root.join("owned/unstarted.json");
-        std::fs::write(&owned, b"unstarted registration").unwrap();
-        record.ownership = Some(owned.clone());
+        let record = OperationRecord::write(&runner.root, "unstarted", &operation).unwrap();
         drop(record);
-        assert!(!owned.exists());
         assert_eq!(
             std::fs::read_dir(runner.root.join("operations"))
                 .unwrap()
@@ -1230,24 +1170,42 @@ mod tests {
     async fn a_failed_spawn_records_that_no_creator_is_in_progress() {
         let dir = tempfile::tempdir().expect("state");
         let supervisor = Supervisor::new(Arc::new(tokio::sync::Semaphore::new(1)), 5, 1);
-        let runner = Runner::new(&Execution::default(), dir.path(), supervisor).expect("runner");
-        let ownership = runner.root.join("owned/libenr-test.json");
-        std::fs::create_dir_all(ownership.parent().expect("parent")).expect("ownership directory");
-        std::fs::write(&ownership, br#"{"creation_in_progress":true}"#).expect("record");
+        let runner = Runner::new(
+            &Execution::default(),
+            dir.path(),
+            supervisor,
+            test_ownership(dir.path()),
+        )
+        .expect("runner");
+        let name = format!("libenr-{}", "a".repeat(32));
+        let dispatch = Dispatch::Qualification("unspawned-fixture".into());
+        let operation = runner
+            .operation(
+                &name,
+                "image",
+                dir.path(),
+                &["/bin/true".into()],
+                Mode::Command,
+                Default::default(),
+            )
+            .unwrap();
+        runner
+            .reserve_owner(&name, dir.path(), "image", &operation, &dispatch)
+            .await
+            .unwrap();
         let absent = dir.path().join("no-such-executable");
         let error = runner
-            .create_supervised(
-                Command::new(absent),
-                ownership.clone(),
-                Dispatch::Qualification("unspawned-fixture".into()),
-            )
+            .create_supervised(Command::new(absent), name.clone(), dispatch)
             .await
             .expect("task")
             .expect_err("spawn fails");
         assert_eq!(error.kind(), io::ErrorKind::NotFound);
-        let record: serde_json::Value =
-            serde_json::from_slice(&std::fs::read(ownership).expect("record")).expect("JSON");
-        assert_eq!(record["creation_in_progress"], false);
+        let owners = runner
+            .ownership
+            .cleanup_candidates(Some(&name), &boot_id().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(owners[0].state, PhysicalState::Settled);
     }
     #[test]
     fn execution_boundary_requires_immutable_images() {
@@ -1255,4 +1213,30 @@ mod tests {
         assert!(!Runner::valid_image("--privileged"));
         assert!(Runner::valid_image(&format!("sha256:{}", "a".repeat(64))));
     }
+}
+
+fn boot_id() -> io::Result<String> {
+    Ok(std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?
+        .trim()
+        .to_owned())
+}
+fn path_text(path: &Path) -> io::Result<String> {
+    path.to_str()
+        .map(str::to_owned)
+        .ok_or_else(|| io::Error::other("physical path is not UTF-8"))
+}
+
+#[cfg(test)]
+pub(crate) fn test_ownership(cache: &Path) -> OwnershipStore {
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &cache.join("native-spill"),
+        Default::default(),
+    )
+    .unwrap();
+    let control = enrichment_store::control::ControlStore::open(
+        &cache.join("native-test-control"),
+        runtime.clone(),
+    )
+    .unwrap();
+    OwnershipStore::new(control, runtime, cache).unwrap()
 }

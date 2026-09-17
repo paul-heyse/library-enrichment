@@ -1,0 +1,402 @@
+{
+  "module": "regex_automata::hybrid::dfa",
+  "crate": "regex-automata",
+  "api": "api/regex_automata.hybrid.dfa.md",
+  "items": [
+    {
+      "path": "regex_automata::hybrid::dfa::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Builder",
+      "summary": "A builder for constructing a lazy deterministic finite automaton from regular expressions.",
+      "doc": "api/regex_automata.hybrid.dfa.md#builder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<DFA, BuildError>",
+          "summary": "Build a lazy DFA from the given pattern."
+        },
+        {
+          "name": "build_from_nfa",
+          "signature": "fn build_from_nfa(&self, nfa: thompson::NFA) -> Result<DFA, BuildError>",
+          "summary": "Build a DFA from the given NFA."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<DFA, BuildError>",
+          "summary": "Build a lazy DFA from the given patterns."
+        },
+        {
+          "name": "configure",
+          "signature": "fn configure(&mut self, config: Config) -> &mut Builder",
+          "summary": "Apply the given lazy DFA configuration options to this builder."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new lazy DFA builder with the default configuration."
+        },
+        {
+          "name": "syntax",
+          "signature": "fn syntax(&mut self, config: util::syntax::Config) -> &mut Builder",
+          "summary": "Set the syntax configuration for this builder using [`syntax::Config`](crate::util::syntax::Config)."
+        },
+        {
+          "name": "thompson",
+          "signature": "fn thompson(&mut self, config: thompson::Config) -> &mut Builder",
+          "summary": "Set the Thompson NFA configuration for this builder using [`nfa::thompson::Config`](crate::nfa::thompson::Config)."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::dfa::Cache",
+      "name": "Cache",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Cache",
+      "summary": "A cache represents a partially computed DFA.",
+      "doc": "api/regex_automata.hybrid.dfa.md#cache",
+      "methods": [
+        {
+          "name": "clear_count",
+          "signature": "fn clear_count(&self) -> usize",
+          "summary": "Returns the total number of times this cache has been cleared since it was either created or last reset."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the heap memory usage, in bytes, of this cache."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(dfa: &DFA) -> Cache",
+          "summary": "Create a new cache for the given lazy DFA."
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self, dfa: &DFA)",
+          "summary": "Reset this cache such that it can be used for searching with the given lazy DFA (and only that DFA)."
+        },
+        {
+          "name": "search_finish",
+          "signature": "fn search_finish(&mut self, at: usize)",
+          "summary": "Indicates that a search has finished at the given position."
+        },
+        {
+          "name": "search_start",
+          "signature": "fn search_start(&mut self, at: usize)",
+          "summary": "Initializes a new search starting at the given position."
+        },
+        {
+          "name": "search_total_len",
+          "signature": "fn search_total_len(&self) -> usize",
+          "summary": "Returns the total number of bytes that have been searched since this cache was last cleared."
+        },
+        {
+          "name": "search_update",
+          "signature": "fn search_update(&mut self, at: usize)",
+          "summary": "Updates the current search to indicate that it has search to the current position."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::dfa::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct Config",
+      "summary": "The configuration used for building a lazy DFA.",
+      "doc": "api/regex_automata.hybrid.dfa.md#config",
+      "methods": [
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(self, yes: bool) -> Config",
+          "summary": "Whether to attempt to shrink the size of the lazy DFA's alphabet or not."
+        },
+        {
+          "name": "cache_capacity",
+          "signature": "fn cache_capacity(self, bytes: usize) -> Config",
+          "summary": "Sets the maximum amount of heap memory, in bytes, to allocate to the cache for use during a lazy DFA search. If the lazy DFA would otherwise use more heap memory, then, depending on other configuration knobs, either stop the search and ret…"
+        },
+        {
+          "name": "get_byte_classes",
+          "signature": "fn get_byte_classes(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled byte classes or not. This is typically a debugging oriented option, as disabling it confers no speed benefit."
+        },
+        {
+          "name": "get_cache_capacity",
+          "signature": "fn get_cache_capacity(&self) -> usize",
+          "summary": "Returns the cache capacity set on this configuration."
+        },
+        {
+          "name": "get_match_kind",
+          "signature": "fn get_match_kind(&self) -> MatchKind",
+          "summary": "Returns the match semantics set in this configuration."
+        },
+        {
+          "name": "get_minimum_bytes_per_state",
+          "signature": "fn get_minimum_bytes_per_state(&self) -> Option<usize>",
+          "summary": "Returns, if set, the minimum number of bytes per state that need to be processed in order for the lazy DFA to keep going. If the minimum falls below this number (and the cache has been cleared a minimum number of times), then the lazy DFA…"
+        },
+        {
+          "name": "get_minimum_cache_capacity",
+          "signature": "fn get_minimum_cache_capacity(&self, nfa: &thompson::NFA) -> Result<usize, BuildError>",
+          "summary": "Returns the minimum lazy DFA cache capacity required for the given NFA."
+        },
+        {
+          "name": "get_minimum_cache_clear_count",
+          "signature": "fn get_minimum_cache_clear_count(&self) -> Option<usize>",
+          "summary": "Returns, if set, the minimum number of times the cache must be cleared before a lazy DFA search can give up. When no minimum is set, then a search will never quit and will always clear the cache whenever it fills up."
+        },
+        {
+          "name": "get_prefilter",
+          "signature": "fn get_prefilter(&self) -> Option<&Prefilter>",
+          "summary": "Returns the prefilter set in this configuration, if one at all."
+        },
+        {
+          "name": "get_quit",
+          "signature": "fn get_quit(&self, byte: u8) -> bool",
+          "summary": "Returns whether this configuration will instruct the lazy DFA to enter a quit state whenever the given byte is seen during a search. When at least one byte has this enabled, it is possible for a search to return an error."
+        },
+        {
+          "name": "get_skip_cache_capacity_check",
+          "signature": "fn get_skip_cache_capacity_check(&self) -> bool",
+          "summary": "Returns whether the cache capacity check should be skipped."
+        },
+        {
+          "name": "get_specialize_start_states",
+          "signature": "fn get_specialize_start_states(&self) -> bool",
+          "summary": "Returns whether this configuration will instruct the lazy DFA to \"specialize\" start states. When enabled, the lazy DFA will tag start states so that search routines using the lazy DFA can detect when it's in a start state and do some kind…"
+        },
+        {
+          "name": "get_starts_for_each_pattern",
+          "signature": "fn get_starts_for_each_pattern(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled anchored starting states for every pattern in the DFA."
+        },
+        {
+          "name": "get_unicode_word_boundary",
+          "signature": "fn get_unicode_word_boundary(&self) -> bool",
+          "summary": "Returns whether this configuration has enabled heuristic Unicode word boundary support. When enabled, it is possible for a search to return an error."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(self, kind: MatchKind) -> Config",
+          "summary": "Set the desired match semantics."
+        },
+        {
+          "name": "minimum_bytes_per_state",
+          "signature": "fn minimum_bytes_per_state(self, min: Option<usize>) -> Config",
+          "summary": "Configure a lazy DFA search to quit only when its efficiency drops below the given minimum."
+        },
+        {
+          "name": "minimum_cache_clear_count",
+          "signature": "fn minimum_cache_clear_count(self, min: Option<usize>) -> Config",
+          "summary": "Configure a lazy DFA search to quit after a certain number of cache clearings."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Return a new default lazy DFA builder configuration."
+        },
+        {
+          "name": "prefilter",
+          "signature": "fn prefilter(self, pre: Option<Prefilter>) -> Config",
+          "summary": "Set a prefilter to be used whenever a start state is entered."
+        },
+        {
+          "name": "quit",
+          "signature": "fn quit(self, byte: u8, yes: bool) -> Config",
+          "summary": "Add a \"quit\" byte to the lazy DFA."
+        },
+        {
+          "name": "skip_cache_capacity_check",
+          "signature": "fn skip_cache_capacity_check(self, yes: bool) -> Config",
+          "summary": "Configures construction of a lazy DFA to use the minimum cache capacity if the configured capacity is otherwise too small for the provided NFA."
+        },
+        {
+          "name": "specialize_start_states",
+          "signature": "fn specialize_start_states(self, yes: bool) -> Config",
+          "summary": "Enable specializing start states in the lazy DFA."
+        },
+        {
+          "name": "starts_for_each_pattern",
+          "signature": "fn starts_for_each_pattern(self, yes: bool) -> Config",
+          "summary": "Whether to compile a separate start state for each pattern in the lazy DFA."
+        },
+        {
+          "name": "unicode_word_boundary",
+          "signature": "fn unicode_word_boundary(self, yes: bool) -> Config",
+          "summary": "Heuristically enable Unicode word boundaries."
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::dfa::DFA",
+      "name": "DFA",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct DFA",
+      "summary": "A hybrid NFA/DFA (also called a \"lazy DFA\") for regex searching.",
+      "doc": "api/regex_automata.hybrid.dfa.md#dfa",
+      "methods": [
+        {
+          "name": "always_match",
+          "signature": "fn always_match() -> Result<DFA, BuildError>",
+          "summary": "Create a new lazy DFA that matches every input."
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "Return a builder for configuring the construction of a `Regex`."
+        },
+        {
+          "name": "byte_classes",
+          "signature": "fn byte_classes(&self) -> &ByteClasses",
+          "summary": "Returns the equivalence classes that make up the alphabet for this DFA."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "Return a default configuration for a `DFA`."
+        },
+        {
+          "name": "create_cache",
+          "signature": "fn create_cache(&self) -> Cache",
+          "summary": "Create a new cache for this lazy DFA."
+        },
+        {
+          "name": "get_config",
+          "signature": "fn get_config(&self) -> &Config",
+          "summary": "Returns this lazy DFA's configuration."
+        },
+        {
+          "name": "get_nfa",
+          "signature": "fn get_nfa(&self) -> &thompson::NFA",
+          "summary": "Returns a reference to the underlying NFA."
+        },
+        {
+          "name": "match_len",
+          "signature": "fn match_len(&self, cache: &Cache, id: LazyStateID) -> usize",
+          "summary": "Returns the total number of patterns that match in this state."
+        },
+        {
+          "name": "match_pattern",
+          "signature": "fn match_pattern(&self, cache: &Cache, id: LazyStateID, match_index: usize) -> PatternID",
+          "summary": "Returns the pattern ID corresponding to the given match index in the given state."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the memory usage, in bytes, of this lazy DFA."
+        },
+        {
+          "name": "never_match",
+          "signature": "fn never_match() -> Result<DFA, BuildError>",
+          "summary": "Create a new lazy DFA that never matches any input."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<DFA, BuildError>",
+          "summary": "Parse the given regular expression using a default configuration and return the corresponding lazy DFA."
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many<P: AsRef<str>>(patterns: &[P]) -> Result<DFA, BuildError>",
+          "summary": "Parse the given regular expressions using a default configuration and return the corresponding lazy multi-DFA."
+        },
+        {
+          "name": "next_eoi_state",
+          "signature": "fn next_eoi_state(&self, cache: &mut Cache, current: LazyStateID) -> Result<LazyStateID, CacheError>",
+          "summary": "Transitions from the current state to the next state for the special EOI symbol."
+        },
+        {
+          "name": "next_state",
+          "signature": "fn next_state(&self, cache: &mut Cache, current: LazyStateID, input: u8) -> Result<LazyStateID, CacheError>",
+          "summary": "Transitions from the current state to the next state, given the next byte of input."
+        },
+        {
+          "name": "next_state_untagged",
+          "signature": "fn next_state_untagged(&self, cache: &Cache, current: LazyStateID, input: u8) -> LazyStateID",
+          "summary": "Transitions from the current state to the next state, given the next byte of input and a state ID that is not tagged."
+        },
+        {
+          "name": "next_state_untagged_unchecked",
+          "signature": "unsafe fn next_state_untagged_unchecked(&self, cache: &Cache, current: LazyStateID, input: u8) -> LazyStateID",
+          "summary": "Transitions from the current state to the next state, eliding bounds checks, given the next byte of input and a state ID that is not tagged."
+        },
+        {
+          "name": "pattern_len",
+          "signature": "fn pattern_len(&self) -> usize",
+          "summary": "Returns the total number of patterns compiled into this lazy DFA."
+        },
+        {
+          "name": "reset_cache",
+          "signature": "fn reset_cache(&self, cache: &mut Cache)",
+          "summary": "Reset the given cache such that it can be used for searching with the this lazy DFA (and only this DFA)."
+        },
+        {
+          "name": "start_state",
+          "signature": "fn start_state(&self, cache: &mut Cache, config: &start::Config) -> Result<LazyStateID, StartError>",
+          "summary": "Return the ID of the start state for this lazy DFA for the given starting configuration."
+        },
+        {
+          "name": "start_state_forward",
+          "signature": "fn start_state_forward(&self, cache: &mut Cache, input: &Input<'_>) -> Result<LazyStateID, MatchError>",
+          "summary": "Return the ID of the start state for this lazy DFA when executing a forward search."
+        },
+        {
+          "name": "start_state_reverse",
+          "signature": "fn start_state_reverse(&self, cache: &mut Cache, input: &Input<'_>) -> Result<LazyStateID, MatchError>",
+          "summary": "Return the ID of the start state for this lazy DFA when executing a reverse search."
+        },
+        {
+          "name": "try_search_fwd",
+          "signature": "fn try_search_fwd(&self, cache: &mut Cache, input: &Input<'_>) -> Result<Option<HalfMatch>, MatchError>",
+          "summary": "Executes a forward search and returns the end position of the leftmost match that is found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_search_overlapping_fwd",
+          "signature": "fn try_search_overlapping_fwd(&self, cache: &mut Cache, input: &Input<'_>, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Executes an overlapping forward search and returns the end position of matches as they are found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_search_overlapping_rev",
+          "signature": "fn try_search_overlapping_rev(&self, cache: &mut Cache, input: &Input<'_>, state: &mut OverlappingState) -> Result<(), MatchError>",
+          "summary": "Executes a reverse overlapping search and returns the start of the position of the leftmost match that is found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_search_rev",
+          "signature": "fn try_search_rev(&self, cache: &mut Cache, input: &Input<'_>) -> Result<Option<HalfMatch>, MatchError>",
+          "summary": "Executes a reverse search and returns the start of the position of the leftmost match that is found. If no match exists, then `None` is returned."
+        },
+        {
+          "name": "try_which_overlapping_matches",
+          "signature": "fn try_which_overlapping_matches(&self, cache: &mut Cache, input: &Input<'_>, patset: &mut PatternSet) -> Result<(), MatchError>",
+          "summary": "Writes the set of patterns that match anywhere in the given search configuration to `patset`. If multiple patterns match at the same position and the underlying DFA supports overlapping matches, then all matching patterns are written to th…"
+        }
+      ]
+    },
+    {
+      "path": "regex_automata::hybrid::dfa::OverlappingState",
+      "name": "OverlappingState",
+      "kind": "struct",
+      "crate": "regex-automata",
+      "signature": "struct OverlappingState",
+      "summary": "Represents the current state of an overlapping search.",
+      "doc": "api/regex_automata.hybrid.dfa.md#overlappingstate",
+      "methods": [
+        {
+          "name": "get_match",
+          "signature": "fn get_match(&self) -> Option<HalfMatch>",
+          "summary": "Return the match result of the most recent search to execute with this state."
+        },
+        {
+          "name": "start",
+          "signature": "fn start() -> OverlappingState",
+          "summary": "Create a new overlapping state that begins at the start state of any automaton."
+        }
+      ]
+    }
+  ]
+}

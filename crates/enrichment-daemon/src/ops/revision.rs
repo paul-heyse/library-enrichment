@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use enrichment_core::{
-    canonical, clock,
+    canonical,
     evidence::{Artifact, ArtifactKind, EvidenceKind, Gap, GapReason},
     identity::{Context, Ecosystem, Release, ReleaseKey},
     policy::ArchivePolicy,
@@ -84,7 +84,8 @@ async fn acquire(
     work: &super::resolve_job::Work,
 ) -> Result<Envelope, String> {
     let mut acq = Acquisition::new(service).for_job(work);
-    let started = clock::now_rfc3339();
+    let started =
+        enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?;
     let api = service
         .config
         .producers
@@ -190,6 +191,8 @@ async fn acquire(
     let acquisition_id = uuid::Uuid::new_v4().to_string();
     let receipt = json!({"acquisition_id":acquisition_id,"repository":identity.repository,"package_subdir":identity.package_subdir,"source_revision":identity.commit,"tree":tree,"declared_project_version":declared_version,"archive_sha256":stored.sha256,"extraction":extraction,"archive_request":archive_url.as_str(),"archive_http":archive,"commit_request":commit_url.as_str(),"commit_http":commit});
     let receipt_bytes = canonical::to_canonical_string(&receipt).into_bytes();
+    let retrieved_at =
+        enrichment_core::native_time::AcquisitionTime::now().map_err(|error| error.to_string())?;
     let receipt_artifact = service
         .blobs
         .put(&receipt_bytes, |_| {
@@ -201,7 +204,7 @@ async fn acquire(
                     "{}@{}#{}",
                     identity.repository, identity.commit, identity.package_subdir
                 ),
-                &clock::now_rfc3339(),
+                retrieved_at,
             )
         })
         .map_err(|e| e.to_string())?
@@ -235,10 +238,10 @@ async fn acquire(
         "github-revision",
         "2",
         acq.semantic_inputs(),
-        started.clone(),
+        started,
         RunOutcome::Succeeded,
         Vec::new(),
-    );
+    )?;
     acq.runs
         .last_mut()
         .ok_or("revision acquisition attempt missing")?
@@ -367,7 +370,7 @@ async fn publish_rust(
             _ => EvidenceKind::Documentation,
         });
     }
-    acq.run("revision-source","5",inputs,clock::now_rfc3339(),RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")]);
+    acq.run("revision-source","5",inputs,enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?,RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")])?;
     let producers = BTreeMap::from([
         ("github-revision".into(), "2".into()),
         ("revision-source".into(), "5".into()),
@@ -398,7 +401,10 @@ async fn publish_rust(
         limitations: acq.gaps.iter().map(|g| g.detail.clone()).collect(),
     };
     let freshness = Freshness {
-        registry_checked_at: Some(clock::now_rfc3339()),
+        registry_checked_at: Some(
+            enrichment_core::native_time::AcquisitionTime::now()
+                .map_err(|error| error.to_string())?,
+        ),
         source_version_match: SourceVersionMatch::Exact,
         latest_verified: false,
     };
@@ -415,7 +421,7 @@ async fn publish_rust(
     acq.delivery_template = Some(
         Research {
             summary,
-            data: common::to_object(&data),
+            data: common::payload(&data),
             coverage,
             freshness,
             context_id: Some(context.context_id.to_string()),

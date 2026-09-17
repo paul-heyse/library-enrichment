@@ -1,21 +1,20 @@
 //! Retained, scoped executed facts. Attempt clocks, paths and protocol negotiation stay outside
 //! these semantic payloads (ADR-0026).
 use super::relational::{FactSource, SubjectRef};
+use crate::native_union::{Domain, Rule, Unit};
 use crate::{
     canonical,
     execution::{ProbeMode, ProcessEnd},
     wire::EvidenceClass,
 };
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
-)]
-#[serde(deny_unknown_fields)]
-pub struct Utf8Position {
-    pub line: u32,
-    pub byte: u32,
+crate::native_struct! {
+    #[derive(Copy, PartialOrd, Ord)]
+    pub struct Utf8Position {
+        line: u32 => Rule::Coordinate(Unit::LineZeroBased),
+        byte: u32 => Rule::Coordinate(Unit::Utf8Byte),
+    }
 }
 impl Utf8Position {
     /// Reject nonexistent lines and offsets inside a UTF-8 character. A trailing newline
@@ -29,11 +28,12 @@ impl Utf8Position {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct Utf8Range {
-    pub start: Utf8Position,
-    pub end: Utf8Position,
+crate::native_struct! {
+    #[derive(Copy)]
+    pub struct Utf8Range {
+        start: Utf8Position => Rule::Text,
+        end: Utf8Position => Rule::RangeEnd { unit: Unit::Utf8Byte, start: "start".into() },
+    }
 }
 impl Utf8Range {
     pub fn validate(self) -> Result<(), String> {
@@ -44,91 +44,27 @@ impl Utf8Range {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum SemanticMethod {
-    Hover,
-    Definition,
-    Implementation,
-    References,
-    Diagnostics,
-}
-impl SemanticMethod {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Hover => "hover",
-            Self::Definition => "definition",
-            Self::Implementation => "implementation",
-            Self::References => "references",
-            Self::Diagnostics => "diagnostics",
-        }
-    }
-    pub fn parse(s: &str) -> Option<Self> {
-        [
-            Self::Hover,
-            Self::Definition,
-            Self::Implementation,
-            Self::References,
-            Self::Diagnostics,
-        ]
-        .into_iter()
-        .find(|v| v.as_str() == s)
-    }
+crate::native_vocabulary! {
+    pub enum SemanticMethod { Hover = "hover", Definition = "definition", Implementation = "implementation", References = "references", Diagnostics = "diagnostics" }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ExecutionOutcome {
-    Results,
-    Empty,
-    Unsupported,
-    Unresolved,
-    Incomplete,
-    Failed,
-    Cancelled,
-}
-impl ExecutionOutcome {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Results => "results",
-            Self::Empty => "empty",
-            Self::Unsupported => "unsupported",
-            Self::Unresolved => "unresolved",
-            Self::Incomplete => "incomplete",
-            Self::Failed => "failed",
-            Self::Cancelled => "cancelled",
-        }
-    }
-    pub fn parse(s: &str) -> Option<Self> {
-        [
-            Self::Results,
-            Self::Empty,
-            Self::Unsupported,
-            Self::Unresolved,
-            Self::Incomplete,
-            Self::Failed,
-            Self::Cancelled,
-        ]
-        .into_iter()
-        .find(|v| v.as_str() == s)
-    }
+crate::native_vocabulary! {
+    pub enum ExecutionOutcome { Results = "results", Empty = "empty", Unsupported = "unsupported", Unresolved = "unresolved", Incomplete = "incomplete", Failed = "failed", Cancelled = "cancelled" }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum ExecutionTarget {
-    Artifact {
-        artifact_id: String,
-        range: Utf8Range,
-    },
-    External {
-        scope: String,
-        path: String,
-        limitation: String,
-    },
-    Unresolved {
-        limitation: String,
-    },
+crate::native_union! {
+    pub enum ExecutionTarget {
+        Artifact = "artifact" {
+            artifact_id: String => Rule::Reference(Domain::Artifact),
+            range: Utf8Range => Rule::Text,
+        },
+        External = "external" {
+            scope: String => Rule::NonEmpty,
+            path: String => Rule::MemberPath,
+            limitation: String => Rule::NonEmpty,
+        },
+        Unresolved = "unresolved" { limitation: String => Rule::NonEmpty },
+    }
 }
 impl ExecutionTarget {
     pub fn validate(&self) -> Result<(), String> {
@@ -162,81 +98,68 @@ impl ExecutionTarget {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct ExecutionDiagnostic {
-    pub range: Utf8Range,
-    /// LSP severity 1–4, or absent when the server did not supply one.
-    pub severity: Option<u32>,
-    pub code: Option<String>,
-    pub source: Option<String>,
-    pub message: String,
+crate::native_struct! {
+    pub struct ExecutionDiagnostic {
+        range: Utf8Range => Rule::Text,
+        /// LSP severity 1–4, or absent when the server did not supply one.
+        severity: Option<u32> => Rule::Coordinate(Unit::Ordinal),
+        code: Option<String> => Rule::Text,
+        source: Option<String> => Rule::Text,
+        message: String => Rule::Text,
+    }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct SemanticQuery {
-    pub method: SemanticMethod,
-    pub document_artifact_id: String,
-    pub position: Option<Utf8Position>,
-    pub anchor_symbol_id: Option<String>,
-    pub server: String,
-    pub outcome: ExecutionOutcome,
-    pub hover: Option<String>,
-    pub locations: Vec<ExecutionTarget>,
-    pub diagnostics: Vec<ExecutionDiagnostic>,
-    pub limitations: Vec<String>,
+crate::native_struct! {
+    pub struct SemanticQuery {
+        method: SemanticMethod => Rule::Vocabulary(SemanticMethod::VALUES.iter().map(|value| (*value).into()).collect()),
+        document_artifact_id: String => Rule::Reference(Domain::Artifact),
+        position: Option<Utf8Position> => Rule::Text,
+        anchor_symbol_id: Option<String> => Rule::Reference(Domain::Symbol),
+        server: String => Rule::NonEmpty,
+        outcome: ExecutionOutcome => Rule::Vocabulary(ExecutionOutcome::VALUES.iter().map(|value| (*value).into()).collect()),
+        hover: Option<String> => Rule::Text,
+        locations: Vec<ExecutionTarget> => Rule::Sequence,
+        diagnostics: Vec<ExecutionDiagnostic> => Rule::Sequence,
+        limitations: Vec<String> => Rule::Sequence,
+    }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeObject {
-    pub module: String,
-    pub selection: Vec<String>,
-    pub outcome: ExecutionOutcome,
-    /// The actual Python type's qualified name; not a static SymbolKind claim.
-    pub type_name: Option<String>,
-    pub signature: Option<String>,
-    pub docstring: Option<String>,
-    pub attributes: Vec<String>,
-    pub limitations: Vec<String>,
+crate::native_struct! {
+    pub struct RuntimeObject {
+        module: String => Rule::NonEmpty,
+        selection: Vec<String> => Rule::Sequence,
+        outcome: ExecutionOutcome => Rule::Vocabulary(ExecutionOutcome::VALUES.iter().map(|value| (*value).into()).collect()),
+        /// The actual Python type's qualified name, independent of static symbol kind.
+        type_name: Option<String> => Rule::Text,
+        signature: Option<String> => Rule::Text,
+        docstring: Option<String> => Rule::Text,
+        attributes: Vec<String> => Rule::Sequence,
+        limitations: Vec<String> => Rule::Sequence,
+    }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct UsageProbe {
-    pub mode: ProbeMode,
-    pub snippet_artifact_id: String,
-    pub end: ProcessEnd,
-    pub exit_code: Option<i32>,
-    pub stdout: String,
-    pub stderr: String,
+crate::native_struct! {
+    pub struct UsageProbe {
+        mode: ProbeMode => Rule::Vocabulary(ProbeMode::VALUES.iter().map(|value| (*value).into()).collect()),
+        snippet_artifact_id: String => Rule::Reference(Domain::Artifact),
+        end: ProcessEnd => Rule::Vocabulary(ProcessEnd::VALUES.iter().map(|value| (*value).into()).collect()),
+        exit_code: Option<i32> => Rule::Text,
+        stdout: String => Rule::Text,
+        stderr: String => Rule::Text,
+    }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(
-    tag = "kind",
-    content = "value",
-    rename_all = "snake_case",
-    deny_unknown_fields
-)]
-pub enum ExecutionPayload {
-    SemanticQuery(SemanticQuery),
-    RuntimeObject(RuntimeObject),
-    UsageProbe(UsageProbe),
+crate::native_payload! {
+    #[derive(JsonSchema)]
+    pub enum ExecutionPayload {
+        SemanticQuery(SemanticQuery) = "semantic_query",
+        RuntimeObject(RuntimeObject) = "runtime_object",
+        UsageProbe(UsageProbe) = "usage_probe",
+    }
 }
 impl ExecutionPayload {
-    pub fn kind(&self) -> &'static str {
-        match self {
-            Self::SemanticQuery(_) => "semantic_query",
-            Self::RuntimeObject(_) => "runtime_object",
-            Self::UsageProbe(_) => "usage_probe",
-        }
-    }
     /// Canonical result content is written before binding its source/observation identity.
     pub fn canonical_bytes(&self) -> Result<Vec<u8>, String> {
-        let value = serde_json::to_value(self).map_err(|e| e.to_string())?;
-        Ok(canonical::to_canonical_string(&value).into_bytes())
+        let values =
+            crate::native_union::NativeUnion::encode(&[self]).map_err(|error| error.to_string())?;
+        crate::native_identity::record_bytes("enrichment/execution-payload/3", values)
+            .map_err(|error| error.to_string())
     }
     pub fn validate(&self, subject: &SubjectRef) -> Result<(), String> {
         let document = match subject {
@@ -354,16 +277,16 @@ fn outcome(
     Ok(())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct ExecutionObservation {
-    pub observation_id: String,
-    pub subject: SubjectRef,
-    pub environment_id: String,
-    pub image_id: String,
-    pub containment_identity: String,
-    pub payload: ExecutionPayload,
-    pub source: FactSource,
+    observation_id: String => crate::native_union::Rule::Text,
+    subject: SubjectRef => crate::native_union::Rule::Text,
+    environment_id: String => crate::native_union::Rule::Text,
+    image_id: String => crate::native_union::Rule::Text,
+    containment_identity: String => crate::native_union::Rule::Text,
+    payload: ExecutionPayload => crate::native_union::Rule::Text,
+    source: FactSource => crate::native_union::Rule::Text,
+}
 }
 impl ExecutionObservation {
     pub fn new(

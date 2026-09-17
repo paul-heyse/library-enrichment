@@ -1,0 +1,52 @@
+# PB16 -- how does `ra_ap_hir` behave when the proc-macro server is unavailable?
+#
+# PLAN-V2 §12.3's last open question. §3.2 reserves `proc_macro_policy='server_failed'` for the
+# case; whether that value is REACHABLE -- whether the failure is recordable at all, or whether
+# it presents as silently incomplete resolutions -- is what this probe measures.
+#
+# `[workspace]` is present and empty on purpose: this crate lives inside the library-enrichment
+# repository tree but is NOT a member of its workspace, the same arrangement `delta-arrow-probe`
+# and `rustc-public-probe` use.
+#
+# No `rust-toolchain.toml`: `ra_ap_*` 0.0.352 declares `rust-version = "1.98"` and the repository
+# pins stable 1.98.1, so this builds on the ordinary toolchain. Nothing here needs nightly, which
+# is the whole reason this question is answerable without the `rustc_private` machinery PB15
+# needed.
+[workspace]
+
+[package]
+name = "ra-ap-hir-probe"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+publish = false
+
+# Pinned exactly, per the standing rule: the newest published version, named rather than floated.
+# rust-analyzer publishes its internal crates as `ra_ap_<name>` on a rolling 0.0.x line where the
+# patch number IS the identity -- 0.0.352 is a specific rust-analyzer commit, and `^0.0.352` would
+# silently mean a different compiler front end.
+[dependencies]
+hir = { package = "ra_ap_hir", version = "=0.0.352" }
+ide = { package = "ra_ap_ide", version = "=0.0.352" }
+ide_db = { package = "ra_ap_ide_db", version = "=0.0.352" }
+base_db = { package = "ra_ap_base_db", version = "=0.0.352" }
+load_cargo = { package = "ra_ap_load-cargo", version = "=0.0.352" }
+project_model = { package = "ra_ap_project_model", version = "=0.0.352" }
+proc_macro_api = { package = "ra_ap_proc_macro_api", version = "=0.0.352" }
+paths = { package = "ra_ap_paths", version = "=0.0.352" }
+vfs = { package = "ra_ap_vfs", version = "=0.0.352" }
+span = { package = "ra_ap_span", version = "=0.0.352" }
+syntax = { package = "ra_ap_syntax", version = "=0.0.352" }
+cfg = { package = "ra_ap_cfg", version = "=0.0.352" }
+
+# NOT used by this crate's own code. It is here to FORCE a resolution.
+#
+# `ra-ap-rustc_lexer` 0.166.0 carries a const assertion that `unicode-ident` and
+# `unicode-properties` were generated from the same Unicode version, and a fresh resolution off
+# crates.io fails it: `unicode-properties` 0.1.4 is Unicode 17.0.0, while `unicode-ident` 1.0.25
+# moved to 18.0.0. rust-analyzer's own lockfile pins a working pair; a consumer resolving these
+# crates independently does not inherit it. 1.0.24 is the last Unicode 17 release.
+#
+# This is a dependency-graph fact about `ra_ap_*` 0.0.352, not about this probe, and it is the
+# kind of thing that is invisible until someone builds it.
+unicode-ident = "=1.0.24"

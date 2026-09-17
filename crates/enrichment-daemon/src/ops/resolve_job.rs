@@ -2,7 +2,7 @@
 use super::{common, resolve, verify};
 use crate::{
     envelope,
-    jobs::{self, ResolutionStage},
+    jobs::{self, Resolution},
     service::Service,
 };
 use enrichment_core::{
@@ -64,7 +64,9 @@ pub(super) async fn subscribe(
 ) -> io::Result<(jobs::JobRecord, String, bool)> {
     let (record, token, new) = service
         .jobs
-        .submit(jobs::JobSpec::Resolve(request.clone()))
+        .submit(jobs::Arguments::Resolve {
+            request: request.clone(),
+        })
         .await?;
     service.single_flight.submitted(new);
     if new {
@@ -243,7 +245,7 @@ struct Receipt {
     format: String,
     job_id: String,
     request: ResolveRequest,
-    stage: ResolutionStage,
+    stage: Resolution,
     normalization: enrichment_core::producer::ProducerRun,
 }
 
@@ -251,14 +253,7 @@ struct Receipt {
 pub(super) fn prepare(
     acq: &mut resolve::Acquisition<'_>,
     metadata: &SnapshotMetadata,
-) -> Result<
-    Option<(
-        ResolutionStage,
-        enrichment_store::repository::JobCompletion,
-        crate::delivery::DeliverySlot,
-    )>,
-    String,
-> {
+) -> Result<Option<(Resolution, enrichment_store::repository::JobCompletion)>, String> {
     let Some(work) = acq.work else {
         return Ok(None);
     };
@@ -295,7 +290,7 @@ pub(super) fn prepare(
         .collect();
     input_artifact_ids.sort();
     input_artifact_ids.dedup();
-    let stage = ResolutionStage {
+    let stage = Resolution {
         release_id: metadata.release.release_id.to_string(),
         environment_id: metadata.environment.environment_id.to_string(),
         context_id: metadata.context.context_id.to_string(),
@@ -327,56 +322,16 @@ pub(super) fn prepare(
         .last_mut()
         .ok_or("normalization attempt disappeared")?
         .log = Some(log.artifact_id);
-    let state = if acq.gaps.is_empty() {
-        JobState::Succeeded
-    } else {
-        JobState::Partial
-    };
     let mut template = acq
         .delivery_template
         .clone()
         .ok_or("resolution delivery template missing before publication")?;
-    // The payload's metadata was assembled by the actual acquisition path. Late provenance is
-    // filled once, before candidate rendering; the snapshot summary is bound by the coordinator.
-    for (key, rows) in [
-        (
-            "artifacts",
-            serde_json::to_value(&acq.artifacts).map_err(|e| e.to_string())?,
-        ),
-        (
-            "producer_runs",
-            serde_json::to_value(&acq.runs).map_err(|e| e.to_string())?,
-        ),
-    ] {
-        let existing = template
-            .data
-            .entry(key)
-            .or_insert_with(|| serde_json::json!([]));
-        let entries = existing
-            .as_array_mut()
-            .ok_or("resolution provenance must be an array")?;
-        for row in rows
-            .as_array()
-            .ok_or("resolution provenance serializer returned a non-array")?
-        {
-            if key == "producer_runs"
-                && let Some(existing) = entries
-                    .iter_mut()
-                    .find(|existing| existing["attempt_id"] == row["attempt_id"])
-            {
-                // The template predates the final config/input/log fields for this attempt.
-                // It is the same attempt, so replace its provisional presentation instead of
-                // returning two contradictory records with one identity.
-                *existing = row.clone();
-            } else if !entries.contains(row) {
-                entries.push(row.clone());
-            }
-        }
-    }
-    template.data.insert(
-        "gaps".into(),
-        serde_json::to_value(&acq.gaps).map_err(|e| e.to_string())?,
-    );
+    let enrichment_core::wire::data::ToolData::ResolveLibrary(data) = &mut template.data else {
+        return Err("resolution requires a native resolve payload".into());
+    };
+    data.artifacts = acq.artifacts.clone();
+    data.producer_runs = acq.runs.clone();
+    data.gaps = acq.gaps.clone();
     for artifact in &acq.artifacts {
         if !template
             .artifacts
@@ -392,57 +347,8 @@ pub(super) fn prepare(
     }
     crate::delivery::size(&template, crate::delivery::MAX_RESULT_BYTES)
         .map_err(|e| e.to_string())?;
-    let (prepare_delivery, delivery) = crate::delivery::prepare_job(
-        acq.service.blobs.clone(),
-        move |manifest, coverage| {
-            let mut result = template.clone();
-            result.context_id = Some(manifest.context_id.to_string());
-            result.snapshot_id = Some(manifest.snapshot_id.to_string());
-            result.summary = format!(
-                "Published {} for {} {}; indexed {} definitions and {} evidence fragments. See coverage and gaps for qualified limits.",
-                manifest.snapshot_id,
-                manifest.crate_name,
-                manifest
-                    .crate_version
-                    .as_deref()
-                    .unwrap_or("selected revision"),
-                manifest.counts.definitions,
-                manifest.counts.fragments,
-            );
-            result.data.insert(
-                "snapshot".into(),
-                serde_json::to_value(enrichment_core::wire::data::SnapshotSummary {
-                    snapshot_id: manifest.snapshot_id.to_string(),
-                    normalizer_version: manifest.normalizer_version.clone(),
-                    counts: manifest.counts.clone(),
-                    published_at: manifest.published_at.clone(),
-                })?,
-            );
-            let mut coverage = coverage.clone();
-            coverage.limitations.extend(result.coverage.limitations);
-            let complete = coverage.complete();
-            result.coverage = coverage;
-            Ok(Envelope::new(
-                enrichment_core::wire::EnvelopeBody {
-                    request_id: result.request_id,
-                    summary: result.summary,
-                    context_id: result.context_id,
-                    snapshot_id: result.snapshot_id,
-                    data: result.data,
-                    coverage: result.coverage,
-                    freshness: result.freshness,
-                    evidence: result.evidence,
-                    artifacts: result.artifacts,
-                    delivery: result.delivery,
-                },
-                if !complete {
-                    Outcome::Partial { job: None }
-                } else {
-                    Outcome::Ok { job: None }
-                },
-            ))
-        },
-    );
+    let native_result =
+        enrichment_core::operation::results::ResultRecord::from_envelope(&template)?;
     Ok(Some((
         stage.clone(),
         enrichment_store::repository::JobCompletion {
@@ -453,12 +359,11 @@ pub(super) fn prepare(
                 .map_err(|e| e.to_string())?,
             job_id: work.id.clone(),
             kind: PublishedJobKind::Resolve,
-            state,
+
             attempt_id: stage.attempt_id,
             result_artifact_ids: vec![result.artifact_id],
-            prepare_delivery,
+            result: native_result,
         },
-        delivery,
     )))
 }
 
@@ -481,7 +386,7 @@ pub(super) async fn recover(
     else {
         return Ok(None);
     };
-    let jobs::JobSpec::Resolve(request) = &record.specification else {
+    let jobs::Arguments::Resolve { request } = &record.specification else {
         return Err(io::Error::other(
             "resolution publication has a different operation",
         ));
@@ -576,6 +481,17 @@ pub(super) async fn recover(
         .map_err(|e| io::Error::other(e.to_string()))?;
     Ok(Some((
         publication.state,
-        crate::delivery::recover_job(blobs, &publication)?,
+        crate::delivery::recover_job(
+            blobs,
+            &repository.runtime,
+            repository
+                .catalog
+                .pin()
+                .await
+                .map_err(io::Error::other)?
+                .as_ref(),
+            &publication,
+        )
+        .await?,
     )))
 }

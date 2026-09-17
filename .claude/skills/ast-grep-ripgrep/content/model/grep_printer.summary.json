@@ -1,0 +1,203 @@
+{
+  "module": "grep_printer::summary",
+  "crate": "grep-printer",
+  "api": "api/grep_printer.summary.md",
+  "items": [
+    {
+      "path": "grep_printer::summary::SummaryKind",
+      "name": "SummaryKind",
+      "kind": "enum",
+      "crate": "grep-printer",
+      "signature": "enum SummaryKind",
+      "summary": "The type of summary output (if any) to print.",
+      "doc": "api/grep_printer.summary.md#summarykind",
+      "aliases": [
+        "grep_printer::SummaryKind"
+      ],
+      "variants": [
+        "Count",
+        "CountMatches",
+        "PathWithMatch",
+        "PathWithoutMatch",
+        "QuietWithMatch",
+        "QuietWithoutMatch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "grep_printer::summary::Summary",
+      "name": "Summary",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct Summary<W>",
+      "summary": "The summary printer, which emits aggregate results from a search.",
+      "doc": "api/grep_printer.summary.md#summary",
+      "aliases": [
+        "grep_printer::Summary"
+      ],
+      "methods": [
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Return a mutable reference to the underlying writer."
+        },
+        {
+          "name": "has_written",
+          "signature": "fn has_written(&self) -> bool",
+          "summary": "Returns true if and only if this printer has written at least one byte to the underlying writer during any of the previous searches."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Consume this printer and return back ownership of the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(wtr: W) -> Summary<W>",
+          "summary": "Return a summary printer with a default configuration that writes matches to the given writer."
+        },
+        {
+          "name": "new_no_color",
+          "signature": "fn new_no_color(wtr: W) -> Summary<NoColor<W>>",
+          "summary": "Return a summary printer with a default configuration that writes matches to the given writer."
+        },
+        {
+          "name": "sink",
+          "signature": "fn sink<'s, M: Matcher>(&'s mut self, matcher: M) -> SummarySink<'static, 's, M, W>",
+          "summary": "Return an implementation of `Sink` for the summary printer."
+        },
+        {
+          "name": "sink_with_path",
+          "signature": "fn sink_with_path<'p, 's, M, P>(&'s mut self, matcher: M, path: &'p P) -> SummarySink<'p, 's, M, W> where M: Matcher, P: ?Sized + AsRef<Path>",
+          "summary": "Return an implementation of `Sink` associated with a file path."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::summary::SummaryBuilder",
+      "name": "SummaryBuilder",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct SummaryBuilder",
+      "summary": "A builder for summary printer.",
+      "doc": "api/grep_printer.summary.md#summarybuilder",
+      "aliases": [
+        "grep_printer::SummaryBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<W: WriteColor>(&self, wtr: W) -> Summary<W>",
+          "summary": "Build a printer using any implementation of `termcolor::WriteColor`."
+        },
+        {
+          "name": "build_no_color",
+          "signature": "fn build_no_color<W: io::Write>(&self, wtr: W) -> Summary<NoColor<W>>",
+          "summary": "Build a printer from any implementation of `io::Write` and never emit any colors, regardless of the user color specification settings."
+        },
+        {
+          "name": "color_specs",
+          "signature": "fn color_specs(&mut self, specs: ColorSpecs) -> &mut SummaryBuilder",
+          "summary": "Set the user color specifications to use for coloring in this printer."
+        },
+        {
+          "name": "exclude_zero",
+          "signature": "fn exclude_zero(&mut self, yes: bool) -> &mut SummaryBuilder",
+          "summary": "Exclude count-related summary results with no matches."
+        },
+        {
+          "name": "hyperlink",
+          "signature": "fn hyperlink(&mut self, config: HyperlinkConfig) -> &mut SummaryBuilder",
+          "summary": "Set the configuration to use for hyperlinks output by this printer."
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&mut self, kind: SummaryKind) -> &mut SummaryBuilder",
+          "summary": "Set the output mode for this printer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> SummaryBuilder",
+          "summary": "Return a new builder for configuring the summary printer."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&mut self, yes: bool) -> &mut SummaryBuilder",
+          "summary": "When enabled, if a path was given to the printer, then it is shown in the output (either as a heading or as a prefix to each matching line). When disabled, then no paths are ever included in the output even when a path is provided to the p…"
+        },
+        {
+          "name": "path_terminator",
+          "signature": "fn path_terminator(&mut self, terminator: Option<u8>) -> &mut SummaryBuilder",
+          "summary": "Set the path terminator used."
+        },
+        {
+          "name": "separator_field",
+          "signature": "fn separator_field(&mut self, sep: Vec<u8>) -> &mut SummaryBuilder",
+          "summary": "Set the separator used between fields for the `Count` and `CountMatches` modes."
+        },
+        {
+          "name": "separator_path",
+          "signature": "fn separator_path(&mut self, sep: Option<u8>) -> &mut SummaryBuilder",
+          "summary": "Set the path separator used when printing file paths."
+        },
+        {
+          "name": "stats",
+          "signature": "fn stats(&mut self, yes: bool) -> &mut SummaryBuilder",
+          "summary": "Enable the gathering of various aggregate statistics."
+        }
+      ]
+    },
+    {
+      "path": "grep_printer::summary::SummarySink",
+      "name": "SummarySink",
+      "kind": "struct",
+      "crate": "grep-printer",
+      "signature": "struct SummarySink<'p, 's, M: Matcher, W>",
+      "summary": "An implementation of `Sink` associated with a matcher and an optional file path for the summary printer.",
+      "doc": "api/grep_printer.summary.md#summarysink",
+      "aliases": [
+        "grep_printer::SummarySink"
+      ],
+      "implements": [
+        "grep_searcher::sink::Sink"
+      ],
+      "methods": [
+        {
+          "name": "begin",
+          "signature": "fn begin(&mut self, _searcher: &Searcher) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "binary_byte_offset",
+          "signature": "fn binary_byte_offset(&self) -> Option<u64>",
+          "summary": "If binary data was found in the previous search, this returns the offset at which the binary data was first detected."
+        },
+        {
+          "name": "binary_data",
+          "signature": "fn binary_data(&mut self, searcher: &Searcher, binary_byte_offset: u64) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self, searcher: &Searcher, finish: &SinkFinish) -> Result<(), io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "has_match",
+          "signature": "fn has_match(&self) -> bool",
+          "summary": "Returns true if and only if this printer received a match in the previous search."
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched(&mut self, searcher: &Searcher, mat: &SinkMatch<'_>) -> Result<bool, io::Error>",
+          "via_trait": "grep_searcher::sink::Sink"
+        },
+        {
+          "name": "stats",
+          "signature": "fn stats(&self) -> Option<&Stats>",
+          "summary": "Return a reference to the stats produced by the printer for all searches executed on this sink."
+        }
+      ]
+    }
+  ]
+}

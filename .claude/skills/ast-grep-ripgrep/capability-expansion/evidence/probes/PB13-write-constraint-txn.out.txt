@@ -1,0 +1,29 @@
+PB13 — write and constraint: one transaction, or two?
+
+  constraint under test: `off >= 0`
+  conforming rows: off = 10, 20      violating row: off = -5
+
+  A  write CONFORMING then constraint 
+      after create              version=0 files=0 constraints=none
+      after write (input_plan)  version=1 files=1 constraints=none   OK
+      after add constraint      version=2 files=1 constraints=off_nonneg=off >= 0   OK
+
+  B  write VIOLATING  then constraint 
+      after create              version=0 files=0 constraints=none
+      after write (input_plan)  version=1 files=1 constraints=none   OK
+      after add constraint      version=1 files=1 constraints=none   ERR: Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+
+  C  constraint then write VIOLATING  
+      after create              version=0 files=0 constraints=none
+      after add constraint      version=1 files=0 constraints=off_nonneg=off >= 0   OK
+      after write (input_plan)  version=1 files=0 constraints=off_nonneg=off >= 0   ERR: Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+
+  D  constraint then write CONFORMING 
+      after create              version=0 files=0 constraints=none
+      after add constraint      version=1 files=0 constraints=off_nonneg=off >= 0   OK
+      after write (input_plan)  version=2 files=1 constraints=off_nonneg=off >= 0   OK
+
+  Reading the table: each successful operation advances `version` by one if it is
+  its own commit. A constraint add that FAILS should leave version and files as
+  they were -- if it instead removed the data, arm B would show files dropping.
+

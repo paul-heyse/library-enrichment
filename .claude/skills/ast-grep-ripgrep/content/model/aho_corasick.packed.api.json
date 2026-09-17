@@ -1,0 +1,183 @@
+{
+  "module": "aho_corasick::packed::api",
+  "crate": "aho-corasick",
+  "api": "api/aho_corasick.packed.api.md",
+  "items": [
+    {
+      "path": "aho_corasick::packed::api::MatchKind",
+      "name": "MatchKind",
+      "kind": "enum",
+      "crate": "aho-corasick",
+      "signature": "enum MatchKind",
+      "summary": "A knob for controlling the match semantics of a packed multiple string searcher.",
+      "doc": "api/aho_corasick.packed.api.md#matchkind",
+      "aliases": [
+        "aho_corasick::packed::MatchKind"
+      ],
+      "variants": [
+        "LeftmostFirst",
+        "LeftmostLongest"
+      ],
+      "methods": []
+    },
+    {
+      "path": "aho_corasick::packed::api::Builder",
+      "name": "Builder",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct Builder",
+      "summary": "A builder for constructing a packed searcher from a collection of patterns.",
+      "doc": "api/aho_corasick.packed.api.md#builder",
+      "aliases": [
+        "aho_corasick::packed::Builder"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add<P: AsRef<[u8]>>(&mut self, pattern: P) -> &mut Builder",
+          "summary": "Add the given pattern to this set to match."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Option<Searcher>",
+          "summary": "Build a searcher from the patterns added to this builder so far."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<I, P>(&mut self, patterns: I) -> &mut Builder where I: IntoIterator<Item = P>, P: AsRef<[u8]>",
+          "summary": "Add the given iterator of patterns to this set to match."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of patterns added to this builder."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> usize",
+          "summary": "Returns the length, in bytes, of the shortest pattern added."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Builder",
+          "summary": "Create a new builder for constructing a multi-pattern searcher. This constructor uses the default configuration."
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::packed::api::Config",
+      "name": "Config",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct Config",
+      "summary": "The configuration for a packed multiple pattern searcher.",
+      "doc": "api/aho_corasick.packed.api.md#config",
+      "aliases": [
+        "aho_corasick::packed::Config"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder(&self) -> Builder",
+          "summary": "Create a packed builder from this configuration. The builder can be used to accumulate patterns and create a [`Searcher`] from them."
+        },
+        {
+          "name": "heuristic_pattern_limits",
+          "signature": "fn heuristic_pattern_limits(&mut self, yes: bool) -> &mut Config",
+          "summary": "Request that heuristic limitations on the number of patterns be employed. This useful to disable for benchmarking where one wants to explore how Teddy performs on large number of patterns even if the heuristics would otherwise refuse const…"
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(&mut self, kind: MatchKind) -> &mut Config",
+          "summary": "Set the match semantics for this configuration."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Config",
+          "summary": "Create a new default configuration. A default configuration uses leftmost-first match semantics."
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::packed::api::FindIter",
+      "name": "FindIter",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct FindIter<'s, 'h>",
+      "summary": "An iterator over non-overlapping matches from a packed searcher.",
+      "doc": "api/aho_corasick.packed.api.md#finditer",
+      "aliases": [
+        "aho_corasick::packed::FindIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Match>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "aho_corasick::packed::api::Searcher",
+      "name": "Searcher",
+      "kind": "struct",
+      "crate": "aho-corasick",
+      "signature": "struct Searcher",
+      "summary": "A packed searcher for quickly finding occurrences of multiple patterns.",
+      "doc": "api/aho_corasick.packed.api.md#searcher",
+      "aliases": [
+        "aho_corasick::packed::Searcher"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> Builder",
+          "summary": "A convenience function for calling `Builder::new()`."
+        },
+        {
+          "name": "config",
+          "signature": "fn config() -> Config",
+          "summary": "A convenience function for calling `Config::new()`."
+        },
+        {
+          "name": "find",
+          "signature": "fn find<B: AsRef<[u8]>>(&self, haystack: B) -> Option<Match>",
+          "summary": "Return the first occurrence of any of the patterns in this searcher, according to its match semantics, in the given haystack. The `Match` returned will include the identifier of the pattern that matched, which corresponds to the index of t…"
+        },
+        {
+          "name": "find_in",
+          "signature": "fn find_in<B: AsRef<[u8]>>(&self, haystack: B, span: Span) -> Option<Match>",
+          "summary": "Return the first occurrence of any of the patterns in this searcher, according to its match semantics, in the given haystack starting from the given position."
+        },
+        {
+          "name": "find_iter",
+          "signature": "fn find_iter<'a, 'b, B: ?Sized + AsRef<[u8]>>(&'a self, haystack: &'b B) -> FindIter<'a, 'b>",
+          "summary": "Return an iterator of non-overlapping occurrences of the patterns in this searcher, according to its match semantics, in the given haystack."
+        },
+        {
+          "name": "match_kind",
+          "signature": "fn match_kind(&self) -> &MatchKind",
+          "summary": "Returns the match kind used by this packed searcher."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the approximate total amount of heap used by this searcher, in units of bytes."
+        },
+        {
+          "name": "minimum_len",
+          "signature": "fn minimum_len(&self) -> usize",
+          "summary": "Returns the minimum length of a haystack that is required in order for packed searching to be effective."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<I, P>(patterns: I) -> Option<Searcher> where I: IntoIterator<Item = P>, P: AsRef<[u8]>",
+          "summary": "A convenience function for constructing a searcher from an iterator of things that can be converted to a `&[u8]`."
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,8 @@
 /// The wire schema version carried by every tool response.
 ///
 /// The native runtime epoch exposes complete artifact receipts and one current contract.
+extern crate self as enrichment_core;
+
 pub const SCHEMA_VERSION: &str = "3.0";
 
 /// Canonical snapshot storage, independent of the frozen response envelope.
@@ -17,7 +19,6 @@ pub const SNAPSHOT_SCHEMA_VERSION: &str = evidence::snapshot::FORMAT;
 
 pub mod archive;
 pub mod canonical;
-pub mod clock;
 pub mod compare;
 pub mod config;
 pub mod evidence;
@@ -45,9 +46,20 @@ mod tests {
 }
 pub mod capsule_protocol;
 
+pub mod native_analysis;
+pub mod native_collections;
 /// Shared Arrow kernels consumed by native DataFusion identity plans.
 pub mod native_identity;
+pub mod native_json;
 pub mod native_key;
+pub mod native_payload;
+pub mod native_predicate;
+pub mod native_record;
+pub mod native_schema;
+pub mod native_text;
+pub mod native_time;
+pub mod native_types;
+pub mod native_union;
 
 pub mod native_url;
 /// Library-format kernels for optimizer-visible native version operations.

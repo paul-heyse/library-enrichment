@@ -1,0 +1,230 @@
+{
+  "module": "grep_regex::matcher",
+  "crate": "grep-regex",
+  "api": "api/grep_regex.matcher.md",
+  "items": [
+    {
+      "path": "grep_regex::matcher::RegexCaptures",
+      "name": "RegexCaptures",
+      "kind": "struct",
+      "crate": "grep-regex",
+      "signature": "struct RegexCaptures",
+      "summary": "Represents the match offsets of each capturing group in a match.",
+      "doc": "api/grep_regex.matcher.md#regexcaptures",
+      "aliases": [
+        "grep_regex::RegexCaptures"
+      ],
+      "implements": [
+        "grep_matcher::Captures"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, i: usize) -> Option<Match>",
+          "via_trait": "grep_matcher::Captures"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "grep_matcher::Captures"
+        }
+      ]
+    },
+    {
+      "path": "grep_regex::matcher::RegexMatcher",
+      "name": "RegexMatcher",
+      "kind": "struct",
+      "crate": "grep-regex",
+      "signature": "struct RegexMatcher",
+      "summary": "An implementation of the `Matcher` trait using Rust's standard regex library.",
+      "doc": "api/grep_regex.matcher.md#regexmatcher",
+      "aliases": [
+        "grep_regex::RegexMatcher"
+      ],
+      "implements": [
+        "grep_matcher::Matcher"
+      ],
+      "methods": [
+        {
+          "name": "capture_count",
+          "signature": "fn capture_count(&self) -> usize",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "capture_index",
+          "signature": "fn capture_index(&self, name: &str) -> Option<usize>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "captures_at",
+          "signature": "fn captures_at(&self, haystack: &[u8], at: usize, caps: &mut RegexCaptures) -> Result<bool, NoError>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "find_at",
+          "signature": "fn find_at(&self, haystack: &[u8], at: usize) -> Result<Option<Match>, NoError>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "find_candidate_line",
+          "signature": "fn find_candidate_line(&self, haystack: &[u8]) -> Result<Option<LineMatchKind>, NoError>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(&self) -> Option<LineTerminator>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: &str) -> Result<RegexMatcher, Error>",
+          "summary": "Create a new matcher from the given pattern using the default configuration."
+        },
+        {
+          "name": "new_captures",
+          "signature": "fn new_captures(&self) -> Result<RegexCaptures, NoError>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "new_line_matcher",
+          "signature": "fn new_line_matcher(pattern: &str) -> Result<RegexMatcher, Error>",
+          "summary": "Create a new matcher from the given pattern using the default configuration, but matches lines terminated by `\\n`."
+        },
+        {
+          "name": "non_matching_bytes",
+          "signature": "fn non_matching_bytes(&self) -> Option<&ByteSet>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "shortest_match_at",
+          "signature": "fn shortest_match_at(&self, haystack: &[u8], at: usize) -> Result<Option<usize>, NoError>",
+          "via_trait": "grep_matcher::Matcher"
+        },
+        {
+          "name": "try_find_iter",
+          "signature": "fn try_find_iter<F, E>(&self, haystack: &[u8], matched: F) -> Result<Result<(), E>, NoError> where F: FnMut(Match) -> Result<bool, E>",
+          "via_trait": "grep_matcher::Matcher"
+        }
+      ]
+    },
+    {
+      "path": "grep_regex::matcher::RegexMatcherBuilder",
+      "name": "RegexMatcherBuilder",
+      "kind": "struct",
+      "crate": "grep-regex",
+      "signature": "struct RegexMatcherBuilder",
+      "summary": "A builder for constructing a `Matcher` using regular expressions.",
+      "doc": "api/grep_regex.matcher.md#regexmatcherbuilder",
+      "aliases": [
+        "grep_regex::RegexMatcherBuilder"
+      ],
+      "methods": [
+        {
+          "name": "ban_byte",
+          "signature": "fn ban_byte(&mut self, byte: Option<u8>) -> &mut RegexMatcherBuilder",
+          "summary": "Ban a byte from occurring in a regular expression pattern."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self, pattern: &str) -> Result<RegexMatcher, Error>",
+          "summary": "Build a new matcher using the current configuration for the provided pattern."
+        },
+        {
+          "name": "build_literals",
+          "signature": "fn build_literals<B: AsRef<str>>(&self, literals: &[B]) -> Result<RegexMatcher, Error>",
+          "summary": "Build a new matcher from a plain alternation of literals."
+        },
+        {
+          "name": "build_many",
+          "signature": "fn build_many<P: AsRef<str>>(&self, patterns: &[P]) -> Result<RegexMatcher, Error>",
+          "summary": "Build a new matcher using the current configuration for the provided patterns. The resulting matcher behaves as if all of the patterns given are joined together into a single alternation. That is, it reports matches where at least one of t…"
+        },
+        {
+          "name": "case_insensitive",
+          "signature": "fn case_insensitive(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the case insensitive (`i`) flag."
+        },
+        {
+          "name": "case_smart",
+          "signature": "fn case_smart(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether to enable \"smart case\" or not."
+        },
+        {
+          "name": "crlf",
+          "signature": "fn crlf(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the line terminator to `\\r\\n` and enable CRLF matching for `$` in regex patterns."
+        },
+        {
+          "name": "dfa_size_limit",
+          "signature": "fn dfa_size_limit(&mut self, bytes: usize) -> &mut RegexMatcherBuilder",
+          "summary": "Set the approximate size of the cache used by the DFA."
+        },
+        {
+          "name": "dot_matches_new_line",
+          "signature": "fn dot_matches_new_line(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the any character (`s`) flag, where in `.` matches anything when `s` is set and matches anything except for new line when it is not set (the default)."
+        },
+        {
+          "name": "fixed_strings",
+          "signature": "fn fixed_strings(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether the patterns should be treated as literal strings or not. When this is active, all characters, including ones that would normally be special regex meta characters, are matched literally."
+        },
+        {
+          "name": "ignore_whitespace",
+          "signature": "fn ignore_whitespace(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the ignore whitespace (`x`) flag."
+        },
+        {
+          "name": "line_terminator",
+          "signature": "fn line_terminator(&mut self, line_term: Option<u8>) -> &mut RegexMatcherBuilder",
+          "summary": "Set an ASCII line terminator for the matcher."
+        },
+        {
+          "name": "multi_line",
+          "signature": "fn multi_line(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the multi-line matching (`m`) flag."
+        },
+        {
+          "name": "nest_limit",
+          "signature": "fn nest_limit(&mut self, limit: u32) -> &mut RegexMatcherBuilder",
+          "summary": "Set the nesting limit for this parser."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> RegexMatcherBuilder",
+          "summary": "Create a new builder for configuring a regex matcher."
+        },
+        {
+          "name": "octal",
+          "signature": "fn octal(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether to support octal syntax or not."
+        },
+        {
+          "name": "size_limit",
+          "signature": "fn size_limit(&mut self, bytes: usize) -> &mut RegexMatcherBuilder",
+          "summary": "Set the approximate size limit of the compiled regular expression."
+        },
+        {
+          "name": "swap_greed",
+          "signature": "fn swap_greed(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the greedy swap (`U`) flag."
+        },
+        {
+          "name": "unicode",
+          "signature": "fn unicode(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Set the value for the Unicode (`u`) flag."
+        },
+        {
+          "name": "whole_line",
+          "signature": "fn whole_line(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Whether each pattern should match the entire line or not. This is equivalent to surrounding the pattern with `(?m:^)` and `(?m:$)`."
+        },
+        {
+          "name": "word",
+          "signature": "fn word(&mut self, yes: bool) -> &mut RegexMatcherBuilder",
+          "summary": "Require that all matches occur on word boundaries."
+        }
+      ]
+    }
+  ]
+}

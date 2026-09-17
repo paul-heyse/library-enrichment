@@ -1,21 +1,22 @@
 //! Typed catalog records. Visibility is determined by one committed catalog generation.
 
 use crate::identity::{ContextId, SnapshotId};
+use crate::native_union::Rule;
 use crate::producer::ProducerRun;
 use serde::{Deserialize, Serialize};
 
+crate::native_struct! {
 /// A derived comparison is owned by its request and exact input pair, never a producer run.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct ComparisonPublication {
-    pub job_id: String,
-    pub request_digest: String,
-    pub before_context_id: ContextId,
-    pub before_snapshot_id: SnapshotId,
-    pub after_context_id: ContextId,
-    pub after_snapshot_id: SnapshotId,
-    pub state: crate::wire::JobState,
-    pub delivery: super::Artifact,
+    job_id: String => Rule::NonEmpty,
+    request_digest: String => Rule::Sha256,
+    before_context_id: ContextId => Rule::Text,
+    before_snapshot_id: SnapshotId => Rule::Text,
+    after_context_id: ContextId => Rule::Text,
+    after_snapshot_id: SnapshotId => Rule::Text,
+    state: crate::wire::JobState => Rule::Text,
+    delivery: super::Artifact => Rule::Text,
+}
 }
 
 impl ComparisonPublication {
@@ -52,9 +53,8 @@ fn validate_delivery(delivery: &super::Artifact) -> Result<(), String> {
         || delivery.size_bytes == 0
         || delivery.size_bytes > 32 * 1024 * 1024
         || delivery.kind != super::ArtifactKind::Other
-        || delivery.media_type != "application/json"
-        || delivery.source_uri != "service:job-delivery/3"
-        || delivery.retrieved_at.is_empty()
+        || delivery.media_type != crate::operation::results::MEDIA_TYPE
+        || delivery.source_uri != crate::operation::results::JOB_URI
         || delivery.final_url.is_some()
         || delivery.etag.is_some()
         || delivery.last_modified.is_some()
@@ -65,28 +65,24 @@ fn validate_delivery(delivery: &super::Artifact) -> Result<(), String> {
     Ok(())
 }
 
+crate::native_struct! {
 /// A committed job result is recovered through native catalog records, never by rerunning it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct JobPublication {
-    pub job_id: String,
-    pub context_id: ContextId,
-    pub snapshot_id: SnapshotId,
-    pub kind: PublishedJobKind,
-    pub state: crate::wire::JobState,
-    pub attempt_id: String,
-    pub result_artifact_ids: Vec<String>,
+    job_id: String => Rule::NonEmpty,
+    context_id: ContextId => Rule::Text,
+    snapshot_id: SnapshotId => Rule::Text,
+    kind: PublishedJobKind => Rule::Text,
+    state: crate::wire::JobState => Rule::Text,
+    attempt_id: String => Rule::NonEmpty,
+    result_artifact_ids: Vec<String> => Rule::Set,
     /// Complete bounded presentation, admitted before this catalog publication.
     /// It is not a producer input and does not enter evidence identity.
-    pub delivery: super::Artifact,
+    delivery: super::Artifact => Rule::Text,
+}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum PublishedJobKind {
-    Verify,
-    Inspect,
-    Resolve,
+crate::native_vocabulary! {
+pub enum PublishedJobKind { Verify = "verify", Inspect = "inspect", Resolve = "resolve" }
 }
 
 impl JobPublication {
@@ -122,13 +118,13 @@ impl JobPublication {
     }
 }
 
+crate::native_struct! {
 /// An immutable snapshot manifest admitted for a particular context.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct SnapshotEntry {
-    pub snapshot_id: SnapshotId,
-    pub context_id: ContextId,
-    pub publication: super::snapshot::EvidenceManifest,
+    snapshot_id: SnapshotId => crate::native_union::Rule::Text,
+    context_id: ContextId => crate::native_union::Rule::Text,
+    publication: super::snapshot::EvidenceManifest => crate::native_union::Rule::Text,
+}
 }
 
 impl SnapshotEntry {

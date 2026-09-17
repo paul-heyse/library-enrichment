@@ -11,7 +11,7 @@ use serde::Serialize;
 use tokio::process::Command;
 
 pub const SUBDIRECTORIES: &[&str] = &[
-    "s", "r", "l", "v", "n", "h", "t", "c", "f", "d", "x", "home", "owned",
+    "s", "r", "l", "v", "n", "h", "t", "c", "f", "d", "x", "home",
 ];
 
 #[derive(Debug, Clone, Serialize)]
@@ -221,11 +221,13 @@ pub struct QualificationProbes {
 
 pub async fn probe(
     config: &Execution,
-    cache: &Path,
+    paths: &enrichment_store::StatePaths,
     ecosystem: &str,
     image: &str,
 ) -> io::Result<QualificationProbes> {
     use std::sync::{Arc, atomic::AtomicBool};
+    let cache = &paths.cache_root;
+    let _data = enrichment_store::state::exclusive(&paths.data_root, ".daemon.lock")?;
     let probes = probes()
         .remove(ecosystem)
         .ok_or_else(|| io::Error::other("unknown producer ecosystem"))?;
@@ -235,12 +237,15 @@ pub async fn probe(
         config.cleanup_deadline_seconds,
         1,
     );
-    let mut runner = super::Runner::new(config, cache, supervisor.clone())?;
     let runtime = enrichment_store::runtime::QueryRuntime::new(
         &cache.join("qualification-spill"),
         Default::default(),
     )
     .map_err(io::Error::other)?;
+    let control = enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?;
+    let ownership =
+        enrichment_store::physical_ownership::OwnershipStore::new(control, runtime.clone(), cache)?;
+    let mut runner = super::Runner::new(config, cache, supervisor.clone(), ownership.clone())?;
     let mut commands: Vec<_> = probes.iter().map(|probe| probe.argv.clone()).collect();
     commands.push(vec![
         "/bin/sh".into(),
@@ -252,8 +257,8 @@ pub async fn probe(
         image: image.into(),
         commands,
     }));
-    runner.recover_owned()?;
-    super::budget::recover_orphans(cache)?;
+    runner.recover_owned().await?;
+    super::budget::recover_orphans(&ownership).await?;
     let runner = runner.admitted().await?;
     let lease = runner
         .lease

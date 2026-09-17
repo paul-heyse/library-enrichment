@@ -7,8 +7,8 @@ use arrow::{
 };
 use std::{collections::HashMap, io::Write, sync::Arc};
 
-pub const VERSION: &str = "python-arrow-facts/1";
-pub const PROTOCOL: &str = "2.0";
+pub const VERSION: &str = "python-arrow-facts/2";
+pub const PROTOCOL: &str = "3.0";
 pub const ENCODER: &str = "25.0.1";
 pub const GRIFFE: &str = "2.3.0";
 pub const MAX_BYTES: u64 = 64 * 1024 * 1024;
@@ -20,42 +20,14 @@ pub const MAX_FILES: usize = 65_536;
 fn text(name: &str, nullable: bool) -> Field {
     Field::new(name, DataType::Utf8, nullable)
 }
-fn strings(name: &str) -> Field {
-    Field::new(name, DataType::List(Arc::new(text("item", false))), false)
-}
 pub fn schema() -> SchemaRef {
-    let publicness = Field::new(
-        "publicness",
-        DataType::Struct(
-            vec![
-                Field::new("exported", DataType::Boolean, true),
-                Field::new("underscore", DataType::Boolean, false),
-                Field::new("reexport", DataType::Boolean, false),
-                Field::new("docstring", DataType::Boolean, false),
-                strings("declared_exports"),
-                strings("unresolved_exports"),
-            ]
-            .into(),
-        ),
-        false,
-    );
     let observation = Field::new(
         "observation",
         DataType::Struct(
-            vec![
-                text("path", false),
-                text("kind", false),
-                text("origin", false),
-                text("file", false),
-                Field::new("line", DataType::UInt32, true),
-                text("signature", true),
-                strings("overloads"),
-                text("docs", true),
-                text("alias_target", true),
-                strings("bases"),
-                publicness,
-            ]
-            .into(),
+            <super::Observation as crate::native_union::NativeStruct>::fields()
+                .iter()
+                .map(|field| crate::native_schema::producer_field(field))
+                .collect(),
         ),
         true,
     );

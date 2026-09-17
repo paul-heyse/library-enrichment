@@ -1,6 +1,6 @@
 //! Native process eligibility and exact durable operation witnesses under a live command grant.
 use crate::{
-    control_jobs::{Claim, Grant, JobStore, encode},
+    control_jobs::{Claim, Grant, JobStore},
     execution_policy::{Capture, Policy},
     immutable_definitions::{Binding, Definitions},
     native_delta::DeltaStore,
@@ -28,20 +28,7 @@ pub struct Witness {
     pub environment_id: Option<String>,
     pub snapshot_id: Option<String>,
 }
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct Effect {
-    grant_id: String,
-    job_id: String,
-    policy_id: String,
-    profile: String,
-    ecosystem: String,
-    environment_id: Option<String>,
-    snapshot_id: Option<String>,
-    image_id: String,
-    acquisition: bool,
-    operation_id: String,
-    operation_binding: Binding,
-}
+use enrichment_core::operation::jobs::Effect;
 #[derive(Debug, Clone)]
 pub struct ProcessGrant {
     parent: Grant,
@@ -83,8 +70,8 @@ pub(crate) async fn admit(
         "process_routes",
         policy.route_plan().await?.into_view(),
     )?;
-    let requested_config = Key::ExecutionConfiguration.value(facts.execution)?;
-    let selected_config = Key::ExecutionConfiguration.value(&jobs.config().execution)?;
+    let requested_config = Key::ExecutionConfiguration.record(facts.execution)?;
+    let selected_config = Key::ExecutionConfiguration.record(&jobs.config().execution)?;
     let decisions = session.sql(r#"
         SELECT c.grant_id, c.job_id, c.policy_id, c.ecosystem, c.environment_id,
           c.snapshot_id, r.profile, r.image_id,
@@ -93,8 +80,8 @@ pub(crate) async fn admit(
                WHEN r.image_id<>$4 THEN 'contained_image_mismatch'
                WHEN c.profile<>'static' AND c.image_id<>r.image_id THEN 'claimed_image_changed'
                WHEN $6<>$7 THEN 'process_containment_binding_mismatch'
-               WHEN c.profile='static' AND NOT coalesce(d.arguments.resolve.allow_local_build,false) THEN 'build_not_requested'
-               WHEN c.profile='static' AND d.arguments.resolve.freshness='offline' THEN 'offline_build_forbidden'
+               WHEN c.profile='static' AND NOT coalesce(d.arguments.resolve.request.allow_local_build,false) THEN 'build_not_requested'
+               WHEN c.profile='static' AND d.arguments.resolve.request.freshness='offline' THEN 'offline_build_forbidden'
                WHEN $5='language_server' AND d.arguments.inspect IS NULL THEN 'language_server_not_requested'
           END AS refusal
         FROM state.records.claims c JOIN state.records.commands d ON c.job_id=d.job_id
@@ -138,7 +125,8 @@ pub(crate) async fn admit(
         .read(&operation_id, &operation_binding)
         .await?
         .drop_columns(&["operation_id"])?;
-    let operation: Operation = crate::registry::rows(runtime, retained, 1)
+    let operation: Operation = runtime
+        .records(retained, 1)
         .await?
         .pop()
         .ok_or_else(|| invalid("retained process operation missing"))?;
@@ -147,22 +135,19 @@ pub(crate) async fn admit(
         .drop_columns(&["refusal"])?
         .with_column("acquisition", lit(facts.acquisition))?
         .with_column("operation_id", lit(&operation_id))?;
-    #[derive(Serialize)]
-    struct Input<'a> {
-        operation_binding: &'a Binding,
-    }
-    let binding = session.read_batch(encode(
-        std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
-            arrow::datatypes::Field::new(
-                "operation_binding",
-                crate::immutable_definitions::binding_type(),
-                false,
-            ),
-        ])),
-        &[Input {
-            operation_binding: &operation_binding,
-        }],
-    )?)?;
+    use enrichment_core::native_union::NativeStruct;
+    let binding = session
+        .read_batch(Binding::batch(std::slice::from_ref(&operation_binding))?)?
+        .select(vec![
+            enrichment_core::evidence::arrow_model::expressions::record(
+                &enrichment_core::operation::definition_binding_type(),
+                &Binding::fields()
+                    .iter()
+                    .map(|field| (field.name().as_str(), col(field.name())))
+                    .collect::<Vec<_>>(),
+            )?
+            .alias("operation_binding"),
+        ])?;
     let selected = selected.join(
         binding,
         datafusion::logical_expr::JoinType::Inner,
@@ -170,7 +155,8 @@ pub(crate) async fn admit(
         &[],
         None,
     )?;
-    let effect: Effect = crate::registry::rows(runtime, selected, 1)
+    let effect: Effect = runtime
+        .records(selected, 1)
         .await?
         .pop()
         .ok_or_else(|| invalid("process effect projection missing"))?;
@@ -181,7 +167,7 @@ pub(crate) async fn admit(
         Key::ProcessEffect,
         "effect_id",
     );
-    let effect_id = Key::ProcessEffect.value(&effect)?;
+    let effect_id = Key::ProcessEffect.record(&effect)?;
     let effect_binding = definitions.retain(&effect).await?;
     grant.check().await?;
     Ok(ProcessGrant {

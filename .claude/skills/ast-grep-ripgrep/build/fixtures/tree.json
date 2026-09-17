@@ -1,0 +1,47 @@
+{
+  "_comment": [
+    "The probe fixture tree, stored as a manifest rather than as real files.",
+    "",
+    "Two reasons it is not committed as a directory. A fixture named `.gitignore` or `.ignore`",
+    "would be interpreted by the *host* repository's git and by ripgrep's own ignore stack while",
+    "scanning this skill, quietly changing what an unrelated search in the host repo sees. And a",
+    "hidden fixture file is exactly the thing several probes need to prove is skipped by default,",
+    "which cannot be demonstrated if the checkout has already been filtered.",
+    "",
+    "probes.py materialises this into a scratch directory, runs against it, and discards it.",
+    "Content is byte-exact and deterministic: the recorded observations are only reproducible if",
+    "the haystack is."
+  ],
+  "files": {
+    "src/main.rs": "fn main() {\n    println!(\"hello\");\n    helper(1);\n}\n\nfn helper(x: i32) -> i32 {\n    // helper is called above\n    x + 1\n}\n",
+    "src/lib.rs": "pub struct Parser {\n    depth: usize,\n}\n\nimpl Parser {\n    pub fn new() -> Self {\n        Parser { depth: 0 }\n    }\n    fn recover(&mut self) {}\n}\n\npub trait Visit {\n    fn visit(&self);\n}\n\nimpl Visit for Parser {\n    fn visit(&self) {}\n}\n",
+    "src/app.py": "import os\nfrom typing import Any\n\n\nclass Handler:\n    def handle(self, request: Any) -> None:\n        print(request)\n\n    def _private(self) -> None:\n        pass\n\n\ndef main() -> None:\n    print(\"start\")\n    os.getcwd()\n",
+    "src/util.ts": "export function parseRule(text: string): string {\n  console.log(text);\n  return text;\n}\n\nexport class Builder {\n  build(): void {\n    console.log('built');\n  }\n}\n",
+    "docs/notes.md": "# Notes\n\nThe word alpha alpha repeats here.\nA TODO marker lives in prose, not in code.\n",
+    "docs/weekend.txt": "Saturday,Sat\nSunday,Sun\nMonday,Mon\n",
+    "docs/quotes.txt": "he said \"hello\" loudly\nshe said 'goodbye' softly\nmismatched \"quote' here\nthe word \"said\" appears inside quotes here\n",
+    "docs/nested.txt": "(a(b)c)\nflat (x) here\n",
+    "docs/unicode.txt": "caf\u00e9 na\u00efve\n\u0398\u03b5\u03c3\u03c3\u03b1\u03bb\u03bf\u03bd\u03af\u03ba\u03b7\n\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35\n\u00dcber\n",
+    "docs/multiline.txt": "start block\n  inner one\n  inner two\nend block\ntrailing\n",
+    "config/settings.toml": "[server]\nport = 8080\n# port = 9090 is commented out\nhost = \"localhost\"\n",
+    "vendor/bundled.js": "function vendored() { console.log('vendor'); }\n",
+    "target/generated.rs": "fn generated() { println!(\"generated\"); }\n",
+    "node_modules/dep/index.js": "module.exports = function dep() { console.log('dep'); };\n",
+    "nested/deep/deeper/buried.py": "def buried() -> None:\n    print(\"buried\")\n",
+    "GITIGNORE_FIXTURE": "target/\nvendor/\n",
+    "IGNORE_FIXTURE": "config/\n",
+    "HIDDEN_FIXTURE": "secret = \"in a hidden file\"\n",
+    "HIDDEN_DIR_FIXTURE": "buried in a hidden directory\n",
+    "docs/eclass.txt": "0a\n1a\n90\n0x\n",
+    "docs/unicode17.txt": "\ud802\udd40 sidetic\n"
+  },
+  "renames": {
+    "GITIGNORE_FIXTURE": ".gitignore",
+    "IGNORE_FIXTURE": ".ignore",
+    "HIDDEN_FIXTURE": ".hidden.toml",
+    "HIDDEN_DIR_FIXTURE": ".hiddendir/inside.txt"
+  },
+  "binary_files": {
+    "data/blob.bin": "68656c6c6f00776f726c640a6e6565646c650a"
+  }
+}

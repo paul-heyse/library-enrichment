@@ -11,29 +11,46 @@ class ObservationOrigin(StrEnum):
 
 
 class Publicness(BaseModel):
-    declared_exports: list[str] = Field(..., description="Literal __all__ entries.")
-    docstring: bool = Field(
-        ..., description="A docstring exists; absence does not prove private API."
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    exported: bool | None = Field(
-        ..., description="Membership in a statically resolved __all__, when known."
+    declared_exports: list[str]
+    docstring: bool
+    exported: bool | None
+    reexport: bool
+    underscore: bool
+    unresolved_exports: list[str]
+
+
+class PythonBase(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    reexport: bool = Field(..., description="This is a reexport declaration.")
-    underscore: bool = Field(
-        ..., description="Underscore naming convention, not a privacy verdict."
-    )
-    unresolved_exports: list[str] = Field(
-        ..., description="Export expressions not statically reduced to literals."
-    )
+    ordinal: int = Field(..., ge=0)
+    rendering: str
+
+
+class PythonDefaultOrigin(StrEnum):
+    absent = "absent"
+    declared = "declared"
+    implicit_variadic = "implicit_variadic"
+
+
+class PythonParameterKind(StrEnum):
+    positional_only = "positional-only"
+    positional_or_keyword = "positional or keyword"
+    variadic_positional = "variadic positional"
+    keyword_only = "keyword-only"
+    variadic_keyword = "variadic keyword"
 
 
 class WorkerFile(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    file: str = Field(..., description="Archive-relative file path.")
-    module: str = Field(..., description="Qualified module import path.")
-    origin: ObservationOrigin = Field(..., description="Whether it is .py or .pyi.")
+    file: str
+    module: str
+    origin: ObservationOrigin
 
 
 class WorkerRequest(BaseModel):
@@ -56,25 +73,53 @@ class WorkerRequest(BaseModel):
     schema_version: str = Field(..., description="Protocol version.")
 
 
+class PythonParameter(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    annotation: str | None
+    default_origin: PythonDefaultOrigin | None
+    kind: PythonParameterKind | None
+    name: str
+    ordinal: int = Field(..., ge=0)
+    reported_default: str | None
+
+
+class PythonCallable(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    labels: list[str]
+    parameters: list[PythonParameter]
+    returns: str | None
+
+
+class PythonOverload(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    callable: PythonCallable
+    ordinal: int = Field(..., ge=0)
+    signature: str
+
+
 class Observation(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    alias_target: str | None = Field(..., description="Alias target even if unresolved.")
-    bases: list[str] = Field(
-        ..., description="Declared base expressions, not resolved inheritance claims."
-    )
-    docs: str | None = Field(..., description="Full bounded docstring.")
-    file: str = Field(..., description="Relative archive path, never an arbitrary local path.")
-    kind: str = Field(..., description="Module, class, function or attribute.")
-    line: int | None = Field(..., description="First declaration line.", ge=0)
-    origin: ObservationOrigin = Field(..., description="Source versus stub provenance.")
-    overloads: list[str] = Field(
-        ..., description="Every declared overload, including stub-only overload groups."
-    )
-    path: str = Field(..., description="Qualified Python path.")
-    publicness: Publicness = Field(..., description="Signals remain separate.")
-    signature: str | None = Field(..., description="Rendered signature or annotation.")
+    alias_target: str | None
+    bases: list[PythonBase]
+    callable: PythonCallable | None
+    docs: str | None
+    file: str
+    kind: str
+    line: int | None = Field(..., ge=0)
+    origin: ObservationOrigin
+    overload_ordinal: int | None = Field(..., ge=0)
+    overloads: list[PythonOverload]
+    path: str
+    publicness: Publicness
+    signature: str | None
 
 
 class WorkerProtocol(BaseModel):

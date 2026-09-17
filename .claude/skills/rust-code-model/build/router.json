@@ -1,0 +1,714 @@
+{
+  "note": "The curated core of this repository. Everything else is derived from upstream; this is the part that says which layer answers which question, and -- more usefully -- which layer an agent is about to reach for by mistake. `rejected` is the load-bearing field.",
+  "layers": [
+    {
+      "id": "rustdoc-json",
+      "subject": "Rustdoc JSON + rustdoc-types",
+      "obtained_by": "rustdoc --output-format json, or docs.rs/crate/NAME/VERSION/json",
+      "entry_point": "rustdoc_types::Crate",
+      "answers": "what a crate exposes: modules, signatures, generics, bounds, trait impls, re-exports, attributes, docs",
+      "cannot_answer": "anything a function does -- there are no bodies in the document at all (RD002); anything about code that is not this crate's public API; anything cfg-gated off at build time (RD005)",
+      "needs_build": "yes -- rustdoc must compile the crate, or docs.rs must have done so",
+      "needs_network": "only for the hosted form",
+      "stability": "unstable, nightly-only; format_version has had four breaking bumps in five weeks",
+      "reach_for_when": "the question is about the shape of a public contract"
+    },
+    {
+      "id": "syntax",
+      "subject": "ra_ap_syntax",
+      "obtained_by": "ra_ap_syntax::SourceFile::parse, or rust-analyzer parse",
+      "entry_point": "ra_ap_syntax::SourceFile",
+      "answers": "exactly how source is written: items, tokens, comments, whitespace, offsets, nesting, and incomplete or invalid code",
+      "cannot_answer": "what any name refers to; what type anything has; what a macro expands to (SY003)",
+      "needs_build": "no -- it parses a string",
+      "needs_network": "no",
+      "stability": "0.0.x weekly, but the rowan/AstNode/SyntaxKind design has been stable for years",
+      "reach_for_when": "the question is about text, formatting, position, or code that does not compile"
+    },
+    {
+      "id": "hir",
+      "subject": "ra_ap_hir",
+      "obtained_by": "ra_ap_hir::Semantics over a loaded database",
+      "entry_point": "ra_ap_hir::Semantics",
+      "answers": "what names mean: resolution, definitions and references, inferred types, method resolution, trait and impl relationships, macro-expanded semantics, and the mapping back to syntax",
+      "cannot_answer": "how a body executes as a graph; anything about a project it has not loaded; trivia, which is discarded above the syntax layer",
+      "needs_build": "a loaded database, and proc macros need building to expand",
+      "needs_network": "no, once dependencies are vendored",
+      "stability": "0.0.x weekly, every release semver-breaking, no changelog; only 12.84% documented",
+      "reach_for_when": "the question is what a symbol means or where it resolves to"
+    },
+    {
+      "id": "project-load",
+      "subject": "ra_ap_load-cargo + ra_ap_project_model",
+      "obtained_by": "ra_ap_load_cargo::load_workspace_at",
+      "entry_point": "ra_ap_load_cargo::load_workspace_at",
+      "answers": "how a real Cargo project becomes an analysis database: workspace discovery, the crate graph, roots, dependencies, sysroot, the selected configuration",
+      "cannot_answer": "any fact about code -- it makes the other layers able to answer, and answers nothing itself",
+      "needs_build": "yes -- build scripts and proc macros are compiled unless disabled",
+      "needs_network": "yes, unless dependencies are already fetched",
+      "stability": "0.0.x weekly, and explicitly NOT an API boundary upstream, so the most volatile of the three",
+      "reach_for_when": "you need hir or syntax to see a real crate rather than a loose file"
+    },
+    {
+      "id": "mir",
+      "subject": "MIR via rustc_driver + rustc_middle::mir",
+      "obtained_by": "rustc -Zunpretty=mir, -Zdump-mir; or rustc_public for a typed API",
+      "entry_point": "rustc_middle::mir::Body",
+      "answers": "how a body executes: basic blocks, terminators, locals, places, operands, rvalues, calls, branches, drops, moves",
+      "cannot_answer": "what the source looked like; original variable names, which survive only as debug annotations (XL002); anything about items with no body",
+      "needs_build": "yes -- a full compilation",
+      "needs_network": "no",
+      "stability": "unstable and unversioned; the textual view says it is for human consumers only (MI006)",
+      "reach_for_when": "the question is about control flow, drops, or what actually runs"
+    },
+    {
+      "id": "dataflow",
+      "subject": "rustc_mir_dataflow",
+      "obtained_by": "rustc -Zdump-mir-dataflow=yes, or the Analysis trait inside the compiler",
+      "entry_point": "rustc_mir_dataflow::Analysis",
+      "answers": "how state evolves along execution paths: initialisation, liveness, borrows, moves, and any custom forward or backward analysis",
+      "cannot_answer": "anything MIR itself does not already carry -- it derives facts over the graph, it does not add to it",
+      "needs_build": "yes",
+      "needs_network": "no",
+      "stability": "unstable; roughly ten signature-affecting commits a year, and one reversal",
+      "reach_for_when": "the question is whether something holds at a program point, not merely which edges exist"
+    },
+    {
+      "id": "cargo-metadata",
+      "subject": "cargo metadata / cargo_metadata",
+      "obtained_by": "cargo metadata --format-version 1",
+      "entry_point": "cargo_metadata::MetadataCommand",
+      "answers": "package identity, targets, workspace structure, dependency identities and renames, the resolved graph, manifest metadata, declared features",
+      "cannot_answer": "anything whatsoever about code; which features a particular build resolved, as opposed to which are declared (PL003)",
+      "needs_build": "no -- resolution only, and --no-deps skips even that",
+      "needs_network": "yes unless the lockfile is complete and the registry cached",
+      "stability": "the wire format has been version 1 since ~2017; the crate that parses it is pre-1.0",
+      "reach_for_when": "the question is about packages, targets, features or dependency identity"
+    }
+  ],
+  "questions": [
+    {
+      "question": "What does this crate expose publicly?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::Crate::index",
+      "rejected": [
+        [
+          "hir",
+          "sees every item whether public or not, and has no notion of the documented surface"
+        ],
+        [
+          "cargo-metadata",
+          "knows the package, not a single item inside it"
+        ]
+      ],
+      "recipe": "rg -P '\\tstruct\\t' content/index/symbols.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What is the exact signature, generics and bounds of an item?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::ItemEnum",
+      "rejected": [
+        [
+          "syntax",
+          "has the signature as written, but not the resolved paths in it"
+        ]
+      ],
+      "recipe": "rg -P '^ra_ap_hir::semantics::Semantics\\t' content/index/methods.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "Is this item deprecated, or gated behind a feature?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::Item::deprecation",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "for the feature half: a gated-off item is absent entirely, with no record that it exists"
+        ]
+      ],
+      "recipe": "rg -P '^ra_ap_hir\\t' content/index/features.tsv",
+      "probe": "RD005"
+    },
+    {
+      "question": "What does this function do?",
+      "layer": "mir",
+      "entry_point": "rustc -Zunpretty=mir",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "contains no function bodies at all -- the single most common wrong turn"
+        ],
+        [
+          "syntax",
+          "has the body as text with nothing resolved"
+        ]
+      ],
+      "recipe": "rg -P '^MI001\\t' content/index/behaviors.tsv",
+      "probe": "RD002"
+    },
+    {
+      "question": "What type does this expression have?",
+      "layer": "hir",
+      "entry_point": "ra_ap_hir::Semantics::type_of_expr",
+      "rejected": [
+        [
+          "syntax",
+          "records the type as written and infers nothing"
+        ],
+        [
+          "rustdoc-json",
+          "has no expressions"
+        ],
+        [
+          "mir",
+          "has types, but the expression structure is gone"
+        ]
+      ],
+      "recipe": "rg -P 'type_of_expr' content/index/methods.tsv",
+      "probe": "XL001"
+    },
+    {
+      "question": "Where is this symbol defined, and where is it used?",
+      "layer": "hir",
+      "entry_point": "ra_ap_ide::Analysis",
+      "rejected": [
+        [
+          "syntax",
+          "can find the spelling but cannot tell two different items with the same name apart"
+        ],
+        [
+          "rustdoc-json",
+          "has no call sites"
+        ]
+      ],
+      "recipe": "rg -P '^ra_ap_ide::Analysis\\t' content/index/methods.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "Which impl does this method call resolve to?",
+      "layer": "hir",
+      "entry_point": "ra_ap_hir::Semantics::resolve_method_call",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "lists impls but cannot resolve a call site"
+        ],
+        [
+          "syntax",
+          "sees a method name and nothing else"
+        ]
+      ],
+      "recipe": "rg -P 'resolve_method_call' content/index/methods.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What traits does this type implement?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::ItemEnum::Impl",
+      "rejected": [
+        [
+          "hir",
+          "also answers, and is the right choice when the type is local or private rather than a published API"
+        ]
+      ],
+      "recipe": "rg -P '^ra_ap_syntax::ast::AstNode\\t' content/index/impls.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What does this macro expand to?",
+      "layer": "mir",
+      "entry_point": "rustc -Zunpretty=expanded",
+      "rejected": [
+        [
+          "syntax",
+          "holds the invocation unexpanded -- MACRO_CALL is as far as it goes"
+        ]
+      ],
+      "recipe": "rg -P '^MI007\\t' content/index/behaviors.tsv",
+      "probe": "SY003"
+    },
+    {
+      "question": "Where exactly is this in the file, including comments and whitespace?",
+      "layer": "syntax",
+      "entry_point": "ra_ap_syntax::SyntaxNode::text_range",
+      "rejected": [
+        [
+          "hir",
+          "discards trivia"
+        ],
+        [
+          "mir",
+          "keeps spans but not the text between them"
+        ]
+      ],
+      "recipe": "rg -P '^COMMENT\\t' content/index/syntax-kinds.tsv",
+      "probe": "SY002"
+    },
+    {
+      "question": "How do I analyse code that does not compile?",
+      "layer": "syntax",
+      "entry_point": "ra_ap_syntax::SourceFile::parse",
+      "rejected": [
+        [
+          "hir",
+          "needs a resolvable program"
+        ],
+        [
+          "mir",
+          "needs a successful compilation"
+        ],
+        [
+          "rustdoc-json",
+          "needs rustdoc to succeed"
+        ]
+      ],
+      "recipe": "rg -P '^ERROR\\t' content/index/syntax-kinds.tsv",
+      "probe": "SY001"
+    },
+    {
+      "question": "How do I rewrite every occurrence of a pattern?",
+      "layer": "hir",
+      "entry_point": "rust-analyzer ssr",
+      "rejected": [
+        [
+          "syntax",
+          "can match structurally but will not check that the replacement resolves"
+        ]
+      ],
+      "recipe": "rg -P '^HI002\\t' content/index/behaviors.tsv",
+      "probe": "HI002"
+    },
+    {
+      "question": "Which branch runs, and under what condition?",
+      "layer": "mir",
+      "entry_point": "rustc_middle::mir::TerminatorKind::SwitchInt",
+      "rejected": [
+        [
+          "hir",
+          "has the expression tree, not the graph"
+        ],
+        [
+          "syntax",
+          "has the if as written"
+        ]
+      ],
+      "recipe": "rg -P '\\tSwitchInt\\t' content/index/mir-vocabulary.tsv",
+      "probe": "MI001"
+    },
+    {
+      "question": "Where is this value dropped?",
+      "layer": "mir",
+      "entry_point": "rustc_middle::mir::TerminatorKind::Drop",
+      "rejected": [
+        [
+          "syntax",
+          "drops appear nowhere in the source"
+        ],
+        [
+          "hir",
+          "knows ownership but not drop placement"
+        ]
+      ],
+      "recipe": "rg -P '\\tDrop\\t' content/index/mir-vocabulary.tsv",
+      "probe": "MI003"
+    },
+    {
+      "question": "Is this local initialised at this point?",
+      "layer": "dataflow",
+      "entry_point": "rustc_mir_dataflow::impls::MaybeUninitializedPlaces",
+      "rejected": [
+        [
+          "mir",
+          "gives the graph; whether a fact holds along every path is a fixpoint over it"
+        ]
+      ],
+      "recipe": "rg -P 'MaybeUninitializedPlaces' content/index/dataflow.tsv",
+      "probe": "DF001"
+    },
+    {
+      "question": "Is this local live here?",
+      "layer": "dataflow",
+      "entry_point": "rustc_mir_dataflow::impls::MaybeLiveLocals",
+      "rejected": [
+        [
+          "mir",
+          "the same reason: liveness is derived over the graph, not recorded in it"
+        ]
+      ],
+      "recipe": "rg -P 'MaybeLiveLocals' content/index/dataflow.tsv",
+      "probe": "DF002"
+    },
+    {
+      "question": "How do I write my own dataflow analysis?",
+      "layer": "dataflow",
+      "entry_point": "rustc_mir_dataflow::Analysis",
+      "rejected": [
+        [
+          "dataflow",
+          "if you remember AnalysisDomain or GenKillAnalysis: both are gone, merged into Analysis and removed respectively"
+        ]
+      ],
+      "recipe": "rg -P '^Analysis\\tmethod\\t.*required$' content/index/dataflow.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What are the call edges out of this function?",
+      "layer": "mir",
+      "entry_point": "rustc_middle::mir::TerminatorKind::Call",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "has no call graph of any kind"
+        ],
+        [
+          "hir",
+          "can resolve a call it is shown, but does not enumerate a body's calls as a graph"
+        ]
+      ],
+      "recipe": "rg -P '\\tCall\\t' content/index/mir-vocabulary.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What is the crate graph and which features are on?",
+      "layer": "cargo-metadata",
+      "entry_point": "cargo_metadata::Metadata::resolve",
+      "rejected": [
+        [
+          "cargo-metadata",
+          "with --no-deps the resolve field is null, which is not the same as no dependencies"
+        ],
+        [
+          "project-load",
+          "builds its own graph for analysis, which is not the Cargo view"
+        ]
+      ],
+      "recipe": "rg -P '^PL001\\t' content/index/behaviors.tsv",
+      "probe": "PL001"
+    },
+    {
+      "question": "How do I load a real Cargo project into an analysis database?",
+      "layer": "project-load",
+      "entry_point": "ra_ap_load_cargo::load_workspace_at",
+      "rejected": [
+        [
+          "hir",
+          "operates on a database; it does not create one"
+        ],
+        [
+          "cargo-metadata",
+          "describes the project without loading anything"
+        ]
+      ],
+      "recipe": "rg -P '^ra_ap_load_cargo::' content/index/symbols.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "Which MIR am I looking at -- before or after optimisation?",
+      "layer": "mir",
+      "entry_point": "rustc_middle::mir::MirPhase",
+      "rejected": [
+        [
+          "mir",
+          "asking for 'the MIR' is ambiguous: built, analysis and runtime differ"
+        ]
+      ],
+      "recipe": "rg -P '^MirPhase\\t' content/index/mir-vocabulary.tsv",
+      "probe": "DF003"
+    },
+    {
+      "question": "Which rustdoc format version am I parsing?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::FORMAT_VERSION",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "the toolchain's own version does not tell you: docs.rs serves whatever its fleet built, and rustdoc-types 0.61.0 is itself served at format 60"
+        ]
+      ],
+      "recipe": "rg -P 'format_version' content/index/version-oracles.tsv",
+      "probe": "RD006"
+    },
+    {
+      "question": "Can I cache a rustdoc Id and use it later?",
+      "layer": "rustdoc-json",
+      "entry_point": "rustdoc_types::Id",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "no: an Id is a position in one document. Adding an unrelated item shifts it"
+        ]
+      ],
+      "recipe": "rg -P '^RD004\\t' content/index/behaviors.tsv",
+      "probe": "RD004"
+    },
+    {
+      "question": "Why is this item missing from the documentation I generated?",
+      "layer": "rustdoc-json",
+      "entry_point": "--document-private-items",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "three different causes look identical: not public, cfg-gated off, or in a private module"
+        ]
+      ],
+      "recipe": "rg -P '^RD003\\t' content/index/behaviors.tsv",
+      "probe": "RD003"
+    },
+    {
+      "question": "What node kinds can appear in a Rust syntax tree?",
+      "layer": "syntax",
+      "entry_point": "ra_ap_syntax::SyntaxKind",
+      "rejected": [
+        [
+          "rustdoc-json",
+          "documents the types, not the grammar they encode"
+        ]
+      ],
+      "recipe": "rg -P '\\tnode\\t' content/index/syntax-kinds.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "Which rust-analyzer version am I actually running?",
+      "layer": "hir",
+      "entry_point": "rust-analyzer --version",
+      "rejected": [
+        [
+          "hir",
+          "the binary reports a rustc release number; there is no published mapping to an ra_ap crate version"
+        ]
+      ],
+      "recipe": "rg -P 'rust-analyzer' content/index/version-oracles.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "Can I script these tools and trust the exit code?",
+      "layer": "cross-layer",
+      "entry_point": "-",
+      "rejected": [
+        [
+          "hir",
+          "sometimes: ssr exits 1 on a refused rule, but parse exits 0 on source it could not parse"
+        ]
+      ],
+      "recipe": "rg -P '\\texit codes\\t' content/index/behaviors.tsv",
+      "probe": "SY004"
+    },
+    {
+      "question": "Which layer should I use at all?",
+      "layer": "cross-layer",
+      "entry_point": "content/index/layers.tsv",
+      "rejected": [],
+      "recipe": "rg -P '^mir\\t' content/index/layers.tsv",
+      "probe": "-"
+    }
+  ],
+  "views": [
+    {
+      "view": "normal",
+      "shows": "the source, pretty-printed",
+      "loses": "nothing; it is the input",
+      "probe": "MI002"
+    },
+    {
+      "view": "expanded",
+      "shows": "macros expanded, prelude injected",
+      "loses": "the original macro invocations",
+      "probe": "MI007"
+    },
+    {
+      "view": "expanded,identified",
+      "shows": "the expansion with node ids",
+      "loses": "as expanded",
+      "probe": "-"
+    },
+    {
+      "view": "expanded,hygiene",
+      "shows": "the expansion with hygiene markers",
+      "loses": "as expanded",
+      "probe": "-"
+    },
+    {
+      "view": "ast-tree",
+      "shows": "the compiler's AST before expansion",
+      "loses": "trivia",
+      "probe": "-"
+    },
+    {
+      "view": "ast-tree,expanded",
+      "shows": "the AST after expansion",
+      "loses": "trivia and the invocations",
+      "probe": "-"
+    },
+    {
+      "view": "hir",
+      "shows": "HIR pretty-printed back as Rust",
+      "loses": "trivia, some sugar",
+      "probe": "-"
+    },
+    {
+      "view": "hir,identified",
+      "shows": "HIR with node ids",
+      "loses": "as hir",
+      "probe": "-"
+    },
+    {
+      "view": "hir,typed",
+      "shows": "HIR with inferred types written in",
+      "loses": "as hir",
+      "probe": "-"
+    },
+    {
+      "view": "hir-tree",
+      "shows": "the HIR data structure",
+      "loses": "as hir",
+      "probe": "MI004"
+    },
+    {
+      "view": "thir-tree",
+      "shows": "typed HIR as a tree",
+      "loses": "untyped sugar",
+      "probe": "-"
+    },
+    {
+      "view": "thir-flat",
+      "shows": "typed HIR, flattened and fully typed",
+      "loses": "untyped sugar",
+      "probe": "MI004"
+    },
+    {
+      "view": "mir",
+      "shows": "the control-flow graph: blocks, terminators, locals",
+      "loses": "names, nesting, source shape",
+      "probe": "MI001"
+    },
+    {
+      "view": "mir-cfg",
+      "shows": "the same graph as graphviz",
+      "loses": "as mir",
+      "probe": "MI008"
+    },
+    {
+      "view": "stable-mir",
+      "shows": "MIR through the rustc_public projection",
+      "loses": "some compiler-internal detail",
+      "probe": "MI005"
+    }
+  ],
+  "oracles": [
+    {
+      "subject": "rustc",
+      "question": "which compiler is this?",
+      "command": "rustc +TOOLCHAIN --version",
+      "answers_for": "the compiler that will produce every MIR and dataflow observation",
+      "trap": "a bare +nightly floats; use a dated toolchain"
+    },
+    {
+      "subject": "rustdoc",
+      "question": "which format version does this toolchain emit?",
+      "command": "rustdoc +TOOLCHAIN -Z unstable-options --output-format json",
+      "answers_for": "locally produced documents only",
+      "trap": "says nothing about what docs.rs will serve for a crate"
+    },
+    {
+      "subject": "rustdoc JSON",
+      "question": "which format version is THIS document?",
+      "command": "read the format_version field of the payload",
+      "answers_for": "that one document",
+      "trap": "the only reliable reading. rustdoc-types 0.61.0, which defines FORMAT_VERSION = 61, is served by docs.rs at format 60"
+    },
+    {
+      "subject": "rustdoc-types",
+      "question": "which format version does this crate model?",
+      "command": "rustdoc_types::FORMAT_VERSION",
+      "answers_for": "the crate you compiled against",
+      "trap": "the minor version equals the format version, so 0.61.0 means 61"
+    },
+    {
+      "subject": "rust-analyzer",
+      "question": "which rust-analyzer is this?",
+      "command": "rust-analyzer --version",
+      "answers_for": "the rustc release the binary was built in",
+      "trap": "NOT an ra_ap_* crate version, and there is no published mapping between them. The rust-analyzer repository carries no version number at all"
+    },
+    {
+      "subject": "ra_ap_* crates",
+      "question": "which release is this?",
+      "command": "read the version from Cargo.lock",
+      "answers_for": "the crates you linked",
+      "trap": "0.0.N is bumped weekly and every release is semver-breaking; a caret requirement will float across breaking changes"
+    },
+    {
+      "subject": "cargo",
+      "question": "which metadata schema is this?",
+      "command": "cargo metadata --format-version 1",
+      "answers_for": "the envelope shape",
+      "trap": "version has read 1 for years while new keys were added; tolerate unknown fields"
+    },
+    {
+      "subject": "cargo_metadata",
+      "question": "which parser version is this?",
+      "command": "read the version from Cargo.lock",
+      "answers_for": "the crate",
+      "trap": "pre-1.0, so a minor bump is breaking; it may also lag fields Cargo already emits"
+    }
+  ],
+  "unreachable": [
+    {
+      "capability": "rustdoc JSON for any rustc-internal crate",
+      "exists_in": "nowhere",
+      "reachable": "no",
+      "why": "the rust-docs-json rustup component ships std, core, alloc, proc_macro, test and std_detect only",
+      "instead": "the rustc-docs component, or the pinned source in content/corpus/rustc"
+    },
+    {
+      "capability": "a stable API for MIR",
+      "exists_in": "rustc_public (formerly stable_mir)",
+      "reachable": "partially",
+      "why": "still requires a nightly compiler and rustc_private",
+      "instead": "rustc -Zunpretty=stable-mir to see the projection, or the pinned rustc_public source"
+    },
+    {
+      "capability": "rust-analyzer search",
+      "exists_in": "the CLI",
+      "reachable": "no",
+      "why": "panics on this build with 'Try to use attached db, but not db is attached'",
+      "instead": "ssr with a rule, or ast-grep for a purely structural match"
+    },
+    {
+      "capability": "a JSON Schema for cargo metadata output",
+      "exists_in": "nowhere",
+      "reachable": "no",
+      "why": "rust-lang/cargo publishes no schema file for the metadata envelope",
+      "instead": "the Cargo book page in content/corpus/cargo, and cargo_metadata's own types"
+    },
+    {
+      "capability": "a mapping from an ra_ap version to a rust-analyzer commit",
+      "exists_in": "nowhere published",
+      "reachable": "no",
+      "why": "versions are minted at publish time by xtask; the repository has no version field",
+      "instead": "match by publication date, and record that it is an inference"
+    },
+    {
+      "capability": "feature gates in rustdoc JSON",
+      "exists_in": "the compiler",
+      "reachable": "no",
+      "why": "an item gated off is absent from the document with no trace",
+      "instead": "the [features] table of Cargo.toml, indexed as features.tsv"
+    },
+    {
+      "capability": "function bodies in rustdoc JSON",
+      "exists_in": "the compiler",
+      "reachable": "no",
+      "why": "the format models the documented surface, not code",
+      "instead": "MIR, THIR or the HIR layer"
+    },
+    {
+      "capability": "search-index.js on nightly-rustc docs",
+      "exists_in": "older rustdoc",
+      "reachable": "no",
+      "why": "rustdoc moved to a search.index/ stringdex backend; the old path is a 404",
+      "instead": "search.index/root.js, crates.js, or each crate's all.html"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ use datafusion::{
     prelude::{SessionContext, col, lit},
 };
 use enrichment_core::{
-    canonical, clock,
+    canonical,
     evidence::{
         SnapshotCounts,
         catalog::SnapshotEntry,
@@ -101,15 +101,18 @@ pub struct EvidenceRepository {
 
 type LogReferences = Vec<(String, u64)>;
 
-/// One bounded preparation step after the candidate identity is known, before catalog commit.
-pub type JobDeliveryFactory = Arc<
-    dyn Fn(
-            &EvidenceManifest,
-            &enrichment_core::wire::Coverage,
-        ) -> std::io::Result<enrichment_core::evidence::Artifact>
-        + Send
-        + Sync,
->;
+/// Exact candidate and its already-admitted transport view selected by one publication commit.
+pub struct PublishedSnapshot {
+    pub state: Option<enrichment_core::wire::JobState>,
+    pub manifest: EvidenceManifest,
+    pub result: Option<enrichment_core::wire::Envelope>,
+}
+impl std::ops::Deref for PublishedSnapshot {
+    type Target = EvidenceManifest;
+    fn deref(&self) -> &Self::Target {
+        &self.manifest
+    }
+}
 
 /// Result intent becomes a publication only in the successful catalog selection commit.
 #[derive(Clone)]
@@ -117,23 +120,22 @@ pub struct JobCompletion {
     pub publication_fence: crate::control::PublicationFence,
     pub job_id: String,
     pub kind: enrichment_core::evidence::catalog::PublishedJobKind,
-    pub state: enrichment_core::wire::JobState,
     pub attempt_id: String,
     pub result_artifact_ids: Vec<String>,
-    /// Called with the final candidate identity before catalog visibility. Rebase may repeat
-    /// this bounded preparation; the returned artifact must already be durable.
-    pub prepare_delivery: JobDeliveryFactory,
+    /// Complete native input; candidate rebinding is the fixed DataFusion result plan.
+    pub result: enrichment_core::operation::results::ResultRecord,
 }
 impl JobCompletion {
     fn bind(
         &self,
         manifest: &EvidenceManifest,
         delivery: enrichment_core::evidence::Artifact,
+        state: enrichment_core::wire::JobState,
     ) -> enrichment_core::evidence::catalog::JobPublication {
         enrichment_core::evidence::catalog::JobPublication {
             job_id: self.job_id.clone(),
             kind: self.kind,
-            state: self.state,
+            state,
             attempt_id: self.attempt_id.clone(),
             result_artifact_ids: self.result_artifact_ids.clone(),
             delivery,
@@ -144,6 +146,20 @@ impl JobCompletion {
 }
 
 impl EvidenceRepository {
+    /// Prepare a complete service-owned storage inventory before recovery dispatch.
+    /// Publication still selects only its committed exact version vector.
+    pub async fn prepare_storage(&self) -> Result<crate::native_discovery::Discovered> {
+        let lease = crate::leases::shared(&self.paths.data_root)?;
+        let store = crate::native_delta::DeltaStore::new(
+            &self.paths.data_root.join("delta"),
+            self.runtime.clone(),
+        )?;
+        let mut inventory = store.discover(100_000, 256).await?;
+        for table in inventory.tables.values_mut() {
+            *table = crate::leases::leased_view(table, &self.runtime.session(), &lease)?;
+        }
+        Ok(inventory)
+    }
     /// Reuse static declarations in a newly resolved consumer context. This does not assert
     /// that the declarations were compiled or executed in that environment: their original
     /// producer sources and observed documentation configuration remain unchanged. Executed
@@ -225,6 +241,7 @@ impl EvidenceRepository {
         // union with observations already published in the child environment.
         self.publish_prepared(metadata, staged, attempts, None, None)
             .await
+            .map(|published| published.manifest)
     }
     /// # Errors
     /// Unavailable state roots or invalid budgets prevent startup.
@@ -280,7 +297,7 @@ impl EvidenceRepository {
         run: enrichment_core::producer::ProducerRun,
         artifacts: Vec<enrichment_core::evidence::Artifact>,
         completion: JobCompletion,
-    ) -> Result<EvidenceManifest> {
+    ) -> Result<PublishedSnapshot> {
         let (plans, attempts) =
             crate::ingest::execution(self, &metadata, observations, run, artifacts).await?;
         self.publish_native(metadata, plans, attempts, None, Some(completion))
@@ -331,7 +348,7 @@ impl EvidenceRepository {
         attempts: Attempts,
         mut expected_base: Option<SnapshotId>,
         completion: Option<JobCompletion>,
-    ) -> futures::future::BoxFuture<'_, Result<EvidenceManifest>> {
+    ) -> futures::future::BoxFuture<'_, Result<PublishedSnapshot>> {
         Box::pin(async move {
             if self.read_only {
                 return Err(invalid("evidence repository was opened read-only"));
@@ -399,7 +416,7 @@ impl EvidenceRepository {
         mut attempts: crate::attempt_plan::AttemptPlan,
         mut expected_base: Option<SnapshotId>,
         completion: Option<JobCompletion>,
-    ) -> Result<EvidenceManifest> {
+    ) -> Result<PublishedSnapshot> {
         if self.read_only {
             return Err(invalid("evidence repository was opened read-only"));
         }
@@ -429,8 +446,9 @@ impl EvidenceRepository {
                         .await?
                 }
             };
+            let mut prepared_result = None;
+            let mut prepared_state = None;
             let publication = if let Some(completion) = &completion {
-                let prepare = Arc::clone(&completion.prepare_delivery);
                 let bytes = serde_json::to_vec(&manifest).map_err(external)?;
                 let binding = self.admit_manifest(&manifest, &bytes).await?;
                 let session = binding.session(&self.runtime, None)?;
@@ -459,28 +477,47 @@ impl EvidenceRepository {
                     .await
                 }
                 .map_err(std::io::Error::other)?;
-                let mut completion = completion.clone();
-                if completion.kind == enrichment_core::evidence::catalog::PublishedJobKind::Resolve
-                {
-                    completion.state = if coverage.complete() {
-                        enrichment_core::wire::JobState::Succeeded
-                    } else {
-                        enrichment_core::wire::JobState::Partial
-                    };
-                }
-                let candidate = manifest.clone();
-                let artifact = self
+                let result = crate::result_plan::bind(
+                    &self.runtime,
+                    completion.result.clone(),
+                    &manifest,
+                    coverage,
+                    completion.kind,
+                )
+                .await?;
+                let state = result.state;
+                prepared_state = Some(state);
+                let result = result.result;
+                let request_id =
+                    enrichment_core::wire::RequestId::try_from("req_retained".to_owned())
+                        .map_err(external)?;
+                let envelope = result.clone().into_envelope(request_id.clone());
+                let blobs = self.blobs.clone();
+                let (artifact, index) = self
                     .runtime
-                    .blocking(move || prepare(&candidate, &coverage))
-                    .await
-                    .map_err(|e| invalid(format!("delivery preparation worker failed: {e}")))??;
+                    .blocking(move || {
+                        crate::result::store(&blobs, &envelope, crate::result::JOB_URI)
+                    })
+                    .await??;
+                prepared_result = Some(
+                    crate::result_delivery::retained(
+                        &self.runtime,
+                        result.header,
+                        &artifact,
+                        &index,
+                        1024 * 1024,
+                        None,
+                        request_id,
+                    )
+                    .await?,
+                );
                 self.catalog
                     .retain_artifact_plan(&self.runtime, attempts.receipts(&self.runtime).await?)
                     .await?;
                 self.catalog
                     .retain_result(&self.runtime, &self.blobs, &artifact)
                     .await?;
-                let publication = completion.bind(&manifest, artifact);
+                let publication = completion.bind(&manifest, artifact, state);
                 publication.validate().map_err(invalid)?;
                 self.validate_delivery(&publication).await?;
                 Some(publication)
@@ -506,7 +543,13 @@ impl EvidenceRepository {
                 }),
             };
             match self.catalog.commit(delta).await? {
-                CommitOutcome::Committed { .. } => return Ok(manifest),
+                CommitOutcome::Committed { .. } => {
+                    return Ok(PublishedSnapshot {
+                        manifest,
+                        result: prepared_result,
+                        state: prepared_state,
+                    });
+                }
                 CommitOutcome::Conflict { current, .. } => {
                     let catalog = self.catalog.pin().await?;
                     let bytes = serde_json::to_vec(&manifest).map_err(external)?;
@@ -690,7 +733,8 @@ impl EvidenceRepository {
             counts,
             indexed: coverage.indexed,
             missing: coverage.missing,
-            published_at: clock::now_rfc3339(),
+            published_at: enrichment_core::native_time::ObservationTime::now()
+                .map_err(std::io::Error::other)?,
         };
         manifest.validate().map_err(invalid)?;
         let bytes = serde_json::to_vec_pretty(&manifest).map_err(external)?;
@@ -781,48 +825,19 @@ impl EvidenceRepository {
         publication: &enrichment_core::evidence::catalog::JobPublication,
     ) -> Result<Vec<enrichment_core::evidence::Artifact>> {
         publication.validate().map_err(invalid)?;
-        let dependencies = self
-            .catalog
-            .pin()
-            .await?
+        let catalog = self.catalog.pin().await?;
+        let dependencies = catalog
             .result_dependencies(&self.runtime, &self.blobs, &publication.delivery)
             .await?;
-        let publication = publication.clone();
-        let blobs = self.blobs.clone();
-        self.runtime
-            .blocking(move || -> std::io::Result<()> {
-                let header = blobs.read_delivery(&publication.delivery, "delivery-admission")?;
-                let expected = match publication.state {
-                    enrichment_core::wire::JobState::Succeeded => {
-                        header.outcome().is_some_and(|outcome| {
-                            matches!(outcome, enrichment_core::wire::Outcome::Ok { .. })
-                        })
-                    }
-                    enrichment_core::wire::JobState::Partial => {
-                        header.outcome().is_some_and(|outcome| {
-                            matches!(outcome, enrichment_core::wire::Outcome::Partial { .. })
-                        })
-                    }
-                    enrichment_core::wire::JobState::Failed
-                    | enrichment_core::wire::JobState::Cancelled => {
-                        header.outcome().is_some_and(|outcome| {
-                            matches!(outcome, enrichment_core::wire::Outcome::Error { .. })
-                        })
-                    }
-                    _ => false,
-                };
-                if header.context_id.as_deref() != Some(publication.context_id.as_str())
-                    || header.snapshot_id.as_deref() != Some(publication.snapshot_id.as_str())
-                    || !expected
-                {
-                    return Err(std::io::Error::other(
-                        "delivery differs from its catalog scope or outcome",
-                    ));
-                }
-                Ok(())
-            })
-            .await
-            .map_err(|e| invalid(format!("delivery validation worker failed: {e}")))??;
+        let retained = catalog
+            .retained_result(&self.runtime, &publication.delivery.artifact_id)
+            .await?;
+        crate::result_plan::admit_job(
+            &self.runtime,
+            publication,
+            catalog.result_record(&retained).await?,
+        )
+        .await?;
         Ok(dependencies)
     }
 
@@ -865,66 +880,19 @@ impl EvidenceRepository {
         publication: &enrichment_core::evidence::catalog::ComparisonPublication,
     ) -> Result<Vec<enrichment_core::evidence::Artifact>> {
         publication.validate().map_err(invalid)?;
-        let dependencies = self
-            .catalog
-            .pin()
-            .await?
+        let catalog = self.catalog.pin().await?;
+        let dependencies = catalog
             .result_dependencies(&self.runtime, &self.blobs, &publication.delivery)
             .await?;
-        let publication = publication.clone();
-        let blobs = self.blobs.clone();
-        self.runtime
-            .blocking(move || -> std::io::Result<_> {
-                let (_, fields) = blobs.read_result_sections(
-                    &publication.delivery,
-                    &[
-                        "status",
-                        "context_id",
-                        "snapshot_id",
-                        "data.before",
-                        "data.after",
-                    ],
-                    1024 * 1024,
-                )?;
-                let expected = match publication.state {
-                    enrichment_core::wire::JobState::Succeeded => "ok",
-                    enrichment_core::wire::JobState::Partial => "partial",
-                    _ => {
-                        return Err(std::io::Error::other(
-                            "invalid comparison publication outcome",
-                        ));
-                    }
-                };
-                let text = |key: &str| fields.get(key).and_then(serde_json::Value::as_str);
-                let side = |key: &str, context: &str, snapshot: &str| {
-                    fields.get(key).is_some_and(|side| {
-                        side.get("context_id").and_then(serde_json::Value::as_str) == Some(context)
-                            && side.get("snapshot_id").and_then(serde_json::Value::as_str)
-                                == Some(snapshot)
-                    })
-                };
-                if text("status") != Some(expected)
-                    || text("context_id") != Some(publication.after_context_id.as_str())
-                    || text("snapshot_id") != Some(publication.after_snapshot_id.as_str())
-                    || !side(
-                        "data.before",
-                        publication.before_context_id.as_str(),
-                        publication.before_snapshot_id.as_str(),
-                    )
-                    || !side(
-                        "data.after",
-                        publication.after_context_id.as_str(),
-                        publication.after_snapshot_id.as_str(),
-                    )
-                {
-                    return Err(std::io::Error::other(
-                        "comparison delivery differs from its exact input pair or outcome",
-                    ));
-                }
-                Ok(())
-            })
-            .await?
-            .map_err(DataFusionError::from)?;
+        let retained = catalog
+            .retained_result(&self.runtime, &publication.delivery.artifact_id)
+            .await?;
+        crate::result_plan::admit_comparison(
+            &self.runtime,
+            publication,
+            catalog.result_record(&retained).await?,
+        )
+        .await?;
         Ok(dependencies)
     }
 

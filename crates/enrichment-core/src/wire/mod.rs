@@ -61,3 +61,5 @@ pub use research::{
     DiagnosticCause, InspectionAspect, MatchCount, RecoveryAction, ResearchSelection,
     ResultSection,
 };
+
+pub mod bindings;

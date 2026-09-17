@@ -1,0 +1,275 @@
+{
+  "_comment": [
+    "The only per-library configuration in this repository. Everything that changes the bytes",
+    "build.py produces is declared here, so the acquisition cache key can be recomputed without",
+    "running anything.",
+    "",
+    "Four blocks have no counterpart in the sibling manifests, and each exists because copying",
+    "fastmcp's build unchanged would have produced an index that is silently wrong rather than",
+    "broken:",
+    "",
+    "  subjects        -- three subjects, two pins. typer._click is a module-prefix projection,",
+    "                     not a second Griffe load: Griffe already descends into private",
+    "                     submodules, so the vendored copy is indexed whether we name it or not.",
+    "                     Naming it is what lets a row say WHICH library it is a fact about.",
+    "",
+    "  export_signals  -- neither library uses __all__. rich declares it in 2 modules of 77,",
+    "                     typer in 1 of 32 and that one is private. Griffe's Module.exports is",
+    "                     __all__-only, so the __all__-only reading leaves the preferred-spelling",
+    "                     ranking with a constant term, marks every alias an import-site, and",
+    "                     admits nothing to the boundary rows.",
+    "",
+    "  dunder_protocols -- rich's two central protocols, ConsoleRenderable and RichCast, declare",
+    "                     nothing but __rich_console__ and __rich__. Three separate underscore",
+    "                     filters drop them, and the assignability producer skips a protocol with",
+    "                     no public members, so satisfies.tsv would come out EMPTY for both and",
+    "                     every check would still pass. That is the failure this family exists to",
+    "                     prevent, so the names are declared rather than inferred.",
+    "",
+    "  probe_environment -- this repository executes its subjects. Rendering is deterministic",
+    "                     only under a replaced environment; the evidence for each name is in",
+    "                     the block itself."
+  ],
+
+  "repository": {
+    "name": "typer-rich",
+    "title": "Typer and Rich capability repository",
+    "description": "Typer, Rich and Typer's vendored Click, indexed at pinned releases, joined to upstream documentation, runnable tutorials, examples and tests, and to executed probes that capture what the output actually looks like."
+  },
+
+  "tools": {
+    "ast_grep_version": "0.45.3",
+    "ast_grep_note": "A hard gate here, unlike fastmcp, where a mismatch only warns. link.dunder_sites and check_rule_tests both depend on the parser, and a silently different ast-grep changes what the corpus link pass finds.",
+    "griffe_versions": ["2.3.0"],
+    "griffelib_versions": ["2.3.0"],
+    "ty_version": "0.0.80",
+    "checker_binary": "pyrefly",
+    "checker_version": "1.3.1",
+    "checker_note": "The batch analysis producer. Pinned because the workstation carries a different release and a capture from two versions is not a capture.",
+    "python_expected": "3.14",
+    "docstring_parser": "google"
+  },
+
+  "environment": {
+    "schema": 1,
+    "python": "3.14",
+    "install": ["typer==0.27.2", "rich==15.0.0"],
+    "resolved_file": "resolved.json",
+    "resolved_note": "7 distributions. Three arrive through ranges -- pygments>=2.13.0,<3.0.0, markdown-it-py>=2.2.0, annotated-doc>=0.0.2 -- so the declared pins are not a pin. Syntax output depends on the pygments release, which makes this lock load-bearing for the render probes rather than hygiene.",
+    "one_capsule_note": "One capsule venv, not two. typer depends on rich by range; resolving them separately would let the index describe a rich that typer never runs against, which is precisely the fact the render probes exist to pin. A rich-only re-pin therefore changes the envelope key and invalidates typer's captures. That is correct: bumping rich changes what typer's --help renders."
+  },
+
+  "distributions": [
+    {
+      "dist": "typer",
+      "module": "typer",
+      "role": "primary"
+    },
+    {
+      "dist": "rich",
+      "module": "rich",
+      "role": "primary",
+      "exclude_modules": ["rich._unicode_data", "rich._emoji_codes"],
+      "exclude_note": "23 generated character-width tables (11,928 lines) and a 3,610-line emoji map. Excluded from the index AND from assert_coverage's expectation -- if only the first, the assertion passes vacuously. They are data, not API, and they would be roughly 40% of the symbol count. Their behaviour is covered instead: UNICODE_VERSION is in env-vars.tsv and probed through cell_len, emoji substitution through Console.print(':smile:')."
+    }
+  ],
+
+  "subjects": [
+    {
+      "name": "typer",
+      "dist": "typer",
+      "pinned": true,
+      "module_prefixes": ["typer"],
+      "exclude_prefixes": ["typer._click"]
+    },
+    {
+      "name": "rich",
+      "dist": "rich",
+      "pinned": true,
+      "module_prefixes": ["rich"]
+    },
+    {
+      "name": "click",
+      "dist": "typer",
+      "pinned": false,
+      "module_prefixes": ["typer._click"],
+      "vendored_from": {
+        "upstream": "pallets/click",
+        "release": "8.3.1",
+        "evidence": "typer/_click/__init__.py module docstring"
+      },
+      "registries": [
+        {
+          "base": "typer._click.shell_completion.ShellComplete",
+          "registrar": "typer._click.shell_completion.add_completion_class"
+        }
+      ],
+      "declared_reachability": [
+        {
+          "subclasses_of": ["typer._click.types.ParamType"],
+          "reached_via": "typer.Option / typer.Argument (annotation resolution)",
+          "why": "What an annotation BECOMES. `Annotated[int, typer.Option(min=1)]` is turned into a typer._click.types.IntRange by typer itself, so the class appears in nobody's signature and inherits from nothing nameable -- both graph joins miss it. It is still the answer to 'what does my annotation do on the command line', which is the question Typer exists to answer, and it is the one the 0.26.0 note closes off: customizing the field types with Click-specific types is no longer supported, and this is the list of types that means."
+        }
+      ],
+      "internal_allowlist": [
+        "typer._click._compat._AtomicFile",
+        "typer._click._compat._FixupStream",
+        "typer._click._compat._NonClosingTextIOWrapper",
+        "typer._click._textwrap.TextWrapper",
+        "typer._click._winconsole.ConsoleStream",
+        "typer._click._winconsole._WindowsConsoleRawIOBase",
+        "typer._click._winconsole._WindowsConsoleReader",
+        "typer._click._winconsole._WindowsConsoleWriter",
+        "typer._click.parser._Argument",
+        "typer._click.parser._Option",
+        "typer._click.parser._ParsingState",
+        "typer._click.types.OptionHelpExtra",
+        "typer._click.utils.LazyFile",
+        "typer._click.utils.PacifyFlushWrapper"
+      ],
+      "internal_allowlist_why": "Vendored Click classes with public members that a caller genuinely never meets: stream shims, the Windows console layer, the parser's own state, and two file wrappers. check_reachability fails on any OTHER click item that comes out `internal`, so this list is the claim being made -- if the vendored copy grows a class that callers do meet, the build says so rather than quietly filing it under internal.",
+      "note": "Vendored Click: 15 modules, 5,548 lines. Where Context, Parameter, ParamType, shell completion and the whole exception hierarchy live. Typer 0.26.0 dropped the external click dependency, so `import click` in a Typer project resolves to a DIFFERENT library from the one Typer runs -- and it still type-checks. Read a row under this subject as a fact about Typer's copy at 0.27.2, never as a fact about the click package."
+    }
+  ],
+
+  "export_signals": {
+    "dunder_all": true,
+    "redundant_alias": true,
+    "public_module_definition": true,
+    "note": "Ranked, highest first. `redundant_alias` is the PEP 484 `from .x import Y as Y` idiom, which is typer/__init__.py's entire content -- 28 names, and the __all__-only reading finds none of them. `public_module_definition` is rich's convention: a non-underscore name defined in a non-underscore module is public, because rich documents rich.table.Table and never re-exports it. That third signal subtracts names bound under `if __name__ == \"__main__\":`, because nearly every rich module ends in a self-demo and Griffe walks the guard body statically -- measured, without the subtraction rich.panel reported `c` and `p` as exports alongside `Panel`.",
+    "measured": "Modules carrying exports went from 1/32 to 14/32 for typer and 2/76 to 56/76 for rich."
+  },
+
+  "dunder_protocols": ["__rich__", "__rich_console__", "__rich_measure__", "__rich_repr__"],
+
+  "probe_environment": {
+    "allow": ["PATH", "HOME", "LC_ALL", "LANG", "TZ", "PYTHONHASHSEED", "PYTHONDONTWRITEBYTECODE", "PYTHONIOENCODING", "VIRTUAL_ENV"],
+    "values": {
+      "LC_ALL": "C",
+      "LANG": "C",
+      "TZ": "UTC",
+      "PYTHONHASHSEED": "0",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "PYTHONIOENCODING": "utf-8"
+    },
+    "must_be_absent": [
+      "UNICODE_VERSION", "TERMINAL_WIDTH", "COLUMNS", "LINES",
+      "NO_COLOR", "FORCE_COLOR", "PY_COLORS", "GITHUB_ACTIONS",
+      "TTY_COMPATIBLE", "TTY_INTERACTIVE", "TERM", "COLORTERM",
+      "JUPYTER_COLUMNS", "JUPYTER_LINES",
+      "DATABRICKS_RUNTIME_VERSION", "_TYPER_FORCE_DISABLE_TERMINAL"
+    ],
+    "evidence": {
+      "UNICODE_VERSION": "rich/_unicode_data/__init__.py -- read from os.environ directly, NOT through Console._environ, and the loader is @cache'd so it is also order-dependent.",
+      "DATABRICKS_RUNTIME_VERSION": "rich/console.py -- os.getenv inside _is_jupyter.",
+      "TERMINAL_WIDTH": "typer/rich_utils.py -- read once at module import into MAX_WIDTH. Setting it after `import typer.rich_utils` has no effect, which is its own probe.",
+      "GITHUB_ACTIONS|FORCE_COLOR|PY_COLORS": "typer/rich_utils.py -- collapsed into FORCE_TERMINAL at import.",
+      "TERM": "Measured: TERM=dumb overrode an explicitly passed Console(width=40) and reported 80.",
+      "NO_COLOR": "Measured: NO_COLOR=1 stripped the colour from force_terminal=True, color_system='truecolor' output while leaving bold intact. NO_COLOR='' is ignored."
+    },
+    "layers_note": "Four layers, all required, because no single one covers the surface. (1) replace the process environment wholesale from `allow`/`values` -- not unset-a-list, a literal dict with nothing inherited; HOME points at a scratch directory so typer.get_app_dir() is deterministic. (2) Console(_environ=<literal dict>) on every rich probe. (3) explicit width/height/force_terminal/color_system/legacy_windows/get_time/get_datetime. (4) one subprocess per probe."
+  },
+
+  "corpora": [
+    {
+      "name": "typer-docs",
+      "repo": "fastapi/typer",
+      "ref": "0.27.2",
+      "ref_kind": "tag",
+      "source_prefix": "docs/",
+      "dest": "corpus/typer/docs",
+      "suffixes": [".md"],
+      "excludes": ["img/", "css/", "js/", "overrides/"],
+      "expected_files": 75,
+      "note": "The documentation site at the pinned tag, MkDocs. docs/reference/ is kept: it reads like generated API stubs but is not -- context.md is the prose that explains typer.Context and typer.CallbackParam, which is exactly what the vendored-click reachability story needs."
+    },
+    {
+      "name": "typer-docs-src",
+      "repo": "fastapi/typer",
+      "ref": "0.27.2",
+      "ref_kind": "tag",
+      "source_prefix": "docs_src/",
+      "dest": "corpus/typer/docs_src",
+      "suffixes": [".py"],
+      "excludes": [],
+      "expected_files": 304,
+      "note": "Every code block in the tutorial is a real file here, one directory per doc page and numbered within it. The highest-value corpus in this repository: upstream's own answer to 'how do I do X', executable, at the pinned release. Indexed, never executed -- see reference.md."
+    },
+    {
+      "name": "typer-tests",
+      "repo": "fastapi/typer",
+      "ref": "0.27.2",
+      "ref_kind": "tag",
+      "source_prefix": "tests/",
+      "dest": "corpus/typer/tests",
+      "suffixes": [".py"],
+      "excludes": [],
+      "expected_files": 296,
+      "note": "What upstream asserts about its own behaviour, including the help-output assertions that pin the 0.27.0 metavar change."
+    },
+    {
+      "name": "rich-docs",
+      "repo": "Textualize/rich",
+      "ref": "v15.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "docs/source/",
+      "dest": "corpus/rich/docs",
+      "suffixes": [".rst", ".py"],
+      "excludes": [],
+      "expected_files": 64,
+      "note": "Sphinx, not MkDocs. console.rst is the only prose anywhere describing the terminal-detection environment variables."
+    },
+    {
+      "name": "rich-examples",
+      "repo": "Textualize/rich",
+      "ref": "v15.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "examples/",
+      "dest": "corpus/rich/examples",
+      "suffixes": [".py", ".md"],
+      "excludes": [],
+      "expected_files": 37,
+      "note": "Runnable demonstrations of the renderables. The closest thing rich has to typer's docs_src."
+    },
+    {
+      "name": "rich-tests",
+      "repo": "Textualize/rich",
+      "ref": "v15.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "tests/",
+      "dest": "corpus/rich/tests",
+      "suffixes": [".py"],
+      "excludes": [],
+      "expected_files": 67,
+      "note": "Upstream's own executable statement of the behaviour this repository refuses to probe -- test_progress.py in particular, which is where a reader is sent when they want animation."
+    },
+    {
+      "name": "rich-questions",
+      "repo": "Textualize/rich",
+      "ref": "v15.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "questions/",
+      "dest": "corpus/rich/questions",
+      "suffixes": [".md"],
+      "excludes": [],
+      "expected_files": 11,
+      "note": "Upstream's answers to the questions people actually ask -- square brackets, broken emoji, unexpected highlighting, ANSI escapes. Short, and each one is a failure mode an agent will hit."
+    },
+    {
+      "name": "rich-changelog",
+      "repo": "Textualize/rich",
+      "ref": "v15.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "",
+      "dest": "corpus/rich/changelog",
+      "suffixes": [".md"],
+      "excludes": [
+        "README", "CONTRIBUTING", "CODE_OF_CONDUCT", "CONTRIBUTORS", "FAQ",
+        "SECURITY", "AI_POLICY", "docs/", "examples/", "tests/", "questions/",
+        "benchmarks/", ".faq/", ".github/", "imgs/", "assets/", "tools/"
+      ],
+      "expected_files": 1,
+      "note": "CHANGELOG.md alone. Rich has no release-notes page, so this is the only source for when TTY_COMPATIBLE, TTY_INTERACTIVE and UNICODE_VERSION arrived and what the empty-value semantics of NO_COLOR and FORCE_COLOR became in 14.0. The exclusion list is long because the prefix is the repository root; excluding 'README' catches all 18 translations, since an exclude matches a path prefix."
+    }
+  ]
+}

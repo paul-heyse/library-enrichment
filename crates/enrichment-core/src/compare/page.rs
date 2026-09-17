@@ -2,12 +2,13 @@
 use crate::search::CursorError;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ComparisonKey {
-    pub plan: u32,
-    pub subject: String,
-    pub key: String,
+crate::native_struct! {
+    #[derive(PartialOrd,Ord)]
+    pub struct ComparisonKey {
+        plan: u32 => crate::native_union::Rule::UnsignedRange {min:0,max:7},
+        subject: String => crate::native_union::Rule::Text,
+        key: String => crate::native_union::Rule::NonEmpty,
+    }
 }
 
 /// Stable alternative order is `(value, source)` within an immutable changed key.

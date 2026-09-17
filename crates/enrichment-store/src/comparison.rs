@@ -12,9 +12,151 @@ use enrichment_core::compare::{
     self, Change, Scope,
     page::{AlternativeCursor, ComparisonKey},
 };
-use std::collections::BTreeMap;
+use enrichment_core::native_union::{Cell, NativeStruct, Rule};
+use std::{collections::BTreeMap, sync::Arc};
+
+enrichment_core::native_struct! {
+    struct ChangeInput {
+        before_snapshot: enrichment_core::identity::SnapshotId => Rule::Text,
+        after_snapshot: enrichment_core::identity::SnapshotId => Rule::Text,
+        key: ComparisonKey => Rule::Text,
+        scope: Scope => Rule::Text,
+        before: Option<Vec<compare::Alternative>> => Rule::Sequence,
+        after: Option<Vec<compare::Alternative>> => Rule::Sequence,
+        before_page: enrichment_core::wire::Page => Rule::Text,
+        after_page: enrichment_core::wire::Page => Rule::Text,
+        detail: Option<bool> => Rule::Text,
+    }
+}
+enrichment_core::native_struct! {
+    struct ChangedRow { key: ComparisonKey => Rule::Text, change: Change => Rule::Text }
+}
+
+async fn compose_changes(
+    runtime: &crate::runtime::QueryRuntime,
+    inputs: &[ChangeInput],
+) -> Result<Vec<(ComparisonKey, Change)>> {
+    use datafusion::functions::core::expr_ext::FieldAccessor;
+    let session = runtime.session();
+    crate::native_catalog::work(
+        &session,
+        "change_inputs",
+        session.read_batch(ChangeInput::batch(inputs)?)?.into_view(),
+    )?;
+    let frame = session.sql("WITH classified AS (SELECT *, CASE WHEN before IS NULL THEN 'added' WHEN after IS NULL THEN 'removed' ELSE 'changed' END AS kind FROM change_inputs) SELECT *,concat(CASE WHEN scope='api' AND kind='added' THEN 'API observed only on the after side; confirm coverage before treating this as an addition. Execution and project compatibility have not been established.' WHEN scope='api' THEN 'Observed API representation changed; producer rendering, including Infallible versus never-type (!), can differ without a source-level compatibility change. Verify consequential usage.' ELSE 'Evidence changed within this scope; this is not an executed behavior assertion.' END,CASE WHEN detail THEN ' This reply projects the requested before alternative page; the opposite side count remains unknown.' WHEN detail=false THEN ' This reply projects the requested after alternative page; the opposite side count remains unknown.' ELSE '' END) AS interpretation FROM classified").await?;
+    let fields = ChangeInput::fields();
+    let key_fields = ComparisonKey::fields();
+    let fingerprint = enrichment_core::native_identity::canonical_bytes(
+        "comparison-change/3",
+        vec![
+            fields[0].clone(),
+            fields[1].clone(),
+            key_fields[0].clone(),
+            key_fields[2].clone(),
+        ]
+        .into(),
+    );
+    let identity = datafusion::functions::string::expr_fn::concat(vec![
+        lit("change_"),
+        datafusion::functions::encoding::expr_fn::encode(
+            datafusion::functions::crypto::expr_fn::sha256(fingerprint.call(vec![
+                col("before_snapshot"),
+                col("after_snapshot"),
+                col("key").field("plan"),
+                col("key").field("key"),
+            ])),
+            lit("hex"),
+        ),
+    ]);
+    let change = enrichment_core::evidence::arrow_model::expressions::record(
+        &Change::data_type(),
+        &[
+            ("change_id", identity),
+            ("scope", col("scope")),
+            ("kind", col("kind")),
+            ("subject", col("key").field("subject")),
+            ("before", col("before")),
+            ("after", col("after")),
+            ("interpretation", col("interpretation")),
+            ("before_page", col("before_page")),
+            ("after_page", col("after_page")),
+        ],
+    )?;
+    let frame = frame
+        .select(vec![col("key"), change.alias("change")])?
+        .sort(vec![
+            col("key").field("plan").sort(true, false),
+            col("key").field("subject").sort(true, false),
+            col("key").field("key").sort(true, false),
+        ])?;
+    Ok(runtime
+        .records::<ChangedRow>(frame, inputs.len().max(1))
+        .await?
+        .into_iter()
+        .map(|row| (row.key, row.change))
+        .collect())
+}
 
 const ALTERNATIVES: usize = 32;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn changed_key_identity_is_native_and_independent_of_detail_delivery() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
+        let mut input = ChangeInput {
+            before_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
+                "snap_{}",
+                "a".repeat(64)
+            ))
+            .unwrap(),
+            after_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
+                "snap_{}",
+                "b".repeat(64)
+            ))
+            .unwrap(),
+            key: ComparisonKey {
+                plan: 0,
+                subject: "crate::f".into(),
+                key: "path_f".into(),
+            },
+            scope: Scope::Api,
+            before: None,
+            after: Some(vec![]),
+            before_page: Default::default(),
+            after_page: Default::default(),
+            detail: None,
+        };
+        let original = compose_changes(&runtime, &[input.clone()])
+            .await?
+            .remove(0)
+            .1;
+        assert_eq!(original.kind, compare::ChangeKind::Added);
+        assert!(original.interpretation.contains("confirm coverage"));
+        input.detail = Some(false);
+        input.after = Some(vec![compare::Alternative {
+            value: compare::AlternativeValue::Inline {
+                value: serde_json::json!({"parameter":"value"}),
+            },
+            source: None,
+        }]);
+        let detail = compose_changes(&runtime, &[input.clone()])
+            .await?
+            .remove(0)
+            .1;
+        assert_eq!(original.change_id, detail.change_id);
+        assert!(detail.interpretation.contains("after alternative page"));
+        input.after_snapshot =
+            enrichment_core::identity::SnapshotId::try_from(format!("snap_{}", "c".repeat(64)))
+                .unwrap();
+        let different = compose_changes(&runtime, &[input]).await?.remove(0).1;
+        assert_ne!(original.change_id, different.change_id);
+        Ok(())
+    }
+}
 
 pub struct ComparisonPage {
     pub total: u64,
@@ -39,18 +181,45 @@ struct Axis {
 fn axes(scopes: &[Scope], catalog: &str) -> Vec<Axis> {
     let mut axes = Vec::new();
     if scopes.contains(&Scope::Api) {
-        axes.push(Axis { id: 0, scope: Scope::Api, raw: format!(r"
+        let payload = enrichment_core::evidence::relational::ApiPayload::body_fields()
+            .iter()
+            .filter(|field| {
+                !matches!(
+                    serde_json::from_str::<enrichment_core::native_union::Rule>(
+                        field
+                            .metadata()
+                            .get("enrichment.rule")
+                            .expect("generated field rule")
+                    )
+                    .expect("generated finite rule"),
+                    enrichment_core::native_union::Rule::Documentation
+                )
+            })
+            .map(|field| {
+                format!(
+                    "'{}', payload.\"{}\"",
+                    field.name().replace('\'', "''"),
+                    field.name().replace('\"', "\"\"")
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        axes.push(Axis {
+            id: 0,
+            scope: Scope::Api,
+            raw: format!(
+                r"
             SELECT path_id AS key, path AS label,
                 named_struct('kind', kind, 'qualifier', qualifier,
                     'definition_path', definition_path, 'defined_in_package', defined_in_package,
                     'is_reexport', is_reexport, 'observation',
                     CASE WHEN observation_id IS NULL THEN NULL ELSE
-                    named_struct('origin', origin, 'declared_kind', declared_kind,
-                        'signature', signature, 'deprecated', payload.deprecated,
-                        'cfg_hints', array_sort(payload.cfg_hints), 'python', payload.python) END) AS value,
+                    named_struct('origin', origin, {payload}) END) AS value,
                 source
             FROM {catalog}.domain.api_surface
-        ") });
+        "
+            ),
+        });
     }
     for (id, scope, kinds) in [
         (1, Scope::Docs, "'doc_text', 'readme_section'"),
@@ -63,18 +232,18 @@ fn axes(scopes: &[Scope], catalog: &str) -> Vec<Axis> {
                 SELECT concat(f.kind, ':', f.subject.kind, ':',
                     CASE f.subject.kind WHEN 'symbol' THEN s.path_id
                         WHEN 'definition' THEN d.definition_id WHEN 'library' THEN 'library'
-                        WHEN 'feature' THEN f.subject.feature
-                        WHEN 'example' THEN f.subject.path
-                        WHEN 'document' THEN concat(CAST(octet_length(coalesce(f.source.locator.file, '')) AS VARCHAR), ':', coalesce(f.source.locator.file, ''), f.subject.heading)
+                        WHEN 'feature' THEN f.subject.feature.name
+                        WHEN 'example' THEN f.subject.example.path
+                        WHEN 'document' THEN concat(CAST(octet_length(coalesce(coalesce(f.source.locator.lines.file, f.source.locator.archive_member.path, f.source.locator.python_declaration.file, f.source.locator.manifest_key.file, f.source.locator.markdown_section.file, f.source.locator.source_start.file), '')) AS VARCHAR), ':', coalesce(coalesce(f.source.locator.lines.file, f.source.locator.archive_member.path, f.source.locator.python_declaration.file, f.source.locator.manifest_key.file, f.source.locator.markdown_section.file, f.source.locator.source_start.file), ''), f.subject.document.heading)
                     END) AS key,
                     CASE f.subject.kind WHEN 'library' THEN 'library' WHEN 'symbol' THEN s.path
-                        WHEN 'definition' THEN d.definition_path WHEN 'feature' THEN f.subject.feature
-                        WHEN 'document' THEN f.subject.heading WHEN 'example' THEN f.subject.path END AS label,
+                        WHEN 'definition' THEN d.definition_path WHEN 'feature' THEN f.subject.feature.name
+                        WHEN 'document' THEN f.subject.document.heading WHEN 'example' THEN f.subject.example.path END AS label,
                     named_struct('kind', f.kind, 'text', replace(f.text, chr(13) || chr(10), chr(10)),
                         'evidence_class', f.source.evidence_class) AS value, f.source
                 FROM {catalog}.evidence.fragments f
-                LEFT JOIN {catalog}.evidence.symbols s ON f.subject.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
-                LEFT JOIN {catalog}.evidence.definitions d ON f.subject.definition_id = d.definition_id AND f.subject.kind = 'definition'
+                LEFT JOIN {catalog}.evidence.symbols s ON f.subject.symbol.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
+                LEFT JOIN {catalog}.evidence.definitions d ON f.subject.definition.definition_id = d.definition_id AND f.subject.kind = 'definition'
                 WHERE f.kind IN ({kinds})
             ") });
         }
@@ -94,11 +263,11 @@ fn axes(scopes: &[Scope], catalog: &str) -> Vec<Axis> {
             raw: format!(
                 r"
             WITH headers AS (
-                SELECT unnest(python_distribution.metadata) AS header, source
+                SELECT unnest(map_entries(python_distribution.metadata)) AS header, source
                 FROM {catalog}.evidence.release_metadata WHERE kind = 'python_distribution'
             )
             SELECT header.key AS key, header.key AS label,
-                array_sort(header.values) AS value, source FROM headers
+                array_sort(header.value) AS value, source FROM headers
             WHERE header.key IN ('requires-python', 'requires-dist', 'provides-extra')
         "
             ),
@@ -106,17 +275,17 @@ fn axes(scopes: &[Scope], catalog: &str) -> Vec<Axis> {
     }
     if scopes.contains(&Scope::Relationships) {
         axes.push(Axis { id: 7, scope: Scope::Relationships, raw: format!(r"
-            SELECT concat(r.subject.kind, ':', coalesce(s.symbol_id, r.subject.definition_id)) AS key,
+            SELECT concat(r.subject.kind, ':', coalesce(s.symbol_id, r.subject.definition.definition_id)) AS key,
                 coalesce(s.path, d.definition_path) AS label,
                 named_struct('relation', r.relation, 'qualifier', r.qualifier,
                     'target_kind', r.target.kind, 'target_symbol_id', t.symbol_id,
-                    'target_definition_id', r.target.definition_id,
-                    'target_package', r.target.package, 'target_path', r.target.path) AS value,
+                    'target_definition_id', r.target.definition.definition_id,
+                    'target_package', r.target.external.package, 'target_path', coalesce(r.target.external.path, r.target.unresolved.path)) AS value,
                 r.source
             FROM {catalog}.evidence.relationships r
-            LEFT JOIN {catalog}.evidence.symbols s ON r.subject.symbol_id = s.symbol_id AND r.subject.kind = 'symbol'
-            LEFT JOIN {catalog}.evidence.definitions d ON r.subject.definition_id = d.definition_id AND r.subject.kind = 'definition'
-            LEFT JOIN {catalog}.evidence.symbols t ON r.target.symbol_id = t.symbol_id AND r.target.kind = 'symbol'
+            LEFT JOIN {catalog}.evidence.symbols s ON r.subject.symbol.symbol_id = s.symbol_id AND r.subject.kind = 'symbol'
+            LEFT JOIN {catalog}.evidence.definitions d ON r.subject.definition.definition_id = d.definition_id AND r.subject.kind = 'definition'
+            LEFT JOIN {catalog}.evidence.symbols t ON r.target.symbol.symbol_id = t.symbol_id AND r.target.kind = 'symbol'
         ") });
     }
     axes.sort_by_key(|a| a.id);
@@ -278,7 +447,7 @@ async fn page_inner(
     );
     // Reserve a bounded terminal header/index envelope independently of value artifacts.
     let mut artifact_bytes = crate::runtime::remaining_artifact_bytes().saturating_sub(1024 * 1024);
-    let mut hydrated = BTreeMap::new();
+    let mut hydrated = Vec::new();
     for key in &keys {
         let axis = axes
             .iter()
@@ -335,13 +504,14 @@ async fn page_inner(
                         let array = batch.column_by_name("value").ok_or_else(|| {
                             DataFusionError::Internal("missing comparison value".into())
                         })?;
+                        let field = Arc::new(batch.schema().field_with_name("value")?.clone());
                         for (row, source) in sources.into_iter().enumerate() {
                             observed = true;
                             if values.len() == ALTERNATIVES {
                                 more = true;
                                 break;
                             }
-                            let value = projection::comparison_value::deliver(array.as_ref(), row, &blobs, remaining)?;
+                            let value = projection::comparison_value::deliver(&field, array.as_ref(), row, &blobs, remaining)?;
                             let Some(value) = value else {
                                 if values.is_empty() {
                                     return Err(DataFusionError::ResourcesExhausted(format!("remaining comparison artifact capacity ({remaining} bytes) cannot hold a nonempty side page; reduce changed keys per request or follow an existing alternative cursor")));
@@ -383,45 +553,19 @@ async fn page_inner(
         }
         let (after_values, after_page) = sides.pop().expect("two comparison sides");
         let (before_values, before_page) = sides.pop().expect("two comparison sides");
-        let mut change = compare::change(
-            axis.scope,
-            &key.key,
-            &key.subject,
-            before_values,
-            after_values,
-        );
-        // Identity is the immutable pair and changed key, independent of this detail page.
-        change.change_id = format!(
-            "change_{}",
-            enrichment_core::canonical::digest_hex(&serde_json::json!([
-                "comparison-change/2",
-                snapshots,
-                key.plan,
-                key.key
-            ]))
-        );
-        if let Some(detail) = detail {
-            change.interpretation.push_str(if detail.before {
-                " This reply projects the requested before alternative page; the opposite side's count remains unknown."
-            } else {
-                " This reply projects the requested after alternative page; the opposite side's count remains unknown."
-            });
-        }
-        change.before_page = before_page;
-        change.after_page = after_page;
-        hydrated.insert((axis.id, key.key.clone()), change);
+        hydrated.push(ChangeInput {
+            before_snapshot: before.manifest().snapshot_id.clone(),
+            after_snapshot: after.manifest().snapshot_id.clone(),
+            key: key.clone(),
+            scope: axis.scope,
+            before: before_values,
+            after: after_values,
+            before_page,
+            after_page,
+            detail: detail.map(|cursor| cursor.before),
+        });
     }
-    let changes = keys
-        .into_iter()
-        .map(|key| {
-            let change = hydrated
-                .remove(&(key.plan, key.key.clone()))
-                .ok_or_else(|| {
-                    DataFusionError::Execution("selected comparison row disappeared".into())
-                })?;
-            Ok((key, change))
-        })
-        .collect::<Result<_>>()?;
+    let changes = compose_changes(runtime, &hydrated).await?;
     Ok(ComparisonPage {
         total,
         changes,

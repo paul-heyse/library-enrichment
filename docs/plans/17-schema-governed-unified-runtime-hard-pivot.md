@@ -1,8 +1,8 @@
 ---
 title: Schema-governed unified DataFusion and Delta runtime hard pivot
-status: draft
+status: in-progress
 date: 2026-09-16
-adrs: [ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045]
+adrs: [ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045, ADR-0047, ADR-0048, ADR-0049]
 phase: 6
 ---
 
@@ -22,12 +22,20 @@ Plan 15's complete destination: WP00–WP12, F01–F14, DFU-01–DFU-08, L01–L
 and [Delta integration follow-up](../design_review/reviews/design_review_delta-integration-followup_2026-09-15.md)
 remain inputs. This is one integrated architecture and deletion plan, not an optional schema addendum.
 
-**Status: proposed implementation; all FP packages open.** This planning pass changed documentation
-and added a bounded library probe/evidence only. It did not change product code, dependencies,
-installed services or state, and ran no product qualification. New executed library observations
-are in the [planning evidence](../design_review/reviews/evidence/combined-schema-runtime-plan-2026-09-16/README.md).
-They qualify specific implementation assumptions, not acceptance of the target. Every original
-WP remains open at full scope; Q01–Q13 remain `not_run` as final target gates.
+**Execution audit updated 2026-09-16. Implementation is substantial but incomplete.**
+The finite schema machinery, typed producer/evidence contracts, provider composition, native job
+views, complete retained results, generated nine-tool bindings and durable physical ownership are
+implemented in source, with focused receipts listed in §2. No FP package meets its complete exit
+criteria yet. Significant architectural work remains, especially typed ID deployment, remaining
+handler/effect policy, exact retention and maintenance, replay, and structured kernel telemetry.
+Q01–Q13 and the complete SC01–SC10 matrices remain `not_run` as final-target acceptance.
+
+**Read §2 for current completion status and §8 for the remaining execution order.** They supersede
+the previous chronological checkpoints. Numbered actions in §4 preserve the entire target scope;
+they are requirements, not a claim that every listed action is still unimplemented. This update is
+a source-and-receipt audit only: no implementation, product test reruns, installation or deletion
+was performed. Earlier planning probes remain [library evidence](../design_review/reviews/evidence/combined-schema-runtime-plan-2026-09-16/README.md),
+not product acceptance.
 
 ### 1.1 Non-negotiable destination
 
@@ -52,95 +60,131 @@ WP remains open at full scope; Q01–Q13 remain `not_run` as final target gates.
 
 ### 1.2 Evidence and working-tree boundary
 
-Reviewed HEAD: `9c154de8b2ead1d082fd253399bb1694627395c1`. The tree is dirty: the planning inspection
-previously reported 261 porcelain entries, including 76 untracked entries during Plan 16; this
-is a dated checkpoint, not a current file count. The schema review and this planning evidence add
-new untracked paths. HEAD alone does not identify this implementation. The original execution baseline is
-`.dev-state/plan15/execution-baseline.json`; the original source digest was
-`5b2640ca15e4e1e6bb3355eda84edb89d4bcdab3e390897513648c0581d4026a`.
+Current audited HEAD is `70539211e72a819b043f50793ba77c6689e85874`; substantial tracked and
+untracked implementation edits are not represented by that commit. The Plan 17 implementation
+baseline is `.dev-state/plan17/execution/baseline.json`. The status audit captured 695 product,
+configuration, vendor, script and test files in `.dev-state/plan17/status-audit/source-receipt.json`
+at `2026-09-16T23:31:30Z`, with aggregate content digest
+`9f7357f2775982d95a3465409a6191351104cfd9493132cca45c0f027f32a4ab`.
+The receipt also hashes the existing execution logs and records its inclusion scope. It is a
+reproducible source checkpoint, not a qualification receipt or an attribution of every dirty path.
 
-Preserve existing implementation and concurrent operator work. In particular, protected harness
-changes, Python-toolchain policy/ADR-0046 work, new skills/reference material and review evidence
-must not be reset or attributed wholesale to this plan. Before resuming implementation, record a
-fresh path/content baseline and current source receipt. Do not recreate the start of Plan 15.
+Planning originally inspected HEAD `9c154de8b2ead1d082fd253399bb1694627395c1`; the subsequent
+commit above was made outside that planning pass. Plan 15 provenance remains in
+`.dev-state/plan15/execution-baseline.json`. Preserve existing target implementation and concurrent
+operator work, especially protected harness changes, ADR-0046/Python-toolchain work and new
+skills/reference material. Do not reset the tree or reconstruct the start of an earlier plan.
 
-Source observations below mean **source-integrated**, not final-source or installed qualification.
-Existing logs under `.dev-state/plan15/` are development receipts and can be removed by explicit
-development cleanup; copy the necessary receipt/provenance into the final qualification artifact
-when the corresponding oracle is rerun. No previous-plan acceptance pass transfers to this epoch.
+Source observations mean **implemented in the inspected tree**, not final-source or installed
+qualification. Development logs can predate later changes, omit invocation/source identity, or be
+replaced by a rerun at the same path. §2 states the scope of the inspected receipt; its historical
+pass never transfers to the whole current source. Copy exact source, command, input, profile and
+log provenance into final qualification artifacts when their oracles run. No previous-plan pass
+transfers to this epoch. No task-owned Cargo/test/native-worker process was running at audit time.
 
 ## 2. Current implementation and the remaining boundary
 
-Paths in this document use `core/`, `store/`, and `daemon/` for
-`crates/enrichment-{core,store,daemon}/src/`. Links resolve to the actual files inspected.
+Paths abbreviated `core/`, `store/` and `daemon/` mean
+`crates/enrichment-{core,store,daemon}/src/`. **Implemented** below describes source scope already
+landed in the working tree. **Remaining** includes both missing architecture and qualification of
+implemented paths. Only recorded executions receive `passed` or `failed`; absent final executions
+are `not_run`. No percentage or broad completion claim is inferred from file or test counts.
 
-| Area | Reuse already present | Remaining obligation |
+### 2.1 Package completion ledger
+
+Action numbers refer to the unchanged numbered requirements in §4. A reference to an action in
+both columns means its implementation is partial or its required oracle has not closed.
+
+| Package | Implemented scope and source authority | Remaining scope to action |
 |---|---|---|
-| Native runtime | Shared bounded native executor, configured session/RuntimeEnv, Delta extension planner under retention, owned reads/writes/blocking work, operation context and spill | Complete external allocation/lifetime accounting, every extension contract, selected mutation routes and final failure qualification |
-| Schema and identity | Core Arrow evidence/worker contracts; semantic-contract Delta registry; explicit unsigned mapping; 26 shared native identity contracts; native tag/value/key/reference admission | Complete intrinsic/recursive metadata validation; eliminate remaining semantic JSON hashes; result/cursor/replay/retention identities; ordinary-extension proof |
-| Delta persistence/catalogs | Ten purpose-specific evidence tables, exact table/version/cohort/contract publication vectors, current native Delta scans, shared synchronizing local ObjectStore, qualified append | Controlled discovery/factory integration, full mutation/feature matrix, retention and power-loss qualification |
-| Control/publication | Fifteen tagged families, native current-state windows/joins, fenced claims/interests/renewal, one publication/head/terminal commit, artifact receipts and retained-result metadata | Retention/cleanup/maintenance families, remaining procedural job decisions, physical ownership authority, independent-process recovery/race matrix |
-| Acquisition | Native Rust/Python release selection, markers/wheel eligibility, dependency frontier, resolution routing, network policy, Delta HTTP cache | Durable raw registry/source fact authority, complete source/environment/producer witnesses, residual acquisition/revision policies and bounded resource proof |
-| Normalization | Both old semantic walkers removed; bounded Rust fact streams and generated Python Arrow IPC; native closure/ambiguity/coverage/admission; document and execution plans; native attempt and metadata contribution plans | Rustdoc compatibility defect, remaining execution/LSP/runtime observation lowering, full semantic field inventory and independent deep/large oracles |
-| Process authority | Exact retained policy/operation/effect definitions, private live grants, native image/configuration/containment admission, operator-only fixed qualification, warm-LSP command rebinding | Native proof of exact authorized inputs/environment/producer/action, durable physical cleanup/resources, real contained execution and revocation/restart qualification |
-| Research/results | Native score/factor/explanation plans, native browse/comparison/coverage components; Delta receipt/result lookup and dependency closure; wire 3.0 | Handler selection, result sections, page/cursor decisions, result identity, overflow and recovery still have procedural owners |
-| CDF | Two materialized search surfaces with atomic input/output checkpoints and explicit rebuild modes; publication changes consumed by the manifest resource | Full mutation/revision/fault equivalence, native rebuild selection, fresh-process typed replay and qualified logical read-provider cache |
-| Diagnostics | Core Arrow events, bounded reserved ingress, Delta `native_events`, native windows/aggregates/failure history, dropped-event reporting, explicit writer close | Delta/kernel events, daemon/component counters, complete correlation, writer fault/retention qualification and resource accounting |
-| Deployment/removal | Many old writers, journals, object normalizers and sidecars deleted; generated current schemas | Remaining live legacy behavior, active rules/fixtures/configs, final qualification, fresh installation and enumerated old-epoch deletion |
+| **FP00 — authority** | ADR-0047 establishes generated native schema authority; ADR-0048 adopts format 61; ADR-0049 records controlled provider composition. Current configuration declarations reject unknown fields. Native operation declarations and generated transport bindings exist. | Actions 1–5/7: complete the route-to-dataflow and field-owner inventories, consolidate all operation/policy consumers, join capability claims to route evidence, reconcile living guidance and prepare/install the current protected enforcement patch. Action 6's decisions exist; reconcile all supersession/disposition records and additional patch provenance before closure. |
+| **FP01 — declarations** | [Native unions](../../crates/enrichment-core/src/native_union.rs), records, payloads, vocabularies and split documentation declarations generate Arrow/Serde/Schemars/codecs. SubjectRef/TargetRef/Locator/ExecutionTarget, evidence, callable facts, commands, jobs, results, telemetry and physical ownership use them. Finite field/collection/reference descriptors replace substantial literal allowlists and provenance SQL. | Actions 3–5/7: finish the field/domain inventory, all scoped control/result/retention references and collection bounds, full manifest/limit propagation, and FP06/FP12's missing retention declarations. Prove the real one-variant/one-reference/one-aspect extension through every consumer (SC01/SC06/SC07). Existing generators are the implementation substrate; do not rebuild them. |
+| **FP02 — typed values/identity** | [Native schemas](../../crates/enrichment-core/src/native_schema.rs), canonical field framing and declared collection ordering; UTC-microsecond event/acquisition/producer/job clocks; UInt64-to-Decimal storage; fixed-binary extension support; parent-aware CHECK constraints and exact name-based read projection. Native definitions, citations, artifact receipts, projection checkpoints and comparison changed-key identities replace several JSON hashes. | Actions 1–8/11: deploy fixed-binary IDs/digests in actual semantic families (the content-identity macro still encodes Utf8), remove remaining semantic JSON hashes/cursor bindings, finish all dependency witnesses and the native contract-change/invalidation relation. Qualify actual kernel schema-edit delegation, every deployed value/layout and all mutation routes for actions 9/10. SC02–SC05/SC08 remain open. |
+| **FP03 — planning/admission** | [Semantic analyzer](../../crates/enrichment-core/src/native_analysis.rs) runs before coercion in the shared session; full-field UDFs, metadata-preserving record/map/array selection, generated intrinsic/collection predicates and scoped evidence anti-joins are implemented. Native invariant branches return structured rule/stage/witness failures. | Actions 2–8: finish declared domains/references across all families and the actual JOIN/UNION/CASE/IN/cast/aggregate/physical-output matrix; admit trusted key/statistics metadata only after the relevant checks. Resolve the status optimizer failure without bypassing semantic checks. Prove null/element/cardinality and wrong-scope violation sets independently (SC03/SC04/SC06). |
+| **FP04 — interchange/encoding** | [Bounded native JSON sink](../../crates/enrichment-core/src/native_json.rs) streams escaped values, exact integers/decimal strings, binary/domain values, clocks, maps/lists and tagged records. Typed citations preserve subject/source/locator; EvidenceFragment/legacy Symbol filling are removed. Generated worker/wire/Python schemas and full native result IPC exist; focused codec and generated-binding checks passed. | Actions 1–7: finish propagation to every resource/export/recovery consumer, complete native field inventory and numeric/null/union matrices through actual worker→Delta→MCP, prove full frame bounds and codec witness invalidation, and remove remaining semantic decode bridges. The encoder itself is implemented; full SC07 fidelity is not qualified. |
+| **FP05 — providers/mutations** | [Discovery](../../crates/enrichment-store/src/native_discovery.rs) uses bounded atomic DataFusion ListingSchemaProvider plus the patched DeltaTableFactory controlled opener. Exact table/version/schema/store/session capture is wired into preparation/startup. Actual native CHECK installation, nested IN persistence and fixed-binary read configuration have focused receipts. | Actions 1–3/5–7: enumerate and qualify every allowed/refused mutation and metadata route, protocol/feature enforcement, global keys/duplicate merge semantics, custom extension properties and complete provider metadata. Close interrupted CREATE→ADD CONSTRAINT recovery and backend concurrency/durability. Audit all four vendor manifests and route effects; do not list factory/discovery as absent. |
+| **FP06 — control/ownership** | [Control](../../crates/enrichment-store/src/control.rs) has **18 families**, including roots, owners and reservations. Core Arguments/Resolution and generated JobSnapshot replace daemon JobSpec/ResolutionStage; native plans own interests, shutdown selection and request/resolution admission. [OwnershipStore](../../crates/enrichment-store/src/physical_ownership.rs) owns durable creator/absence observations and capacity decisions; Runner, startup, qualification and cleanup are wired to it. Publication admits complete retained native results and native terminal state. | Actions 1/2/4–8: remaining caller-side request policy; exact query/result/replay/CDF protection, maintenance generations, orphan/stage cleanup obligations and complete scoped references. Bind claim expiry/reuse to reconciled physical ownership at every crash boundary. Qualify independent-process head/claim/interest/reservation races, lost acknowledgements and fresh duplicates. Physical owners are implemented; retention enrollment is not. |
+| **FP07 — acquisition/producers** | Generated acquisition/HTTP/producer/manifest contracts and native input Maps; native Rust/Python normalization, release/marker/dependency/network selection. [Rustdoc facts](../../crates/enrichment-core/src/producer/rustdoc/facts.rs) now use **rustdoc-types 0.61.0** and patched public-api 0.52.2, preserving stability/default-body and structured callable facts. Python facts carry ordered overload/base/parameter records and default origin. Historical format fixtures were removed. | Actions 1–3/6–9: durable typed registry/revision/source facts (registry selection still consumes temporary facts), remaining source/freshness/environment and runtime/LSP policies, independent complete callable/producer oracles, depth/cycle/large-input limits and owned cleanup. Actions 4/5's parser/renderer replacement is implemented; real acquisition, normalization and downstream fidelity still need current-worker qualification. |
+| **FP08 — effects** | Native commands/grants and immutable operation/effect readback remain the authority substrate. Typed inventories, clocks and generated codecs now feed them. Durable root/owner/reservation handling surrounds Runner creation and recovery; DataFusion child tasks propagate operation/effect context via JoinSetTracer. | Actions 1–6: prove the command authorizes exact argv/input/environment/output/network/budgets, finish derived environments and policy consistency, durable warm-LSP reuse and physical exit/revocation semantics. Rewrite stale live fixtures that still inspect/write `owned/*.json`. Run real contained producers/cancellation/restart/C20 for all enabled profiles; constructor compilation is not this evidence. |
+| **FP09 — research** | Native availability and full ancillary consensus replace bounded first-winner metadata; typed text/citations and split documentation projection are present. [Configuration comparison](../../crates/enrichment-store/src/comparison_context.rs) preserves unknown/empty/set meaning; native changed-key identity binds exact before/after snapshots. Native status selection is written but currently fails its focused test. | Actions 1–7: overview/inspection selection and ambiguity, duplicate kind/scope normalization, cursor/request identities, native page/evidence/window selection, full callable field-difference semantics and residual parallel query outputs. `ops/inspect.rs`, `search.rs`, `compare.rs` still contain semantic sort/dedup/hash decisions. Repair status and qualify independent whole-tool outcomes. |
+| **FP10 — results/MCP** | [ResultRecord](../../crates/enrichment-core/src/operation/results.rs) retains complete typed payload/header/evidence/artifacts/delivery. [Per-tool Delta relations](../../crates/enrichment-store/src/result_relations.rs), IPC+JSON indexing, native publication scope/outcome/cancellation admission and ranked byte-measured delivery are implemented. JobDeliveryFactory/DeliverySlot and DTO-clearing overflow are removed. `research_operations!` plus [wire bindings](../../crates/enrichment-core/src/wire/bindings.rs) generate all nine FastMCP Tool registrations. | Actions 1–10 residual consumers: consolidate core dispatch and handler composition/page policies, exact cursor/section/reference witnesses and authorization, export/readback and crash/orphan closure, all typed resource paths and packaged guidance. Publication/cancellation and escaped retained recovery have focused passes; complete real MCP journeys, retained export, missing-artifact and per-section boundaries remain unqualified. |
+| **FP11 — CDF/replay** | [SearchProjection](../../crates/enrichment-store/src/search_projection.rs) uses generated checkpoint/command fields and native full-join mode selection for initial/incremental/revision/source/history/export. Exact output/input selection and the manifest CDF consumer are present; old JSON checkpoint decoding and procedural mode selection were replaced. | Actions 2–8: complete incremental/full mutation and fault equivalence, missing-history/schema/contract rebuilds, orphan output handling, fresh-process typed-command replay, real immutable DeltaLogicalCodec cache consumer with revalidation/rebinding, and dependency-by-dependency invalidation. These are substantial implementation and qualification gaps, not only test wiring. |
+| **FP12 — retention/maintenance** | Global file leases still protect providers/plans/streams, including optimized-away logical scans. Operator maintenance now consults native physical ownership, and retired payload/reservation names were removed. State generation **8** binds cache/data roots with peer markers; export now checks destination rows and captured generation rather than assuming version zero. | **Actions 1–8 remain at full architectural scope:** native retention policy/horizons, protected versions, enrollment and maintenance fencing, owned checkpoint/log compaction/OPTIMIZE/VACUUM, actual safe reclamation, orphan cleanup and storage power-loss qualification. Existing locks and operator deletion are not the target retention protocol. Latest maintenance/export/peer-marker changes have no behavioral receipt. |
+| **FP13 — telemetry/resources** | Generated native event records, bounded reserved ingress, Delta history, explicit writer close and typed service HTTP/RPC/verification observations are present. [Daemon counters](../../crates/enrichment-daemon/src/metrics.rs) delegate to native aggregation; separate atomic semantic counters are gone. Native child-task context and reservation release have focused receipts. | Actions 1–6: integrate structured kernel MetricEvent via MetricsReporter/ReportGeneratorLayer and all builder metrics; complete component/recovery policy and lineage, capture-time external allocation bounds, event saturation/fault/drop/restart behavior and non-recursive telemetry. Prove ownership persists until physical work ends. No project kernel reporter is wired. |
+| **FP14 — physical choices** | Native Delta scans, metadata-preserving projection and independently projected heavy documentation are implemented; earlier narrow projection measurements and planning stats probes exist. | **Actions 1–8:** complete-journey cold/warm/offline/export/execution measurements, binary-ID/clock effects, native/external memory and I/O, strict/DV/COUNT equivalence, stats/pruning layers and chosen file/layout/cache/compaction settings with negative results. No final workload matrix or performance acceptance exists. |
+| **FP15 — deletion/design** | Many old normalizers, journals, flat union/DTO codecs, clocks, result callbacks, ownership files and handwritten Python wrappers were deleted. Current generated artifacts and ADR-0047–0049 are present. | **Actions 1–5:** close every L01–L24 behavior/import/test/package/rule/config path; finish positive enforcement and actual extension/policy-change oracles; reconcile patch provenance, DESIGN, STATUS, product skill/setup and protected installation. `STATUS.md` still describes Plan 15; this audit updates this plan only. |
+| **FP16 — qualification/activation** | No final-source candidate, installed-client qualification, fresh activation or retired-install removal is evidenced for Plan 17. Source uses the new epoch; that does not qualify a deployment. | **Actions 1–6 in full:** implement/register Q recipes, build one matching locked daemon/worker/executor/Python candidate, final quality and nine-tool/resource/offline/export/real-client/Linux acceptance, verified deletion manifest, activation and deployed smoke. `just --list` still lacks the thirteen proposed Q recipes. Reverify actual prerequisites when running them; do not invent `blocked` results. |
 
-### 2.1 Corrections to the chronological checkpoint
+### 2.2 Recorded focused evidence
 
-These are important when deciding what to implement next:
+All receipts below were **read, not rerun**, during this status audit. Paths are relative to
+`.dev-state/plan17/execution/`. Counts describe individual receipts, not an acceptance-gate tally.
+Older logs remain historical development evidence. None identifies the complete final source and
+deployment required by Q13.
 
-1. [Control records](../../crates/enrichment-store/src/control.rs) now have **15** families,
-   including `artifact_receipts` and `retained_results`; the older checkpoint's 13-family count is
-   stale. Retention and maintenance records are still absent from `Table::ALL`.
-2. [Attempt plans](../../crates/enrichment-store/src/attempt_plan.rs) and
-   [publication plans](../../crates/enrichment-store/src/publication_plan.rs) already replaced the
-   earlier object attempt/metadata merge. Finish residual consumers; do not rebuild that replacement.
-3. [Dependency expansion](../../crates/enrichment-store/src/dependency_plan.rs),
-   [HTTP cache](../../crates/enrichment-store/src/http_cache.rs), and
-   [resolution policy](../../crates/enrichment-store/src/resolution_policy.rs) are native now.
-   Their existence does not make every acquisition/source policy native or durably queryable.
-4. The second CDF consumer exists:
-   [manifest](../../crates/enrichment-daemon/src/ops/manifest.rs) calls
-   `Repository::publication_changes`, which executes
-   [EvidenceTables::change_plan](../../crates/enrichment-store/src/delta_evidence.rs).
-   Its remaining work is fidelity, policy, fault, retention, and public-path qualification.
-5. [Process grants](../../crates/enrichment-store/src/process_grants.rs) retain and read back the
-   selected operation before dispatch. Grant existence and exact operation hashing are not yet
-   proof that every argv/input/output action was selected by the command's semantic contract.
-6. [Telemetry history](../../crates/enrichment-store/src/telemetry_history.rs) already implements
-   `Close`, including concurrent-close handling, and service shutdown invokes it. Do not list basic
-   writer termination as wholly unimplemented; crash/fault/lifetime/retention qualification remains.
-7. [Result catalog](../../crates/enrichment-store/src/result_catalog.rs) makes lookup and dependency
-   closure native, but [result encoding](../../crates/enrichment-store/src/result.rs) still assigns
-   section aliases from JSON field names. [Delivery](../../crates/enrichment-daemon/src/delivery.rs)
-   still clears DTO fields and reconstructs recovery fields. This is substantial replacement work.
-8. The native score UDF replacement is present. Remaining handler token/kind/cursor and page logic
-   must consume that authority; reimplementing scoring is not the next task.
-
-### 2.2 Existing receipts and their limits
-
-Inspected **2026-09-16**; these are existing executions, not new tests run for this planning pass.
-
-| Receipt under `.dev-state/plan15/` | Recorded outcome | What remains outside the receipt |
+| Receipt | Recorded result | Evidence scope / limit |
 |---|---|---|
-| `native-control-drain-offline-journey.log` | 1 passed, 271.14 s | Predates the latest process/telemetry changes; not installed qualification |
-| `native-process-route-tests.log` | 4 passed, 55.18 s | Native synthetic route/grant fixtures; not actual containment |
-| `native-process-readback-tests.log` | 1 passed, 54.74 s | Exact retained operation/readback/revocation; not complete command-to-input authorization |
-| `native-qualification-authority-tests.log` | 1 passed, 0.08 s | Fixed qualification scope only; not real operator/container qualification |
-| `native-telemetry-runtime-contracts.log` | 14 passed, 0.84 s | Before the final close change; not writer crash/power-loss/retention qualification |
-| `native-telemetry-close-tests.log` | 1 passed, 0.80 s | Concurrent close/refusal/reopen behavior; does not certify every lifecycle boundary |
-| `native-telemetry-schemas-generate.log` | 4 valid / 5 invalid conformance cases passed | Current generated schemas; full nine-tool installed fidelity still open |
-| `native-telemetry-clippy.log` | Strict affected-crate all-target check passed, 6.37 s | Before the final concurrent-close tweak; no final-source broad quality claim |
-| `native-projection-publication.log` | 1 passed, 106.16 s | Focused publication/projection behavior; not the full CDF mutation/fault matrix |
-| `native-column-projection-tests.log` | 1 passed, 15.09 s | Native projection/read-I/O boundary only |
-| `rustdoc-compat-probe/stability.log` | Probe executed and demonstrated format-61 stable metadata rejected by the 0.59 parser | A confirmed defect to repair in FP07, not a successful producer acceptance result |
+| `generated-policy-core.log` | `passed`: 124 tests | Generated core policy/command contracts at that checkpoint; later source changed |
+| `generated-delta-contracts.log` | `passed`: 9 tests | Actual Delta typed/null/identity/metadata boundaries; not all mutation routes |
+| `generated-native-boundaries.log` | `passed`: 6 tests | Shared-session semantic/clock/artifact boundaries, not SC04's full operator matrix |
+| `native-map-projection-oracle.log` | `passed`: 1 test | Sliced/empty/null Maps and nested field metadata |
+| `native-value-codec-oracle.log` | `passed`: 2 tests | Exact numeric/binary/domain and typed union/map/list/clock wire values, escaped byte caps |
+| `format61-facts.log` | `passed`: 10 selected core tests | Format-61 facts and renderer model; zero-test filtered targets add no evidence |
+| `python-callables-worker.log` | `passed`: 5 tests | Focused Python callable extraction; not independent full SC09 coverage |
+| `integrated-normalizers.log`; `generated-acquisition-integration.log` | `passed`: 2 normalizer tests; 2 HTTP + 6 Arrow tests | Predate later fields/worker identities; latest broader store run has failures (§2.3) |
+| `native-provider-discovery-oracles.log` | `passed`: 3 tests | Bounded/collision/atomic listing, exact factory capture and nested IN CHECK round trip |
+| `native-request-admission-oracle.log` | `passed`: 1 test | Native request/resolution validation, not removal of every caller-side validator |
+| `unified-admission-witness.log`; `unified-admission-claims.log` | `passed`: 1 + 1 tests | Structured invariant witness; native claim lifecycle including expired producer budget (54.15 s). Not independent-process full Q03 |
+| `typed-citation-identity.log`; `typed-case-null-oracle.log`; `typed-case-domain-refusal.log` | `passed`: 1 + 1 + 1 tests | Typed citation identity and CASE absence/domain behavior |
+| `native-result-delivery-relations.log` | `passed`: 3 tests, 22.26 s | Per-tool native Delta result/recovery and escaped delivery bounds; predates added ownership families |
+| `native-publication-admission.log` | `passed`: 2 tests, 7.09 s | Native scope/outcome/payload admission, JSON parity and cancelled-probe distinction. Supersedes the earlier incomplete checkpoint for this receipt, not the failed full publication journey |
+| `native-configuration-comparison.log`; `native-changed-key-identity.log` | `passed`: 1 + 1 tests | Unknown/empty/set configuration comparison; exact snapshot-pair changed-key identity |
+| `native-ownership-oracle.log` | `passed`: 1 test, 40.75 s | Actual Delta ownership/capacity/reopen, same-boot creator refusal and different-boot recovery; no real container crash matrix |
+| `native-reservation-driver.log` | `passed`: 2 tests, 23.78 s | Capacity survives dropped owner; release after byte removal and bounded preparation |
+| `native-task-context-oracle.log`; `native-service-counter-oracle.log` | `passed`: 1 + 1 tests | Native async/blocking child context/deadline; process-scoped counters and closed-writer refusal |
+| `native-generated-bindings.log` | `passed`: generation/reproducibility; 4 valid / 5 invalid conformance cases | Generated and packaged schemas; not all real MCP values/routes |
+| `native-bindings-python.log` | `passed`: 40 tests, 3.36 s | Focused adapter/envelope/events/catalog/error-preview contracts; no installed-client claim |
+| `native-bindings-ruff.log`; `native-bindings-ty.log` | `passed` for recorded scopes | Focused lint and `ty` on the MCP package, not final whole-product quality |
+| `native-ownership-all-targets.log` | `passed`: daemon all-target compile, 4.13 s | Before the last export/state-test edits; compilation does not exercise cleanup or status behavior |
+| `native-typed-task-clippy.log` | `passed`: affected all-target strict Clippy at that checkpoint | Predates later result/ownership work. Latest strict attempt and final-source gap are below |
 
-The daemon, native worker and executor must be rebuilt together before the next integrated live
-journey. A stale built worker cannot certify current decoder/process contracts. Existing installed
-Plan 14 state has not been replaced by this source. No deployment action belongs to this planning pass.
+### 2.3 Failed and unresolved evidence
+
+These are **recorded failures**, not assertions that every old failure still reproduces on today's
+source. Source edits or a narrower passing test do not close an integrated failure. Resolve or
+reproduce each at its actual boundary after rebuilding any worker whose identity changed.
+
+| Boundary / receipt | Recorded failure | Required next evidence / owner |
+|---|---|---|
+| Status component selection — `native-status-selection.log` | `failed`: `push_down_leaf_projections` reports ambiguous `status_input.__datafusion_extracted_11`; 0 passed / 1 failed | Repair `store/status_plan.rs` and prove known/unknown/unfiltered status through the real session. No subsequent fix or passing receipt is recorded. FP03/FP09/FP10 |
+| Publication/CDF/export — `typed-citation-publication.log` | `failed`: `array_slice` receives a Decimal128 endpoint instead of a supported index; 0 / 1 | Rerun complete `publication_selects_native_delta_vector_and_exports_cohorts` after integration and current worker build. Earlier `generated-publication-journey.log` and `unified-admission-publication.log` also failed. Native result-admission passes do not cover this journey. FP02/FP05/FP10–FP12 |
+| Navigation/text — `typed-citation-navigation.log` | `failed`: actual List child metadata differs from the declared schema; 0 / 1 | Qualify the current metadata-preserving list aggregation patch on `native_navigation_and_text_projection_preserve_retained_identities`. The patch exists; no later passing journey receipt was found. FP03/FP07/FP09 |
+| Execution observation/export — `integrated-publication.log` | `failed`: actual artifact Struct differs from its semantic field contract; 0 / 1 | Latest generated acquisition/result changes need the complete `typed_execution_roundtrip_reuse_native_queries_and_complete_export` rerun with valid target fixtures. FP04/FP07/FP08/FP10 |
+| Broader store selection — `native-research-focused.log` | `failed`: 28 passed / 7 failed | Failures cover stale Rust worker identity, repeated-child/map diagnostic expectations, native-policy and two operation-index Decimal decoding cases, document Struct nullability, and result-dependency clock/window admission. Fixture teardown also logs diagnostic-writer failures/`Already shut down`. Inspect and close each actual test; no later passing receipt for this full selection exists. FP02/FP03/FP07/FP10/FP13 |
+| Strict Clippy — `native-architecture-clippy.log` | `failed`: intermediate missing BTreeMap import and Fields iteration compilation errors | Later compilation passes supersede those compile errors, but do not establish strict Clippy on final source. Current strict Clippy and whole-product quality are `not_run`. FP15/FP16 |
+
+The older unscoped `typed-citation-python.log` failed in concurrently installed skill corpora;
+the scoped MCP checks subsequently passed. This does not grant a final whole-tree typecheck pass.
+Do not restore retired DTOs, relax domain admission, disable the optimizer, or extend deadlines
+merely to make these receipts green.
+
+### 2.4 Implemented but not yet behaviorally checked at the latest boundary
+
+- The latest ownership wiring in startup/operator qualification, failed-spawn recovery and
+  maintenance has not run through the complete real-producer/cleanup suite. Two live cleanup
+  fixtures still access `owned/*.json`; rewrite them around native owner records.
+- The generation-8 cache/data peer-marker refusal test and latest maintenance preview/apply
+  changes have no executed behavioral receipt. Marker JSON is mechanical bootstrap identity,
+  not a retained semantic policy journal.
+- Export's row-based empty-destination check, generation conflict and per-tool result rebinding
+  are in source; portable export/readback and result closure remain unqualified.
+- Daemon/worker/executor must be rebuilt from the same source before the next integrated journey.
+  A previously built native worker cannot qualify the present decoder/contracts; stale identity
+  refusal is visible in the logs.
+- Final quality, all Q/SC matrices, installed nine-tool/resource acceptance, real clients,
+  power-loss evidence, protected enforcement installation, fresh activation and retired-runtime
+  deletion remain outstanding. No new product tests or library probes were needed to establish
+  this audit; pinned skills/source and existing receipts answered the capability questions.
 
 ## 3. Pinned capability basis
 
@@ -170,7 +214,7 @@ receipts; research only unresolved consequential seams.
 | `datafusion_session::{catalog::CatalogProvider, schema::SchemaProvider, table::TableProvider}`; [catalog skill topic](../../.claude/skills/datafusion/content/topics/catalogs.md), [provider map](../design_review/capability-maps/datafusion_provider_contracts.md) | Preserve complete immutable inventories and native forwarding. Async preparation happens before cheap synchronous lookup; no second policy registry or live directory lookup as publication authority |
 | `deltalake_core::table::DeltaTable`; [operations](../../.claude/skills/deltalake/content/catalogs/operations.md) | Use complete logical-input builders and their validators/metrics. `DeltaOps` is removed. Raw provider INSERT remains excluded because the pinned route bypasses table CHECK validation |
 | `deltalake_core::delta_datafusion::{DeltaTableFactory, DeltaLogicalCodec}`; [API](../../.claude/skills/deltalake/content/api/deltalake_core.delta_datafusion.md) | Factory opening is controlled preparation, followed by exact capture. Codec use is qualified immutable read-provider caching only; typed command/CDF descriptors own replay |
-| `deltalake_core::data_catalog::storage::ListingSchemaProvider`; [API](../../.claude/skills/deltalake/content/api/deltalake_core.data_catalog.storage.md) | Current source collects the complete listing, normalizes names and adds entries; table lookup opens current state. Bound the discovery source, reject collisions/errors and capture versions before publishing an immutable inventory |
+| `datafusion_catalog::listing_schema::ListingSchemaProvider` composed with `deltalake_core::delta_datafusion::DeltaTableFactory`; [ADR-0049](../adr/0049-bounded-native-provider-composition.md) | This is the implemented service-owned discovery route. The narrow patches bound streamed listing, reject collisions atomically and inject the captured table/store/session/scan contract. Delta’s separate storage ListingSchemaProvider is not an additional required catalog authority |
 | `deltalake_core::operations::vacuum::VacuumBuilder`; [API](../../.claude/skills/deltalake/content/api/deltalake_core.operations.vacuum.md) | Pass native protected versions through `with_keep_versions`; configure bounded scan concurrency and retention. File protection alone does not prove log/CDF reconstruction or reader-enrollment safety |
 | `buoyant_kernel::struct_patch::ProjectionStructPatchBuilder`; [API](../../.claude/skills/deltalake/content/api/buoyant_kernel.struct_patch.md) | Pair actual kernel schema/expression edits; `build` returns both. Ordinary application rules stay DataFusion expressions; private SchemaComparison is not copied |
 | `buoyant_kernel::metrics::reporter::{ReportGeneratorLayer, MetricsReporter}`; [API](../../.claude/skills/deltalake/content/api/buoyant_kernel.metrics.reporter.md) | Cheap any-thread event capture into the existing bounded Arrow ingress; native aggregation/correlation. No display-string parser or second telemetry authority |
@@ -185,7 +229,8 @@ rebind all live runtime/store/lease handles. Do not interpret successful deseria
 the service's bounded discovery policy. Use a controlled finite inventory and the narrowest upstream
 composition improvement if needed; do not reproduce a second catalog scanner to claim native reuse.
 The factory must also preserve the selected backend/session rather than accidentally reopening
-through another local store. These are FP05 implementation seams, not reasons to skip the integrations.
+through another local store. ADR-0049 and the current vendored composition implement these FP05 seams; the focused
+discovery/factory receipt is in §2.2. Remaining full-route qualification stays mandatory.
 
 ### 3.2 Schema findings qualified against the pinned implementation
 
@@ -254,10 +299,26 @@ qualified restoration. Column mapping and BatchAdapterFactory require an actual 
 evolution consumer; a fresh epoch does not need them. These dispositions do not exclude the native
 mapping/validation operators already used by Delta internally.
 
+### 3.5 Capability clarification during the execution audit
+
+Verified against the pinned skill pages, lockfiles and actual local source on **2026-09-16**.
+No dependency was repinned and no new functional probe was run for this status update.
+
+| Capability | What the current evidence establishes | Effect on remaining scope |
+|---|---|---|
+| `datafusion_common::types::extension::DFExtensionType` — [API](../../.claude/skills/datafusion/content/api/datafusion_common.types.extension.md) | Its pinned surface supplies storage type, metadata serialization and optional array formatting. It does not by itself implement application domain equality or scoped references | Existing semantic analyzer/admission remains necessary; registering IdentityType is not deployment of binary IDs throughout the service |
+| Native listing + Delta factory — [consumer](../../crates/enrichment-store/src/native_discovery.rs), [ADR-0049](../adr/0049-bounded-native-provider-composition.md) | The actual listing type is `datafusion_catalog::listing_schema::ListingSchemaProvider`. The controlled Delta opener and complete scan contract are narrow local patches; three route tests passed | Mark composition implemented and keep full route/feature/resource qualification open. Do not claim these injection APIs exist in the unpatched pin |
+| `deltalake_core::table::DeltaTable::add_constraint` — [consumer](../../crates/enrichment-store/src/native_delta.rs) | Source creates the table and then invokes native ADD CONSTRAINT. This activates enforcement, but spans separate commits | Test/refuse interrupted installation before trusted registration; table version zero is not a reliable empty-target test. The export predicate fix is in source, unqualified |
+| `deltalake_core::operations::vacuum::VacuumBuilder` — [API](../../.claude/skills/deltalake/content/api/deltalake_core.operations.vacuum.md) | `with_keep_versions`, retention duration and scan concurrency are available. Project production code has no corresponding retention/maintenance consumer | Implement FP06/FP12 enrollment, protected versions and fencing; the builder cannot infer service reader/result/CDF/replay obligations or prove log reconstruction |
+| `deltalake_core::delta_datafusion::DeltaLogicalCodec` — [actual source](../../vendor/delta-rs/crates/core/src/delta_datafusion/mod.rs) | Provider encode/decode exists; logical extension hooks still contain TODOs and provider decode ignores the expected schema. DeltaPhysicalCodec remains deprecated | FP11 needs the real restricted cache consumer with explicit identity/schema/version/cohort revalidation and live-handle rebinding; generic deserialization is insufficient |
+| `buoyant_kernel::metrics::reporter::{MetricsReporter, ReportGeneratorLayer}` — [API](../../.claude/skills/deltalake/content/api/buoyant_kernel.metrics.reporter.md) | Structured events and a cheap any-thread reporter contract exist at kernel `8ba063f8f84fec222000f66d40d70911d7c79675`. No project reporter implementation/registration is present | FP13 integration remains implementation work. Qualify bounded capture, task-context propagation and diagnostic-writer recursion prevention; current service counters are not kernel metrics |
+| FastMCP 4.0.3 `fastmcp.tools.Tool` / `ToolResult` — [API](../../.claude/skills/fastmcp/content/api/fastmcp.tools.base.md), [adapter](../../python/enrichment_mcp/server.py) | Public Tool supports explicit input/output schemas and async `run`; ToolResult carries structured content. The adapter now consumes generated definitions through these APIs | Credit generated nine-tool registration. Keep actual all-tool/resource frame/schema/client acceptance open; an in-process catalog test is not an installed service journey |
+
 ## 4. Dependency order and work packages
 
-Each package below has implementation, deletion and a decisive verification boundary. All are
-open. Keep working through architecture after the focused boundary check passes. Broad regression,
+Each package below preserves its complete implementation, deletion and verification requirements.
+All full-package exits remain open; §2.1 identifies what is already implemented and what remains.
+“Baseline evidence” describes the pre-implementation starting point, not current absence. Keep working through architecture after the focused boundary check passes. Broad regression,
 installed clients and deployment belong at FP16 once the integrated replacement exists.
 
 | Package | Prerequisites | Deliverable | Prior scope |
@@ -294,11 +355,11 @@ a second schema/expression DSL, an alternative executor or a retained compatibil
 
 ### FP00 — Reconcile authority, scope and enforcement
 
-**Starting evidence:** ADR-0041–0045 and native dependency/architecture checks exist. Plan 15's
+**Baseline evidence (before Plan 17 implementation):** ADR-0041–0045 and native dependency/architecture checks exist. Plan 15's
 protected patch is supplied but unapplied; its earlier apply-check is stale. The plan index still
 described Plan 15 as a draft before this review corrected it.
 
-**Remaining actions**
+**Target actions**
 
 1. Record one operation-to-dataflow inventory covering every nine-tool route, resource, export,
    startup/recovery, operator qualification, capsule cleanup and background maintenance path.
@@ -333,12 +394,12 @@ provenance stays byte-identical. Q01/Q12 remain open until the actual extension 
 
 ### FP01 — Establish one finite schema and semantic-field declaration
 
-**Starting evidence:** retain the typed Arrow models and native contract registry. Replace their
+**Baseline evidence (before Plan 17 implementation):** retain the typed Arrow models and native contract registry. Replace their
 hand-maintained variant tables, role-prefix interpretation and consumer-specific shape copies.
 Primary owners are `core/evidence/arrow_model/{encode,checks,decode,execution,metadata,provenance}.rs`,
 `core/{native_identity,native_key,operation,telemetry}.rs` and `store/control.rs`.
 
-**Actions**
+**Target actions**
 
 1. Make each Rust enum/record declaration expose one finite variant/field table. A derive/macro or
    deterministic generator is appropriate; the enum and a second manually written allowlist are
@@ -370,6 +431,10 @@ Primary owners are `core/evidence/arrow_model/{encode,checks,decode,execution,me
    presentation metadata from executable meaning. Bound schema depth, field count, metadata bytes
    and vocabulary/collection growth before recursive processing; reject duplicate field names and
    unknown semantic extensions at the admission boundary.
+   Represent nested field paths as segments, using native field expressions and correct identifier
+   quoting when generating SQL; literal dots/case in names must not change reference meaning.
+   Preserve protocol-specific coordinates such as LSP UTF-16 code units as separately declared
+   units, with explicit native conversion witnesses rather than treating every position as a byte.
 
 **Deletion / oracle:** remove literal variant/decode allowlists, role-prefix dispatch and handwritten
 parallel declarations. SC01/SC06/SC07 demonstrate a new variant/reference/field added once and reaching
@@ -378,11 +443,11 @@ comparison against old tables is a development oracle only; delete it with the o
 
 ### FP02 — Finish schema, intrinsic and canonical identity authority
 
-**Starting evidence:** reuse core `evidence/arrow_model`, `native_identity.rs`, `native_key.rs`,
+**Baseline evidence (before Plan 17 implementation):** reuse core `evidence/arrow_model`, `native_identity.rs`, `native_key.rs`,
 `operation.rs`, `telemetry.rs`, and store `native_delta.rs`, `arrow_contract.rs`, `admission.rs`.
 Do not recreate the completed evidence/attempt/process identity paths.
 
-**Remaining actions**
+**Target actions**
 
 1. Complete the native field inventory for commands, grants, physical observations, raw registry
    facts, result sections, cursors, replay descriptors, retention and maintenance. Generate worker
@@ -440,11 +505,11 @@ planning probe resolves only its named scalar/struct fixtures; it does not close
 
 ### FP03 — Enforce semantic contracts in native planning and admission
 
-**Starting evidence:** the five product ScalarUDFImpl implementations return datatypes; current
+**Baseline evidence (before Plan 17 implementation):** the five product ScalarUDFImpl implementations return datatypes; current
 key binding checks arity, and field compatibility chiefly checks role/function metadata. Native
 catalogs and admission plans already supply the execution substrate.
 
-**Actions**
+**Target actions**
 
 1. Implement `return_field_from_args` on the identity, URL and version UDFs using the exact pinned
    `ReturnFieldArgs` contract. Check domain/vocabulary, argument cardinality and literal-dependent
@@ -476,6 +541,8 @@ catalogs and admission plans already supply the execution substrate.
 7. Use complete trusted constraints/statistics only after aggregate/anti-join admission establishes
    them for the exact immutable table/cohort. Provider schema metadata must not assert PK/FK or
    guaranteed non-null values merely because a candidate declaration requested them.
+   DataFusion's native `Constraint` enum supplies PrimaryKey and Unique; reference admission remains
+   native join-based enforcement. Do not advertise a native foreign-key constraint API at this pin.
 8. Review the remaining UDF optimizer hooks (`simplify`, `coerce_types`, bounds/preimage, ordering,
    nullability, short-circuit behavior) against real consumers. Implement only sound, independently
    proven relationships. `struct_field_mapping` is not valid for parsed URL/PEP 440 pieces; keep it
@@ -489,11 +556,11 @@ mechanical code or imposing unsound hooks on unrelated upstream implementations.
 
 ### FP04 — Generate typed interchange and exact wire value encoding
 
-**Starting evidence:** worker IPC generation exists; evidence wire values still become labels and
+**Baseline evidence (before Plan 17 implementation):** worker IPC generation exists; evidence wire values still become labels and
 JsonObject locators, and legacy Symbol filling invents None/0 values. Result callbacks and mutable
 Envelope trimming remain FP10's larger consumer replacement.
 
-**Actions**
+**Target actions**
 
 1. Generate evidence/result JSON Schemas and Python/worker field projections from FP01's semantic
    declaration, with native Arrow fields as the source for shape. Derive branch requiredness from
@@ -530,11 +597,11 @@ field-list guards and generator inputs as their native replacements land.
 
 ### FP05 — Finish provider contracts, discovery and qualified mutations
 
-**Starting evidence:** complete append uses captured native logical input, shared runtime, writer
+**Baseline evidence (before Plan 17 implementation):** complete append uses captured native logical input, shared runtime, writer
 options and zero internal commit retries. Published providers are read-only; exact Delta scans and
 the local synchronizing store exist. Service-wide DML/metadata/maintenance coverage is incomplete.
 
-**Remaining actions**
+**Target actions**
 
 1. Enumerate every exposed mutation route, including internal SQL, DataFrame, direct provider,
    typed command, metadata and maintenance. Implement the finite update/delete/merge consumers
@@ -570,12 +637,12 @@ identity and simultaneous conditional creates. Power-loss and reclamation remain
 
 ### FP06 — Complete native control decisions and durable ownership
 
-**Starting evidence:** [native control jobs](../../crates/enrichment-store/src/control_jobs.rs)
+**Baseline evidence (before Plan 17 implementation):** [native control jobs](../../crates/enrichment-store/src/control_jobs.rs)
 own claims, interests, transitions and predecessor checks. [Daemon jobs](../../crates/enrichment-daemon/src/jobs.rs)
 still validate resolution/specification state and build interest sets procedurally. The handle
 registry is useful physical ownership; it must not become semantic current state.
 
-**Remaining actions**
+**Target actions**
 
 1. Move remaining `Specification`/`ResolutionStage` semantic validation, interest counts/selection,
    resolution pinning and shutdown/cancellation transition selection into native command plans.
@@ -599,7 +666,7 @@ registry is useful physical ownership; it must not become semantic current state
    producer until prior ownership is reconciled. Terminal publication is not physical exit.
 7. Commit complete result dependency selection with publication/head/terminal as required. Record
    orphan candidate and stage obligations before they can become unreachable; their cleanup is FP12.
-8. Apply generated tagged/presence/reference contracts to all fifteen existing and newly added
+8. Apply generated tagged/presence/reference contracts to all eighteen current and newly added
    control families. Use typed clocks/IDs/coordinates in claims, grants, retention and diagnostics
    as well as evidence. Replace correlated execution qualifier arrays with ordered List<Struct>
    records; family membership and payload validity have one generated rule source.
@@ -611,11 +678,11 @@ control boundary. Q05 proves actual resources stay owned until cleanup, includin
 
 ### FP07 — Finish acquisition facts, producer fidelity and normalization
 
-**Starting evidence:** native version selection, dependency expansion, URL/DNS admission, cache
+**Baseline evidence (before Plan 17 implementation):** native version selection, dependency expansion, URL/DNS admission, cache
 decisions, both normalizers, attempt plans and metadata contribution exist. Preserve those. Remaining
 source handling, artifact maps, execution producers and rustdoc format support need targeted work.
 
-**Remaining actions**
+**Target actions**
 
 1. Retain bounded typed registry/revision/source facts with request/representation/receipt/producer
    provenance in Delta. HTTP cached bytes are not by themselves a queryable registry authority.
@@ -629,10 +696,11 @@ source handling, artifact maps, execution producers and rustdoc format support n
    and process logs as evidence bytes; lower scope, diagnostics, positions, method outcomes,
    artifact references, usable observations and limitations through typed facts and native plans.
    Remove procedural observation sort/merge and semantic JSON transcript interpretation.
-4. Fix the demonstrated rustdoc format mismatch. The current worker deserializes complete payloads
-   with `rustdoc-types 0.59.0` (format 59), while the dated producer emits format 61. The probe shows
-   stable metadata can reject the payload; format 60 also introduced default-body instability
-   metadata which the older model silently drops. Current `ItemFact` does not preserve these fields.
+4. Fix the demonstrated rustdoc format mismatch. The pre-pivot worker deserialized complete payloads
+   with `rustdoc-types 0.59.0` (format 59), while the dated producer emitted format 61. The probe showed
+   stable metadata could reject the payload; format 60 also introduced default-body instability
+   metadata which the older model silently dropped. The replacement is now implemented (§2.1);
+   preserve those fields and complete the producer fidelity oracle rather than restoring the old model.
 5. Adopt an exact qualified format-61 fact model and preserve ordinary, const and default-body
    stability in generated Arrow facts. Align the retained pure signature renderer to that same
    representation. The verifier found no released matching upgrade beyond `public-api 0.52.2`;
@@ -670,17 +738,18 @@ correctly; runtime verification remains the actual qualified effect path.
 Rustdoc follow-up evidence: the completed read-only verifier inspected exact installed 0.59/0.60/
 0.61 source and the [format-61 model commit](https://github.com/rust-lang/rustdoc-types/blob/2e63bdc44b94e86fe12d6e0034d1ed9c2ac6e9dc/src/lib.rs),
 checked [public-api release metadata](https://crates.io/api/v1/crates/public-api) on 2026-09-16,
-and executed the parser probe named in §2.2. `rustdoc-types 0.61.0` is the proposed exact fact-model
-target; its adoption and a compatible renderer remain implementation work, not a changed pin.
+and executed `.dev-state/plan15/rustdoc-compat-probe/stability.log` before the replacement. `rustdoc-types 0.61.0` is now the adopted exact fact model, with the narrowly patched public-api
+0.52.2 renderer recorded by ADR-0048. The parser/renderer replacement is implemented; complete
+producer and downstream qualification remains open (FP07 in §2.1).
 
 ### FP08 — Finish command-to-effect binding and execution semantics
 
-**Starting evidence:** [process grants](../../crates/enrichment-store/src/process_grants.rs) retain
+**Baseline evidence (before Plan 17 implementation):** [process grants](../../crates/enrichment-store/src/process_grants.rs) retain
 immutable operations and effects, recheck parent ownership and compare current native route/config/
 image/containment facts. [Runner](../../crates/enrichment-daemon/src/execution/mod.rs) consumes the
 read-back operation. Warm LSP requests rebind/check live command authority. Full action scope is open.
 
-**Remaining actions**
+**Target actions**
 
 1. Derive each actual operation from the native command definition and exact input/environment/
    producer facts. Validate argv, input inventory/digests/modes, outputs, execution mode, acquisition
@@ -711,10 +780,10 @@ execution profile, and affected runs include `just state-leak-check`.
 
 ### FP09 — Finish native research selection, comparison and evidence shaping
 
-**Starting evidence:** native scoring/browse/comparison/coverage exists. Handlers still perform
+**Baseline evidence (before Plan 17 implementation):** native scoring/browse/comparison/coverage exists. Handlers still perform
 semantic set/sort choices, cursor/request hashing, candidate extraction and response-size trimming.
 
-**Remaining actions**
+**Target actions**
 
 1. Move overview selection, package/context/environment contribution and latest/exact/fallback
    decisions into bound native request plans. Keep exact namespace/snapshot references and explicit
@@ -746,10 +815,11 @@ Inspect native plans as supporting evidence, not as a substitute for semantic re
 
 ### FP10 — Replace result composition and complete generated MCP delivery
 
-**This is a major remaining implementation package.** Delta-backed receipt/index lookup does not
-make the current JSON body and mutable Envelope pipeline native.
+**Current status:** the native ResultRecord/per-tool Delta/encoder/binding replacement is now
+implemented (§2.1). The numbered requirements below remain the complete package contract; residual
+handler/page/export consumers and end-to-end acceptance keep this package open.
 
-**Remaining actions**
+**Target actions**
 
 1. Define typed Arrow/Delta result relations for outcome, sections, ordered rows, evidence/artifact
    references, coverage, diagnostics, retained identity and per-aspect continuations. Each operation
@@ -806,11 +876,11 @@ Unicode/nested values, exact per-section pages, missing artifacts, retained repl
 
 ### FP11 — Complete CDF, rebuild selection and fresh-process replay
 
-**Starting evidence:** reuse both search surfaces, `EvidenceTables::change_plan`, atomic selected
+**Baseline evidence (before Plan 17 implementation):** reuse both search surfaces, `EvidenceTables::change_plan`, atomic selected
 checkpoints and the public manifest consumer. Typed commands/build revisions exist; the qualified
 logical read-provider cache and complete replay consumer do not.
 
-**Remaining actions**
+**Target actions**
 
 1. Complete typed native projection definitions and rebuild eligibility. Move remaining Rust
    source-vector/revision/mode decisions in `SearchProjection::prepare` and semantic checkpoint
@@ -844,11 +914,11 @@ schemas/identities/history, unsupported codecs and dependency-by-dependency inva
 
 ### FP12 — Implement unified retention and native maintenance
 
-**Starting evidence:** retained providers carry lifetime guards and manual filesystem cleanup exists.
+**Baseline evidence (before Plan 17 implementation):** retained providers carry lifetime guards and manual filesystem cleanup exists.
 There is no complete control-owned retention horizon/enrollment/maintenance system. The old
 [maintenance inventory](../../crates/enrichment-daemon/src/maintenance.rs) still names retired payloads.
 
-**Remaining actions**
+**Target actions**
 
 1. Define one finite configurable retention contract and native validation of horizon relationships:
    source artifacts, evidence/projection/control/definition/event tables, data/log/checkpoint history,
@@ -883,11 +953,11 @@ the selected backend's durability boundary. No `ConditionalPutShim` or unsafe ov
 
 ### FP13 — Finish structured telemetry and resource/lifetime accounting
 
-**Starting evidence:** reuse `core/telemetry.rs`, `telemetry_history.rs`, native counters, bounded
+**Baseline evidence (before Plan 17 implementation):** reuse `core/telemetry.rs`, `telemetry_history.rs`, native counters, bounded
 ingress and explicit close. [Daemon metrics](../../crates/enrichment-daemon/src/metrics.rs), LSP/cache
 component counters and durable physical-resource bookkeeping still have separate owners.
 
-**Remaining actions**
+**Target actions**
 
 1. Feed Delta builder operation metrics and structured kernel `MetricEvent` through
    `ReportGeneratorLayer`/`MetricsReporter` into the existing native event contract. Extend typed
@@ -917,7 +987,7 @@ in for those observations.
 
 ### FP14 — Select native physical choices from complete journeys
 
-**Remaining actions**
+**Target actions**
 
 1. Measure the completed cold/warm/offline Rust/Python, search/inspection/comparison, export and
    contained execution journeys. Include control commit/admission and diagnostic overhead; current
@@ -954,7 +1024,7 @@ plan evidence justify the selected defaults. Do not claim speedup from the exist
 
 ### FP15 — Close source deletion and architecture
 
-**Remaining actions**
+**Target actions**
 
 1. Close every deletion row in §5 by production imports/call paths, recovery/error/CLI consumers,
    generated outputs and package contents. Rename residual files where an old name hides a now
@@ -976,7 +1046,7 @@ No unexplained imperative semantic owner remains. Review readiness is separate f
 
 ### FP16 — Qualify final source, activate fresh state and remove retired runtime
 
-**Remaining actions**
+**Target actions**
 
 1. Implement/register the Q01–Q13 commands in §6 with concrete test selection and receipt capture;
    these proposed recipes are not present in the inspected `just --list`. Preserve existing gate
@@ -1010,46 +1080,42 @@ remains a terminal/manual step, not a new check before every edit or commit.
 
 ## 5. Complete deletion obligations
 
-Every L-row remains open until its full source and behavioral closure. Already deleted files must
-not be restored for comparison or old tests. Remaining work includes behaviors surviving under new
-names, not just the baseline file names.
+Every L-row remains open until its **whole behavioral and packaging obligation** is closed.
+The middle column credits concrete removals/replacements; it is not permission to retain the
+remaining behavior under a new name. Already deleted code must not return for comparison or old
+fixtures. Frozen specification/review provenance is explicitly retained by §1.1.
 
-| Plan 15 ID | Already replaced or removed | Remaining closure / owner |
+| ID | Removed or replaced in the inspected source | Remaining closure / owner |
 |---|---|---|
-| L01 | `catalog_generation.rs`, pointer/manifest publication replaced | Control retention/log/maintenance and old cleanup consumers; FP06/FP12/FP15 |
-| L02 | JSON job journal and old authoritative map replaced | Procedural job validation/interest decisions and durable physical ownership; FP06/FP08 |
-| L03 | Ordinary evidence writer, semantic RelationWriter and staging writer removed | Audit residual `dataset.rs`/`record_writer.rs` mechanics, every write route and resource lifetime; FP05/FP07/FP13 |
-| L04 | Native contribution, attempts and metadata rebase present | Result publication callbacks, remaining acquisition/environment object merges and complete dependency selection; FP06/FP07/FP10 |
-| L05 | Rust and Python semantic walkers removed | Producer fidelity/scale, residual execution/LSP normalization and old fixtures; FP07 |
-| L06 | Generated Arrow worker interchange and direct native ingestion present | Execution/runtime semantic JSON interpretation, fact completeness, residual staging resources; FP02/FP07 |
-| L07 | Native registry version/marker/dependency selection present | Remaining source/revision/freshness/environment eligibility and durable raw facts; FP07 |
-| L08 | Whole-score UDF/tokenizer replaced | Handler factor/kind/token duplication and full semantic oracle; FP09 |
-| L09 | Shared evidence/policy/process native identities present | Research/result/cursor/config/schema semantic hashes and dead canonical folds; FP02/FP10 |
-| L10 | Native command/routes/process grants present | Complete command-input scope, procedural readiness/selection/job/resource policy and all physical qualifications; FP06/FP08/FP09 |
-| L11 | Native retained receipt/section/dependency lookup present | Procedural body/aliases/callbacks/DTO trimming/recovery and result identity; FP10 |
-| L12 | Native Delta scans, CDF projections and diagnostic history present | Retention stores, physical reservation journals, old cleanup inventories, component metrics and replay policy; FP11–FP14 |
-| L13 | Wire 3.0, research-result/3 and protocol 3 replacements generated | Final generated operation/result/cursor epoch, packaged aliases and obsolete fixtures; FP00/FP10/FP15 |
-| L14 | Many alternate writers/readers and dependency exceptions removed | Whole-tree imports/features/scripts/rules/configs/package contents and inactive executables; FP15 |
-| L15 | No target installation/deletion claimed | Verified old-root/process/registration manifest, fresh activation and actual removal; FP16 |
-
-The combined schema scope adds these deletion rows. They are mandatory, alongside L01–L15.
-
-| ID | Delete as replacement lands | Replacement / owner |
-|---|---|---|
-| L16 | Handwritten tagged variant tables, decoder allowlists and mixed per-tag scalar payloads | Generated discriminated per-variant contracts; FP01/FP02 |
-| L17 | Semantic `enrichment.role` prefix parsing and field-name-specific domain/set rules | Finite extension/field/collection descriptors and shared native consumers; FP01/FP03 |
-| L18 | Internal semantic RFC 3339/hex/prefixed-string IDs and row-dependent coordinate units | Typed timestamps, digests, domain IDs and coordinate variants; FP02; exact external source text remains source evidence |
-| L19 | Blanket nullable-write adaptation, datatype-only passthrough and target metadata pasted onto unchecked casts | Derived conditional requiredness, exact field checks and admitted native mapping; FP02/FP05 |
-| L20 | Handwritten reference SQL that restates declared reference contracts; duplicated list/known rules | Generated scoped anti-joins and collection admission; FP01/FP03 |
-| L21 | Correlated parallel arrays/Vec zips, independently aggregated ordinals and duplicate known flags | Ordered List<Struct> facts/results with declared NULL/empty semantics; FP06/FP07/FP09 |
-| L22 | Lossy evidence labels/JsonObject locators, legacy Symbol filling, Arrow→JSON→serde semantic bridges and independent evidence DTO schemas | Generated semantic wire projections and direct native result encoding; FP04/FP10 |
-| L23 | String-only semantic signature comparison where producer-native structured facts exist | Structured callable observations and native field comparison; FP07/FP09; preserve rendered producer text as its own observation |
-| L24 | Old contract/canonical/wire epoch readers, obsolete generated aliases/fixtures, stale recipe/rule assumptions | One target epoch and regenerated current artifacts; FP15/FP16; no compatibility adapters or historical runtime backup |
+| L01 | `catalog_generation.rs` and pointer/manifest publication replaced by Delta control; retired catalog/jobs/snapshot cleanup names removed | Complete retention/log/maintenance and every cleanup/recovery consumer; FP06/FP12/FP15 |
+| L02 | JSON job journal, daemon JobSpec/ResolutionStage, independent interest aggregation and durable ownership/reservation JSON removed | Remaining caller policy, all physical-owner/claim crash semantics and stale `owned/*.json` tests; FP06/FP08 |
+| L03 | Ordinary evidence writer, semantic RelationWriter and staging writer removed; complete native append and CHECK path present | Audit remaining dataset/record-writer mechanics, all admitted/refused mutation routes and resource lifetime; FP05/FP07/FP13 |
+| L04 | Native attempt/metadata contribution and result publication binding replace object merge/callback owners; JobDeliveryFactory/DeliverySlot removed | Remaining acquisition/environment merges, complete dependency/orphan selection and integrated publication/export; FP06/FP07/FP10 |
+| L05 | Rust/Python semantic walkers removed; format-61 facts/native normalizers and structured callable extraction present | Full producer fidelity/scale, residual execution/LSP semantic lowering and current fixtures; FP07 |
+| L06 | Generated Arrow worker/provenance/HTTP/manifest codecs and direct native ingestion replace multiple JSON bridges | Runtime/LSP semantic JSON, remaining generic row decoders, fact completeness and stage resources; FP02/FP07 |
+| L07 | Native registry version/marker/dependency/network selection present | Durable raw registry/source facts and residual source/revision/freshness/environment eligibility; FP07 |
+| L08 | Whole-score UDF/tokenizer replaced by native factors | Handler kind/scope/token normalization and independent whole-tool semantic oracle; FP09 |
+| L09 | Native evidence/policy/process/schema/checkpoint/citation/artifact/changed-key identities replace several JSON hashes | Search/inspection/comparison/artifact cursor/request/configuration hashes, complete typed ID deployment and witness invalidation; FP02/FP09–FP11 |
+| L10 | Native command/routes/grants, request admission, interests and durable resource facts implemented | Exact command-input authorization, remaining readiness/selection/handler policy, warm resources and actual physical qualifications; FP06/FP08/FP09 |
+| L11 | Complete native ResultRecord, per-tool Delta capture, native result admission/delivery/recovery, generated section aliases; callback/DTO-clearing paths removed | Handler page/composition consumers, exact section/reference/cursor policies, export and full replay/byte qualification; FP10 |
+| L12 | Native scans, typed CDF rebuild selection, diagnostic/service counters and ownership facts; old reservation/cleanup names removed | Version/horizon protection, native maintenance/reclamation, component/kernel metrics and replay protocol; FP11–FP14 |
+| L13 | Current typed wire/result/request/worker schemas and generated nine-tool bindings replace handwritten Python wrappers/schema assembly | Final epoch/fixture/package/config/product-guidance consistency and actual client values; FP00/FP10/FP15 |
+| L14 | Many alternate readers/writers and redundant dependency paths removed | Whole-tree imports/features/scripts/rules/config/package and inactive executable audit, including vendored provenance; FP15 |
+| L15 | No target installation or retired-install deletion performed | Reverified path/process/registration manifest, candidate qualification, fresh activation and actual scoped removal; FP16 |
+| L16 | Generated discriminated payloads replace flat tagged scalars and many handwritten variant/decoder tables | Full-family audit and one-real-variant extension reaching every consumer, including new retention families; FP01/FP02 |
+| L17 | Finite Rule/Domain/collection descriptors and native consumers replace role-prefix and field-name set dispatch | Remaining duplicate vocabularies/reference/field policies and full owner inventory; FP01/FP03 |
+| L18 | UTC-microsecond clocks and per-variant coordinates deployed; fixed-binary extension/Delta/codec support implemented | Actual semantic IDs/digests remain largely Utf8/prefixed/hex; deploy binary types and close field/coordinate/unit inventory. Exact external text remains evidence; FP02 |
+| L19 | Exact field/name projection, parent-aware physical nullability and generated native CHECK/collection admission replace blanket coercion | Every mutation/reopen/operator boundary and independent NULL/parent/child/map matrix; FP02/FP03/FP05 |
+| L20 | Generated scoped evidence references and collection predicates replace parallel provenance admission loops | Control/result/retention scoped references, duplicate hardcoded policy SQL and independent wrong-scope/cardinality oracles; FP01/FP03 |
+| L21 | Rust/Python callable/overload/base and multiple qualifier/control/query records use generated List<Struct> contracts | Remaining coverage/query coupled arrays, ordering/cardinality and NULL/empty/unknown inventory; FP06/FP07/FP09 |
+| L22 | EvidenceFragment/legacy Symbol filling and JsonObject locator substitutions removed; typed citations, ToolData and ResultRecord generate codecs/wire shapes | Remaining semantic decode/re-encode and handler result owners, all resource/export paths and real MCP fidelity; FP04/FP10 |
+| L23 | Structured producer callable observations and declaration-derived comparison axes implemented | Independent before/after parameter/overload/default/return semantics, unavailable coverage and real inspect/compare qualification; FP07/FP09 |
+| L24 | Old rustdoc fixtures/readers and several generated aliases removed; state epoch 8 requires fresh paired roots | Whole-tree old-epoch fixture/recipe/rule/install audit and target package/activation proof. No compatibility adapter or historical runtime backup; FP15/FP16 |
 
 ## 6. Acceptance implementation and run discipline
 
 These are the original mandatory Q oracles, retained in full. Their final-target status is
-**`not_run`**. Focused development receipts in §2.2 support implementation decisions; they do not
+**`not_run`**. Focused development receipts and failures in §2.2–§2.3 support implementation decisions; they do not
 close these aggregates. Register recipe implementations as the owning boundary becomes executable.
 
 | ID / recipe to implement | Remaining decisive oracle | Packages |
@@ -1084,9 +1150,9 @@ and testing the fresh candidate first.
 ### 6.1 Schema oracles within the existing acceptance gates
 
 These are focused sub-oracles, not a replacement acceptance registry or new pass-count inflation.
-Every SC row is **`not_run` for the target implementation**. The planning probe is evidence for
-the current pinned library behavior, including demonstrated hazards, not a passing implementation
-of these requirements. Register concrete tests under the named Q owner as each boundary lands.
+Every complete SC matrix is **`not_run` for final-target acceptance**. Focused implementation
+cases have executed (§2.2), and some integration cases failed (§2.3). Neither those subsets nor the
+planning probes constitute a passing complete matrix. Register concrete tests under the named Q owner as each boundary lands.
 
 | ID | Required executable result | Owner / aggregate |
 |---|---|---|
@@ -1144,7 +1210,7 @@ procedural authority for a required local service operation.
 | Integration family | Remaining disposition / evidence owner |
 |---|---|
 | Delta TableProvider / CDF provider | Existing production consumers; finish exact schema/vector, mutation and retention evidence; FP05/FP11/FP12 |
-| DeltaTableFactory / ListingSchemaProvider | Implement bounded controlled discovery/preparation, capture/admit then immutable registration; FP05 |
+| DeltaTableFactory / ListingSchemaProvider | Implemented via the bounded DataFusion listing provider and controlled Delta factory (ADR-0049); finish complete provider/mutation/feature qualification. No second Delta listing authority is required; FP05 |
 | Unity schema/catalog/list | No configured source identified in this review; retain explicit unconfigured disposition. If an actual enabled source is found, qualify upstream adapter credentials/list failures/version capture; FP00/FP05 |
 | DeltaPlanner / DeltaExtensionPlanner | Existing composed planner; finish complete mutation/resource routes while inheriting private delegates; FP05/FP13 |
 | Eight ExecutionPlan / nine DisplayAs implementations | Inherit current scans/validation/mapping/merge/metrics through public operations; no retired physical wrapper or display authority; FP05/FP14 |
@@ -1223,28 +1289,73 @@ of S findings; none claims that proposed implementation has already landed.
 - Actual current external rustdoc formats remain explicit producer contracts. Historical internal
   epochs, format downgrades, wire aliases, imported old state and rollback executables remain deleted.
 
-## 8. Resume instructions and completion record
+## 8. Remaining execution order and completion record
 
-1. Read this plan and its evidence, the current source baseline, living design and ADRs. Preserve
-   unfinished target work and unrelated operator edits. Completed normalizers, scoring, dependency
-   selection, CDF consumers, process readback and diagnostic history are the substrate to extend.
-2. Start FP00's authority/decision inventory and FP01's finite schema declaration. Implement
-   FP02–FP04's typed storage, semantic checks and generated encoding on a real evidence path,
-   covering optional variants, binary IDs, scoped references and a typed evidence result end to end.
-3. Finish control/effect scope, producer fidelity and native research/result composition using those
-   contracts. Fix the demonstrated rustdoc mismatch before claiming the real Rust producer works.
-4. Record progress by FP ID with changed/deleted paths, source receipt, focused command/log and
-   remaining boundary. S/E matrix rows close only with their named behavioral oracles. Preserve all
-   original Q requirements and deletion obligations; do not infer completion from generated files.
-5. Finish replay, retention, maintenance, resources and source deletion before final installed
-   qualification. Protected rule installation and power-loss/client prerequisites stay explicit;
-   they do not block independent architecture work or justify narrowing mandatory scope.
-6. Do not roll out a schema-only intermediate epoch. Activate the fully integrated target once,
-   with fresh state, new canonical/contract/wire identities and the scoped retired-runtime deletion.
+The user requested this status audit **instead of continued implementation**. Resume product work
+only when instructed. Preserve the source checkpoint in §1.2 and the complete target requirements;
+no compatibility reader, old-state import or alternate runtime is authorized by this audit.
 
-## Outcome (recorded after implementation)
+### 8.1 Dependency-ordered implementation backlog
 
-Not implemented by this planning pass. Record what was built, corrected mistakes, deliberate
-changes and final-source acceptance evidence here as execution completes. This plan is complete
-only when all implementation, deletion, qualification and activation obligations are satisfied.
-Creating this document and executing library probes closes no runtime work package.
+1. **Stabilize the native boundaries that subsequent work consumes (FP02–FP05/FP09/FP10).**
+   Repair status selection, account for every unresolved receipt in §2.3, and qualify the current
+   metadata/nullable/Decimal adapters on their actual consumers. Rebuild the matching worker before
+   worker-dependent execution. Do not recreate the already implemented declaration/codec/provider/
+   job/result foundations or spend cycles rerunning unrelated broad suites.
+2. **Finish the common semantic contract, then apply it to remaining owners (FP00–FP04).**
+   Complete the operation/field inventory; deploy domain IDs and digests as fixed-binary native
+   values; finish scoped references, collection limits and contract-change/dependency witnesses.
+   Replace remaining cursor/request/configuration JSON hashes and semantic decode bridges. Use
+   one real new field/aspect and one policy change as the cross-consumer oracle; retain explicit
+   physical mechanisms and exact external bytes at their declared boundaries.
+3. **Close effect, acquisition and public research semantics (FP06–FP10).**
+   Finish command-to-argv/input/environment/output/budget authorization, claim/physical-owner
+   reconciliation, durable warm-resource scope, source/registry facts, producer/callable fidelity
+   and handler selection/paging. Rewrite stale execution fixtures around native authority. Complete
+   native result/resource/export closure and all nine public routes; preserve the implemented
+   generated FastMCP registrations and per-tool result relations.
+4. **Implement exact retention and owned maintenance together (FP06/FP12).**
+   Add protection/enrollment/maintenance/cleanup families, one retention contract and generation
+   fencing before loading protected versions. Include results, definitions, replay, CDF and exports.
+   Drive native checkpoint/log compaction/OPTIMIZE/VACUUM with selected protected versions and prove
+   actual safe reclamation. The global lease and updated operator cleanup remain mechanisms within
+   this design, not a substitute. Qualify interrupted constraint installation and storage durability.
+5. **Finish replay and incremental semantics on that protection protocol (FP11).**
+   Implement typed fresh-process command replay and the real immutable DeltaLogicalCodec cache
+   consumer with allowlisting, exact revalidation and live-handle rebinding. Close CDF/full rebuild
+   equivalence and output/offset/orphan faults, marker expiry and semantic invalidation matrices.
+6. **Complete telemetry and resource ownership alongside those changes (FP13).**
+   Wire cheap bounded structured kernel metrics into existing native history; prove context across
+   kernel/native task boundaries and prevent the writer observing itself. Finish external allocation
+   budgets, component/recovery policies, saturation/fault/drop/shutdown and physical-exit accounting.
+7. **Choose physical settings from complete journeys (FP14).**
+   Measure native and external memory, latency, spill and I/O on complete cold/warm/offline/export/
+   execution flows. Record actual log/DF/kernel/Parquet stats and strict/DV equivalence. Qualify adopted
+   settings and retain explicit negative/unconfigured dispositions, without a second native engine.
+8. **Close deletion/design before final qualification (FP15).**
+   Resolve every L01–L24 row, inspect production/recovery/test/package consumers, finish architecture
+   rules and patch provenance, update living documentation and prepare protected installation.
+   Keep the frozen blueprint/review provenance. `STATUS.md` and other living checkpoints must be
+   reconciled here; this audit has intentionally not rewritten them.
+9. **Qualify and activate once the architecture is complete (FP16).**
+   Register actual Q commands and source-bound receipts; build the matching non-editable candidate.
+   Run final quality, Q/SC matrices, all tools/resources/export/offline/real-client/Linux profiles
+   and C20/state-leak checks. Capture actual missing prerequisites as `blocked`, not assumed blockers.
+   Qualify before applying the verified retired-install deletion manifest and fresh activation;
+   finish deployed smoke and regenerate/check the acceptance report from final receipts.
+
+Run decisive checks at the changed boundary, then continue architecture. Reserve broad quality,
+installed-client and final acceptance execution for the integrated target. A green subset closes
+only its named boundary, never an FP package by inference.
+
+### 8.2 Completion record
+
+**As audited 2026-09-16: in progress; not qualified or installed.** §2.1 credits implemented source
+and identifies the remaining actions for every FP00–FP16 package. §2.2 records focused evidence;
+§2.3 keeps failed/unresolved executions visible; §5 keeps all deletion obligations; §6 preserves
+all Q/SC criteria. No complete FP/Q/SC/L obligation is claimed closed by this documentation update.
+The previous chronological checkpoints have been consolidated into these current sections so
+superseded counts, already implemented tasks and unfinished test attempts no longer drive execution.
+
+Final completion still requires implementation, removal, current-source qualification and fresh
+activation. Record that outcome only when its evidence exists.

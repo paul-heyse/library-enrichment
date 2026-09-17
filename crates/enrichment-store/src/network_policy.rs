@@ -28,7 +28,6 @@ impl NetworkPolicy {
     }
     fn session(&self) -> Result<SessionContext> {
         let session = self.runtime.session();
-        session.register_udf(enrichment_core::native_url::parts());
         session.register_batch(
             "trusted_endpoints",
             RecordBatch::try_new(
@@ -49,7 +48,7 @@ impl NetworkPolicy {
         let session = self.session()?;
         crate::native_catalog::work(&session, "network_input", input.into_view())?;
         session.sql(&format!(r#"
-        WITH parsed AS (SELECT *,url_parts_v1(url) AS parsed,url_parts_v1(coalesce(resolved_url,url)) AS address_parts FROM network_input),
+        WITH parsed AS (SELECT *,url_parts_v2(url) AS parsed,url_parts_v2(coalesce(resolved_url,url)) AS address_parts FROM network_input),
         facts AS (SELECT p.*,t.authority IS NOT NULL AS trusted FROM parsed p LEFT JOIN trusted_endpoints t ON p.parsed.authority=t.authority)
         SELECT * EXCLUDE(parsed,trusted,address_parts), coalesce(address_parts.host,parsed.host) AS selected_host, CASE
             WHEN hop>{} THEN 'redirect_limit'

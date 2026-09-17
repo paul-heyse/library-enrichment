@@ -1,23 +1,17 @@
 //! Sphinx v2 navigation inventory. A document index never establishes API completeness.
 use flate2::read::ZlibDecoder;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::io::Read;
 use url::Url;
 
-/// One inventory entry, including non-Python domains and exact inventory provenance.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Entry {
-    /// Object or label, including spaces.
-    pub name: String,
-    /// Domain and role, e.g. py:class or std:label.
-    pub role: String,
-    /// Upstream priority, not a confidence value.
-    pub priority: i32,
-    /// Resolved document URI; core fetch policy must still approve it.
-    pub uri: String,
-    /// Display label.
-    pub display: String,
+crate::native_struct! {
+    /// One inventory entry, including non-Python domains and exact inventory provenance.
+    pub struct Entry {
+        name: String => crate::native_union::Rule::Text,
+        role: String => crate::native_union::Rule::NonEmpty,
+        priority: i32 => crate::native_union::Rule::Text,
+        uri: String => crate::native_union::Rule::DocumentUri,
+        display: String => crate::native_union::Rule::Text,
+    }
 }
 
 /// Bounded decoded inventory.

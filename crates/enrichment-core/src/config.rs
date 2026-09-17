@@ -4,8 +4,8 @@
 //! (blueprint §10). This module is where "what the operator enabled" actually comes from, so
 //! that `service_status` reports configuration rather than a compiled-in guess.
 //!
-//! The contract is `config/service.example.toml`, which is frozen and documents every key with
-//! its default. Missing keys fall back to those documented defaults; an unparsable file is an
+//! Generated native declarations below own the current configuration contract.
+//! `config/service.example.toml` is frozen historical provenance, not a runtime configuration. Missing keys fall back to those documented defaults; an unparsable file is an
 //! error rather than a silent fallback, because starting with different limits than the
 //! operator wrote is worse than not starting. Keys the frozen example does not carry --
 //! `[network]` and the registry base URLs -- were added for Phase 1 and are documented in
@@ -15,47 +15,46 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
+crate::native_struct! {
 /// Everything the daemon reads out of its configuration file.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
     /// Daemon-wide Arrow query and storage admission budgets (ADR-0024).
-    pub arrow: ArrowConfig,
+    arrow: ArrowConfig => crate::native_union::Rule::Text,
     /// Isolated producer configuration; never enabled by a client request.
-    pub execution: Execution,
+    execution: Execution => crate::native_union::Rule::Text,
     /// Result and transport budgets (§7.3).
-    pub limits: Limits,
+    limits: Limits => crate::native_union::Rule::Text,
     /// Execution-profile policy (§10).
-    pub policy: Policy,
+    policy: Policy => crate::native_union::Rule::Text,
     /// Registry and document freshness (§3.3).
-    pub freshness: FreshnessConfig,
+    freshness: FreshnessConfig => crate::native_union::Rule::Text,
     /// Per-ecosystem producer settings.
-    pub producers: Producers,
+    producers: Producers => crate::native_union::Rule::Text,
     /// Outbound network limits (§10).
-    pub network: Network,
-    /// Where this came from, so `service_status` can say.
-    #[serde(skip)]
-    pub source: Source,
+    network: Network => crate::native_union::Rule::Text,
+} ephemeral { source: Source = Source::BuiltInDefaults }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
-#[serde(default, deny_unknown_fields)]
+crate::native_struct! {
+#[serde(default)]
 pub struct ArrowConfig {
-    pub native: NativeQueryConfig,
-    pub memory_bytes: usize,
-    pub spill_bytes: u64,
-    pub metadata_cache_bytes: usize,
-    pub batch_rows: usize,
-    pub partitions: usize,
-    pub concurrency: usize,
-    pub result_rows: usize,
-    pub result_bytes: usize,
-    pub query_deadline_seconds: u64,
-    pub admission_deadline_seconds: u64,
-    pub record_bytes: usize,
-    pub batch_bytes: usize,
-    pub file_bytes: u64,
-    pub table_rows: usize,
+    native: NativeQueryConfig => crate::native_union::Rule::Text,
+    memory_bytes: usize => crate::native_union::Rule::Text,
+    spill_bytes: u64 => crate::native_union::Rule::Text,
+    metadata_cache_bytes: usize => crate::native_union::Rule::Text,
+    batch_rows: usize => crate::native_union::Rule::Text,
+    partitions: usize => crate::native_union::Rule::Text,
+    concurrency: usize => crate::native_union::Rule::Text,
+    result_rows: usize => crate::native_union::Rule::Text,
+    result_bytes: usize => crate::native_union::Rule::Text,
+    query_deadline_seconds: u64 => crate::native_union::Rule::Text,
+    admission_deadline_seconds: u64 => crate::native_union::Rule::Text,
+    record_bytes: usize => crate::native_union::Rule::Text,
+    batch_bytes: usize => crate::native_union::Rule::Text,
+    file_bytes: u64 => crate::native_union::Rule::Text,
+    table_rows: usize => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for ArrowConfig {
@@ -80,21 +79,22 @@ impl Default for ArrowConfig {
     }
 }
 
+crate::native_struct! {
 /// Effective native choices; measurements select defaults, configuration captures each run.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
-#[serde(default, deny_unknown_fields)]
+#[serde(default)]
 pub struct NativeQueryConfig {
     /// Stack capacity for each native async and blocking worker; separate from Arrow memory.
-    pub worker_stack_bytes: usize,
-    pub blocking_threads: usize,
-    pub decoder_filter: bool,
-    pub observation_bloom: bool,
-    pub reorder_filters: bool,
-    pub row_group_rows: usize,
-    pub row_group_bytes: usize,
-    pub target_file_bytes: u64,
-    pub claim_lease_seconds: u64,
-    pub normalization_depth: u32,
+    worker_stack_bytes: usize => crate::native_union::Rule::Text,
+    blocking_threads: usize => crate::native_union::Rule::Text,
+    decoder_filter: bool => crate::native_union::Rule::Text,
+    observation_bloom: bool => crate::native_union::Rule::Text,
+    reorder_filters: bool => crate::native_union::Rule::Text,
+    row_group_rows: usize => crate::native_union::Rule::Text,
+    row_group_bytes: usize => crate::native_union::Rule::Text,
+    target_file_bytes: u64 => crate::native_union::Rule::Text,
+    claim_lease_seconds: u64 => crate::native_union::Rule::Text,
+    normalization_depth: u32 => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for NativeQueryConfig {
@@ -140,35 +140,36 @@ impl Source {
     }
 }
 
+crate::native_struct! {
 /// Result and transport budgets.
 ///
 /// Defaults match `config/service.example.toml` exactly. That file is frozen and digest-checked,
 /// so the two cannot drift without `just provenance-check` noticing.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Limits {
     /// Largest inline result body before an artifact handle is used instead.
-    pub inline_result_bytes: usize,
+    inline_result_bytes: usize => crate::native_union::Rule::Text,
     /// Maximum search results per page.
-    pub search_results: usize,
+    search_results: usize => crate::native_union::Rule::Text,
     /// Maximum characters in one evidence excerpt.
-    pub excerpt_characters: usize,
+    excerpt_characters: usize => crate::native_union::Rule::Text,
     /// Maximum lines in one source excerpt.
-    pub source_lines: usize,
+    source_lines: usize => crate::native_union::Rule::Text,
     /// Maximum child entries per namespace in an overview.
-    pub namespace_entries: usize,
+    namespace_entries: usize => crate::native_union::Rule::Text,
     /// Largest verification snippet accepted.
-    pub verification_input_bytes: usize,
+    verification_input_bytes: usize => crate::native_union::Rule::Text,
     /// Seconds to wait inline before returning a job receipt.
-    pub inline_wait_seconds: u64,
+    inline_wait_seconds: u64 => crate::native_union::Rule::Text,
     /// Maximum bounded wait in `job_control`.
-    pub max_job_wait_seconds: u64,
+    max_job_wait_seconds: u64 => crate::native_union::Rule::Text,
     /// Concurrent expensive build/probe workers.
-    pub expensive_worker_concurrency: usize,
+    expensive_worker_concurrency: usize => crate::native_union::Rule::Text,
     /// Warm language-server sessions kept alive.
-    pub warm_lsp_sessions: usize,
+    warm_lsp_sessions: usize => crate::native_union::Rule::Text,
     /// Largest NDJSON-RPC frame the daemon will accept (§2.1).
-    pub rpc_message_bytes: usize,
+    rpc_message_bytes: usize => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for Limits {
@@ -189,21 +190,22 @@ impl Default for Limits {
     }
 }
 
+crate::native_struct! {
 /// Execution-profile policy (§10).
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Policy {
     /// Profiles a caller may select from.
     ///
     /// A caller selects from what configuration has enabled; it never grants itself permission.
     /// `runtime` is never a default — it is an explicitly enabled local profile.
-    pub enabled_profiles: Vec<String>,
+    enabled_profiles: Vec<String> => crate::native_union::Rule::Sequence,
     /// Whether `build` requires an operational sandbox.
-    pub require_sandbox_for_build: bool,
+    require_sandbox_for_build: bool => crate::native_union::Rule::Text,
     /// Whether `runtime` requires an operational sandbox.
-    pub require_sandbox_for_runtime: bool,
+    require_sandbox_for_runtime: bool => crate::native_union::Rule::Text,
     /// Whether executed code may reach the network.
-    pub execution_network: bool,
+    execution_network: bool => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for Policy {
@@ -253,20 +255,21 @@ impl Policy {
     }
 }
 
+crate::native_struct! {
 /// Freshness policy (§3.3): mutable lookups get finite TTLs; immutable artifacts are reused by
 /// digest.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct FreshnessConfig {
     /// How long a registry answer is trusted under `cache_ok`.
-    pub registry_ttl_seconds: u64,
+    registry_ttl_seconds: u64 => crate::native_union::Rule::Text,
     /// How long a mutable documentation page is trusted under `cache_ok`.
-    pub mutable_docs_ttl_seconds: u64,
+    mutable_docs_ttl_seconds: u64 => crate::native_union::Rule::Text,
     /// How long an "unavailable" answer is remembered. Shorter than the positive TTLs on
     /// purpose: a timeout is not a permanent absence (§8.4).
-    pub negative_cache_ttl_seconds: u64,
+    negative_cache_ttl_seconds: u64 => crate::native_union::Rule::Text,
     /// Whether a "latest" question always revalidates against the registry.
-    pub latest_requires_revalidation: bool,
+    latest_requires_revalidation: bool => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for FreshnessConfig {
@@ -280,16 +283,17 @@ impl Default for FreshnessConfig {
     }
 }
 
+crate::native_struct! {
 /// Per-ecosystem producer settings.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Producers {
     /// GitHub REST base for public immutable source acquisition.
-    pub github_api_url: String,
+    github_api_url: String => crate::native_union::Rule::Text,
     /// Rust producers.
-    pub rust: RustProducers,
+    rust: RustProducers => crate::native_union::Rule::Text,
     /// Static Python distribution and worker settings.
-    pub python: PythonProducers,
+    python: PythonProducers => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for Producers {
@@ -302,18 +306,19 @@ impl Default for Producers {
     }
 }
 
+crate::native_struct! {
 /// Python producers. The worker executable belongs to the service installation.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct PythonProducers {
     /// PyPI JSON API base, including /pypi.
-    pub pypi_url: String,
+    pypi_url: String => crate::native_union::Rule::Text,
     /// Simple API base for artifact corroboration.
-    pub simple_url: String,
+    simple_url: String => crate::native_union::Rule::Text,
     /// Service-owned Python interpreter containing enrichment_worker and pinned Griffe.
-    pub worker_python: PathBuf,
+    worker_python: PathBuf => crate::native_union::Rule::Text,
     /// Total worker deadline.
-    pub worker_timeout_seconds: u64,
+    worker_timeout_seconds: u64 => crate::native_union::Rule::Text,
+}
 }
 impl Default for PythonProducers {
     fn default() -> Self {
@@ -326,24 +331,25 @@ impl Default for PythonProducers {
     }
 }
 
+crate::native_struct! {
 /// Rust producer settings (`[producers.rust]`).
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct RustProducers {
     /// Download hosted rustdoc JSON before any local compilation (§4.1).
-    pub prefer_hosted_rustdoc_json: bool,
+    prefer_hosted_rustdoc_json: bool => crate::native_union::Rule::Text,
     /// Never explore all feature combinations by default (§4.3).
-    pub all_features_by_default: bool,
+    all_features_by_default: bool => crate::native_union::Rule::Text,
     /// The Rust semantic engine.
-    pub lsp: String,
+    lsp: String => crate::native_union::Rule::Text,
     /// Base URL of the sparse registry index. Its host becomes a trusted endpoint.
-    pub crates_io_index_url: String,
+    crates_io_index_url: String => crate::native_union::Rule::Text,
     /// Base URL of the registry web API. Its host becomes a trusted endpoint.
-    pub crates_io_api_url: String,
+    crates_io_api_url: String => crate::native_union::Rule::Text,
     /// Base URL of the documentation host. Its host becomes a trusted endpoint.
-    pub docs_rs_url: String,
+    docs_rs_url: String => crate::native_union::Rule::Text,
     /// The identifying `User-Agent` sent with every request; crates.io's policy requires one.
-    pub user_agent: String,
+    user_agent: String => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for RustProducers {
@@ -363,21 +369,22 @@ impl Default for RustProducers {
     }
 }
 
+crate::native_struct! {
 /// Outbound network limits (§10). Not in the frozen example; added for Phase 1.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Network {
     /// Largest response body accepted before decompression.
-    pub max_download_bytes: u64,
+    max_download_bytes: u64 => crate::native_union::Rule::Text,
     /// Largest decompressed payload accepted.
-    pub max_decompressed_bytes: u64,
+    max_decompressed_bytes: u64 => crate::native_union::Rule::Text,
     /// Redirect hops followed, each re-checked against policy.
-    pub max_redirects: u32,
+    max_redirects: u32 => crate::native_union::Rule::Text,
     /// Total deadline for one HTTP request.
-    pub request_timeout_seconds: u64,
+    request_timeout_seconds: u64 => crate::native_union::Rule::Text,
     /// Deadline for one durable acquisition. On expiry cancel producer work and settle cleanup;
     /// a publication already admitted commits before the terminal job result is reported.
-    pub acquisition_timeout_seconds: u64,
+    acquisition_timeout_seconds: u64 => crate::native_union::Rule::Text,
+}
 }
 
 impl Default for Network {
@@ -487,34 +494,61 @@ mod tests {
     const FROZEN_EXAMPLE: &str = include_str!("../../../config/service.example.toml");
 
     #[test]
-    fn defaults_match_the_frozen_example() {
-        let example: Config = toml::from_str(FROZEN_EXAMPLE).expect("the example parses");
-        let defaults = Config::default();
-        assert_eq!(example.limits, defaults.limits);
-        assert_eq!(example.policy, defaults.policy);
-        assert_eq!(example.freshness, defaults.freshness);
-        // The example predates the base-URL keys, so only the keys it carries are compared.
-        assert_eq!(
-            example.producers.rust.prefer_hosted_rustdoc_json,
-            defaults.producers.rust.prefer_hosted_rustdoc_json
+    fn retained_defaults_match_frozen_provenance_without_loading_a_retired_config() {
+        let frozen: toml::Value = toml::from_str(FROZEN_EXAMPLE).unwrap();
+        let defaults = serde_json::to_value(Config::default()).unwrap();
+        for section in ["limits", "policy", "freshness"] {
+            for (name, actual) in defaults[section].as_object().unwrap() {
+                assert_eq!(
+                    actual,
+                    &serde_json::to_value(&frozen[section][name]).unwrap(),
+                    "{section}.{name}"
+                );
+            }
+        }
+        for name in [
+            "prefer_hosted_rustdoc_json",
+            "all_features_by_default",
+            "lsp",
+        ] {
+            assert_eq!(
+                defaults["producers"]["rust"][name],
+                serde_json::to_value(&frozen["producers"]["rust"][name]).unwrap()
+            );
+        }
+        assert!(
+            !Config::default()
+                .policy
+                .enabled_profiles
+                .contains(&"runtime".into())
         );
-        assert_eq!(
-            example.producers.rust.all_features_by_default,
-            defaults.producers.rust.all_features_by_default
+        assert!(
+            toml::from_str::<Config>(FROZEN_EXAMPLE).is_err(),
+            "retired options cannot be silently accepted"
         );
-        assert_eq!(example.producers.rust.lsp, defaults.producers.rust.lsp);
     }
 
     #[test]
-    fn the_frozen_example_does_not_enable_the_runtime_profile() {
-        let example: Config = toml::from_str(FROZEN_EXAMPLE).expect("the example parses");
-        assert!(
-            !example
-                .policy
-                .enabled_profiles
-                .contains(&"runtime".to_owned()),
-            "runtime is an explicitly enabled local profile, never a default"
+    fn generated_config_records_preserve_values_and_exclude_only_load_origin() {
+        use crate::native_union::NativeStruct;
+        let mut config = Config::default();
+        let id = crate::native_key::Key::OperationPolicy
+            .record(&config)
+            .unwrap();
+        config.source = Source::File("/tmp/operator.toml".into());
+        assert_eq!(
+            id,
+            crate::native_key::Key::OperationPolicy
+                .record(&config)
+                .unwrap()
         );
+        let batch = Config::batch(&[config]).unwrap();
+        let rows = crate::evidence::arrow_model::cells::RowSet::batch(&batch).unwrap();
+        assert_eq!(Config::decode(rows.row(0)).unwrap(), Config::default());
+        for source in ["unknown = true", "[network]\nunknown = true"] {
+            assert!(toml::from_str::<Config>(source).is_err());
+        }
+        toml::from_str::<Config>(include_str!("../../../config/service.dev.toml")).unwrap();
     }
 
     #[test]
@@ -614,37 +648,38 @@ mod tests {
     }
 }
 
+crate::native_struct! {
 /// Service-owned rootless execution backend. Immutable image IDs are operator admitted.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
-#[serde(default, deny_unknown_fields)]
+#[serde(default)]
 pub struct Execution {
-    pub storage_root: Option<PathBuf>,
-    pub python_image: Option<String>,
-    pub rust_image: Option<String>,
-    pub deadline_seconds: u64,
-    pub output_bytes: usize,
+    storage_root: Option<PathBuf> => crate::native_union::Rule::Text,
+    python_image: Option<String> => crate::native_union::Rule::Text,
+    rust_image: Option<String> => crate::native_union::Rule::Text,
+    deadline_seconds: u64 => crate::native_union::Rule::Text,
+    output_bytes: usize => crate::native_union::Rule::Text,
     /// CPU bandwidth in logical CPUs, not affinity or a guaranteed scheduling allocation.
-    pub cpus: u32,
-    pub memory_mib: u64,
+    cpus: u32 => crate::native_union::Rule::Text,
+    memory_mib: u64 => crate::native_union::Rule::Text,
     /// Hard writable tmpfs ceiling, additionally limited by the effective memory bound.
-    pub scratch_mib: u64,
+    scratch_mib: u64 => crate::native_union::Rule::Text,
     /// First-party executor binary, mounted read-only and bound into qualification.
-    pub executor_path: Option<PathBuf>,
-    pub pids: u32,
-    pub queue_limit: usize,
+    executor_path: Option<PathBuf> => crate::native_union::Rule::Text,
+    pids: u32 => crate::native_union::Rule::Text,
+    queue_limit: usize => crate::native_union::Rule::Text,
     /// The container broker executable. Absent means the packaged `/usr/bin/podman`.
     ///
     /// Configurable because an operator may install Podman elsewhere, and because a cleanup
     /// failure is otherwise unreachable from a test: the F3 oracle points this at a wrapper
     /// that fails `rm` a bounded number of times.
-    pub broker_path: Option<PathBuf>,
+    broker_path: Option<PathBuf> => crate::native_union::Rule::Text,
     /// How long the cleanup supervisor keeps retrying removal before the owned container is
     /// declared unresolved. Its worker permit is held for the whole window.
-    pub cleanup_deadline_seconds: u64,
+    cleanup_deadline_seconds: u64 => crate::native_union::Rule::Text,
     /// Aggregate ceiling on writable capsule storage, in MiB.
-    pub capsule_budget_mib: u64,
+    capsule_budget_mib: u64 => crate::native_union::Rule::Text,
     /// Idle seconds before a warm session is evicted and its container removed.
-    pub lsp_idle_seconds: u64,
+    lsp_idle_seconds: u64 => crate::native_union::Rule::Text,
+}
 }
 impl Default for Execution {
     fn default() -> Self {

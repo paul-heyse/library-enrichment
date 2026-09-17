@@ -35,7 +35,6 @@ WITH typed AS (
 impl RustIndex {
     pub fn new(runtime: &QueryRuntime, batches: Vec<RecordBatch>) -> Result<Self> {
         let session = runtime.session();
-        session.register_udf(enrichment_core::native_version::semver_key());
         session.register_table(
             "registry_facts",
             Arc::new(MemTable::try_new(

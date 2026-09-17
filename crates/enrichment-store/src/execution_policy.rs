@@ -272,7 +272,7 @@ impl Policy {
         Ok(Self {
             runtime: runtime.clone(),
             session,
-            policy_id: enrichment_core::native_key::Key::OperationPolicy.value(config)?,
+            policy_id: enrichment_core::native_key::Key::OperationPolicy.record(config)?,
         })
     }
 
@@ -413,8 +413,14 @@ mod tests {
             },
             image_id: format!("sha256:{}", "a".repeat(64)),
             command: vec!["/bin/sh".into(), "-c".into(), RESOURCE_PROBE.into()],
-            started_at: "2026-09-16T00:00:00Z".into(),
-            finished_at: "2026-09-16T00:00:01Z".into(),
+            started_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+            finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-16T00:00:01.000000Z".to_owned(),
+            )
+            .unwrap(),
             exit_code: Some(0),
             end: ProcessEnd::Exited,
             stdout: "200000 100000\n1073741824\n0\n128\ntmpfs 131072 4096\n".into(),
@@ -627,13 +633,12 @@ mod tests {
             let command = jobs
                 .command_with_id(
                     id.clone(),
-                    Arguments {
-                        resolve: Some(ResolveRequest {
+                    Arguments::Resolve {
+                        request: ResolveRequest {
                             name: "fixture".into(),
                             allow_local_build: enabled,
                             ..Default::default()
-                        }),
-                        ..Default::default()
+                        },
                     },
                 )
                 .await

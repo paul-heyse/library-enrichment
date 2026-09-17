@@ -465,7 +465,10 @@ fn feature_gated_items_follow_the_documented_build_configuration() {
             ArtifactKind::RustdocJson,
             "application/json",
             "https://docs.rs/enr-fixture/rustdoc.json",
-            "2026-09-16T00:00:00Z",
+            enrichment_core::native_time::AcquisitionTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
         );
         let run = ProducerRun {
             attempt_id: "fixture".into(),
@@ -474,8 +477,14 @@ fn feature_gated_items_follow_the_documented_build_configuration() {
             config_digest: "fixture".into(),
             inputs: [("rustdoc_json".into(), artifact.sha256.clone())].into(),
             profile: ExecutionProfile::Static,
-            started_at: "2026-09-16T00:00:00Z".into(),
-            finished_at: "2026-09-16T00:00:01Z".into(),
+            started_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-16T00:00:00.000000Z".to_owned(),
+            )
+            .unwrap(),
+            finished_at: enrichment_core::native_time::ObservationTime::try_from(
+                "2026-09-16T00:00:01.000000Z".to_owned(),
+            )
+            .unwrap(),
             outcome: RunOutcome::Succeeded,
             gaps: vec![],
             log: None,
@@ -1416,7 +1425,10 @@ async fn publish_comparison_variant(
                 ArtifactKind::Changelog,
                 "text/plain",
                 "fixture:behavior-note",
-                "2026-09-14T00:00:00Z",
+                enrichment_core::native_time::AcquisitionTime::try_from(
+                    "2026-09-14T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
             )
         })
         .expect("note")
@@ -1466,8 +1478,14 @@ async fn publish_comparison_variant(
         .into_iter()
         .collect(),
         profile: ExecutionProfile::Static,
-        started_at: "2026-09-14T00:00:00Z".into(),
-        finished_at: "2026-09-14T00:00:01Z".into(),
+        started_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T00:00:00.000000Z".to_owned(),
+        )
+        .unwrap(),
+        finished_at: enrichment_core::native_time::ObservationTime::try_from(
+            "2026-09-14T00:00:01.000000Z".to_owned(),
+        )
+        .unwrap(),
         outcome: RunOutcome::Succeeded,
         gaps: vec![],
         log: None,
@@ -1694,7 +1712,10 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
                 ArtifactKind::Other,
                 "text/plain",
                 "fixture:unicode",
-                "2026-09-13T00:00:00Z",
+                enrichment_core::native_time::AcquisitionTime::try_from(
+                    "2026-09-13T00:00:00.000000Z".to_owned(),
+                )
+                .unwrap(),
             )
         })
         .expect("artifact")
@@ -1716,10 +1737,18 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
     assert_eq!(recovered, text);
     let answer = enrichment_daemon::envelope::ok(
         "large answer",
-        serde_json::json!({"text":text})
-            .as_object()
-            .expect("object")
-            .clone(),
+        enrichment_core::wire::data::SearchData {
+            page: enrichment_core::wire::Page::new(0, Some(0), false, None),
+            query: text.clone(),
+            tokens: vec![],
+            kinds: vec![],
+            area: None,
+            hits: vec![],
+            scoring: vec![],
+            searched: vec![],
+            offset: 0,
+        }
+        .into(),
         enrichment_core::wire::Coverage {
             details: None,
             assessments: Vec::new(),
@@ -1755,10 +1784,11 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
         .await
         .expect("lookup")
         .expect("saved");
-    let saved: serde_json::Value =
-        serde_json::from_slice(&service.blobs.read(&artifact.sha256).expect("read")).expect("JSON");
-    assert_eq!(saved["result"]["data"], serde_json::json!(answer.data));
-    assert_eq!(saved["result"]["request_id"], "req_retained");
+    let saved = service
+        .blobs
+        .read_delivery(&artifact, "req_read")
+        .expect("native result");
+    assert_eq!(saved.data, answer.data);
 }
 
 #[tokio::test]

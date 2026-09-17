@@ -1,0 +1,427 @@
+# `regex_automata::util::iter`
+
+Crate `regex-automata` · 7 public items · structured records in [`model/regex_automata.util.iter.json`](../model/regex_automata.util.iter.json)
+
+## CapturesIter
+
+`struct` · `regex_automata::util::iter::CapturesIter`
+
+```rust
+struct CapturesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<Captures>
+```
+
+An iterator over all non-overlapping captures for an infallible search.
+
+The iterator yields a [`Captures`] value until no more matches could be
+found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_captures_iter`] and then
+calling [`TryCapturesIter::infallible`].
+
+---
+
+## HalfMatchesIter
+
+`struct` · `regex_automata::util::iter::HalfMatchesIter`
+
+```rust
+struct HalfMatchesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**Methods** (1)
+
+```rust
+fn input<'i>(&'i self) -> &'i Input<'h>
+```
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<HalfMatch>
+```
+
+An iterator over all non-overlapping half matches for an infallible search.
+
+The iterator yields a [`HalfMatch`] value until no more matches could be
+found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_half_matches_iter`] and
+then calling [`TryHalfMatchesIter::infallible`].
+
+---
+
+## MatchesIter
+
+`struct` · `regex_automata::util::iter::MatchesIter`
+
+```rust
+struct MatchesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**Methods** (1)
+
+```rust
+fn input<'i>(&'i self) -> &'i Input<'h>
+```
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<Match>
+```
+
+An iterator over all non-overlapping matches for an infallible search.
+
+The iterator yields a [`Match`] value until no more matches could be found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_matches_iter`] and
+then calling [`TryMatchesIter::infallible`].
+
+---
+
+## Searcher
+
+`struct` · `regex_automata::util::iter::Searcher`
+
+```rust
+struct Searcher<'h>
+```
+
+**Derives**: Clone, Debug
+
+**Methods** (9)
+
+```rust
+fn advance<F>(&mut self, finder: F) -> Option<Match> where F: FnMut(&Input<'_>) -> Result<Option<Match>, MatchError>
+fn advance_half<F>(&mut self, finder: F) -> Option<HalfMatch> where F: FnMut(&Input<'_>) -> Result<Option<HalfMatch>, MatchError>
+fn input<'s>(&'s self) -> &'s Input<'h>
+fn into_captures_iter<F>(self, caps: Captures, finder: F) -> TryCapturesIter<'h, F> where F: FnMut(&Input<'_>, &mut Captures) -> Result<(), MatchError>
+fn into_half_matches_iter<F>(self, finder: F) -> TryHalfMatchesIter<'h, F> where F: FnMut(&Input<'_>) -> Result<Option<HalfMatch>, MatchError>
+fn into_matches_iter<F>(self, finder: F) -> TryMatchesIter<'h, F> where F: FnMut(&Input<'_>) -> Result<Option<Match>, MatchError>
+fn new(input: Input<'h>) -> Searcher<'h>
+fn try_advance<F>(&mut self, finder: F) -> Result<Option<Match>, MatchError> where F: FnMut(&Input<'_>) -> Result<Option<Match>, MatchError>
+fn try_advance_half<F>(&mut self, finder: F) -> Result<Option<HalfMatch>, MatchError> where F: FnMut(&Input<'_>) -> Result<Option<HalfMatch>, MatchError>
+```
+
+A searcher for creating iterators and performing lower level iteration.
+
+This searcher encapsulates the logic required for finding all successive
+non-overlapping matches in a haystack. In theory, iteration would look
+something like this:
+
+1. Setting the start position to `0`.
+2. Execute a regex search. If no match, end iteration.
+3. Report the match and set the start position to the end of the match.
+4. Go back to (2).
+
+And if this were indeed the case, it's likely that `Searcher` wouldn't
+exist. Unfortunately, because a regex may match the empty string, the above
+logic won't work for all possible regexes. Namely, if an empty match is
+found, then step (3) would set the start position of the search to the
+position it was at. Thus, iteration would never end.
+
+Instead, a `Searcher` knows how to detect these cases and forcefully
+advance iteration in the case of an empty match that overlaps with a
+previous match.
+
+If you know that your regex cannot match any empty string, then the simple
+algorithm described above will work correctly.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+In particular, a `Searcher` is not itself an iterator. Instead, it provides
+`advance` routines that permit moving the search along explicitly. It also
+provides various routines, like [`Searcher::into_matches_iter`], that
+accept a closure (representing how a regex engine executes a search) and
+returns a conventional iterator.
+
+The lifetime parameters come from the [`Input`] type passed to
+[`Searcher::new`]:
+
+* `'h` is the lifetime of the underlying haystack.
+
+# Searcher vs Iterator
+
+Why does a search type with "advance" APIs exist at all when we also have
+iterators? Unfortunately, the reasoning behind this split is a complex
+combination of the following things:
+
+1. While many of the regex engines expose their own iterators, it is also
+nice to expose this lower level iteration helper because it permits callers
+to provide their own `Input` configuration. Moreover, a `Searcher` can work
+with _any_ regex engine instead of only the ones defined in this crate.
+This way, everyone benefits from a shared iteration implementation.
+2. There are many different regex engines that, while they have the same
+match semantics, they have slightly different APIs. Iteration is just
+complex enough to want to share code, and so we need a way of abstracting
+over those different regex engines. While we could define a new trait that
+describes any regex engine search API, it would wind up looking very close
+to a closure. While there may still be reasons for the more generic trait
+to exist, for now and for the purposes of iteration, we use a closure.
+Closures also provide a lot of easy flexibility at the call site, in that
+they permit the caller to borrow any kind of state they want for use during
+each search call.
+3. As a result of using closures, and because closures are anonymous types
+that cannot be named, it is difficult to encapsulate them without both
+costs to speed and added complexity to the public API. For example, in
+defining an iterator type like
+[`dfa::regex::FindMatches`](crate::dfa::regex::FindMatches),
+if we use a closure internally, it's not possible to name this type in the
+return type of the iterator constructor. Thus, the only way around it is
+to erase the type by boxing it and turning it into a `Box<dyn FnMut ...>`.
+This boxed closure is unlikely to be inlined _and_ it infects the public
+API in subtle ways. Namely, unless you declare the closure as implementing
+`Send` and `Sync`, then the resulting iterator type won't implement it
+either. But there are practical issues with requiring the closure to
+implement `Send` and `Sync` that result in other API complexities that
+are beyond the scope of this already long exposition.
+4. Some regex engines expose more complex match information than just
+"which pattern matched" and "at what offsets." For example, the PikeVM
+exposes match spans for each capturing group that participated in the
+match. In such cases, it can be quite beneficial to reuse the capturing
+group allocation on subsequent searches. A proper iterator doesn't permit
+this API due to its interface, so it's useful to have something a bit lower
+level that permits callers to amortize allocations while also reusing a
+shared implementation of iteration. (See the documentation for
+[`Searcher::advance`] for an example of using the "advance" API with the
+PikeVM.)
+
+What this boils down to is that there are "advance" APIs which require
+handing a closure to it for every call, and there are also APIs to create
+iterators from a closure. The former are useful for _implementing_
+iterators or when you need more flexibility, while the latter are useful
+for conveniently writing custom iterators on-the-fly.
+
+# Example: iterating with captures
+
+Several regex engines in this crate over convenient iterator APIs over
+[`Captures`] values. To do so, this requires allocating a new `Captures`
+value for each iteration step. This can perhaps be more costly than you
+might want. Instead of implementing your own iterator to avoid that
+cost (which can be a little subtle if you want to handle empty matches
+correctly), you can use this `Searcher` to do it for you:
+
+```
+use regex_automata::{
+    nfa::thompson::pikevm::PikeVM,
+    util::iter::Searcher,
+    Input, Span,
+};
+
+let re = PikeVM::new("foo(?P<numbers>[0-9]+)")?;
+let haystack = "foo1 foo12 foo123";
+
+let mut caps = re.create_captures();
+let mut cache = re.create_cache();
+let mut matches = vec![];
+let mut searcher = Searcher::new(Input::new(haystack));
+while let Some(_) = searcher.advance(|input| {
+    re.search(&mut cache, input, &mut caps);
+    Ok(caps.get_match())
+}) {
+    // The unwrap is OK since 'numbers' matches if the pattern matches.
+    matches.push(caps.get_group_by_name("numbers").unwrap());
+}
+assert_eq!(matches, vec![
+    Span::from(3..4),
+    Span::from(8..10),
+    Span::from(14..17),
+]);
+
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+---
+
+## TryCapturesIter
+
+`struct` · `regex_automata::util::iter::TryCapturesIter`
+
+```rust
+struct TryCapturesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**Methods** (1)
+
+```rust
+fn infallible(self) -> CapturesIter<'h, F>
+```
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<Result<Captures, MatchError>>
+```
+
+An iterator over all non-overlapping captures for a fallible search.
+
+The iterator yields a `Result<Captures, MatchError>` value until no more
+matches could be found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_captures_iter`].
+
+---
+
+## TryHalfMatchesIter
+
+`struct` · `regex_automata::util::iter::TryHalfMatchesIter`
+
+```rust
+struct TryHalfMatchesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**Methods** (2)
+
+```rust
+fn infallible(self) -> HalfMatchesIter<'h, F>
+fn input<'i>(&'i self) -> &'i Input<'h>
+```
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<Result<HalfMatch, MatchError>>
+```
+
+An iterator over all non-overlapping half matches for a fallible search.
+
+The iterator yields a `Result<HalfMatch, MatchError>` value until no more
+matches could be found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_half_matches_iter`].
+
+---
+
+## TryMatchesIter
+
+`struct` · `regex_automata::util::iter::TryMatchesIter`
+
+```rust
+struct TryMatchesIter<'h, F>
+```
+
+**Implements**: `core::iter::traits::iterator::Iterator`
+
+**Derives**: Debug
+
+**Methods** (2)
+
+```rust
+fn infallible(self) -> MatchesIter<'h, F>
+fn input<'i>(&'i self) -> &'i Input<'h>
+```
+
+**via `core::iter::traits::iterator::Iterator`**
+
+```rust
+fn next(&mut self) -> Option<Result<Match, MatchError>>
+```
+
+An iterator over all non-overlapping matches for a fallible search.
+
+The iterator yields a `Result<Match, MatchError>` value until no more
+matches could be found.
+
+The type parameters are as follows:
+
+* `F` represents the type of a closure that executes the search.
+
+The lifetime parameters come from the [`Input`] type:
+
+* `'h` is the lifetime of the underlying haystack.
+
+When possible, prefer the iterators defined on the regex engine you're
+using. This tries to abstract over the regex engine and is thus a bit more
+unwieldy to use.
+
+This iterator is created by [`Searcher::into_matches_iter`].
+
+---

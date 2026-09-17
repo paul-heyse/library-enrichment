@@ -1,0 +1,59 @@
+PB15 — is `rustc_public` a usable extraction surface for `staging.mir`?
+
+  sysroot: /home/paul/.rustup/toolchains/nightly-2026-09-13-x86_64-unknown-linux-gnu
+  fixture: /home/paul/library-enrichment/.claude/skills/ast-grep-ripgrep/capability-expansion/evidence/probes/rustc-public-probe/fixtures/cfg_shapes.rs
+
+  B CONTROL  rustc -Zunpretty=mir, block count per fn
+      expectation: must produce the SAME counts, in the same order, as arm A
+      straight_line  2 blocks
+      branching      5 blocks
+      looping        6 blocks
+
+  A          rustc_public, body walked into §3.6's staging.mir shape
+      expectation: Body / BasicBlock / TerminatorKind reachable, and cfg_edge fillable
+      cfg_shapes::straight_line 2 blocks, 3 locals, 4 staging.mir rows
+      cfg_shapes::branching 5 blocks, 4 locals, 10 staging.mir rows
+      cfg_shapes::looping 6 blocks, 9 locals, 17 staging.mir rows
+
+  A′         the rows for `looping`, in §3.6's columns
+      block  stmt  stmt_kind         terminator_kind  edge_target  edge_kind
+      0      0     Assign                                          
+      0      1     Assign                                          
+      0                              Goto             1            goto
+      1      0     Assign                                          
+      1      1     Assign                                          
+      1                              SwitchInt        5            switch:0
+      1                              SwitchInt        2            switch:otherwise
+      2      0     Assign                                          
+      2      1     Assign                                          
+      2                              Assert           3            assert:success
+      3      0     Assign                                          
+      3      1     Assign                                          
+      3                              Assert           4            assert:success
+      4      0     Assign                                          
+      4                              Goto             1            goto
+      5      0     Assign                                          
+      5                              Return                        
+      back edges (edge_target < block_index): 1
+
+  C          the same `looping` body at every phase the compiler will dump
+      expectation: the counts must DIFFER between phases -- if they did not, the
+      agreement in arms A and B would carry no information about phase at all
+      built.after                14 blocks   (cfg_shapes.looping.1-1-000.built.after.mir)
+      analysis.after             8 blocks   (cfg_shapes.looping.2-1-000.analysis.after.mir)
+      runtime-optimized.after    6 blocks   (cfg_shapes.looping.3-3-000.runtime-optimized.after.mir)
+      96 phases dumped, 3 distinct block counts among the three named phases
+
+  VERDICT
+      CONFIRMED — the typed surface and the textual surface agree on
+      all 3 functions, and the counts differ BETWEEN functions, so the
+      agreement is not the agreement of two constants.
+
+      AND arm C attributes that agreement to a PHASE. `looping` is
+        built.after                14 blocks
+        analysis.after             8 blocks
+        runtime-optimized.after    6 blocks
+      and arms A and B both reported 6, which is ["runtime-optimized.after"].
+      So BOTH candidate mapping_bases read the same phase, and it is
+      the only one either of them can reach. §3.6's `mir_phase`
+      vocabulary has three values; these two surfaces reach one.

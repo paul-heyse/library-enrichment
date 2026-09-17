@@ -147,13 +147,20 @@ pub(crate) async fn validate_references(
     table: &str,
     key: &str,
 ) -> Result<()> {
+    let mut invariants = crate::invariants::Invariants::default();
+    reference_rules(&mut invariants, session, table, key).await?;
+    runtime.admit(invariants).await
+}
+
+pub(crate) async fn reference_rules(
+    invariants: &mut crate::invariants::Invariants,
+    session: &datafusion::prelude::SessionContext,
+    table: &str,
+    key: &str,
+) -> Result<()> {
     // Both identifiers are compiled private relation/field names, never caller SQL.
-    let closure = session.sql(&format!("WITH receipts AS (SELECT {key} AS id,log,unnest(acquisitions) AS artifact FROM {table}), inputs AS (SELECT {key} AS id,unnest(inputs) AS input FROM {table}) SELECT r.id FROM receipts r LEFT ANTI JOIN inputs i ON r.id=i.id AND r.artifact.sha256=i.input.digest WHERE r.log IS DISTINCT FROM r.artifact.artifact_id LIMIT 1")).await?;
-    runtime
-        .require_empty(closure, "attempt_acquisition_closure", "publication")
-        .await?;
+    let closure = session.sql(&format!("WITH receipts AS (SELECT {key} AS id,log,unnest(acquisitions) AS artifact FROM {table}), inputs AS (SELECT {key} AS id,unnest(native_map_entries(inputs)) AS input FROM {table}) SELECT r.id FROM receipts r LEFT ANTI JOIN inputs i ON r.id=i.id AND r.artifact.sha256=i.input.value WHERE r.log IS DISTINCT FROM r.artifact.artifact_id LIMIT 1")).await?;
+    invariants.push(closure, "attempt_acquisition_closure", "publication")?;
     let logs = session.sql(&format!("WITH receipts AS (SELECT {key} AS id,unnest(acquisitions) AS artifact FROM {table}) SELECT a.{key} FROM {table} a LEFT JOIN receipts r ON a.{key}=r.id AND a.log=r.artifact.artifact_id WHERE a.log IS NOT NULL GROUP BY a.{key} HAVING count(r.id)<>1 LIMIT 1")).await?;
-    runtime
-        .require_empty(logs, "attempt_log_reference", "publication")
-        .await
+    invariants.push(logs, "attempt_log_reference", "publication")
 }

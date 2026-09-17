@@ -1,0 +1,65 @@
+warning: use of deprecated method `datafusion::physical_plan::ExecutionPlan::partition_statistics`: Use StatisticsContext::compute instead
+   --> examples/pb02_constraints.rs:151:22
+    |
+151 |                     .partition_statistics(None)
+    |                      ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `datafusion::physical_plan::ExecutionPlan::partition_statistics`: Use StatisticsContext::compute instead
+   --> examples/pb02_constraints.rs:155:22
+    |
+155 |                     .partition_statistics(Some(0))
+    |                      ^^^^^^^^^^^^^^^^^^^^
+
+PB02 — does supplying `constraints()` change the optimised plan?
+
+  Both arms use the SAME wrapper over the SAME Delta table.
+  Arm A: constraints() -> None            (what delta-rs does today)
+  Arm B: constraints() -> PrimaryKey([0]) (what the plan's wrapper would add)
+
+== PB02a · constraints() ==
+
+  [CHANGED] distinct on the key alone
+            sql: SELECT DISTINCT entity_id FROM t
+              A(None) | Aggregate: groupBy=[[t.entity_id]], aggr=[[]]
+              A(None) |   TableScan: t projection=[entity_id]
+              B(PK)   | TableScan: t projection=[entity_id]
+  [same]    distinct on key + dependent column
+  [same]    distinct on a non-key column
+  [same]    group by the key
+  [same]    count(distinct key)
+  [CHANGED] self-join on the key
+            sql: SELECT a.entity_id FROM t a JOIN t b ON a.entity_id = b.entity_id
+              A(None) | Projection: a.entity_id
+              A(None) |   Inner Join: a.entity_id = b.entity_id
+              A(None) |     SubqueryAlias: a
+              A(None) |       TableScan: t projection=[entity_id]
+              A(None) |     SubqueryAlias: b
+              A(None) |       TableScan: t projection=[entity_id]
+              B(PK)   | LeftSemi Join: a.entity_id = b.entity_id
+              B(PK)   |   SubqueryAlias: a
+              B(PK)   |     TableScan: t projection=[entity_id]
+              B(PK)   |   SubqueryAlias: b
+              B(PK)   |     TableScan: t projection=[entity_id]
+  [same]    plain filter (should not change)
+
+  2 of 7 queries planned differently.
+
+== PB02b · statistics() ==
+
+  scan       plan: same      root num_rows  A(None)=all=Absent part0=Absent  B(Exact 3)=all=Absent part0=Absent
+      rendered | DeltaScanExec, statistics=[Rows=Exact(3), Bytes=Inexact(1051), [(Col[0]:)]]
+      rendered |   DataSourceExec: file_groups={1 group: [[<SCRATCH>/t_pb02/part-00000-<uuid>.snappy.parquet]]}, projection=[entity_id, __delta_rs_file_id__], file_type=parquet, statistics=[Rows=Exact(3), Bytes=Inexact(1051), [(Col[0]:),(Col[1]: Min=Exact(Dictionary(UInt16, Utf8("0"))) Max=Exact(Dictionary(UInt16, Utf8("0"))) Null=Exact(0) Distinct=Exact(1))]]
+      channel  | statistics rendered in plan text: true
+  self-join  plan: same      root num_rows  A(None)=all=Absent part0=Absent  B(Exact 3)=all=Absent part0=Absent
+      rendered | HashJoinExec: mode=CollectLeft, join_type=Inner, on=[(entity_id@0, entity_id@0)], projection=[entity_id@0], statistics=[Rows=Inexact(3), Bytes=Absent, [(Col[0]:)]]
+      rendered |   DeltaScanExec, statistics=[Rows=Exact(3), Bytes=Inexact(1051), [(Col[0]:)]]
+      rendered |     DataSourceExec: file_groups={1 group: [[<SCRATCH>/t_pb02/part-00000-<uuid>.snappy.parquet]]}, projection=[entity_id, __delta_rs_file_id__], file_type=parquet, statistics=[Rows=Exact(3), Bytes=Inexact(1051), [(Col[0]:),(Col[1]: Min=Exact(Dictionary(UInt16, Utf8("0"))) Max=Exact(Dictionary(UInt16, Utf8("0"))) Null=Exact(0) Distinct=Exact(1))]]
+      rendered |   DeltaScanExec, statistics=[Rows=Inexact(3), Bytes=Inexact(1051), [(Col[0]:)]]
+      channel  | statistics rendered in plan text: true
+
+== what reached the plan ==
+
+  functional dependencies on the scan schema (arm B): FunctionalDependencies { deps: [FunctionalDependence { source_indices: [0], target_indices: [0, 1, 2], nullable: false, mode: Single }] }
+  functional dependencies on the scan schema (arm A): FunctionalDependencies { deps: [] }
